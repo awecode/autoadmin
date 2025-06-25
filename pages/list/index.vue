@@ -27,7 +27,7 @@ const columns = cfg.list?.columns ?? undefined
 const actions = [
     {
         label: 'Add',
-        to: `/${modelLabel}/new`,
+        to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
     }
 ]
 
