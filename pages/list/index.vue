@@ -1,7 +1,6 @@
 <template>
     <div class="container mx-auto px-4 py-8">
-        {{ modelLabel }}x
-        <DataTable endpoint="/api/platforms" delete-endpoint="/api/platforms" title="Platforms" :columns="columns"
+        <DataTable :endpoint="listEndpoint" :delete-endpoint="deleteEndpoint" :title="listTitle" :columns="columns"
             :actions="actions">
             <template #actions-cell-prepend="{ row }">
                 <UButton color="primary" icon="i-heroicons-pencil" variant="ghost"
@@ -16,6 +15,10 @@
 <script setup lang="ts">
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useNuxtApp().$adminRegistry.get(modelLabel)
+
+const listEndpoint = cfg?.list?.endpoint ?? `/api/${modelLabel}`
+const deleteEndpoint = cfg?.delete?.endpoint ?? `/api/${modelLabel}`
+const listTitle = cfg?.list?.title ?? useTitleCase(cfg?.label ?? modelLabel)
 if (!cfg) {
     throw createError({
         statusCode: 404,

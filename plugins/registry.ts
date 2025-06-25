@@ -9,16 +9,25 @@ type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 interface ListOptions<T extends Table = Table> {
   showCreateButton: boolean
   fields: ColKey<T>[]
+  title?: string
+  endpoint?: string
 }
 
 interface UpdateOptions {
   showDeleteButton: boolean
 }
+
+interface DeleteOptions {
+  enabled: boolean
+  endpoint?: string
+}
+
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
   searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T>>
   update?: Partial<UpdateOptions>
+  delete?: Partial<DeleteOptions>
 }
 
 const defaultOptions = {
