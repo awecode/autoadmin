@@ -2,12 +2,6 @@
     <div class="container mx-auto px-4 py-8">
         <DataTable :endpoint="listEndpoint" :delete-endpoint="deleteEndpoint" :title="listTitle" :columns="columns"
             :actions="actions">
-            <template #actions-cell-prepend="{ row }">
-                <UButton color="primary" icon="i-heroicons-pencil" variant="ghost"
-                    :to="`/admin/categories/${row.original.id}`">
-                    Edit
-                </UButton>
-            </template>
         </DataTable>
     </div>
 </template>
@@ -28,12 +22,10 @@ if (!cfg) {
 
 const columns = [
     {
-        id: 'name',
         accessorKey: 'name',
         header: 'Platform Name'
     },
     {
-        id: 'preferredLocationId',
         accessorKey: 'preferredLocationId',
         header: 'Preferred Location'
     }
@@ -41,12 +33,12 @@ const columns = [
 
 const actions = [
     {
-        label: 'Add Platform',
-        to: '/platforms/new',
+        label: 'Add',
+        to: `/${modelLabel}/new`,
     }
 ]
 
 useHead({
-    title: 'Platforms - Ministage'
+    title: `${listTitle} - Ministage`
 })
 </script>
