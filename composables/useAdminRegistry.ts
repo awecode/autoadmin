@@ -14,6 +14,11 @@ interface ListOptions<T extends Table = Table> {
     columns?: TableColumn<T>[]
 }
 
+interface CreateOptions {
+    enabled: boolean
+    endpoint?: string
+}
+
 interface UpdateOptions {
     enabled: boolean
     showDeleteButton: boolean
@@ -28,6 +33,7 @@ export interface AdminModelOptions<T extends Table = Table> {
     label?: string
     searchFields?: ColKey<T>[]
     list?: Partial<ListOptions<T>>
+    create?: Partial<CreateOptions>
     update?: Partial<UpdateOptions>
     delete?: Partial<DeleteOptions>
 }

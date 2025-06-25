@@ -32,6 +32,6 @@ const actions = [
 ]
 
 useHead({
-    title: `${listTitle} - Ministage`
+    title: `${listTitle}`
 })
 </script>
