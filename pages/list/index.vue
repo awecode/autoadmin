@@ -7,6 +7,8 @@
 </template>
 
 <script setup lang="ts">
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useNuxtApp().$adminRegistry.get(modelLabel)
 
@@ -17,8 +19,8 @@ if (!cfg) {
     })
 }
 
-const listEndpoint = cfg.list?.endpoint ?? `/api/${modelLabel}`
-const deleteEndpoint = cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `/api/${modelLabel}`) : undefined
+const listEndpoint = cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`
+const deleteEndpoint = cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
 const columns = [

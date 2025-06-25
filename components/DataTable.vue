@@ -88,11 +88,16 @@ const query = computed(() => ({
   ...((props.filters ? filterQuery.value : {}) as Record<string, string>),
 }))
 
-const { data, status, refresh } = useFetch<Data<T>>(() => props.endpoint, {
+const { data, status, error, refresh } = useFetch<Data<T>>(() => props.endpoint, {
   query,
   lazy: true,
   watch: false,
 })
+
+// Keep error for display in template instead of throwing
+if (error.value) {
+  console.error(error.value)
+}
 
 defineExpose({ data, status, refresh, sort, page, pageSize, filterQuery, search, reset })
 
@@ -170,7 +175,9 @@ async function handleDelete(id: string) {
     </slot>
     <div class="flex-grow overflow-hidden">
       <slot name="table" :rows="data?.results">
-        <UTable v-model:sort="sort" class="h-full overflow-auto" sort-mode="manual" :columns="columns"
+        <UAlert v-if="error" color="error" variant="subtle" :title="error.statusMessage || 'An error occurred'"
+          :description="error.message || 'Failed to fetch data'" icon="i-heroicons-exclamation-triangle" />
+        <UTable v-else v-model:sort="sort" class="h-full overflow-auto" sort-mode="manual" :columns="columns"
           :data="data?.results" :loading="status === 'pending'" :ui="{
             thead: 'sticky top-0 z-10',
           }">

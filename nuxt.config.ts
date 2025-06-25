@@ -11,6 +11,12 @@ export default defineNuxtConfig({
       rootDir: fileURLToPath(new URL('..', import.meta.url))
     }
   },
+  runtimeConfig: {
+    adminUrlPrefix,
+    public: {
+      apiPrefix: '/api/autoadmin',
+    },
+  },
   $meta: {
     name: 'autoadmin',
   },
