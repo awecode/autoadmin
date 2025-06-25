@@ -1,5 +1,16 @@
+import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
+
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
     // TODO: Implement actual database calls
+    const registry = useAdminRegistry()
+    console.log("A", registry.all(), "B")
+    const model = registry.get(modelLabel)
+    if (!model) {
+        throw createError({
+            statusCode: 404,
+            statusMessage: `Model ${modelLabel} not registered.`,
+        })
+    }
     return {
         results: [
             { id: 1, name: `Sample ${modelLabel} 1` },
@@ -14,6 +25,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     }
 }
 
+// TODO: Implement actual database calls
 export async function createRecord(modelLabel: string, data: any): Promise<any> {
     return {
         id: Date.now(),
