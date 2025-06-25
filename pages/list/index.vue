@@ -10,7 +10,7 @@
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
-const cfg = useNuxtApp().$adminRegistry.get(modelLabel)
+const cfg = useAdminRegistry().get(modelLabel)
 
 if (!cfg) {
     throw createError({

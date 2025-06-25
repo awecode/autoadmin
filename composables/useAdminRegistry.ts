@@ -43,6 +43,7 @@ export interface AdminModelConfig<T extends Table = Table>
 }
 
 // Global registry - maintains state across the application
+// TODO May be use memory storage instead of globalThis
 function getRegistry(): Map<string, AdminModelConfig> {
     // @ts-expect-error: attach to global for persistence
     if (!globalThis.__admin_registry__) {
