@@ -1,22 +1,24 @@
-import { parseAutoadminRoute, getHttpMethodForRoute } from '#layers/autoadmin/server/utils/router'
+import { parseAutoadminRoute } from '#layers/autoadmin/server/utils/router'
 import { listRecords, createRecord, getRecordDetail, updateRecord, deleteRecord } from '#layers/autoadmin/server/services/autoadmin'
 
 export default defineEventHandler(async (event) => {
     try {
         const url = getRequestURL(event)
-        const method = getMethod(event)
+        const method = event.method
+
+        // URL Structure:
+        // <apiPrefix>/<autoadmin-route>
+
+        // Autoadmin Route Structure:
+        // GET <model-label>: List
+        // POST <model-label> <body>: Create
+        // GET <model-label>/<lookup-field-value>: Detail
+        // POST/PATCH/PUT <model-label>/<lookup-field-value> <body>: Update
+        // DELETE <model-label>/<lookup-field-value>: Delete
 
         const pathSegments = url.pathname.split('/api/autoadmin/')[1] || ''
 
-        const parsedRoute = parseAutoadminRoute(pathSegments)
-
-        const allowedMethods = getHttpMethodForRoute(parsedRoute.routeType)
-        if (!allowedMethods.includes(method)) {
-            throw createError({
-                statusCode: 405,
-                statusMessage: `Method ${method} not allowed for ${parsedRoute.routeType} operation`,
-            })
-        }
+        const parsedRoute = parseAutoadminRoute(pathSegments, method)
 
         const query = getQuery(event)
         const body = method !== 'GET' ? await readBody(event) : undefined
