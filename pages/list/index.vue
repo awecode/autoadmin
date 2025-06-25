@@ -22,17 +22,7 @@ if (!cfg) {
 const listEndpoint = cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`
 const deleteEndpoint = cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
-
-const columns = [
-    {
-        accessorKey: 'name',
-        header: 'Platform Name'
-    },
-    {
-        accessorKey: 'preferredLocationId',
-        header: 'Preferred Location'
-    }
-]
+const columns = cfg.list?.columns ?? undefined
 
 const actions = [
     {

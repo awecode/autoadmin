@@ -1,6 +1,7 @@
 import type { Table } from 'drizzle-orm'
 import { getTableName } from "drizzle-orm"
 import { defu } from 'defu'
+import type { TableColumn } from '#ui/types'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
@@ -10,6 +11,7 @@ interface ListOptions<T extends Table = Table> {
     fields: ColKey<T>[]
     title?: string
     endpoint?: string
+    columns?: TableColumn<T>[]
 }
 
 interface UpdateOptions {

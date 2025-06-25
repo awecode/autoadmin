@@ -7,7 +7,7 @@ interface DataTableProps {
   endpoint: string
   deleteEndpoint?: string
   title?: string
-  columns?: Array<TableColumn>
+  columns?: Array<TableColumn<T>>
   actions?: Array<Omit<Button, 'size'> & { onClick?: () => void }>
   filters?: boolean
   defaultActions?: Array<'edit' | 'delete'>
@@ -36,7 +36,21 @@ const props = withDefaults(defineProps<DataTableProps>(), {
 const route = useRoute()
 const router = useRouter()
 
-const columns = computed(() => [...props.columns, { id: 'actions' }])
+const columns = computed(() => {
+  let tableColumns = props.columns
+
+  // Auto-generate columns from first result if no columns provided
+  if ((!tableColumns || tableColumns.length === 0) && data.value?.results && data.value.results.length > 0) {
+    const firstResult = data.value.results[0]
+    tableColumns = Object.keys(firstResult).map(key => ({
+      id: key,
+      accessorKey: key,
+      header: toTitleCase(key),
+    }))
+  }
+
+  return [...(tableColumns || []), { id: 'actions' }]
+})
 
 const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc' | 'desc' } | undefined>('sort', '', {
   route,
