@@ -16,7 +16,9 @@ export default defineEventHandler(async (event) => {
         // POST/PATCH/PUT <model-label>/<lookup-field-value> <body>: Update
         // DELETE <model-label>/<lookup-field-value>: Delete
 
-        const pathSegments = url.pathname.split('/api/autoadmin/')[1] || ''
+        const config = useRuntimeConfig()
+        const apiPrefix = (config.public.apiPrefix || '/api/autoadmin') as string
+        const pathSegments = url.pathname.split(apiPrefix)[1] || ''
 
         const parsedRoute = parseAutoadminRoute(pathSegments, method)
 
