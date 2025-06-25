@@ -43,34 +43,44 @@ export interface AdminModelConfig<T extends Table = Table>
 }
 
 // Global registry - maintains state across the application
-const registry = new Map<string, AdminModelConfig>()
+function getRegistry(): Map<string, AdminModelConfig> {
+    // @ts-expect-error: attach to global for persistence
+    if (!globalThis.__admin_registry__) {
+        // @ts-expect-error: attach to global for persistence
+        globalThis.__admin_registry__ = new Map<string, AdminModelConfig>()
+    }
 
-function registerAdminModel<T extends Table>(
-    model: T,
-    opts: AdminModelOptions<T> = {},
-): void {
-    const key = (opts.label ?? getTableName(model)) as string
-
-    const cfg: AdminModelConfig<T> = defu(
-        opts,
-        defaultOptions,
-        { model, label: key },
-    )
-
-    registry.set(key, cfg as unknown as AdminModelConfig<Table>)
-}
-
-function getAdminConfig<T extends Table = Table>(
-    label: string,
-): AdminModelConfig<T> | undefined {
-    return registry.get(label) as AdminModelConfig<T> | undefined
+    // @ts-expect-error: attach to global for persistence
+    return globalThis.__admin_registry__
 }
 
 export function useAdminRegistry() {
+    const registry = getRegistry()
+
+    function registerAdminModel<T extends Table>(
+        model: T,
+        opts: AdminModelOptions<T> = {},
+    ): void {
+        const key = (opts.label ?? getTableName(model)) as string
+
+        const cfg: AdminModelConfig<T> = defu(
+            opts,
+            defaultOptions,
+            { model, label: key },
+        )
+
+        registry.set(key, cfg as unknown as AdminModelConfig<Table>)
+    }
+
+    function getAdminConfig<T extends Table = Table>(
+        label: string,
+    ): AdminModelConfig<T> | undefined {
+        return registry.get(label) as AdminModelConfig<T> | undefined
+    }
+
     return {
-        all: () =>
-            Array.from(registry.values()) as AdminModelConfig<Table>[],
+        all: () => Array.from(registry.values()) as AdminModelConfig<Table>[],
         get: getAdminConfig,
         register: registerAdminModel,
     }
-} 
+}
