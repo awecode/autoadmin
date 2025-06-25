@@ -1,5 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
+const adminUrlPrefix = process.env.ADMIN_URL_PREFIX || '/admin'
+
 export default defineNuxtConfig({
   extends: ['..'],
   modules: ['@nuxt/eslint'],
@@ -19,7 +21,7 @@ export default defineNuxtConfig({
     'pages:extend': function (pages) {
       pages.push({
         name: 'list',
-        path: '/:modelLabel(.+)/',
+        path: `${adminUrlPrefix}/:modelLabel(.+)/`,
         file: '#layers/automadmin/pages/list/index.vue',
       })
     }

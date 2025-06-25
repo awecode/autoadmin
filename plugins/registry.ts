@@ -7,6 +7,7 @@ import { defu } from 'defu'
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
 interface ListOptions<T extends Table = Table> {
+  enabled: boolean
   showCreateButton: boolean
   fields: ColKey<T>[]
   title?: string
@@ -14,6 +15,7 @@ interface ListOptions<T extends Table = Table> {
 }
 
 interface UpdateOptions {
+  enabled: boolean
   showDeleteButton: boolean
 }
 
@@ -31,8 +33,9 @@ export interface AdminModelOptions<T extends Table = Table> {
 }
 
 const defaultOptions = {
-  list: { showCreateButton: true },
-  update: { showDeleteButton: true },
+  list: { enabled: true, showCreateButton: true },
+  update: { enabled: true, showDeleteButton: true },
+  delete: { enabled: true },
 } as const satisfies AdminModelOptions<Table>
 
 export interface AdminModelConfig<T extends Table = Table>

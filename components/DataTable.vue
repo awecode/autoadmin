@@ -178,8 +178,8 @@ async function handleDelete(id: string) {
             <div class="flex items-center gap-2">
               <slot name="actions-cell-prepend" v-bind="scope ?? {}" />
               <slot name="actions-cell" v-bind="scope ?? {}">
-                <UButton v-if="props.defaultActions?.includes('delete')" color="error" icon="i-heroicons-trash"
-                  variant="ghost" @click="handleDelete(scope.row.original.id)">
+                <UButton v-if="props.defaultActions?.includes('delete') && deleteEndpoint" color="error"
+                  icon="i-heroicons-trash" variant="ghost" @click="handleDelete(scope.row.original.id)">
                   Delete
                 </UButton>
               </slot>

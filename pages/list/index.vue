@@ -10,15 +10,16 @@
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useNuxtApp().$adminRegistry.get(modelLabel)
 
-const listEndpoint = cfg?.list?.endpoint ?? `/api/${modelLabel}`
-const deleteEndpoint = cfg?.delete?.endpoint ?? `/api/${modelLabel}`
-const listTitle = cfg?.list?.title ?? useTitleCase(cfg?.label ?? modelLabel)
 if (!cfg) {
     throw createError({
         statusCode: 404,
         statusMessage: `Model ${modelLabel} not registered.`
     })
 }
+
+const listEndpoint = cfg.list?.endpoint ?? `/api/${modelLabel}`
+const deleteEndpoint = cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `/api/${modelLabel}`) : undefined
+const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
 const columns = [
     {
