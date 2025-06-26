@@ -1,7 +1,7 @@
 import type { ZodObject, ZodTypeAny } from 'zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select' | 'json'
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select' | 'json' | 'file'
 
 interface FieldSpec {
   name: string
@@ -127,6 +127,11 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       case 'ZodDate':
       case 'date':
         type = 'date'
+        break
+      case 'ZodCustom':
+      case 'custom':
+        // Drizzle-zod uses a custom type for blobs, which we'll map to 'file'.
+        type = 'file'
         break
       case 'ZodRecord':
       case 'record':
