@@ -114,7 +114,7 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       case 'ZodEnum':
       case 'enum':
         type = 'select'
-        enumValues = definition.values
+        enumValues = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
         break
       case 'ZodDate':
       case 'date':
