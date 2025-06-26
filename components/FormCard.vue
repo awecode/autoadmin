@@ -63,16 +63,14 @@ async function handleSubmit(event: Event) {
       navigateTo(props.redirectTo)
     }
     emit('submit', data.value)
-  }
-  catch (err: any) {
+  } catch (err: any) {
     let msg = 'Operation failed'
     let title = 'Error'
     if (err.data?.data?.issues) {
       const validationError = fromError(new z.ZodError(err.data.data.issues))
       msg = validationError.toString().replace('Validation error: ', '')
       title = 'Validation Error'
-    }
-    else if (err.data?.message || err.message) {
+    } else if (err.data?.message || err.message) {
       msg = err.data?.message || err.message
       title = err.data?.statusMessage || 'Error'
     }
@@ -81,8 +79,7 @@ async function handleSubmit(event: Event) {
       description: msg,
       color: 'error',
     })
-  }
-  finally {
+  } finally {
     formLoading.value = false
   }
 }
@@ -130,9 +127,9 @@ function handleCancel() {
 
       <UForm
         v-else
+        class="space-y-6 px-4"
         :schema="schema"
         :state="data"
-        class="space-y-6 px-4"
         @submit.prevent="handleSubmit"
       >
         <div class="flex flex-col gap-4">

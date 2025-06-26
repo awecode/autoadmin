@@ -8,8 +8,8 @@ export default defineNuxtConfig({
   eslint: {
     config: {
       // Use the generated ESLint config for lint root project as well
-      rootDir: fileURLToPath(new URL('..', import.meta.url))
-    }
+      rootDir: fileURLToPath(new URL('..', import.meta.url)),
+    },
   },
   runtimeConfig: {
     adminUrlPrefix,
@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     name: 'autoadmin',
   },
   alias: {
-    '#layers/automadmin': fileURLToPath(new URL('.', import.meta.url))
+    '#layers/automadmin': fileURLToPath(new URL('.', import.meta.url)),
   },
   hooks: {
     'pages:extend': function (pages) {
@@ -35,6 +35,6 @@ export default defineNuxtConfig({
         path: `${adminUrlPrefix}/:modelLabel/create`,
         file: '#layers/automadmin/pages/create/index.vue',
       })
-    }
-  }
+    },
+  },
 })

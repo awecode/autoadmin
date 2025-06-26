@@ -5,27 +5,24 @@ import { drizzle } from 'drizzle-orm/libsql'
 let _db: DrizzleD1Database
 
 export function useDb() {
-
-    if (!_db) {
-        const dbBinding = useEvent().context.cloudflare?.env?.DB
-        if (dbBinding) {
-            _db = drizzleD1(dbBinding, {
-                casing: 'snake_case',
-                // logger: true,
-            })
-        }
-        else {
-            const config = useRuntimeConfig()
-            if (config.databaseUrl) {
-                _db = drizzle(config.databaseUrl as string, {
-                    casing: 'snake_case',
-                    logger: true,
-                })
-            }
-            else {
-                throw new Error('No database binding or configuration found.')
-            }
-        }
+  if (!_db) {
+    const dbBinding = useEvent().context.cloudflare?.env?.DB
+    if (dbBinding) {
+      _db = drizzleD1(dbBinding, {
+        casing: 'snake_case',
+        // logger: true,
+      })
+    } else {
+      const config = useRuntimeConfig()
+      if (config.databaseUrl) {
+        _db = drizzle(config.databaseUrl as string, {
+          casing: 'snake_case',
+          logger: true,
+        })
+      } else {
+        throw new Error('No database binding or configuration found.')
+      }
     }
-    return _db
+  }
+  return _db
 }

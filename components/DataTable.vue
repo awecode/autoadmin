@@ -57,8 +57,9 @@ const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc
   router,
   transform: {
     get(value) {
-      if (!value)
+      if (!value) {
         return undefined
+      }
 
       const [column, direction] = value.split(':')
       return {
@@ -67,8 +68,9 @@ const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc
       }
     },
     set(value) {
-      if (!value?.column)
+      if (!value?.column) {
         return undefined
+      }
       return `${value.column}:${value.direction}`
     },
   },
@@ -83,8 +85,9 @@ const filterQuery = useRouteQuery('filters', '', {
   router,
   transform: {
     get(value: string) {
-      if (!value)
+      if (!value) {
         return {}
+      }
 
       return Object.fromEntries(value.split(';').map(item => item.split(':'))) as Record<string, string>
     },
@@ -149,15 +152,13 @@ async function handleDelete(id: string) {
         description: 'Deleted successfully',
         color: 'success',
       })
-    }
-    catch (err: any) {
+    } catch (err: any) {
       useToast().add({
         title: 'Error',
         description: err.message || 'Failed to delete',
         color: 'error',
       })
-    }
-    finally {
+    } finally {
       deleteModal.close()
     }
   }
@@ -179,36 +180,60 @@ async function handleDelete(id: string) {
         </slot>
         <slot name="actions">
           <div class="flex items-center gap-2">
-            <slot name="actions-prepend" />
-            <slot name="filters" :query="filterQuery" :schema="data?.filter_schema" />
-            <UButton v-for="action in actions" :key="action.label" v-bind="action" size="xs" />
-            <slot name="actions-append" />
+            <slot name="actions-prepend"></slot>
+            <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot>
+            <UButton
+              v-for="action in actions"
+              :key="action.label"
+              v-bind="action"
+              size="xs"
+            />
+            <slot name="actions-append"></slot>
           </div>
         </slot>
       </div>
     </slot>
     <div class="flex-grow overflow-hidden">
       <slot name="table" :rows="data?.results">
-        <UAlert v-if="error" color="error" variant="subtle" :title="error.statusMessage || 'An error occurred'"
-          :description="error.message || 'Failed to fetch data'" icon="i-heroicons-exclamation-triangle" />
-        <UTable v-else v-model:sort="sort" class="h-full overflow-auto" sort-mode="manual" :columns="columns"
-          :data="data?.results" :loading="status === 'pending'" :ui="{
+        <UAlert
+          v-if="error"
+          color="error"
+          icon="i-heroicons-exclamation-triangle"
+          variant="subtle"
+          :description="error.message || 'Failed to fetch data'"
+          :title="error.statusMessage || 'An error occurred'"
+        />
+        <UTable
+          v-else
+          v-model:sort="sort"
+          class="h-full overflow-auto"
+          sort-mode="manual"
+          :columns="columns"
+          :data="data?.results"
+          :loading="status === 'pending'"
+          :ui="{
             thead: 'sticky top-0 z-10',
-          }">
+          }"
+        >
           <template #actions-cell="scope">
             <div class="flex items-center gap-2">
-              <slot name="actions-cell-prepend" v-bind="scope ?? {}" />
+              <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
               <slot name="actions-cell" v-bind="scope ?? {}">
-                <UButton v-if="props.defaultActions?.includes('delete') && deleteEndpoint" color="error"
-                  icon="i-heroicons-trash" variant="ghost" @click="handleDelete(scope.row.original.id)">
+                <UButton
+                  v-if="props.defaultActions?.includes('delete') && deleteEndpoint"
+                  color="error"
+                  icon="i-heroicons-trash"
+                  variant="ghost"
+                  @click="handleDelete(scope.row.original.id)"
+                >
                   Delete
                 </UButton>
               </slot>
-              <slot name="actions-cell-append" v-bind="scope ?? {}" />
+              <slot name="actions-cell-append" v-bind="scope ?? {}"></slot>
             </div>
           </template>
           <template v-for="(_, name) in $slots" #[name]="scope">
-            <slot :name="name" v-bind="scope ?? {}" />
+            <slot :name="name" v-bind="scope ?? {}"></slot>
           </template>
         </UTable>
       </slot>
@@ -218,12 +243,17 @@ async function handleDelete(id: string) {
         <div>
           <span class="text-sm text-gray-500">
             {{ `Showing ${data?.pagination?.size! * (data?.pagination.page! - 1) + 1} to
-            ${Math.min(data?.pagination.size! *
-              data?.pagination.page!, data?.pagination.count!)} of ${data?.pagination.count} entries` }}
+            ${Math.min(data?.pagination.size!
+            * data?.pagination.page!, data?.pagination.count!)} of ${data?.pagination.count} entries` }}
           </span>
         </div>
-        <UPagination v-if="data?.pagination.pages! > 1" v-model="page" size="xs" :page-count="data?.pagination.size!"
-          :total="data?.pagination.count!" />
+        <UPagination
+          v-if="data?.pagination.pages! > 1"
+          v-model="page"
+          size="xs"
+          :page-count="data?.pagination.size!"
+          :total="data?.pagination.count!"
+        />
       </div>
     </slot>
   </div>
