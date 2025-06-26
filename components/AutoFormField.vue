@@ -12,6 +12,11 @@ defineProps<{
     <USelect v-model="state[field.name]" class="w-full" :items="field.enumValues" />
   </UFormField>
   <UFormField v-else :label="field.label" :name="field.name">
-    <UInput v-model="state[field.name]" :type="field.type" />
+    <UInput
+      v-model="state[field.name]"
+      :max="field.rules?.max"
+      :min="field.rules?.min"
+      :type="field.type"
+    />
   </UFormField>
 </template>

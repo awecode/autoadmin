@@ -106,6 +106,12 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
             Object.assign(rules, mapZodCheckToRules(check))
           }
         }
+        if ((innerType as any).minValue != null) {
+          rules.min = (innerType as any).minValue
+        }
+        if ((innerType as any).maxValue != null) {
+          rules.max = (innerType as any).maxValue
+        }
         break
       case 'ZodBoolean':
       case 'boolean':
