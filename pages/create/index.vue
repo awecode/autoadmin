@@ -1,18 +1,23 @@
 <script setup lang="ts">
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
-
 if (!cfg) {
     throw createError({
         statusCode: 404,
         statusMessage: `Model ${modelLabel} not registered.`
     })
 }
+const model = cfg.model
+const insertSchema = createInsertSchema(model)
+
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
 const router = useRouter()
+const formSpec = zodToFormSpec(insertSchema)
 
 const form = ref<{ [key: string]: any }>({})
 
@@ -27,7 +32,7 @@ const createEndpoint = cfg.create?.endpoint ?? `${apiPrefix}/${modelLabel}`
 const performCreate = async () => {
     loading.value = true
     try {
-        const response = await $fetch(createEndpoint, {
+        const response = await $fetch<{ success: boolean }>(createEndpoint, {
             method: 'POST',
             body: form.value
         })
@@ -48,6 +53,9 @@ useHead({
 </script>
 
 <template>
+    {{ insertSchema }}
+    <div>=============================</div>
+    {{ formSpec }}
     <div class="container mx-auto px-4 py-8">
         <div class="max-w-2xl mx-auto">
             <div class="flex items-center mb-6">
@@ -95,9 +103,9 @@ useHead({
                 <div class="flex items-center justify-between">
                     <button type="submit" :disabled="loading"
                         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50">
-                        {{ loading ? 'Creating...' : 'Create Platform' }}
+                        {{ loading ? 'Creating...' : 'Create' }}
                     </button>
-                    <NuxtLink to="/platforms"
+                    <NuxtLink :to="{ name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }"
                         class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
                         Cancel
                     </NuxtLink>
