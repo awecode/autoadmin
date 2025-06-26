@@ -17,6 +17,7 @@ const insertSchema = createInsertSchema(model)
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
 const router = useRouter()
+console.log(insertSchema)
 const formSpec = zodToFormSpec(insertSchema)
 
 const form = ref<{ [key: string]: any }>({})
@@ -53,7 +54,7 @@ useHead({
 </script>
 
 <template>
-  {{ insertSchema }}
+  <!-- {{ insertSchema }} -->
   <div>=============================</div>
   {{ formSpec }}
   <div class="container mx-auto px-4 py-8">

@@ -128,6 +128,10 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       case 'date':
         type = 'date'
         break
+      case 'ZodBigInt':
+      case 'bigint':
+        type = 'number' // HTML inputs do not have a 'bigint' type, so 'number' is the closest, separate from number because no min/max
+        break
       case 'ZodCustom':
       case 'custom':
         // Drizzle-zod uses a custom type for blobs, which we'll map to 'file'.
