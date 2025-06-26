@@ -11,6 +11,19 @@ defineProps<{
   <UFormField v-if="field.type === 'select'" :label="field.label" :name="field.name">
     <USelect v-model="state[field.name]" class="w-full" :items="field.enumValues" />
   </UFormField>
+  <UFormField
+    v-else-if="field.type === 'json'"
+    :label="field.label"
+    :name="field.name"
+  >
+    <UTextarea
+      v-model="state[field.name]"
+      class="w-full font-mono"
+      placeholder="{}"
+      spellcheck="false"
+      :rows="6"
+    />
+  </UFormField>
   <UFormField v-else :label="field.label" :name="field.name">
     <UInput
       v-model="state[field.name]"

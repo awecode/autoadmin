@@ -1,7 +1,7 @@
 import type { ZodObject, ZodTypeAny } from 'zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select'
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select' | 'json'
 
 interface FieldSpec {
   name: string
@@ -106,6 +106,8 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
             Object.assign(rules, mapZodCheckToRules(check))
           }
         }
+        // Check for top-level minValue and maxValue on the innerType object itself,
+        // which is where they appear in the provided schema structure.
         if ((innerType as any).minValue != null) {
           rules.min = (innerType as any).minValue
         }
@@ -125,6 +127,21 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       case 'ZodDate':
       case 'date':
         type = 'date'
+        break
+      case 'ZodRecord':
+      case 'record':
+        type = 'json'
+        break
+      case 'ZodUnion':
+      case 'union':
+        // If a union contains a record type, it's likely a JSON field from drizzle-zod.
+        if (definition.options?.some((opt: any) => {
+          const optDef = getDef(opt)
+          const optTypeKey = optDef?.typeName ?? optDef?.type
+          return optTypeKey === 'ZodRecord' || optTypeKey === 'record'
+        })) {
+          type = 'json'
+        }
         break
     }
 
