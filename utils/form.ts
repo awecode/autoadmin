@@ -1,116 +1,137 @@
-import {
-    type ZodTypeAny,
-    ZodObject,
-    ZodOptional,
-    ZodDefault,
-    ZodEffects,
-    ZodString,
-    ZodNumber,
-    ZodBoolean,
-    ZodDate,
-    ZodEnum,
-    ZodNativeEnum,
-} from 'zod'
+import type { ZodObject, ZodTypeAny } from 'zod'
 
 type Rules = Record<string, unknown>
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select'
 
 interface FieldSpec {
-    name: string
-    label: string
-    type: string
-    required: boolean
-    rules: Rules
-    enumValues?: string[]
-    defaultValue?: unknown
+  name: string
+  label: string
+  type: FieldType
+  required: boolean
+  rules: Rules
+  enumValues?: string[]
+  defaultValue?: unknown
+}
+export interface FormSpec {
+  fields: FieldSpec[]
 }
 
-interface FormSpec {
-    fields: FieldSpec[]
+function getDef(zodType: any): any {
+  return zodType?._def ?? zodType?.def
 }
 
-function startCase(s: string) {
-    return s
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/[_\-]+/g, ' ')
-        .replace(/\b\w/g, (m) => m.toUpperCase())
+function mapZodCheckToRules(check: any): Record<string, unknown> {
+  switch (check.kind) {
+    case 'min':
+      return { minLength: check.value }
+    case 'max':
+      return { maxLength: check.value }
+    case 'email':
+      return { isEmail: true }
+    case 'url':
+      return { isUrl: true }
+      // Add more mappings for other Zod checks as needed
+    default:
+      return {}
+  }
 }
 
-function unwrap(t: ZodTypeAny): ZodTypeAny {
-    let cur = t
-    while (true) {
-        if (cur instanceof ZodOptional || cur instanceof ZodDefault) {
-            cur = cur._def.innerType
-            continue
-        }
-        if (cur instanceof ZodEffects) {
-            cur = cur._def.schema
-            continue
-        }
-        break
+function unwrapZodType(zodType: ZodTypeAny): {
+  innerType: any // Using `any` because we can't be sure of the final type's class
+  isOptional: boolean
+  defaultValue?: unknown
+} {
+  let currentType: any = zodType
+  let isOptional = false
+  let defaultValue: unknown
+
+  while (true) {
+    const def = getDef(currentType)
+    if (!def) break
+
+    const typeKey = def.typeName ?? def.type
+
+    if (typeKey === 'ZodOptional' || typeKey === 'optional' || typeKey === 'ZodNullable' || typeKey === 'nullable') {
+      isOptional = true
+      currentType = def.innerType
+    } else if (typeKey === 'ZodDefault' || typeKey === 'default') {
+      isOptional = true
+      if (def.defaultValue) {
+        defaultValue = typeof def.defaultValue === 'function'
+          ? def.defaultValue()
+          : def.defaultValue
+      }
+      currentType = def.innerType
+    } else {
+      break
     }
-    return cur
+  }
+
+  return { innerType: currentType, isOptional, defaultValue }
 }
 
 export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
-    const shape = schema.shape as Record<string, ZodTypeAny>
-    const fields: FieldSpec[] = []
+  const shape = getDef(schema)?.shape ?? schema.shape
+  if (!shape) {
+    // Fallback for safety, though a ZodObject should always have a shape.
+    return { fields: [] }
+  }
 
-    for (const [name, zodType] of Object.entries(shape)) {
-        const required = !zodType.isOptional()
-        const base = unwrap(zodType)
+  const fields: FieldSpec[] = Object.entries(shape).map(([name, zodType]) => {
+    const { innerType, isOptional, defaultValue } = unwrapZodType(zodType as ZodTypeAny)
 
-        let type = 'text'
-        const rules: Rules = {}
-        let enumValues: string[] | undefined
-        let defaultValue: unknown
+    const definition = getDef(innerType)
+    const definitionTypeKey = definition?.typeName ?? definition?.type
 
-        if ('_def' in zodType && (zodType as any)._def.defaultValue !== undefined) {
-            defaultValue = (zodType as any)._def.defaultValue()
+    let type: FieldType = 'text'
+    const rules: Rules = {}
+    let enumValues: string[] | undefined
+
+    switch (definitionTypeKey) {
+      case 'ZodString':
+      case 'string':
+        type = 'text'
+        if (definition.checks) {
+          for (const check of definition.checks) {
+            if (check.kind === 'email') type = 'email'
+            Object.assign(rules, mapZodCheckToRules(check))
+          }
         }
-
-        if (base instanceof ZodEnum) {
-            type = 'select'
-            enumValues = [...base.options]
-        } else if (base instanceof ZodNativeEnum) {
-            type = 'select'
-            enumValues = Object.values(base.enum).filter(
-                (v): v is string => typeof v === 'string',
-            )
-        } else if (base instanceof ZodString) {
-            const checks = base._def.checks ?? []
-            if (checks.some((c) => c.kind === 'email')) {
-                type = 'email'
-                rules.email = true
-            }
-            checks.forEach((c) => {
-                if (c.kind === 'min') rules.min = c.value
-                if (c.kind === 'max') rules.max = c.value
-                if (c.kind === 'regex') rules.regex = c.regex
-            })
-        } else if (base instanceof ZodNumber) {
-            type = 'number'
-            const checks = base._def.checks ?? []
-            checks.forEach((c) => {
-                if (c.kind === 'int') rules.int = true
-                if (c.kind === 'min') rules.min = c.value
-                if (c.kind === 'max') rules.max = c.value
-            })
-        } else if (base instanceof ZodBoolean) {
-            type = 'checkbox'
-        } else if (base instanceof ZodDate) {
-            type = 'date'
+        break
+      case 'ZodNumber':
+      case 'number':
+        type = 'number'
+        if (definition.checks) {
+          for (const check of definition.checks) {
+            Object.assign(rules, mapZodCheckToRules(check))
+          }
         }
-
-        fields.push({
-            name,
-            label: startCase(name),
-            type,
-            required,
-            rules,
-            enumValues,
-            defaultValue,
-        })
+        break
+      case 'ZodBoolean':
+      case 'boolean':
+        type = 'checkbox'
+        break
+      case 'ZodEnum':
+      case 'enum':
+        type = 'select'
+        enumValues = definition.values
+        break
+      case 'ZodDate':
+      case 'date':
+        type = 'date'
+        break
     }
 
-    return { fields }
+    return {
+      name,
+      label: name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+      type,
+      required: !isOptional,
+      rules,
+      enumValues,
+      defaultValue,
+    }
+  })
+
+  return { fields }
 }

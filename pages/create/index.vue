@@ -66,6 +66,8 @@ useHead({
                 <h1 class="text-3xl font-bold">Create New</h1>
             </div>
 
+            <AutoForm :spec="formSpec" />
+
             <form @submit.prevent="performCreate" class="bg-white shadow-md rounded px-8 pt-6 pb-8">
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
