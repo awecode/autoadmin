@@ -1,8 +1,8 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { count } from 'drizzle-orm'
+import { createInsertSchema } from 'drizzle-zod'
 
-export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
-  // TODO: Implement actual database calls
+function getModel(modelLabel: string) {
   const registry = useAdminRegistry()
   const modelConfig = registry.get(modelLabel)
   if (!modelConfig) {
@@ -11,7 +11,11 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
-  const model = modelConfig.model
+  return modelConfig.model
+}
+
+export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
+  const model = getModel(modelLabel)
   const db = useDb()
 
   const baseQuery = db.select().from(model)
@@ -28,15 +32,23 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   }
 }
 
-// TODO: Implement actual database calls
 export async function createRecord(modelLabel: string, data: any): Promise<any> {
+  const model = getModel(modelLabel)
+  const db = useDb()
+
+  const insertSchema = createInsertSchema(model)
+  const validatedData = insertSchema.parse(data)
+
+  const result = await db.insert(model).values(validatedData).returning()
+
   return {
-    id: Date.now(),
-    ...data,
-    created_at: new Date().toISOString(),
+    success: true,
+    message: `${modelLabel} created successfully`,
+    data: result,
   }
 }
 
+// TODO: Implement actual database calls
 export async function getRecordDetail(modelLabel: string, lookupValue: string): Promise<any> {
   return {
     id: lookupValue,

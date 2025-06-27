@@ -11,9 +11,11 @@ if (!cfg) {
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 
-const { data: formSpec } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
+const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
   key: `formspec-${modelLabel}`,
 })
+const formSpec = data.value?.spec as FormSpec
+const schema = cfg.create.schema
 
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
@@ -43,6 +45,7 @@ useHead({
         v-if="formSpec"
         :create-endpoint="createEndpoint"
         :redirect-path="listPath"
+        :schema="schema"
         :spec="formSpec"
       />
     </div>

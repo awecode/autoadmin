@@ -1,13 +1,25 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
+
 import type { FormSpec } from '~/utils/form'
+import * as z from 'zod'
 
 const props = defineProps<{
   spec: FormSpec
   cancelPath?: RouteLocationRaw
   redirectPath?: RouteLocationRaw
   createEndpoint: string
+  schema: Record<string, any>
 }>()
+
+const schema1 = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Must be at least 8 characters'),
+})
+
+const formSchema = z.object(props.schema)
+
+console.log(formSchema, schema1)
 
 const loading = ref(false)
 
@@ -44,7 +56,12 @@ const performCreate = async () => {
 
 <template>
   <div>
-    <UForm class="space-y-4" :state="state" @submit="performCreate">
+    <UForm
+      class="space-y-4"
+      :schema="schema"
+      :state="state"
+      @submit="performCreate"
+    >
       <div v-for="field in spec.fields" :key="field.name">
         <AutoFormField :field="field" :state="state" />
       </div>

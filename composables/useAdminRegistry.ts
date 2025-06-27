@@ -1,7 +1,9 @@
 import type { TableColumn } from '#ui/types'
 import type { Table } from 'drizzle-orm'
+import type * as z from 'zod'
 import { defu } from 'defu'
 import { getTableName } from 'drizzle-orm'
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
@@ -15,13 +17,15 @@ interface ListOptions<T extends Table = Table> {
 }
 
 interface CreateOptions {
-  enabled: boolean
+  enabled?: boolean
   endpoint?: string
+  schema?: z.ZodObject<any>
 }
 
 interface UpdateOptions {
   enabled: boolean
   showDeleteButton: boolean
+  schema?: z.ZodObject<any>
 }
 
 interface DeleteOptions {
@@ -38,16 +42,28 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
 }
 
-const defaultOptions = {
+export interface AdminModelConfig<T extends Table = Table> {
+  model: T
+  label: string
+  list?: ListOptions<T>
+  create: CreateOptions
+  update: UpdateOptions
+  delete: DeleteOptions
+}
+
+const staticDefaultOptions = {
   list: { enabled: true, showCreateButton: true },
   update: { enabled: true, showDeleteButton: true },
   delete: { enabled: true },
 } as const satisfies AdminModelOptions<Table>
 
-export interface AdminModelConfig<T extends Table = Table>
-  extends AdminModelOptions<T> {
-  model: T
-  label: string
+const generateDefaultOptions = (model: Table) => {
+  const insertSchema = createInsertSchema(model)
+  const updateSchema = createUpdateSchema(model)
+  return {
+    create: { schema: insertSchema },
+    update: { schema: updateSchema },
+  }
 }
 
 // Global registry - maintains state across the application
@@ -72,13 +88,14 @@ export function useAdminRegistry() {
   ): void {
     const key = (opts.label ?? getTableName(model)) as string
 
-    const cfg: AdminModelConfig<T> = defu(
+    const cfg = defu(
       opts,
-      defaultOptions,
+      staticDefaultOptions,
+      generateDefaultOptions(model),
       { model, label: key },
     )
 
-    registry.set(key, cfg as unknown as AdminModelConfig<Table>)
+    registry.set(key, cfg)
   }
 
   function getAdminConfig<T extends Table = Table>(
