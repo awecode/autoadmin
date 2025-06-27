@@ -1,49 +1,16 @@
 import type { Table } from 'drizzle-orm'
 import type { FormSpec } from './form'
+import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { useDb } from '~~/server/utils/db'
 
-/**
- * Represents a single column relation extracted from a Drizzle table
- */
-export interface ColumnRelation {
-  columnName: string
-  foreignColumn: any
-  foreignColumnName: string
-  foreignTable: any
-}
-
-/**
- * Gets relations from a Drizzle table by extracting foreign key information
- * @param table - The Drizzle table object
- * @returns Array of column relations
- */
-export function getTableRelations(table: Table): ColumnRelation[] {
-  const relations: ColumnRelation[] = []
-
-  if (!table) {
-    throw new Error('Table object is required')
-  }
-
-  // Get symbols from the table
-  const symbols = Object.getOwnPropertySymbols(table)
-
-  // Find the foreign keys symbol
-  const fkSymbol = symbols.find(
-    s => s.toString() === 'Symbol(drizzle:SQLiteInlineForeignKeys)',
-  )
-  if (!fkSymbol) {
-    // No foreign keys found
-    return relations
-  }
-
-  // Get foreign keys using the symbol
-  const foreignKeys = (table as any)[fkSymbol]
+export function getTableRelations(table: Table) {
+  const relations = []
+  const foreignKeys = getTableConfig(table).foreignKeys
 
   if (!foreignKeys || !Array.isArray(foreignKeys)) {
-    return relations
+    return []
   }
 
-  // Process each foreign key
   for (const fk of foreignKeys) {
     const reference = fk.reference()
     const columns = reference.columns
@@ -70,7 +37,7 @@ function getRowLabel(row: Record<string, any>) {
   return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
 }
 
-export const addRelationToFormSpec = async (formSpec: FormSpec, relations: ColumnRelation[]) => {
+export const addRelationToFormSpec = async (formSpec: FormSpec, relations: ReturnType<typeof getTableRelations>) => {
   relations.forEach(async (relation) => {
     // find field with name relation.columnName
     const field = formSpec.fields.find(field => field.name === relation.columnName)
