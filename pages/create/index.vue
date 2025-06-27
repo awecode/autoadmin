@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { createInsertSchema } from 'drizzle-zod'
-
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
 if (!cfg) {
@@ -9,13 +7,10 @@ if (!cfg) {
     statusMessage: `Model ${modelLabel} not registered.`,
   })
 }
-const model = cfg.model
-const insertSchema = createInsertSchema(model)
 
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 
-// Generate form spec with relations only once using useAsyncData
 const { data: formSpec } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
   key: `formspec-${modelLabel}`,
 })
@@ -30,9 +25,6 @@ useHead({
 </script>
 
 <template>
-  <!-- {{ insertSchema }}
-  <div>=============================</div>
-  {{ formSpec }} -->
   <div class="container mx-auto px-4 py-8">
     <div class="max-w-2xl mx-auto">
       <div class="flex items-center mb-6">
