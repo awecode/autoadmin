@@ -1,6 +1,5 @@
 import type { TableColumn } from '#ui/types'
-import type { Table } from 'drizzle-orm'
-import type * as z from 'zod'
+import type { InferInsertModel, Table } from 'drizzle-orm'
 import { defu } from 'defu'
 import { getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
@@ -16,16 +15,16 @@ interface ListOptions<T extends Table = Table> {
   columns?: TableColumn<T>[]
 }
 
-interface CreateOptions {
+interface CreateOptions<T extends Table = Table> {
   enabled?: boolean
   endpoint?: string
-  schema?: z.ZodObject<any>
+  schema?: InferInsertModel<T>
 }
 
-interface UpdateOptions {
+interface UpdateOptions<T extends Table = Table> {
   enabled: boolean
   showDeleteButton: boolean
-  schema?: z.ZodObject<any>
+  schema?: InferInsertModel<T>
 }
 
 interface DeleteOptions {
@@ -95,7 +94,7 @@ export function useAdminRegistry() {
       { model, label: key },
     )
 
-    registry.set(key, cfg)
+    registry.set(key, cfg as unknown as AdminModelConfig<Table>)
   }
 
   function getAdminConfig<T extends Table = Table>(
