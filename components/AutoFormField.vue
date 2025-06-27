@@ -8,7 +8,19 @@ defineProps<{
 </script>
 
 <template>
-  <UFormField v-if="field.type === 'select'" :label="field.label" :name="field.name">
+  <UFormField
+    v-if="field.type === 'relation'"
+    :label="field.label"
+    :name="field.name"
+  >
+    <USelect
+      v-model="state[field.name]"
+      class="w-full"
+      value-key="value"
+      :items="field.selectItems"
+    />
+  </UFormField>
+  <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name">
     <USelect v-model="state[field.name]" class="w-full" :items="field.enumValues" />
   </UFormField>
   <UFormField

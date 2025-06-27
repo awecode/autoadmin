@@ -1,6 +1,5 @@
 import type { Table } from 'drizzle-orm'
 import type { FormSpec } from './form'
-import process from 'node:process'
 import { useDb } from '~~/server/utils/db'
 
 /**
@@ -67,33 +66,30 @@ export function getTableRelations(table: Table): ColumnRelation[] {
   return relations
 }
 
+function getRowLabel(row: Record<string, any>) {
+  return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
+}
+
 export const addRelationToFormSpec = async (formSpec: FormSpec, relations: ColumnRelation[]) => {
   relations.forEach(async (relation) => {
     // find field with name relation.columnName
     const field = formSpec.fields.find(field => field.name === relation.columnName)
     if (field) {
-      field.type = 'select'
-      field.rules = {}
+      field.type = 'relation'
       //   strip id from field label
       field.label = field.label.replace('Id', '')
-      //   get all ids from relation.foreignTable
-      if (process.server) {
+      //   get all values from relation.foreignTable
+      if (import.meta.server) {
         const db = useDb()
         const rows = await db.select().from(relation.foreignTable)
-        field.enumValues = rows.map(row => row.id)
+        field.selectItems = rows.map(row => ({
+          label: getRowLabel(row),
+          value: row[relation.foreignColumnName],
+        }))
       } else {
-        field.enumValues = ['1', '2']
+        // TODO: get values from API
+        field.selectItems = [{ label: 'One', value: '1' }, { label: 'Two', value: '2' }]
       }
-    } else {
-      formSpec.fields.push({
-        name: relation.columnName,
-        label: relation.columnName,
-        type: 'select',
-        required: true,
-        rules: {},
-        enumValues: [],
-        defaultValue: null,
-      })
     }
   })
 }

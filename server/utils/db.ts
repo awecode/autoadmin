@@ -19,7 +19,7 @@ export function useDb() {
       if (config.databaseUrl) {
         _db = drizzle(config.databaseUrl as string, {
           casing: 'snake_case',
-          logger: true,
+          // logger: true,
         })
       } else {
         throw new Error('No database binding or configuration found.')

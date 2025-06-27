@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { createInsertSchema } from 'drizzle-zod'
 
-const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
 if (!cfg) {
@@ -16,40 +14,38 @@ const insertSchema = createInsertSchema(model)
 
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
-const router = useRouter()
-const formSpec = zodToFormSpec(insertSchema)
+// Generate form spec with relations only once using useAsyncData
+const { data: formSpec } = await useAsyncData(`formspec-${modelLabel}`, async () => {
+  const spec = zodToFormSpec(insertSchema as any)
+  const relations = getTableRelations(model)
+  await addRelationToFormSpec(spec, relations)
+  return spec
+})
 
-const relations = getTableRelations(model)
-await addRelationToFormSpec(formSpec, relations)
-console.log(formSpec)
+// const config = useRuntimeConfig()
+// const apiPrefix = config.public.apiPrefix
+// const form = ref<{ [key: string]: any }>({})
+// const loading = ref(false)
+// const createEndpoint = cfg.create?.endpoint ?? `${apiPrefix}/${modelLabel}`
+// const router = useRouter()
 
-const form = ref<{ [key: string]: any }>({})
+// const performCreate = async () => {
+//   loading.value = true
+//   try {
+//     const response = await $fetch<{ success: boolean }>(createEndpoint, {
+//       method: 'POST',
+//       body: form.value,
+//     })
 
-const loading = ref(false)
-
-const createEndpoint = cfg.create?.endpoint ?? `${apiPrefix}/${modelLabel}`
-
-// Fetch locations for dropdown
-// const { data: locationsData } = await useFetch('/api/locations')
-// const locations = computed(() => locationsData.value?.data || [])
-
-const performCreate = async () => {
-  loading.value = true
-  try {
-    const response = await $fetch<{ success: boolean }>(createEndpoint, {
-      method: 'POST',
-      body: form.value,
-    })
-
-    if (response.success) {
-      await router.push({ name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } })
-    }
-  } catch (error) {
-    alert(`Failed to create: ${error.message}`)
-  } finally {
-    loading.value = false
-  }
-}
+//     if (response.success) {
+//       await router.push({ name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } })
+//     }
+//   } catch (error) {
+//     alert(`Failed to create: ${error.message}`)
+//   } finally {
+//     loading.value = false
+//   }
+// }
 
 useHead({
   title: `${listTitle} > Create`,
@@ -74,7 +70,7 @@ useHead({
         </h1>
       </div>
 
-      <AutoForm :spec="formSpec" />
+      <AutoForm v-if="formSpec" :spec="formSpec" />
 
       <!-- <form class="bg-white shadow-md rounded px-8 pt-6 pb-8" @submit.prevent="performCreate">
         <div class="mb-4">

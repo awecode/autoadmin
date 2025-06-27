@@ -1,7 +1,7 @@
 import type { ZodObject, ZodTypeAny } from 'zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select' | 'json' | 'file'
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select' | 'json' | 'file' | 'relation'
 
 interface FieldSpec {
   name: string
@@ -10,6 +10,7 @@ interface FieldSpec {
   required: boolean
   rules: Rules
   enumValues?: string[]
+  selectItems?: { label: string, value: string }[]
   defaultValue?: unknown
 }
 export interface FormSpec {
