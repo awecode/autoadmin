@@ -1,4 +1,5 @@
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import process from 'node:process'
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1'
 import { drizzle } from 'drizzle-orm/libsql'
 
@@ -6,7 +7,8 @@ let _db: DrizzleD1Database
 
 export function useDb() {
   if (!_db) {
-    const dbBinding = useEvent().context.cloudflare?.env?.DB
+    // const dbBinding = useEvent().context.cloudflare?.env?.DB
+    const dbBinding = process.env.DB
     if (dbBinding) {
       _db = drizzleD1(dbBinding, {
         casing: 'snake_case',

@@ -17,8 +17,11 @@ const insertSchema = createInsertSchema(model)
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
 const router = useRouter()
-console.log(insertSchema)
 const formSpec = zodToFormSpec(insertSchema)
+
+const relations = getTableRelations(model)
+await addRelationToFormSpec(formSpec, relations)
+console.log(formSpec)
 
 const form = ref<{ [key: string]: any }>({})
 
@@ -73,7 +76,7 @@ useHead({
 
       <AutoForm :spec="formSpec" />
 
-      <form class="bg-white shadow-md rounded px-8 pt-6 pb-8" @submit.prevent="performCreate">
+      <!-- <form class="bg-white shadow-md rounded px-8 pt-6 pb-8" @submit.prevent="performCreate">
         <div class="mb-4">
           <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
             Platform Name *
@@ -104,20 +107,6 @@ useHead({
           </p>
         </div>
 
-        <!-- <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="preferredLocationId">
-                        Preferred Location
-                    </label>
-                    <select id="preferredLocationId" v-model="form.preferredLocationId"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="">No preference</option>
-                        <option v-for="location in locations" :key="location.id" :value="location.id">
-                            {{ location.name }} - {{ location.country }}
-                        </option>
-                    </select>
-                    <p class="text-gray-600 text-xs mt-1">Optional: Default location for this platform</p>
-                </div> -->
-
         <div class="flex items-center justify-between">
           <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
@@ -133,7 +122,7 @@ useHead({
             Cancel
           </NuxtLink>
         </div>
-      </form>
+      </form> -->
     </div>
   </div>
 </template>
