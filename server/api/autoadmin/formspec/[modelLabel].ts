@@ -23,8 +23,7 @@ export default defineEventHandler(async (event) => {
   const insertSchema = createInsertSchema(model)
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
-  await addRelationToFormSpec(spec, relations)
+  const specWithRelations = await addRelationToFormSpec(spec, relations)
   const metadata = getTableMetadata(model)
-  useMetadataOnFormSpec(spec, metadata)
-  return spec
+  return useMetadataOnFormSpec(specWithRelations, metadata)
 })

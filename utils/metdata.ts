@@ -31,14 +31,21 @@ export function getTableMetadata(table: Table): TableMetadata {
   return metadata
 }
 
-export const useMetadataOnFormSpec = (formSpec: FormSpec, metadata: TableMetadata) => {
-  formSpec.fields.forEach((field) => {
-    if (metadata.primaryAutoincrementColumns.includes(field.name)) {
-      //   remove field from formspec.fields
-      formSpec.fields = formSpec.fields.filter(f => f.name !== field.name)
-    }
+export const useMetadataOnFormSpec = (formSpec: FormSpec, metadata: TableMetadata): FormSpec => {
+  const updatedFormSpec = { ...formSpec }
+
+  // Filter out primary autoincrement columns
+  updatedFormSpec.fields = updatedFormSpec.fields.filter(
+    field => !metadata.primaryAutoincrementColumns.includes(field.name),
+  )
+
+  // Update datetime columns
+  updatedFormSpec.fields = updatedFormSpec.fields.map((field) => {
     if (metadata.datetimeColumns.includes(field.name)) {
-      field.type = 'datetime-local'
+      return { ...field, type: 'datetime-local' }
     }
+    return field
   })
+
+  return updatedFormSpec
 }

@@ -38,13 +38,18 @@ function getRowLabel(row: Record<string, any>) {
 }
 
 export const addRelationToFormSpec = async (formSpec: FormSpec, relations: ReturnType<typeof getTableRelations>) => {
-  relations.forEach(async (relation) => {
+  const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
+
+  // Process all relations in parallel
+  await Promise.all(relations.map(async (relation) => {
     // find field with name relation.columnName
-    const field = formSpec.fields.find(field => field.name === relation.columnName)
-    if (field) {
+    const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === relation.columnName)
+    if (fieldIndex !== -1) {
+      const field = { ...updatedFormSpec.fields[fieldIndex] }
       field.type = 'relation'
       //   strip id from field label
       field.label = field.label.replace('Id', '')
+
       //   get all values from relation.foreignTable
       if (import.meta.server) {
         const db = useDb()
@@ -57,6 +62,10 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, relations: Retur
         // TODO: get values from API
         field.selectItems = [{ label: 'One', value: '1' }, { label: 'Two', value: '2' }]
       }
+
+      updatedFormSpec.fields[fieldIndex] = field
     }
-  })
+  }))
+
+  return updatedFormSpec
 }
