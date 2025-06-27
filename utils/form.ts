@@ -1,7 +1,7 @@
 import type { ZodObject, ZodTypeAny } from 'zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'select' | 'json' | 'file' | 'relation'
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation'
 
 interface FieldSpec {
   name: string

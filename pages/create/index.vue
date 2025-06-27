@@ -19,6 +19,8 @@ const { data: formSpec } = await useAsyncData(`formspec-${modelLabel}`, async ()
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
   await addRelationToFormSpec(spec, relations)
+  const metadata = getTableMetadata(model)
+  useMetadataOnFormSpec(spec, metadata)
   return spec
 })
 
@@ -53,7 +55,7 @@ useHead({
 </script>
 
 <template>
-  <!-- {{ insertSchema }} -->
+  {{ insertSchema }}
   <div>=============================</div>
   {{ formSpec }}
   <div class="container mx-auto px-4 py-8">
