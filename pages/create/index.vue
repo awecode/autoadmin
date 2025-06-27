@@ -15,13 +15,8 @@ const insertSchema = createInsertSchema(model)
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 
 // Generate form spec with relations only once using useAsyncData
-const { data: formSpec } = await useAsyncData(`formspec-${modelLabel}`, async () => {
-  const spec = zodToFormSpec(insertSchema as any)
-  const relations = getTableRelations(model)
-  await addRelationToFormSpec(spec, relations)
-  const metadata = getTableMetadata(model)
-  useMetadataOnFormSpec(spec, metadata)
-  return spec
+const { data: formSpec } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
+  key: `formspec-${modelLabel}`,
 })
 
 // const config = useRuntimeConfig()

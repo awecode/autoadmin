@@ -1,7 +1,7 @@
 import type { Table } from 'drizzle-orm'
 import type { FormSpec } from './form'
+import { useDb } from '#layers/autoadmin/server/utils/db'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
-import { useDb } from '~~/server/utils/db'
 
 export function getTableRelations(table: Table) {
   const relations = []
