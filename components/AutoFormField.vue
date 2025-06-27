@@ -1,10 +1,27 @@
 <script setup lang="ts">
 import type { FormSpec } from '~/utils/form'
 
-defineProps<{
+const props = defineProps<{
   field: FormSpec['fields'][number]
-  state: Record<string, any>
+  modelValue: any
 }>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: any]
+}>()
+
+const fieldValue = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    // Coerce to Date object for datetime-local fields
+    if (props.field.type === 'datetime-local' && value) {
+      const dateValue = new Date(value)
+      emit('update:modelValue', dateValue)
+    } else {
+      emit('update:modelValue', value)
+    }
+  },
+})
 </script>
 
 <template>
@@ -14,14 +31,14 @@ defineProps<{
     :name="field.name"
   >
     <USelect
-      v-model="state[field.name]"
+      v-model="fieldValue"
       class="w-full"
       value-key="value"
       :items="field.selectItems"
     />
   </UFormField>
   <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name">
-    <USelect v-model="state[field.name]" class="w-full" :items="field.enumValues" />
+    <USelect v-model="fieldValue" class="w-full" :items="field.enumValues" />
   </UFormField>
   <UFormField
     v-else-if="field.type === 'json'"
@@ -29,16 +46,24 @@ defineProps<{
     :name="field.name"
   >
     <UTextarea
-      v-model="state[field.name]"
+      v-model="fieldValue"
       class="w-full font-mono"
       placeholder="{}"
       spellcheck="false"
       :rows="6"
     />
   </UFormField>
+  <UFormField v-else-if="field.type === 'datetime-local'" :label="field.label" :name="field.name">
+    <UInput
+      v-model="fieldValue"
+      :max="field.rules?.max"
+      :min="field.rules?.min"
+      :type="field.type"
+    />
+  </UFormField>
   <UFormField v-else :label="field.label" :name="field.name">
     <UInput
-      v-model="state[field.name]"
+      v-model="fieldValue"
       :max="field.rules?.max"
       :min="field.rules?.min"
       :type="field.type"

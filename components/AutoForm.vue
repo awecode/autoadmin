@@ -12,14 +12,7 @@ const props = defineProps<{
   schema: Record<string, any>
 }>()
 
-const schema1 = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Must be at least 8 characters'),
-})
-
-const formSchema = z.object(props.schema)
-
-console.log(formSchema, schema1)
+console.log(props.schema)
 
 const loading = ref(false)
 
@@ -62,8 +55,9 @@ const performCreate = async () => {
       :state="state"
       @submit="performCreate"
     >
+      {{ state }}
       <div v-for="field in spec.fields" :key="field.name">
-        <AutoFormField :field="field" :state="state" />
+        <AutoFormField v-model="state[field.name]" :field="field" />
       </div>
       <div class="flex items-center justify-between">
         <button
