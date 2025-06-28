@@ -7,7 +7,7 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
 // TODO: Make this configurable - maybe global config?
-const defaultLookupField = 'id'
+const defaultLookupColumnName = 'id' as ColKey<Table>
 
 interface ListOptions<T extends Table = Table> {
   enabled: boolean
@@ -37,7 +37,7 @@ interface DeleteOptions {
 
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
-  lookupField?: ColKey<T>
+  lookupColumnName?: ColKey<T>
   searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T>>
   create?: Partial<CreateOptions>
@@ -45,13 +45,15 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
 }
 
-export type TableWithColumns<T extends Table = Table>
-  = T & { [K in ColKey<T>]: T['_']['columns'][K] }
+// export type TableWithColumns<T extends Table = Table>
+//   = T & { [K in ColKey<T>]: T['_']['columns'][K] }
 
 export interface AdminModelConfig<T extends Table = Table> {
-  model: TableWithColumns<T>
+  // model: TableWithColumns<T>
+  model: T
   label: string
-  lookupField: ColKey<T>
+  lookupColumnName: ColKey<T>
+  lookupColumn: T['_']['columns'][ColKey<T>]
   list?: ListOptions<T>
   create: CreateOptions
   update: UpdateOptions
@@ -59,7 +61,7 @@ export interface AdminModelConfig<T extends Table = Table> {
 }
 
 const staticDefaultOptions = {
-  lookupField: defaultLookupField,
+  lookupColumnName: defaultLookupColumnName,
   list: { enabled: true, showCreateButton: true },
   update: { enabled: true, showDeleteButton: true },
   delete: { enabled: true },
@@ -101,22 +103,24 @@ export function useAdminRegistry() {
       staticDefaultOptions,
       generateDefaultOptions(model),
       { model, label: key },
-    )
+    ) as unknown as AdminModelConfig<T>
 
-    // Validate that lookupField exists on the model's columns
-    const lookupField = cfg.lookupField
+    // Validate that lookupColumnName exists on the model's columns
+    const lookupColumnName = cfg.lookupColumnName
     const modelColumns = getTableColumns(model)
-    if (!Object.keys(modelColumns).includes(lookupField)) {
-      if (lookupField === defaultLookupField) {
+    if (!Object.keys(modelColumns).includes(lookupColumnName)) {
+      if (lookupColumnName === defaultLookupColumnName) {
         throw new Error(
-          `The default lookup field "${lookupField}" does not exist on the table "${getTableName(model)}". Pass a different "lookupField" value during registration. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+          `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(modelColumns).join(', ')}`,
         )
       } else {
         throw new Error(
-          `Invalid lookupField "${lookupField}" provied for model "${key}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+          `Invalid lookupColumnName "${lookupColumnName}" provied for model "${key}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
         )
       }
     }
+    // cast cfg to AdminModelConfig<T> first
+    cfg.lookupColumn = modelColumns[lookupColumnName] as T['_']['columns'][ColKey<T>]
 
     registry.set(key, cfg as unknown as AdminModelConfig<Table>)
   }

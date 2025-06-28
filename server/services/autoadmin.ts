@@ -90,9 +90,9 @@ export async function deleteRecord(modelLabel: string, lookupValue: string): Pro
   const modelConfig = getModelConfig(modelLabel)
   const model = modelConfig.model
   const db = useDb()
-  const lookupField = modelConfig.lookupField
+  const lookupColumn = modelConfig.lookupColumn
   try {
-    await db.delete(model).where(eq(model[lookupField], lookupValue))
+    await db.delete(model).where(eq(lookupColumn, lookupValue))
   } catch (error) {
     if (error instanceof DrizzleQueryError) {
       if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
