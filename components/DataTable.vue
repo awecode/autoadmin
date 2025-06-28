@@ -39,6 +39,7 @@ const props = withDefaults(defineProps<DataTableProps>(), {
 
 const route = useRoute()
 const router = useRouter()
+const loading = ref(false)
 
 const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc' | 'desc' } | undefined>('sort', '', {
   route,
@@ -99,6 +100,32 @@ const { data, status, error, refresh } = useFetch<Data<T>>(() => props.endpoint,
   watch: false,
 })
 
+function computeColumns() {
+  let tableColumns = props.columns
+
+  // Auto-generate columns from first result if no columns provided
+  if ((!tableColumns || tableColumns.length === 0) && data.value?.results && data.value.results.length > 0) {
+    const firstResult = data.value.results[0]
+    tableColumns = Object.keys(firstResult).map(key => ({
+      id: key,
+      accessorKey: key,
+      header: toTitleCase(key),
+    }))
+  }
+
+  return [...(tableColumns || []), { id: 'actions' }]
+}
+
+const computedColumns = ref(computeColumns()) as Ref<TableColumn<T>[]>
+
+watch(data, () => {
+  loading.value = true
+  computedColumns.value = computeColumns()
+  nextTick(() => {
+    loading.value = false
+  })
+})
+
 // Keep error for display in template instead of throwing
 if (error.value) {
   console.error(error.value)
@@ -155,29 +182,11 @@ async function handleDelete(id: string) {
     onConfirm: doDelete,
   })
 }
-
-const columns = computed(() => {
-  let tableColumns = props.columns
-
-  // Auto-generate columns from first result if no columns provided
-  if ((!tableColumns || tableColumns.length === 0) && data.value?.results && data.value.results.length > 0) {
-    const firstResult = data.value.results[0]
-    tableColumns = Object.keys(firstResult).map(key => ({
-      id: key,
-      accessorKey: key,
-      header: toTitleCase(key),
-    }))
-  }
-
-  return [...(tableColumns || []), { id: 'actions' }]
-})
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <slot name="header">
-      <div>Columns: {{ columns }}</div>
-      <div>Type: {{ typeof columns }}</div>
       <div class="flex items-center justify-between">
         <slot name="title" :title="title">
           <h1 class="text-2xl font-semibold">
@@ -209,12 +218,15 @@ const columns = computed(() => {
           :description="error.message || 'Failed to fetch data'"
           :title="error.statusMessage || 'An error occurred'"
         />
+        <div v-else-if="loading">
+          Loading ...
+        </div>
         <UTable
           v-else
           v-model:sort="sort"
           class="h-full overflow-auto"
           sort-mode="manual"
-          :columns="columns"
+          :columns="computedColumns"
           :data="data?.results"
           :loading="status === 'pending'"
           :ui="{
