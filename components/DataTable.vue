@@ -1,11 +1,13 @@
 <script setup lang="ts" generic="T extends Record<string, any> = Record<string, any>">
 import type { Button, TableColumn } from '#ui/types'
+import type { RouteLocationRaw } from 'vue-router'
 import { useRouteQuery } from '@vueuse/router'
 import DeleteModal from '~/components/DeleteModal.vue'
 
 interface DataTableProps {
   endpoint: string
   deleteEndpoint?: string
+  updatePage?: RouteLocationRaw
   title?: string
   columns?: Array<TableColumn<T>>
   actions?: Array<Omit<Button, 'size'> & { onClick?: () => void }>
@@ -219,6 +221,16 @@ async function handleDelete(id: string) {
             <div class="flex items-center gap-2">
               <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
               <slot name="actions-cell" v-bind="scope ?? {}">
+                <UButton
+                  v-if="props.defaultActions?.includes('edit') && updatePage"
+                  color="primary"
+                  icon="i-heroicons-pencil"
+                  variant="ghost"
+                >
+                  <NuxtLink :to="{ ...updatePage, params: { ...updatePage.params, id: scope.row.original.id } }">
+                    Edit
+                  </NuxtLink>
+                </UButton>
                 <UButton
                   v-if="props.defaultActions?.includes('delete') && deleteEndpoint"
                   color="error"
