@@ -4,12 +4,14 @@ import { getTableColumns } from 'drizzle-orm'
 export interface TableMetadata {
   primaryAutoincrementColumns: string[]
   datetimeColumns: string[]
+  autoTimestampColumns: string[]
 }
 
 export function getTableMetadata(table: Table): TableMetadata {
   const metadata: TableMetadata = {
     primaryAutoincrementColumns: [],
     datetimeColumns: [],
+    autoTimestampColumns: [],
   }
 
   if (!table) {
@@ -24,7 +26,11 @@ export function getTableMetadata(table: Table): TableMetadata {
 
     // // Check for datetime columns with timestamp_ms mode
     if (column.dataType === 'date' && column.config?.mode === 'timestamp_ms') {
-      metadata.datetimeColumns.push(columnName)
+      if (column.config?.default) {
+        metadata.autoTimestampColumns.push(columnName)
+      } else {
+        metadata.datetimeColumns.push(columnName)
+      }
     }
   }
 
@@ -46,6 +52,11 @@ export const useMetadataOnFormSpec = (formSpec: FormSpec, metadata: TableMetadat
     }
     return field
   })
+
+  // Filter out auto timestamp columns
+  updatedFormSpec.fields = updatedFormSpec.fields.filter(
+    field => !metadata.autoTimestampColumns.includes(field.name),
+  )
 
   return updatedFormSpec
 }

@@ -12,8 +12,6 @@ const props = defineProps<{
   schema: Record<string, any>
 }>()
 
-console.log(props.schema)
-
 const loading = ref(false)
 
 const state = reactive({}) as Record<string, any>
