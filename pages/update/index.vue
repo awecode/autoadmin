@@ -10,9 +10,10 @@ if (!cfg) {
 
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
+const id = (useRoute().params.id as string).replace(/\/$/, '')
 
-const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
-  key: `formspec-${modelLabel}`,
+const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}/update/${id}`, {
+  key: `formspec-update-${modelLabel}-${id}`,
 })
 const formSpec = data.value?.spec as FormSpec
 const schema = cfg.create.schema
@@ -22,7 +23,7 @@ const apiPrefix = config.public.apiPrefix
 const createEndpoint = cfg.create?.endpoint ?? `${apiPrefix}/${modelLabel}`
 
 useHead({
-  title: `${listTitle} > Create`,
+  title: `${listTitle} > Update`,
 })
 </script>
 
@@ -37,7 +38,7 @@ useHead({
           ← Back to {{ listTitle }}
         </NuxtLink>
         <h1 class="text-3xl font-bold">
-          Create New
+          Update {{ id }}
         </h1>
       </div>
 
