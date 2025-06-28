@@ -37,7 +37,7 @@ function mapZodCheckToRules(check: any): Record<string, unknown> {
   }
 }
 
-function unwrapZodType(zodType: ZodTypeAny): {
+export function unwrapZodType(zodType: ZodTypeAny): {
   innerType: any // Using `any` because we can't be sure of the final type's class
   isOptional: boolean
   defaultValue?: unknown

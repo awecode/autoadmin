@@ -16,19 +16,19 @@ interface ListOptions<T extends Table = Table> {
 }
 
 interface CreateOptions<T extends Table = Table> {
-  enabled?: boolean
+  enabled: boolean // added by staticDefaultOptions
   endpoint?: string
-  schema?: InferInsertModel<T>
+  schema: InferInsertModel<T> // added by generateDefaultOptions
 }
 
 interface UpdateOptions<T extends Table = Table> {
-  enabled: boolean
+  enabled: boolean // added by staticDefaultOptions
   showDeleteButton: boolean
-  schema?: InferInsertModel<T>
+  schema: InferInsertModel<T> // added by generateDefaultOptions
 }
 
 interface DeleteOptions {
-  enabled: boolean
+  enabled: boolean // added by staticDefaultOptions
   endpoint?: string
 }
 

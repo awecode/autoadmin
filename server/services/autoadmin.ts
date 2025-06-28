@@ -1,6 +1,8 @@
+import type { ZodTypeAny } from 'zod'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
+import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { count } from 'drizzle-orm'
-import { createInsertSchema } from 'drizzle-zod'
+import { ZodDate } from 'zod'
 
 function getModel(modelLabel: string) {
   const registry = useAdminRegistry()
@@ -33,11 +35,36 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 }
 
 export async function createRecord(modelLabel: string, data: any): Promise<any> {
-  const model = getModel(modelLabel)
+  const registry = useAdminRegistry()
+  const modelConfig = registry.get(modelLabel)
+  if (!modelConfig) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} not registered.`,
+    })
+  }
+  const model = modelConfig.model
   const db = useDb()
 
-  const insertSchema = createInsertSchema(model)
-  const validatedData = insertSchema.parse(data)
+  const schema = modelConfig.create.schema
+
+  const shape = schema.shape
+
+  // Preprocess string values into Date for date fields
+  const preprocessed = { ...data }
+  for (const key in shape) {
+    const fieldSchema = unwrapZodType(shape[key])
+    if (fieldSchema.innerType.def.type === 'date' && typeof preprocessed[key] === 'string') {
+      const maybeDate = new Date(preprocessed[key])
+      if (!Number.isNaN(maybeDate.getTime())) {
+        preprocessed[key] = maybeDate
+      }
+    }
+  }
+
+  console.log(preprocessed)
+
+  const validatedData = schema.parse(preprocessed)
 
   const result = await db.insert(model).values(validatedData).returning()
 
