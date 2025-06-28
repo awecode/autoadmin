@@ -227,7 +227,7 @@ async function handleDelete(id: string) {
                   icon="i-heroicons-pencil"
                   variant="ghost"
                 >
-                  <NuxtLink :to="{ ...updatePage, params: { ...updatePage.params, id: scope.row.original.id } }">
+                  <NuxtLink :to="{ ...updatePage, params: { ...updatePage.params, lookupValue: scope.row.original.id } }">
                     Edit
                   </NuxtLink>
                 </UButton>

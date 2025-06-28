@@ -37,7 +37,7 @@ export default defineNuxtConfig({
       })
       pages.push({
         name: 'autoadmin-update',
-        path: `${adminUrlPrefix}/:modelLabel/update/:id`,
+        path: `${adminUrlPrefix}/:modelLabel/update/:lookupValue`,
         file: '#layers/automadmin/pages/update/index.vue',
       })
     },

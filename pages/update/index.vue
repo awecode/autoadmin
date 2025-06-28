@@ -10,17 +10,18 @@ if (!cfg) {
 
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
-const id = (useRoute().params.id as string).replace(/\/$/, '')
+const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 
-const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}/update/${id}`, {
-  key: `formspec-update-${modelLabel}-${id}`,
+const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}/update/${lookupValue}`, {
+  key: `formspec-update-${modelLabel}-${lookupValue}`,
 })
 const formSpec = data.value?.spec as FormSpec
-const schema = cfg.create.schema
+const values = data.value?.values as Record<string, any>
+const schema = cfg.update.schema
 
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
-const createEndpoint = cfg.create?.endpoint ?? `${apiPrefix}/${modelLabel}`
+const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${lookupValue}`
 
 useHead({
   title: `${listTitle} > Update`,
@@ -38,16 +39,18 @@ useHead({
           ← Back to {{ listTitle }}
         </NuxtLink>
         <h1 class="text-3xl font-bold">
-          Update {{ id }}
+          Update {{ lookupValue }}
         </h1>
       </div>
 
       <AutoForm
         v-if="formSpec"
-        :create-endpoint="createEndpoint"
+        mode="update"
+        :endpoint="endpoint"
         :redirect-path="listPath"
         :schema="schema"
         :spec="formSpec"
+        :values="values"
       />
     </div>
   </div>

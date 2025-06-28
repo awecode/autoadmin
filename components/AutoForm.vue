@@ -6,23 +6,26 @@ import * as z from 'zod'
 
 const props = defineProps<{
   spec: FormSpec
+  mode: 'create' | 'update'
   cancelPath?: RouteLocationRaw
   redirectPath?: RouteLocationRaw
-  createEndpoint: string
+  endpoint: string
   schema: Record<string, any>
+  values?: Record<string, any>
 }>()
 
 const loading = ref(false)
 
-const state = reactive({}) as Record<string, any>
+const state = props.values ? reactive(props.values) as Record<string, any> : reactive({}) as Record<string, any>
 
 const toast = useToast()
 
 const router = useRouter()
 const performCreate = async () => {
+  console.log('performCreate', state)
   loading.value = true
   try {
-    const response = await $fetch<{ success: boolean }>(props.createEndpoint, {
+    const response = await $fetch<{ success: boolean }>(props.endpoint, {
       method: 'POST',
       body: state,
     })
@@ -43,15 +46,41 @@ const performCreate = async () => {
     loading.value = false
   }
 }
+
+const performUpdate = async () => {
+  loading.value = true
+  try {
+    const response = await $fetch<{ success: boolean }>(props.endpoint, {
+      method: 'PUT',
+      body: state,
+    })
+
+    if (response.success) {
+      toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
+      if (props.redirectPath) {
+        await router.push(props.redirectPath)
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      toast.add({ title: 'Error', description: `Failed to update: ${error.message}`, color: 'error' })
+    } else {
+      toast.add({ title: 'Error', description: `Failed to update: ${error}`, color: 'error' })
+    }
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
   <div>
+    {{ mode }}
     <UForm
       class="space-y-4"
       :schema="schema"
       :state="state"
-      @submit="performCreate"
+      @submit="mode === 'create' ? performCreate() : performUpdate()"
     >
       {{ state }}
       <div v-for="field in spec.fields" :key="field.name">
@@ -63,7 +92,7 @@ const performCreate = async () => {
           type="submit"
           :disabled="loading"
         >
-          {{ loading ? 'Creating...' : 'Create' }}
+          {{ loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
         </button>
         <NuxtLink
           v-if="cancelPath || redirectPath"

@@ -26,6 +26,7 @@ interface CreateOptions<T extends Table = Table> {
 
 interface UpdateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
+  endpoint?: string
   showDeleteButton: boolean
   schema: InferInsertModel<T> // added by generateDefaultOptions
 }

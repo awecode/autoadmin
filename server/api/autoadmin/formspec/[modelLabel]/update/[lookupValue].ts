@@ -21,7 +21,7 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
     .select(selectObj)
     .from(model)
     .where(eq(lookupColumn, lookupValue))
-  return values
+  return values[0]
 }
 
 export default defineEventHandler(async (event) => {

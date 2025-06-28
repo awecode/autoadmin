@@ -79,10 +79,34 @@ export async function getRecordDetail(modelLabel: string, lookupValue: string): 
 }
 
 export async function updateRecord(modelLabel: string, lookupValue: string, data: any): Promise<any> {
+  const modelConfig = getModelConfig(modelLabel)
+  const model = modelConfig.model
+  const db = useDb()
+
+  const schema = modelConfig.update.schema
+
+  const shape = schema.shape
+
+  // Preprocess string values into Date for date fields
+  const preprocessed = { ...data }
+  for (const key in shape) {
+    const fieldSchema = unwrapZodType(shape[key])
+    if (fieldSchema.innerType.def.type === 'date' && typeof preprocessed[key] === 'string') {
+      const maybeDate = new Date(preprocessed[key])
+      if (!Number.isNaN(maybeDate.getTime())) {
+        preprocessed[key] = maybeDate
+      }
+    }
+  }
+
+  const validatedData = schema.parse(preprocessed)
+
+  const result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
+
   return {
-    id: lookupValue,
-    ...data,
-    updated_at: new Date().toISOString(),
+    success: true,
+    message: `${modelLabel} updated successfully`,
+    data: result,
   }
 }
 

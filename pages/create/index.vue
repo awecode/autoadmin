@@ -19,7 +19,7 @@ const schema = cfg.create.schema
 
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
-const createEndpoint = cfg.create?.endpoint ?? `${apiPrefix}/${modelLabel}`
+const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
 
 useHead({
   title: `${listTitle} > Create`,
@@ -43,7 +43,8 @@ useHead({
 
       <AutoForm
         v-if="formSpec"
-        :create-endpoint="createEndpoint"
+        mode="create"
+        :endpoint="endpoint"
         :redirect-path="listPath"
         :schema="schema"
         :spec="formSpec"
