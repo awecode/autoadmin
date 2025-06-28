@@ -6,6 +6,9 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
+// TODO: Make this configurable - maybe global config?
+const defaultLookupField = 'id'
+
 interface ListOptions<T extends Table = Table> {
   enabled: boolean
   showCreateButton: boolean
@@ -34,6 +37,7 @@ interface DeleteOptions {
 
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
+  lookupField?: ColKey<T>
   searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T>>
   create?: Partial<CreateOptions>
@@ -44,6 +48,7 @@ export interface AdminModelOptions<T extends Table = Table> {
 export interface AdminModelConfig<T extends Table = Table> {
   model: T
   label: string
+  lookupField: ColKey<T>
   list?: ListOptions<T>
   create: CreateOptions
   update: UpdateOptions
@@ -51,6 +56,7 @@ export interface AdminModelConfig<T extends Table = Table> {
 }
 
 const staticDefaultOptions = {
+  lookupField: defaultLookupField,
   list: { enabled: true, showCreateButton: true },
   update: { enabled: true, showDeleteButton: true },
   delete: { enabled: true },

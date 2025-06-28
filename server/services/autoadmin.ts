@@ -1,8 +1,8 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
-import { count } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 
-function getModel(modelLabel: string) {
+function getModelConfig(modelLabel: string): AdminModelConfig {
   const registry = useAdminRegistry()
   const modelConfig = registry.get(modelLabel)
   if (!modelConfig) {
@@ -11,7 +11,11 @@ function getModel(modelLabel: string) {
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
-  return modelConfig.model
+  return modelConfig
+}
+
+function getModel(modelLabel: string) {
+  return getModelConfig(modelLabel).model
 }
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
@@ -33,14 +37,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 }
 
 export async function createRecord(modelLabel: string, data: any): Promise<any> {
-  const registry = useAdminRegistry()
-  const modelConfig = registry.get(modelLabel)
-  if (!modelConfig) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: `Model ${modelLabel} not registered.`,
-    })
-  }
+  const modelConfig = getModelConfig(modelLabel)
   const model = modelConfig.model
   const db = useDb()
 
@@ -89,6 +86,12 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
 }
 
 export async function deleteRecord(modelLabel: string, lookupValue: string): Promise<any> {
+  const modelConfig = getModelConfig(modelLabel)
+  const model = modelConfig.model
+  const db = useDb()
+  const lookupField = modelConfig.lookupField
+  await db.delete(model).where(eq(model[lookupField], lookupValue))
+
   return {
     success: true,
     message: `${modelLabel} ${lookupValue} deleted successfully`,
