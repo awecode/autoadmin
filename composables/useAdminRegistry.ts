@@ -116,7 +116,7 @@ export function useAdminRegistry() {
         )
       } else {
         throw new Error(
-          `Invalid lookupColumnName "${lookupColumnName}" provied for model "${key}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+          `Invalid lookupColumnName "${lookupColumnName}" provided for model "${key}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
         )
       }
     }

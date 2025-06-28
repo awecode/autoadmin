@@ -2,7 +2,6 @@
 import type { RouteLocationRaw } from 'vue-router'
 
 import type { FormSpec } from '~/utils/form'
-import * as z from 'zod'
 
 const props = defineProps<{
   spec: FormSpec

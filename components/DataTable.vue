@@ -13,6 +13,7 @@ interface DataTableProps {
   actions?: Array<Omit<Button, 'size'> & { onClick?: () => void }>
   filters?: boolean
   defaultActions?: Array<'edit' | 'delete'>
+  lookupColumnName?: string
 }
 
 interface Data<TData> {
@@ -33,26 +34,11 @@ const props = withDefaults(defineProps<DataTableProps>(), {
   filters: true,
   deleteEndpoint: undefined,
   defaultActions: () => ['edit', 'delete'],
+  lookupColumnName: 'id',
 })
 
 const route = useRoute()
 const router = useRouter()
-
-const columns = computed(() => {
-  let tableColumns = props.columns
-
-  // Auto-generate columns from first result if no columns provided
-  if ((!tableColumns || tableColumns.length === 0) && data.value?.results && data.value.results.length > 0) {
-    const firstResult = data.value.results[0]
-    tableColumns = Object.keys(firstResult).map(key => ({
-      id: key,
-      accessorKey: key,
-      header: toTitleCase(key),
-    }))
-  }
-
-  return [...(tableColumns || []), { id: 'actions' }]
-})
 
 const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc' | 'desc' } | undefined>('sort', '', {
   route,
@@ -169,11 +155,29 @@ async function handleDelete(id: string) {
     onConfirm: doDelete,
   })
 }
+
+const columns = computed(() => {
+  let tableColumns = props.columns
+
+  // Auto-generate columns from first result if no columns provided
+  if ((!tableColumns || tableColumns.length === 0) && data.value?.results && data.value.results.length > 0) {
+    const firstResult = data.value.results[0]
+    tableColumns = Object.keys(firstResult).map(key => ({
+      id: key,
+      accessorKey: key,
+      header: toTitleCase(key),
+    }))
+  }
+
+  return [...(tableColumns || []), { id: 'actions' }]
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <slot name="header">
+      <div>Columns: {{ columns }}</div>
+      <div>Type: {{ typeof columns }}</div>
       <div class="flex items-center justify-between">
         <slot name="title" :title="title">
           <h1 class="text-2xl font-semibold">
@@ -227,7 +231,7 @@ async function handleDelete(id: string) {
                   icon="i-heroicons-pencil"
                   variant="ghost"
                 >
-                  <NuxtLink :to="{ ...updatePage, params: { ...updatePage.params, lookupValue: scope.row.original.id } }">
+                  <NuxtLink :to="{ ...updatePage, params: { ...updatePage.params, lookupValue: scope.row.original[lookupColumnName] } }">
                     Edit
                   </NuxtLink>
                 </UButton>
@@ -236,7 +240,7 @@ async function handleDelete(id: string) {
                   color="error"
                   icon="i-heroicons-trash"
                   variant="ghost"
-                  @click="handleDelete(scope.row.original.id)"
+                  @click="handleDelete(scope.row.original[lookupColumnName])"
                 >
                   Delete
                 </UButton>
