@@ -67,6 +67,9 @@ const fieldValue = computed({
       :type="field.type"
     />
   </UFormField>
+  <UFormField v-else-if="field.type === 'checkbox'" :label="field.label" :name="field.name">
+    <UCheckbox v-model="fieldValue" />
+  </UFormField>
   <UFormField v-else :label="field.label" :name="field.name">
     <UInput
       v-model="fieldValue"
