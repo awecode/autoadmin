@@ -1,4 +1,4 @@
-import type { ZodObject, ZodTypeAny } from 'zod'
+import type { ZodDefault, ZodNullable, ZodObject, ZodOptional, ZodTypeAny } from 'zod'
 
 type Rules = Record<string, unknown>
 type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation'
@@ -17,8 +17,8 @@ export interface FormSpec {
   fields: FieldSpec[]
 }
 
-function getDef(zodType: any): any {
-  return zodType?._def ?? zodType?.def
+function getDef(zodType: ZodTypeAny) {
+  return zodType?._def
 }
 
 function mapZodCheckToRules(check: any): Record<string, unknown> {
@@ -37,30 +37,41 @@ function mapZodCheckToRules(check: any): Record<string, unknown> {
   }
 }
 
-export function unwrapZodType(zodType: ZodTypeAny): {
-  innerType: any // Using `any` because we can't be sure of the final type's class
+type UnwrappedZod<T extends ZodTypeAny> = T extends
+  | ZodOptional<infer U>
+  | ZodNullable<infer U>
+  | ZodDefault<infer U>
+  ? UnwrappedZod<U>
+  : T
+
+export function unwrapZodType<T extends ZodTypeAny>(zodType: T): {
+  innerType: UnwrappedZod<T>
   isOptional: boolean
   defaultValue?: unknown
 } {
-  let currentType: any = zodType
+  let currentType: ZodTypeAny = zodType
   let isOptional = false
   let defaultValue: unknown
 
   while (true) {
-    const def = getDef(currentType)
+    const def = currentType._def
     if (!def) break
 
-    const typeKey = def.typeName ?? def.type
+    const typeName = def.typeName ?? def.type
 
-    if (typeKey === 'ZodOptional' || typeKey === 'optional' || typeKey === 'ZodNullable' || typeKey === 'nullable') {
+    if (
+      typeName === 'ZodOptional'
+      || typeName === 'optional'
+      || typeName === 'ZodNullable'
+      || typeName === 'nullable'
+    ) {
       isOptional = true
       currentType = def.innerType
-    } else if (typeKey === 'ZodDefault' || typeKey === 'default') {
+    } else if (typeName === 'ZodDefault' || typeName === 'default') {
       isOptional = true
-      if (def.defaultValue) {
-        defaultValue = typeof def.defaultValue === 'function'
-          ? def.defaultValue()
-          : def.defaultValue
+      if (def.defaultValue !== undefined) {
+        defaultValue
+          = typeof def.defaultValue === 'function' ? def.defaultValue() : def.defaultValue
       }
       currentType = def.innerType
     } else {
@@ -68,7 +79,11 @@ export function unwrapZodType(zodType: ZodTypeAny): {
     }
   }
 
-  return { innerType: currentType, isOptional, defaultValue }
+  return {
+    innerType: currentType as UnwrappedZod<T>,
+    isOptional,
+    defaultValue,
+  }
 }
 
 export function zodToFormSpec(schema: ZodObject<any>): FormSpec {

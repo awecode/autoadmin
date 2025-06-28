@@ -1,8 +1,6 @@
-import type { ZodTypeAny } from 'zod'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { count } from 'drizzle-orm'
-import { ZodDate } from 'zod'
 
 function getModel(modelLabel: string) {
   const registry = useAdminRegistry()
@@ -61,8 +59,6 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
       }
     }
   }
-
-  console.log(preprocessed)
 
   const validatedData = schema.parse(preprocessed)
 
