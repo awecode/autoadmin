@@ -1,7 +1,7 @@
 import type { TableColumn } from '#ui/types'
 import type { InferInsertModel, Table } from 'drizzle-orm'
 import { defu } from 'defu'
-import { getTableName } from 'drizzle-orm'
+import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -99,6 +99,21 @@ export function useAdminRegistry() {
       generateDefaultOptions(model),
       { model, label: key },
     )
+
+    // Validate that lookupField exists on the model's columns
+    const lookupField = cfg.lookupField
+    const modelColumns = getTableColumns(model)
+    if (!Object.keys(modelColumns).includes(lookupField)) {
+      if (lookupField === defaultLookupField) {
+        throw new Error(
+          `The default lookup field "${lookupField}" does not exist on the table "${getTableName(model)}". Pass a different "lookupField" value during registration. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+        )
+      } else {
+        throw new Error(
+          `Invalid lookupField "${lookupField}" provied for model "${key}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+        )
+      }
+    }
 
     registry.set(key, cfg as unknown as AdminModelConfig<Table>)
   }
