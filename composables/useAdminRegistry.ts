@@ -45,8 +45,11 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
 }
 
+export type TableWithColumns<T extends Table = Table>
+  = T & { [K in ColKey<T>]: T['_']['columns'][K] }
+
 export interface AdminModelConfig<T extends Table = Table> {
-  model: T
+  model: TableWithColumns<T>
   label: string
   lookupField: ColKey<T>
   list?: ListOptions<T>
