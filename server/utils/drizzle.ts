@@ -62,8 +62,16 @@ export function handleDrizzleError(error: any) {
       stack: '',
     }
   }
+  // Format other database errors with code and message for debugging
+  console.error('Database error:', {
+    code: error.code || 'UNKNOWN',
+    message: error.message,
+    details: error,
+  })
   return {
     statusCode: 500,
-    message: error.message,
+    message: 'A database error occurred',
+    statusMessage: 'Database Error',
+    stack: '',
   }
 }

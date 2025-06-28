@@ -1,6 +1,7 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { count, eq } from 'drizzle-orm'
+import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 function getModelConfig(modelLabel: string): AdminModelConfig {
   const registry = useAdminRegistry()
@@ -90,7 +91,19 @@ export async function deleteRecord(modelLabel: string, lookupValue: string): Pro
   const model = modelConfig.model
   const db = useDb()
   const lookupField = modelConfig.lookupField
-  await db.delete(model).where(eq(model[lookupField], lookupValue))
+  try {
+    await db.delete(model).where(eq(model[lookupField], lookupValue))
+  } catch (error) {
+    if (error instanceof DrizzleQueryError) {
+      if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Cannot delete record because it is referenced by another record',
+        })
+      }
+    }
+    throw handleDrizzleError(error)
+  }
 
   return {
     success: true,
