@@ -1,7 +1,12 @@
 import type { Table } from 'drizzle-orm'
 import type { FormSpec } from './form'
-import { useDb } from '#layers/autoadmin/server/utils/db'
+import { eq } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
+
+export function getRowLabel(row: Record<string, any>) {
+  // TODO: get from formspec if available
+  return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
+}
 
 export function getTableRelations(table: Table) {
   const relations = []
@@ -63,11 +68,7 @@ export function getTableRelationsByColumn(table: Table, columnName: string) {
   return relations
 }
 
-function getRowLabel(row: Record<string, any>) {
-  return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
-}
-
-export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableRelations>) => {
+export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableRelations>, values?: Record<string, any>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
@@ -89,6 +90,14 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
       //     value: row[relation.foreignColumnName],
       //   }))
       // }
+      if (values?.[relation.columnName]) {
+        const db = useDb()
+        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignTable[relation.foreignColumnName], values[relation.columnName]))
+        field.selectItems = rows.map(row => ({
+          label: getRowLabel(row),
+          value: row[relation.foreignColumnName],
+        }))
+      }
       field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.columnName}`
 
       updatedFormSpec.fields[fieldIndex] = field

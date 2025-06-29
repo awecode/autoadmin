@@ -52,11 +52,17 @@ const { data: selectMenuItems, status, execute } = await useLazyFetch<{
   immediate: false,
 })
 
+if (props.field.selectItems) {
+  selectMenuItems.value = props.field.selectItems
+}
+const selectFetched = ref(false)
+
 // TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
 // Maybe use v-select until fix found for Nuxt UI/Reka UI
 function onSelectMenuOpen() {
-  if (!selectMenuItems.value?.length) {
+  if (!selectFetched.value) {
     execute()
+    selectFetched.value = true
   }
 }
 </script>
