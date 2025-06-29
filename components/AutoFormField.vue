@@ -75,6 +75,7 @@ function onSelectMenuOpen() {
   >
     <USelectMenu
       v-model="fieldValue"
+      trailing
       class="w-full"
       label-key="label"
       value-key="value"

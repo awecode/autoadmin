@@ -24,6 +24,12 @@ export default defineEventHandler(async (event) => {
     })
   }
   const relations = getTableRelationsByColumn(cfg.model, columnName)
+  if (relations.length === 0) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `No relations found for column ${columnName}.`,
+    })
+  }
   const db = useDb()
   const choices = []
   for (const relation of relations) {

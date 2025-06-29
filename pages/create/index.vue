@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { getTableConfig } from 'drizzle-orm/sqlite-core'
+
+if (import.meta.client) {
+  window.getTableConfig = getTableConfig
+}
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
 if (!cfg) {

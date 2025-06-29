@@ -1,4 +1,4 @@
-import type { Table } from 'drizzle-orm'
+import type { AnyColumn, Relation, RelationConfig, Relations, Table } from 'drizzle-orm'
 import type { FormSpec } from './form'
 import { eq } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
@@ -8,7 +8,40 @@ export function getRowLabel(row: Record<string, any>) {
   return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
 }
 
-export function getTableRelations(table: Table) {
+export function parseRelations(model: Table, relations: Record<string, Relations>) {
+  const xyz = relations.platformRelations.config({
+    one(target: Table, config?: RelationConfig<string, string, AnyColumn<{ tableName: string }>[]>) {
+      return {
+        withFieldName(name) {
+          return { name, type: 'one', target, config }
+        },
+      }
+    },
+    many(target: Table, config?: { relationName: string }) {
+      return {
+        withFieldName(name) {
+          return { name, type: 'many', target, config }
+        },
+      }
+    },
+  }) as unknown as Record<string, { name: string, type: 'one' | 'many', target: Table }>
+  const m2mRelationsInJunctionTable: ReturnType<typeof getTableRelations> = []
+  for (const [key, value] of Object.entries(xyz)) {
+    // console.log(key, value.name, value.type, value.target)
+    if (value.type === 'many') {
+      const rels = getTableRelations(value.target, 'many')
+      rels.forEach((relation) => {
+        if (relation.foreignTable !== model) {
+          m2mRelationsInJunctionTable.push(relation)
+        }
+      })
+    }
+  }
+  return m2mRelationsInJunctionTable
+}
+
+export function getTableRelations(table: Table, type?: 'one' | 'many') {
+  type = type || 'one'
   const relations = []
   const foreignKeys = getTableConfig(table).foreignKeys
 
@@ -31,6 +64,7 @@ export function getTableRelations(table: Table) {
         foreignColumn,
         foreignColumnName: foreignColumn.name,
         foreignTable: foreignColumn.table,
+        type,
       })
     }
   }
@@ -79,7 +113,7 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
       const field = { ...updatedFormSpec.fields[fieldIndex] }
       field.type = 'relation'
       //   strip id from field label
-      field.label = field.label.replace('Id', '')
+      field.label = field.label.replace(' Id', '')
 
       //   get all values from relation.foreignTable
       // if (import.meta.server) {

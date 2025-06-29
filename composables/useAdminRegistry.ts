@@ -1,5 +1,5 @@
 import type { TableColumn } from '#ui/types'
-import type { InferInsertModel, Table } from 'drizzle-orm'
+import type { InferInsertModel, Relation, Relations, Table } from 'drizzle-orm'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
@@ -39,11 +39,12 @@ interface DeleteOptions {
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
   lookupColumnName?: ColKey<T>
-  searchFields?: ColKey<T>[]
+  // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T>>
   create?: Partial<CreateOptions>
   update?: Partial<UpdateOptions>
   delete?: Partial<DeleteOptions>
+  relations?: Record<string, Relations<string, Record<string, Relation>>>
 }
 
 // export type TableWithColumns<T extends Table = Table>
@@ -59,6 +60,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   create: CreateOptions
   update: UpdateOptions
   delete: DeleteOptions
+  relations?: Record<string, Relations<string, Record<string, Relation>>>
 }
 
 const staticDefaultOptions = {
