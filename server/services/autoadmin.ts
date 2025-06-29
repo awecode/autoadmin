@@ -31,7 +31,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   } catch (error) {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch platforms',
+      statusMessage: `Failed to fetch ${modelLabel}`,
       data: error,
     })
   }

@@ -32,8 +32,6 @@ useHead({
 
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- <div>Columns: {{ columns }}</div>
-    <div>Type: {{ typeof columns }}</div> -->
     <DataTable
       :actions="actions"
       :columns="columns"

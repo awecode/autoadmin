@@ -94,18 +94,12 @@ const query = computed(() => ({
   ...((props.filters ? filterQuery.value : {}) as Record<string, string>),
 }))
 
-const { data, status, error, refresh } = useFetch<Data<T>>(() => props.endpoint, {
-  query,
-  lazy: true,
-  watch: false,
-})
-
-function computeColumns() {
+function computeColumns(results: T[]) {
   let tableColumns = props.columns
 
   // Auto-generate columns from first result if no columns provided
-  if ((!tableColumns || tableColumns.length === 0) && data.value?.results && data.value.results.length > 0) {
-    const firstResult = data.value.results[0]
+  if ((!tableColumns || tableColumns.length === 0) && results && results.length > 0) {
+    const firstResult = results[0]
     tableColumns = Object.keys(firstResult).map(key => ({
       id: key,
       accessorKey: key,
@@ -116,15 +110,21 @@ function computeColumns() {
   return [...(tableColumns || []), { id: 'actions' }]
 }
 
-const computedColumns = ref(computeColumns()) as Ref<TableColumn<T>[]>
+const computedColumns: Ref<TableColumn<T>[]> = ref([])
 
-watch(data, () => {
-  loading.value = true
-  computedColumns.value = computeColumns()
-  nextTick(() => {
-    loading.value = false
-  })
+const { data, status, error, refresh } = useFetch<Data<T>>(() => props.endpoint, {
+  query,
+  onResponse({ response }) {
+    // Because the UTable component does not seem to support reactive columns, we are rerendering it using loading ref
+    loading.value = true
+    computedColumns.value = computeColumns(response._data.results ?? [])
+    nextTick(() => {
+      loading.value = false
+    })
+  },
 })
+
+computedColumns.value = computeColumns(data.value?.results ?? [])
 
 // Keep error for display in template instead of throwing
 if (error.value) {
