@@ -15,13 +15,32 @@ const props = defineProps<{
 
 const loading = ref(false)
 
-const state = props.values ? reactive(props.values) as Record<string, any> : reactive({}) as Record<string, any>
+// Initialize state with values for update and default values for create
+const initializeState = () => {
+  if (props.values) {
+    return reactive(props.values) as Record<string, any>
+  }
+
+  const initialState: Record<string, any> = {}
+
+  // If mode is create, populate with default values from spec
+  if (props.mode === 'create' && props.spec.fields) {
+    for (const field of props.spec.fields) {
+      if (field.defaultValue !== undefined) {
+        initialState[field.name] = field.defaultValue
+      }
+    }
+  }
+
+  return reactive(initialState) as Record<string, any>
+}
+
+const state = initializeState()
 
 const toast = useToast()
 
 const router = useRouter()
 const performCreate = async () => {
-  console.log('performCreate', state)
   loading.value = true
   try {
     const response = await $fetch<{ success: boolean }>(props.endpoint, {

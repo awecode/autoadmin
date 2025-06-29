@@ -53,7 +53,7 @@ async function resolveDefault(raw: unknown) {
   if (isSql(raw)) {
     // recognise CURRENT_TIMESTAMP expression and return the current timestamp without involving the database
     if (raw.queryChunks?.[0]?.value?.[0] === 'CURRENT_TIMESTAMP') {
-      return Date.now()
+      return new Date().toISOString()
     } else {
       const selectSql = sql`SELECT ${raw}`
       // TODO db.execute for other dialects

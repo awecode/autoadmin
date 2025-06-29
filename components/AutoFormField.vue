@@ -12,9 +12,15 @@ const emit = defineEmits<{
 
 const fieldValue = computed({
   get: () => {
-    if (props.field.type === 'datetime-local' && props.modelValue instanceof Date) {
+    if (props.field.type === 'datetime-local') {
       // Format Date object to yyyy-MM-ddThh:mm format for datetime-local input
-      return props.modelValue.toISOString().slice(0, 16)
+      if (props.modelValue instanceof Date) {
+        return props.modelValue.toISOString().slice(0, 16)
+      } else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
+        // Convert ISO format string to datetime-local format (yyyy-MM-ddThh:mm)
+        return props.modelValue.slice(0, 16)
+      }
+      return props.modelValue
     }
     return props.modelValue
   },
