@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   const specWithRelations = await addRelationToFormSpec(spec, relations)
   const metadata = getTableMetadata(model)
   return {
-    spec: useMetadataOnFormSpec(specWithRelations, metadata),
+    spec: await useMetadataOnFormSpec(specWithRelations, metadata),
     schema: insertSchema.shape,
   }
 })

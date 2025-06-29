@@ -1,17 +1,21 @@
 import type { Table } from 'drizzle-orm'
-import { getTableColumns } from 'drizzle-orm'
+import { getTableColumns, sql, SQL } from 'drizzle-orm'
 
 export interface TableMetadata {
   primaryAutoincrementColumns: string[]
   datetimeColumns: string[]
   autoTimestampColumns: string[]
+  defaultValues: Record<string, any>
 }
+
+const db = useDb()
 
 export function getTableMetadata(table: Table): TableMetadata {
   const metadata: TableMetadata = {
     primaryAutoincrementColumns: [],
     datetimeColumns: [],
     autoTimestampColumns: [],
+    defaultValues: {},
   }
 
   if (!table) {
@@ -32,31 +36,70 @@ export function getTableMetadata(table: Table): TableMetadata {
         metadata.datetimeColumns.push(columnName)
       }
     }
+
+    if (column.config?.default) {
+      metadata.defaultValues[columnName] = column.config?.default
+    }
   }
 
   return metadata
 }
 
-export const useMetadataOnFormSpec = (formSpec: FormSpec, metadata: TableMetadata): FormSpec => {
-  const updatedFormSpec = { ...formSpec }
+const isSql = (v: unknown): v is SQL => v instanceof SQL || (
+  v && typeof v === 'object' && 'queryChunks' in v
+)
 
-  // Filter out primary autoincrement columns
-  updatedFormSpec.fields = updatedFormSpec.fields.filter(
+async function resolveDefault(raw: unknown) {
+  if (isSql(raw)) {
+    // recognise CURRENT_TIMESTAMP expression and return the current timestamp without involving the database
+    if (raw.queryChunks?.[0]?.value?.[0] === 'CURRENT_TIMESTAMP') {
+      return Date.now()
+    } else {
+      const selectSql = sql`SELECT ${raw}`
+      // TODO db.execute for other dialects
+      const result = await db.run(selectSql)
+      return result.rows?.[0]?.[0]
+    }
+    // any other SQL default → let the DB handle it
+    return undefined
+  }
+  return raw
+}
+
+export const useMetadataOnFormSpec = async (
+  formSpec: FormSpec,
+  metadata: TableMetadata,
+): Promise<FormSpec> => {
+  let fields = formSpec.fields
+
+  // Drop primary autoincrement columns
+  fields = fields.filter(
     field => !metadata.primaryAutoincrementColumns.includes(field.name),
   )
 
-  // Update datetime columns
-  updatedFormSpec.fields = updatedFormSpec.fields.map((field) => {
-    if (metadata.datetimeColumns.includes(field.name)) {
-      return { ...field, type: 'datetime-local' }
-    }
-    return field
-  })
+  // Convert datetime columns to datetime-local
+  fields = fields.map(field =>
+    metadata.datetimeColumns.includes(field.name)
+      ? { ...field, type: 'datetime-local' }
+      : field,
+  )
 
-  // Filter out auto timestamp columns
-  updatedFormSpec.fields = updatedFormSpec.fields.filter(
+  // Drop auto-timestamp columns
+  fields = fields.filter(
     field => !metadata.autoTimestampColumns.includes(field.name),
   )
 
-  return updatedFormSpec
+  // Resolve async defaults
+  fields = await Promise.all(
+    fields.map(async (field) => {
+      const cfgDefault = metadata.defaultValues[field.name]
+      if (cfgDefault !== undefined) {
+        const resolvedDefaultValue = await resolveDefault(cfgDefault)
+        return { ...field, defaultValue: resolvedDefaultValue }
+      }
+      return field
+    }),
+  )
+
+  return { ...formSpec, fields }
 }
