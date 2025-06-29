@@ -120,7 +120,14 @@ export function useAdminRegistry() {
         )
       }
     }
-    // cast cfg to AdminModelConfig<T> first
+    // Check if lookupColumnName is either primary or unique
+    const lookupColumn = modelColumns[lookupColumnName]
+    if (!lookupColumn.primary && !lookupColumn.unique) {
+      throw new Error(
+        `The lookup field "${lookupColumnName}" is not a primary or unique column on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration.`,
+      )
+    }
+
     cfg.lookupColumn = modelColumns[lookupColumnName] as T['_']['columns'][ColKey<T>]
 
     registry.set(key, cfg as unknown as AdminModelConfig<Table>)
