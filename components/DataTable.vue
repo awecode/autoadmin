@@ -237,16 +237,18 @@ async function handleDelete(id: string) {
             <div class="flex items-center gap-2">
               <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
               <slot name="actions-cell" v-bind="scope ?? {}">
-                <UButton
+                <NuxtLink
                   v-if="props.defaultActions?.includes('edit') && updatePage"
-                  color="primary"
-                  icon="i-heroicons-pencil"
-                  variant="ghost"
+                  :to="{ ...updatePage, params: { ...updatePage.params, lookupValue: scope.row.original[lookupColumnName] } }"
                 >
-                  <NuxtLink :to="{ ...updatePage, params: { ...updatePage.params, lookupValue: scope.row.original[lookupColumnName] } }">
+                  <UButton
+                    color="primary"
+                    icon="i-heroicons-pencil"
+                    variant="ghost"
+                  >
                     Edit
-                  </NuxtLink>
-                </UButton>
+                  </UButton>
+                </NuxtLink>
                 <UButton
                   v-if="props.defaultActions?.includes('delete') && deleteEndpoint"
                   color="error"
