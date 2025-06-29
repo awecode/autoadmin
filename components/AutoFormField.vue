@@ -44,6 +44,21 @@ const fieldValue = computed({
     }
   },
 })
+
+const { data: selectMenuItems, status, execute } = await useLazyFetch<{
+  label: string
+  value: string
+}[]>(props.field.choicesEndpoint ?? '', {
+  immediate: false,
+})
+
+// TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
+// Maybe use v-select until fix found for Nuxt UI/Reka UI
+function onSelectMenuOpen() {
+  if (!selectMenuItems.value?.length) {
+    execute()
+  }
+}
 </script>
 
 <template>
@@ -52,11 +67,14 @@ const fieldValue = computed({
     :label="field.label"
     :name="field.name"
   >
-    <USelect
+    <USelectMenu
       v-model="fieldValue"
       class="w-full"
+      label-key="label"
       value-key="value"
-      :items="field.selectItems"
+      :items="selectMenuItems ?? []"
+      :loading="status === 'pending'"
+      @update:open="onSelectMenuOpen"
     />
   </UFormField>
   <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name">

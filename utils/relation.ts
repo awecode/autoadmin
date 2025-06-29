@@ -33,11 +33,41 @@ export function getTableRelations(table: Table) {
   return relations
 }
 
+export function getTableRelationsByColumn(table: Table, columnName: string) {
+  const relations = []
+  const foreignKeys = getTableConfig(table).foreignKeys
+
+  if (!foreignKeys || !Array.isArray(foreignKeys)) {
+    return []
+  }
+
+  for (const fk of foreignKeys) {
+    const reference = fk.reference()
+    const columns = reference.columns
+    const foreignColumns = reference.foreignColumns
+
+    // Loop through each column pair
+    for (let i = 0; i < columns.length; i++) {
+      const foreignColumn = foreignColumns[i]
+      if (columns[i].name === columnName) {
+        relations.push({
+          columnName,
+          foreignColumn,
+          foreignColumnName: foreignColumn.name,
+          foreignTable: foreignColumn.table,
+        })
+      }
+    }
+  }
+
+  return relations
+}
+
 function getRowLabel(row: Record<string, any>) {
   return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
 }
 
-export const addRelationToFormSpec = async (formSpec: FormSpec, relations: ReturnType<typeof getTableRelations>) => {
+export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableRelations>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
@@ -51,17 +81,15 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, relations: Retur
       field.label = field.label.replace('Id', '')
 
       //   get all values from relation.foreignTable
-      if (import.meta.server) {
-        const db = useDb()
-        const rows = await db.select().from(relation.foreignTable)
-        field.selectItems = rows.map(row => ({
-          label: getRowLabel(row),
-          value: row[relation.foreignColumnName],
-        }))
-      } else {
-        // TODO: get values from API
-        field.selectItems = [{ label: 'One', value: '1' }, { label: 'Two', value: '2' }]
-      }
+      // if (import.meta.server) {
+      //   const db = useDb()
+      //   const rows = await db.select().from(relation.foreignTable)
+      //   field.selectItems = rows.map(row => ({
+      //     label: getRowLabel(row),
+      //     value: row[relation.foreignColumnName],
+      //   }))
+      // }
+      field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.columnName}`
 
       updatedFormSpec.fields[fieldIndex] = field
     }

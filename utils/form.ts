@@ -12,6 +12,7 @@ interface FieldSpec {
   enumValues?: string[]
   selectItems?: { label: string, value: string }[]
   defaultValue?: unknown
+  choicesEndpoint?: string
 }
 export interface FormSpec {
   fields: FieldSpec[]
