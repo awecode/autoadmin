@@ -57,8 +57,13 @@ async function resolveDefault(raw: unknown) {
     } else {
       const selectSql = sql`SELECT ${raw}`
       // TODO db.execute for other dialects
-      const result = await db.run(selectSql)
-      return result.rows?.[0]?.[0]
+      try {
+        const result = await db.run(selectSql)
+        return result.rows?.[0]?.[0]
+      } catch (error) {
+        console.error('Error resolving default value', error)
+        return raw
+      }
     }
     // any other SQL default → let the DB handle it
     return undefined
