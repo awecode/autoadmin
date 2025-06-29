@@ -10,15 +10,25 @@ const emit = defineEmits<{
   'update:modelValue': [value: any]
 }>()
 
+// Helper function to format Date to datetime-local string using local time
+const formatDateToLocal = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 const fieldValue = computed({
   get: () => {
     if (props.field.type === 'datetime-local') {
-      // Format Date object to yyyy-MM-ddThh:mm format for datetime-local input
+      // Format Date object to yyyy-MM-ddThh:mm format for datetime-local input using local time
       if (props.modelValue instanceof Date) {
-        return props.modelValue.toISOString().slice(0, 16)
+        return formatDateToLocal(props.modelValue)
       } else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
-        // Convert ISO format string to datetime-local format (yyyy-MM-ddThh:mm)
-        return props.modelValue.slice(0, 16)
+        // Convert ISO format string to local time, then format for datetime-local
+        return formatDateToLocal(new Date(props.modelValue))
       }
       return props.modelValue
     }
