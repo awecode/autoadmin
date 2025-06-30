@@ -106,13 +106,13 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
 
   if (modelConfig.relations) {
     const relations = parseRelations(model, modelConfig.relations)
-    for (const relation of relations) {
-      if (relation.type === 'many') {
-        const fieldName = `${relation.name}__${relation.columnName}`
-        if (preprocessed[fieldName]) {
-          console.log(fieldName, preprocessed[fieldName])
-          console.log(relation)
-        }
+    for (const relation of relations.m2m) {
+      const fieldName = `___${relation.name}___${relation.otherColumnName}`
+      if (preprocessed[fieldName]) {
+        await db.insert(relation.m2mTable).values(preprocessed[fieldName].map((otherForeignColumnValue: any) => ({
+          [relation.otherColumnName]: otherForeignColumnValue,
+          [relation.selfColumnName]: result[0][relation.selfForeignColumnName],
+        })))
       }
     }
   }
