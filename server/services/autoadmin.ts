@@ -1,13 +1,26 @@
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
-import type { Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { parseRelations } from '#layers/autoadmin/utils/relation'
-import { and, count, eq, inArray } from 'drizzle-orm'
+import { and, count, eq, getTableColumns, inArray } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 async function syncM2MRelation(db: DrizzleD1Database, relation: M2MRelation, selfValue: any, newValues: any[]) {
+  // if the m2m table has only two columns, we can delete and insert all at once
+  if (Object.keys(getTableColumns(relation.m2mTable)).length === 2) {
+    await db.delete(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+    if (newValues.length > 0) {
+      await db.insert(relation.m2mTable).values(newValues.map(value => ({
+        [relation.selfColumnName]: selfValue,
+        [relation.otherColumnName]: value,
+      })))
+    }
+    return
+  }
+  // if the m2m table has more than two columns, there may be additional columns in junction table, so we can't just delete and insert all at once
+  // we need to preserve the exisiting relationships which are also in the new values
+
   // Get existing relationships
   const existing = await db.select()
     .from(relation.m2mTable)
