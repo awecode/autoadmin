@@ -1,4 +1,6 @@
+import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { Table } from 'drizzle-orm'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
@@ -7,6 +9,13 @@ import { eq } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
+
+async function getM2mRelationValues(db: DrizzleD1Database, relation: M2MRelation, selfValue: any) {
+  // if the m2m table has only two columns, we can delete and insert all at once
+  // const values = db.select(relation.otherColumn).from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+  const values = db.select().from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+  return values
+}
 
 const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) => {
   const db = useDb()
@@ -17,11 +26,24 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
   const selectObj = Object.fromEntries(
     columns.map(colName => [colName, model[colName]]),
   )
-  const values = await db
+  const result = await db
     .select(selectObj)
     .from(model)
     .where(eq(lookupColumn, lookupValue))
-  return values[0]
+  const values = result[0]
+
+  // also get m2m values
+  if (cfg.relations) {
+    const relations = parseRelations(model, cfg.relations)
+    for (const relation of relations.m2m) {
+      const fieldName = `___${relation.name}___${relation.otherColumnName}`
+      const selfValue = result[0][relation.selfForeignColumnName]
+      const m2mValues = await getM2mRelationValues(db, relation, selfValue)
+      values[fieldName] = m2mValues.map(value => value[relation.otherColumnName])
+    }
+  }
+
+  return values
 }
 
 export default defineEventHandler(async (event) => {

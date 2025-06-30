@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
+import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
 import type { FormSpec } from '~/utils/form'
 import { processSchema } from '~/utils/schema'
@@ -10,7 +11,7 @@ const props = defineProps<{
   cancelPath?: RouteLocationRaw
   redirectPath?: RouteLocationRaw
   endpoint: string
-  schema: Record<string, any>
+  schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }>
   values?: Record<string, any>
 }>()
 
@@ -97,6 +98,7 @@ const performUpdate = async () => {
 
 <template>
   <div>
+    {{ state }}
     <UForm
       class="space-y-4"
       :schema="processedSchema"
