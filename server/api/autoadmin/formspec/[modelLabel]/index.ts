@@ -24,11 +24,12 @@ export default defineEventHandler(async (event) => {
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
   const parsedRelations = cfg.relations ? parseRelations(cfg.model, cfg.relations) : []
-  console.log(parsedRelations)
   const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations)
+  const specWithRelationsMany = await addRelationToFormSpec(specWithRelations, modelLabel, parsedRelations)
+
   const metadata = getTableMetadata(model)
   return {
-    spec: await useMetadataOnFormSpec(specWithRelations, metadata),
+    spec: await useMetadataOnFormSpec(specWithRelationsMany, metadata),
     schema: insertSchema.shape,
   }
 })

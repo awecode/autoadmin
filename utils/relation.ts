@@ -26,8 +26,7 @@ export function parseRelations(model: Table, relations: Record<string, Relations
     },
   }) as unknown as Record<string, { name: string, type: 'one' | 'many', target: Table }>
   const m2mRelationsInJunctionTable: ReturnType<typeof getTableRelations> = []
-  for (const [key, value] of Object.entries(xyz)) {
-    // console.log(key, value.name, value.type, value.target)
+  for (const [_, value] of Object.entries(xyz)) {
     if (value.type === 'many') {
       const rels = getTableRelations(value.target, 'many')
       rels.forEach((relation) => {
@@ -135,6 +134,18 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
       field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.columnName}`
 
       updatedFormSpec.fields[fieldIndex] = field
+    } else if (relation.type === 'many') {
+      // TODO: handle many relations
+      updatedFormSpec.fields.push({
+        name: relation.columnName,
+        type: 'relation-many',
+        label: relation.columnName,
+        choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${relation.columnName}`,
+        required: false,
+        rules: {},
+      })
+    } else {
+      console.error(`Field ${relation.columnName} not found in form spec`)
     }
   }))
 

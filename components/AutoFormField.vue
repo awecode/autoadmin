@@ -88,6 +88,23 @@ function onSelectMenuOpen() {
       @update:open="onSelectMenuOpen"
     />
   </UFormField>
+  <UFormField
+    v-else-if="field.type === 'relation-many'"
+    :label="field.label"
+    :name="field.name"
+  >
+    <USelectMenu
+      v-model="fieldValue"
+      multiple
+      trailing
+      class="w-full"
+      label-key="label"
+      value-key="value"
+      :items="selectMenuItems ?? []"
+      :loading="status === 'pending'"
+      @update:open="onSelectMenuOpen"
+    />
+  </UFormField>
   <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name">
     <USelect v-model="fieldValue" class="w-full" :items="field.enumValues" />
   </UFormField>
