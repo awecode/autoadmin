@@ -9,11 +9,11 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Model label is required.',
     })
   }
-  const columnName = getRouterParam(event, 'columnName')
-  if (!columnName) {
+  const columnDef = getRouterParam(event, 'columnDef')
+  if (!columnDef) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Column name is required.',
+      statusMessage: 'Column definition is required.',
     })
   }
   const cfg = useAdminRegistry().get(modelLabel)
@@ -30,19 +30,27 @@ export default defineEventHandler(async (event) => {
     })
   }
   const relations = parseRelations(cfg.model, cfg.relations)
-  const relation = relations.find(r => r.columnName === columnName)
+  // columnDef is in the format of ___relationName___columnName
+  const [_, relationName, columnName] = columnDef.split('___')
+  if (!relationName || !columnName) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Invalid column definition ${columnDef}.`,
+    })
+  }
+  const relation = relations.m2m.find(r => r.name === relationName && r.otherColumnName === columnName)
   if (!relation) {
     throw createError({
       statusCode: 404,
-      statusMessage: `No relation found for column ${columnName}.`,
+      statusMessage: `No relation found for column ${columnDef}.`,
     })
   }
   const db = useDb()
   const choices = []
-  const rows = await db.select().from(relation.foreignTable)
+  const rows = await db.select().from(relation.otherTable)
   choices.push(...rows.map(row => ({
     label: getRowLabel(row),
-    value: row[relation.foreignColumnName],
+    value: row[relation.otherForeignColumnName],
   })))
   return choices
 })
