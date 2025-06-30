@@ -28,7 +28,7 @@ export interface M2MRelation extends M2MRelationSelf {
 }
 
 export function parseRelations(model: Table, relations: Record<string, Relations>) {
-  const xyz = relations.platformRelations.config({
+  const relationData = relations.platformRelations.config({
     one(target, config) {
       return {
         withFieldName(name) {
@@ -45,7 +45,7 @@ export function parseRelations(model: Table, relations: Record<string, Relations
     },
   }) as unknown as Record<string, { name: string, type: 'one' | 'many', target: Table }>
   const m2mRelationsInJunctionTable: M2MRelation[] = []
-  for (const [_, value] of Object.entries(xyz)) {
+  for (const [_, value] of Object.entries(relationData)) {
     if (value.type === 'many') {
       const rels = getTableRelations(value.target, 'many')
       let selfData: M2MRelationSelf
@@ -180,18 +180,28 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
       field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.columnName}`
 
       updatedFormSpec.fields[fieldIndex] = field
-    } else if (relation.type === 'many') {
-      updatedFormSpec.fields.push({
-        name: `${relation.name}__${relation.columnName}`,
-        type: 'relation-many',
-        label: toTitleCase((relation.name || relation.columnName).replace('Ids', '')),
-        choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${relation.columnName}`,
-        required: false,
-        rules: {},
-      })
     } else {
       console.error(`Field ${relation.columnName} not found in form spec`)
     }
+  }))
+
+  return updatedFormSpec
+}
+
+export const addManyRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[], values?: Record<string, any>) => {
+  const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
+
+  // Process all relations in parallel
+  await Promise.all(relations.map(async (relation) => {
+    const name = `___${relation.name}___${relation.otherColumnName}`
+    updatedFormSpec.fields.push({
+      name,
+      type: 'relation-many',
+      label: toTitleCase(relation.name),
+      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${name}`,
+      required: false,
+      rules: {},
+    })
   }))
 
   return updatedFormSpec

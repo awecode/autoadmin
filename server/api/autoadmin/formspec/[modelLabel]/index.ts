@@ -1,7 +1,7 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addRelationToFormSpec, getTableRelations, parseRelations } from '#layers/autoadmin/utils/relation'
+import { addManyRelationsToFormSpec, addRelationToFormSpec, getTableRelations, parseRelations } from '#layers/autoadmin/utils/relation'
 import { createInsertSchema } from 'drizzle-zod'
 
 export default defineEventHandler(async (event) => {
@@ -23,9 +23,9 @@ export default defineEventHandler(async (event) => {
   const insertSchema = createInsertSchema(model)
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
-  const parsedRelations = cfg.relations ? parseRelations(cfg.model, cfg.relations) : []
+  const parsedRelations = cfg.relations ? parseRelations(cfg.model, cfg.relations) : { m2m: [] }
   const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations)
-  const specWithRelationsMany = await addRelationToFormSpec(specWithRelations, modelLabel, parsedRelations)
+  const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, parsedRelations.m2m)
 
   const metadata = getTableMetadata(model)
   return {
