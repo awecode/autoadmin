@@ -98,6 +98,7 @@ const performUpdate = async () => {
       class="space-y-4"
       :schema="schema"
       :state="state"
+      @error="console.error"
       @submit="mode === 'create' ? performCreate() : performUpdate()"
     >
       {{ state }}

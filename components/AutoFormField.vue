@@ -37,13 +37,17 @@ const fieldValue = computed({
   set: (value) => {
     // Coerce to Date object for datetime-local fields
     if (props.field.type === 'datetime-local' && value) {
-      const dateValue = new Date(value)
-      emit('update:modelValue', dateValue)
+      emit('update:modelValue', new Date(value))
     } else {
       emit('update:modelValue', value)
     }
   },
 })
+
+// Ensure initial datetime-local values are converted to Date objects
+if (props.field.type === 'datetime-local' && props.modelValue && typeof props.modelValue === 'string') {
+  emit('update:modelValue', new Date(props.modelValue))
+}
 
 const { data: selectMenuItems, status, execute } = await useLazyFetch<{
   label: string
