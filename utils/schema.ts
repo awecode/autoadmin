@@ -1,23 +1,20 @@
-import type { FormSpec } from './form'
+import type { ZodObject, ZodRawShape } from 'zod'
+import { z } from 'zod'
 
-/**
- * Processes a schema by removing any fields that are not defined in the form spec.
- * This ensures that only fields present in the spec are validated.
- */
-export function processSchema(schema: Record<string, any>, spec: FormSpec): Record<string, any> {
-  if (!schema || !spec?.fields) {
-    return {}
-  }
+export function processSchema<S extends ZodRawShape>(
+  schema: ZodObject<S>,
+  spec: FormSpec,
+) {
+  if (!schema || !spec?.fields?.length) return z.object({})
 
-  const processedSchema: Record<string, any> = {}
-  const specFieldNames = new Set(spec.fields.map(field => field.name))
+  const shape = schema.shape
 
-  // Only include schema properties for fields that exist in the spec
-  for (const [fieldName, fieldSchema] of Object.entries(schema)) {
-    if (specFieldNames.has(fieldName)) {
-      processedSchema[fieldName] = fieldSchema
-    }
-  }
+  const pickKeys = Object.fromEntries(
+    spec.fields
+      .map(({ name }) => name)
+      .filter((name): name is keyof S => name in shape) // ignore unknown field names
+      .map(name => [name, true] as const), // keep literal true
+  ) as { [K in keyof S]?: true }
 
-  return processedSchema
+  return schema.pick(pickKeys)
 }
