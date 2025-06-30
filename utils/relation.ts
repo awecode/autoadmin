@@ -10,6 +10,23 @@ export function getRowLabel(row: Record<string, any>) {
   return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
 }
 
+export interface M2MRelationSelf {
+  selfTable: Table
+  selfColumn: AnyColumn
+  selfColumnName: string
+  selfForeignColumn: AnyColumn
+  selfForeignColumnName: string
+}
+export interface M2MRelation extends M2MRelationSelf {
+  name: string
+  m2mTable: Table
+  otherTable: Table
+  otherColumn: AnyColumn
+  otherColumnName: string
+  otherForeignColumn: AnyColumn
+  otherForeignColumnName: string
+}
+
 export function parseRelations(model: Table, relations: Record<string, Relations>) {
   const xyz = relations.platformRelations.config({
     one(target, config) {
@@ -27,19 +44,40 @@ export function parseRelations(model: Table, relations: Record<string, Relations
       }
     },
   }) as unknown as Record<string, { name: string, type: 'one' | 'many', target: Table }>
-  const m2mRelationsInJunctionTable: ReturnType<typeof getTableRelations> = []
+  const m2mRelationsInJunctionTable: M2MRelation[] = []
   for (const [_, value] of Object.entries(xyz)) {
     if (value.type === 'many') {
       const rels = getTableRelations(value.target, 'many')
+      let selfData: M2MRelationSelf
+      rels.forEach((relation) => {
+        if (relation.foreignTable === model) {
+          selfData = {
+            selfTable: relation.foreignTable,
+            selfColumn: relation.column,
+            selfColumnName: relation.columnName,
+            selfForeignColumn: relation.foreignColumn,
+            selfForeignColumnName: relation.foreignColumnName,
+          }
+        }
+      })
       rels.forEach((relation) => {
         if (relation.foreignTable !== model) {
-          relation.name = value.name
-          m2mRelationsInJunctionTable.push(relation)
+          const m2mRelation = {
+            name: value.name,
+            m2mTable: value.target,
+            ...selfData,
+            otherTable: relation.foreignTable,
+            otherColumn: relation.column,
+            otherColumnName: relation.columnName,
+            otherForeignColumn: relation.foreignColumn,
+            otherForeignColumnName: relation.foreignColumnName,
+          }
+          m2mRelationsInJunctionTable.push(m2mRelation)
         }
       })
     }
   }
-  return m2mRelationsInJunctionTable
+  return { m2m: m2mRelationsInJunctionTable }
 }
 
 export function getTableRelations(table: Table, type?: 'one' | 'many') {
@@ -63,7 +101,9 @@ export function getTableRelations(table: Table, type?: 'one' | 'many') {
 
       relations.push({
         name: column.name,
+        column,
         columnName: column.name,
+        table,
         foreignColumn,
         foreignColumnName: foreignColumn.name,
         foreignTable: foreignColumn.table,
@@ -95,6 +135,7 @@ export function getTableRelationsByColumn(table: Table, columnName: string) {
         relations.push({
           name: columnName,
           columnName,
+          table,
           foreignColumn,
           foreignColumnName: foreignColumn.name,
           foreignTable: foreignColumn.table,

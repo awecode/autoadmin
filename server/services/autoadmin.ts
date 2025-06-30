@@ -1,5 +1,6 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
+import { parseRelations } from '#layers/autoadmin/utils/relation'
 import { count, eq } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
@@ -102,6 +103,19 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
   const validatedData = schema.parse(preprocessed)
 
   const result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
+
+  if (modelConfig.relations) {
+    const relations = parseRelations(model, modelConfig.relations)
+    for (const relation of relations) {
+      if (relation.type === 'many') {
+        const fieldName = `${relation.name}__${relation.columnName}`
+        if (preprocessed[fieldName]) {
+          console.log(fieldName, preprocessed[fieldName])
+          console.log(relation)
+        }
+      }
+    }
+  }
 
   return {
     success: true,
