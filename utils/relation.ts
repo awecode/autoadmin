@@ -1,7 +1,7 @@
 import type { AnyColumn, Relation, RelationConfig, Relations, Table } from 'drizzle-orm'
 
-import type { FormSpec } from './form'
-import { eq } from 'drizzle-orm'
+import type { FieldSpec, FormSpec } from './form'
+import { eq, inArray } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { toTitleCase } from './string'
 
@@ -188,20 +188,33 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
   return updatedFormSpec
 }
 
-export const addManyRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[], values?: Record<string, any>) => {
+export const addManyRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[], values?: Record<string, any[]>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
   await Promise.all(relations.map(async (relation) => {
     const name = `___${relation.name}___${relation.otherColumnName}`
-    updatedFormSpec.fields.push({
+    const field: FieldSpec = {
       name,
-      type: 'relation-many',
+      type: 'relation-many' as const,
       label: toTitleCase(relation.name),
       choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${name}`,
       required: false,
       rules: {},
-    })
+      selectItems: [],
+    }
+    if (values?.[name]) {
+      const db = useDb()
+      // Handle array of values for many-to-many relations
+      const rows = await db.select().from(relation.otherTable).where(
+        inArray(relation.otherTable[relation.otherForeignColumnName], values[name]),
+      )
+      field.selectItems = rows.map(row => ({
+        label: getRowLabel(row),
+        value: row[relation.otherForeignColumnName],
+      }))
+    }
+    updatedFormSpec.fields.push(field)
   }))
 
   return updatedFormSpec

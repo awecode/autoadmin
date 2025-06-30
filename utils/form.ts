@@ -3,7 +3,7 @@ import type { ZodDefault, ZodNullable, ZodObject, ZodOptional, ZodTypeAny } from
 type Rules = Record<string, unknown>
 type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many'
 
-interface FieldSpec {
+export interface FieldSpec {
   name: string
   label: string
   type: FieldType

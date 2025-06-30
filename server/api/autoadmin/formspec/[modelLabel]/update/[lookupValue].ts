@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
   const values = await getTableValues(cfg, spec, lookupValue)
   const parsedRelations = cfg.relations ? parseRelations(cfg.model, cfg.relations) : { m2m: [] }
   const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations, values)
-  const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, parsedRelations.m2m)
+  const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, parsedRelations.m2m, values)
   const metadata = getTableMetadata(model)
   const processedSpec = await useMetadataOnFormSpec(specWithRelationsMany, metadata)
   return {
