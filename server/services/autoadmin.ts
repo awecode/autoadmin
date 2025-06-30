@@ -1,7 +1,7 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { parseRelations } from '#layers/autoadmin/utils/relation'
-import { count, eq } from 'drizzle-orm'
+import { and, count, eq, inArray } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 function getModelConfig(modelLabel: string): AdminModelConfig {
@@ -109,10 +109,40 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
     for (const relation of relations.m2m) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {
-        await db.insert(relation.m2mTable).values(preprocessed[fieldName].map((otherForeignColumnValue: any) => ({
-          [relation.otherColumnName]: otherForeignColumnValue,
-          [relation.selfColumnName]: result[0][relation.selfForeignColumnName],
-        })))
+        const selfId = result[0][relation.selfForeignColumnName]
+        const newRelationIds = preprocessed[fieldName]
+
+        // Get existing relationships
+        const existing = await db.select()
+          .from(relation.m2mTable)
+          .where(eq(relation.m2mTable[relation.selfColumnName], selfId))
+
+        const existingOtherIds = existing.map(row => row[relation.otherColumnName])
+
+        // Find records to delete (exist but not in new set)
+        const toDelete = existingOtherIds.filter(id => !newRelationIds.includes(id))
+
+        // Find records to insert (in new set but don't exist)
+        const toInsert = newRelationIds.filter((id: any) => !existingOtherIds.includes(id))
+
+        // Delete records that are no longer needed
+        if (toDelete.length > 0) {
+          await db.delete(relation.m2mTable)
+            .where(and(
+              eq(relation.m2mTable[relation.selfColumnName], selfId),
+              inArray(relation.m2mTable[relation.otherColumnName], toDelete),
+            ))
+        }
+
+        // Insert new records
+        if (toInsert.length > 0) {
+          await db.insert(relation.m2mTable).values(
+            toInsert.map((otherForeignColumnValue: any) => ({
+              [relation.otherColumnName]: otherForeignColumnValue,
+              [relation.selfColumnName]: selfId,
+            })),
+          )
+        }
       }
     }
   }
