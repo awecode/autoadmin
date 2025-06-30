@@ -2,7 +2,7 @@ import type { Table } from 'drizzle-orm'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addRelationToFormSpec, getTableRelations } from '#layers/autoadmin/utils/relation'
+import { addRelationToFormSpec, getTableRelations, parseRelations } from '#layers/autoadmin/utils/relation'
 import { eq } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 
@@ -51,9 +51,11 @@ export default defineEventHandler(async (event) => {
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
   const values = await getTableValues(cfg, spec, lookupValue)
-  const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations, values)
+  const parsedRelations = cfg.relations ? parseRelations(cfg.model, cfg.relations) : []
+  const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations)
+  const specWithRelationsMany = await addRelationToFormSpec(specWithRelations, modelLabel, parsedRelations)
   const metadata = getTableMetadata(model)
-  const processedSpec = await useMetadataOnFormSpec(specWithRelations, metadata)
+  const processedSpec = await useMetadataOnFormSpec(specWithRelationsMany, metadata)
   return {
     spec: processedSpec,
     schema: insertSchema.shape,

@@ -2,6 +2,7 @@
 import type { RouteLocationRaw } from 'vue-router'
 
 import type { FormSpec } from '~/utils/form'
+import { processSchema } from '~/utils/schema'
 
 const props = defineProps<{
   spec: FormSpec
@@ -36,6 +37,9 @@ const initializeState = () => {
 }
 
 const state = initializeState()
+
+// Process schema to only include fields defined in spec
+const processedSchema = computed(() => processSchema(props.schema, props.spec))
 
 const toast = useToast()
 
@@ -93,15 +97,13 @@ const performUpdate = async () => {
 
 <template>
   <div>
-    {{ mode }}
     <UForm
       class="space-y-4"
-      :schema="schema"
+      :schema="processedSchema"
       :state="state"
       @error="console.error"
       @submit="mode === 'create' ? performCreate() : performUpdate()"
     >
-      {{ state }}
       <div v-for="field in spec.fields" :key="field.name">
         <AutoFormField v-model="state[field.name]" :field="field" />
       </div>

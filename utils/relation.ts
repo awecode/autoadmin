@@ -1,7 +1,9 @@
 import type { AnyColumn, Relation, RelationConfig, Relations, Table } from 'drizzle-orm'
+
 import type { FormSpec } from './form'
 import { eq } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
+import { toTitleCase } from './string'
 
 export function getRowLabel(row: Record<string, any>) {
   // TODO: get from formspec if available
@@ -10,14 +12,14 @@ export function getRowLabel(row: Record<string, any>) {
 
 export function parseRelations(model: Table, relations: Record<string, Relations>) {
   const xyz = relations.platformRelations.config({
-    one(target: Table, config?: RelationConfig<string, string, AnyColumn<{ tableName: string }>[]>) {
+    one(target, config) {
       return {
         withFieldName(name) {
           return { name, type: 'one', target, config }
         },
       }
     },
-    many(target: Table, config?: { relationName: string }) {
+    many(target, config) {
       return {
         withFieldName(name) {
           return { name, type: 'many', target, config }
@@ -31,6 +33,7 @@ export function parseRelations(model: Table, relations: Record<string, Relations
       const rels = getTableRelations(value.target, 'many')
       rels.forEach((relation) => {
         if (relation.foreignTable !== model) {
+          relation.name = value.name
           m2mRelationsInJunctionTable.push(relation)
         }
       })
@@ -59,6 +62,7 @@ export function getTableRelations(table: Table, type?: 'one' | 'many') {
       const foreignColumn = foreignColumns[i]
 
       relations.push({
+        name: column.name,
         columnName: column.name,
         foreignColumn,
         foreignColumnName: foreignColumn.name,
@@ -89,6 +93,7 @@ export function getTableRelationsByColumn(table: Table, columnName: string) {
       const foreignColumn = foreignColumns[i]
       if (columns[i].name === columnName) {
         relations.push({
+          name: columnName,
           columnName,
           foreignColumn,
           foreignColumnName: foreignColumn.name,
@@ -135,11 +140,10 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
 
       updatedFormSpec.fields[fieldIndex] = field
     } else if (relation.type === 'many') {
-      // TODO: handle many relations
       updatedFormSpec.fields.push({
-        name: relation.columnName,
+        name: `${relation.name}__${relation.columnName}`,
         type: 'relation-many',
-        label: relation.columnName,
+        label: toTitleCase((relation.name || relation.columnName).replace('Ids', '')),
         choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${relation.columnName}`,
         required: false,
         rules: {},
