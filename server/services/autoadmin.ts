@@ -178,6 +178,8 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
     }
   }
 
+  await saveO2MRelation(db, modelConfig, preprocessed, result)
+
   return {
     success: true,
     message: `${modelLabel} created successfully`,
