@@ -4,7 +4,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addManyRelationsToFormSpec, addRelationToFormSpec, getTableRelations, parseRelations } from '#layers/autoadmin/utils/relation'
+import { addManyRelationsToFormSpec, addRelationToFormSpec, getTableRelations, parseM2mRelations } from '#layers/autoadmin/utils/relation'
 import { eq } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 
@@ -34,7 +34,7 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
 
   // also get m2m values
   if (cfg.relations) {
-    const relations = parseRelations(model, cfg.relations)
+    const relations = parseM2mRelations(model, cfg.relations)
     for (const relation of relations.m2m) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       const selfValue = result[0][relation.selfForeignColumnName]
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
   const values = await getTableValues(cfg, spec, lookupValue)
-  const parsedRelations = cfg.relations ? parseRelations(cfg.model, cfg.relations) : { m2m: [] }
+  const parsedRelations = cfg.relations ? parseM2mRelations(cfg.model, cfg.relations) : { m2m: [] }
   const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations, values)
   const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, parsedRelations.m2m, values)
   const metadata = getTableMetadata(model)

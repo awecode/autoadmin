@@ -2,7 +2,7 @@ import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
-import { parseRelations } from '#layers/autoadmin/utils/relation'
+import { parseM2mRelations } from '#layers/autoadmin/utils/relation'
 import { and, count, eq, getTableColumns, inArray } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
@@ -114,7 +114,7 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
   const result = await db.insert(model).values(validatedData).returning()
 
   if (modelConfig.relations) {
-    const relations = parseRelations(model, modelConfig.relations)
+    const relations = parseM2mRelations(model, modelConfig.relations)
     for (const relation of relations.m2m) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {
@@ -166,7 +166,7 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
   const result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
 
   if (modelConfig.relations) {
-    const relations = parseRelations(model, modelConfig.relations)
+    const relations = parseM2mRelations(model, modelConfig.relations)
     for (const relation of relations.m2m) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {

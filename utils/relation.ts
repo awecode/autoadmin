@@ -27,57 +27,76 @@ export interface M2MRelation extends M2MRelationSelf {
   otherForeignColumnName: string
 }
 
-export function parseRelations(model: Table, relations: Record<string, Relations>) {
-  const relationData = relations.platformRelations.config({
-    one(target, config) {
-      return {
-        withFieldName(name) {
-          return { name, type: 'one', target, config }
-        },
-      }
-    },
-    many(target, config) {
-      return {
-        withFieldName(name) {
-          return { name, type: 'many', target, config }
-        },
-      }
-    },
-  }) as unknown as Record<string, { name: string, type: 'one' | 'many', target: Table }>
-  const m2mRelationsInJunctionTable: M2MRelation[] = []
-  for (const [_, value] of Object.entries(relationData)) {
-    if (value.type === 'many') {
-      const rels = getTableRelations(value.target, 'many')
-      let selfData: M2MRelationSelf
-      rels.forEach((relation) => {
-        if (relation.foreignTable === model) {
-          selfData = {
-            selfTable: relation.foreignTable,
-            selfColumn: relation.column,
-            selfColumnName: relation.columnName,
-            selfForeignColumn: relation.foreignColumn,
-            selfForeignColumnName: relation.foreignColumnName,
-          }
+export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>) {
+  const m2mRelations: M2MRelation[] = []
+
+  Object.entries(m2mTables).forEach(([name, table]) => {
+    const rels = getTableRelations(table, 'many')
+    let selfData: M2MRelationSelf
+    rels.forEach((relation) => {
+      if (relation.foreignTable === model) {
+        selfData = {
+          selfTable: relation.foreignTable,
+          selfColumn: relation.column,
+          selfColumnName: relation.columnName,
+          selfForeignColumn: relation.foreignColumn,
+          selfForeignColumnName: relation.foreignColumnName,
         }
-      })
-      rels.forEach((relation) => {
-        if (relation.foreignTable !== model) {
-          const m2mRelation = {
-            name: value.name,
-            m2mTable: value.target,
-            ...selfData,
-            otherTable: relation.foreignTable,
-            otherColumn: relation.column,
-            otherColumnName: relation.columnName,
-            otherForeignColumn: relation.foreignColumn,
-            otherForeignColumnName: relation.foreignColumnName,
-          }
-          m2mRelationsInJunctionTable.push(m2mRelation)
+      }
+    })
+    rels.forEach((relation) => {
+      if (relation.foreignTable !== model) {
+        const m2mRelation = {
+          name,
+          m2mTable: table,
+          ...selfData,
+          otherTable: relation.foreignTable,
+          otherColumn: relation.column,
+          otherColumnName: relation.columnName,
+          otherForeignColumn: relation.foreignColumn,
+          otherForeignColumnName: relation.foreignColumnName,
         }
-      })
-    }
-  }
-  return { m2m: m2mRelationsInJunctionTable }
+        m2mRelations.push(m2mRelation)
+      }
+    })
+  })
+  return m2mRelations
+
+  // const relationData = m2mTables.map(table => getTableRelations(table, 'many'))
+  // const m2mRelationsInJunctionTable: M2MRelation[] = []
+
+  // // debugger
+  // const rels = getTableRelations(value.target, 'many')
+  // let selfData: M2MRelationSelf
+  // rels.forEach((relation) => {
+  //   if (relation.foreignTable === model) {
+  //     selfData = {
+  //       selfTable: relation.foreignTable,
+  //       selfColumn: relation.column,
+  //       selfColumnName: relation.columnName,
+  //       selfForeignColumn: relation.foreignColumn,
+  //       selfForeignColumnName: relation.foreignColumnName,
+  //     }
+  //   }
+  // })
+  // rels.forEach((relation) => {
+  //   if (relation.foreignTable !== model) {
+  //     const m2mRelation = {
+  //       name: value.name,
+  //       m2mTable: value.target,
+  //       ...selfData,
+  //       otherTable: relation.foreignTable,
+  //       otherColumn: relation.column,
+  //       otherColumnName: relation.columnName,
+  //       otherForeignColumn: relation.foreignColumn,
+  //       otherForeignColumnName: relation.foreignColumnName,
+  //     }
+  //     m2mRelationsInJunctionTable.push(m2mRelation)
+  //   }
+  // })
+
+  // console.log(m2mRelationsInJunctionTable)
+  // return { m2m: m2mRelationsInJunctionTable }
 }
 
 export function getTableRelations(table: Table, type?: 'one' | 'many') {

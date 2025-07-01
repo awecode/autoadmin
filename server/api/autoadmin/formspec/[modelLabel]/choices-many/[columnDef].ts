@@ -1,5 +1,5 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { getRowLabel, parseRelations } from '#layers/autoadmin/utils/relation'
+import { getRowLabel, parseM2mRelations } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')
@@ -23,13 +23,13 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
-  if (!cfg.relations) {
+  if (!cfg.m2m) {
     throw createError({
       statusCode: 404,
-      statusMessage: `No relations found for model ${modelLabel}.`,
+      statusMessage: `No many-to-many relations provided for model ${modelLabel} during registration.`,
     })
   }
-  const relations = parseRelations(cfg.model, cfg.relations)
+  const relations = parseM2mRelations(cfg.model, cfg.m2m)
   // columnDef is in the format of ___relationName___columnName
   const [_, relationName, columnName] = columnDef.split('___')
   if (!relationName || !columnName) {
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Invalid column definition ${columnDef}.`,
     })
   }
-  const relation = relations.m2m.find(r => r.name === relationName && r.otherColumnName === columnName)
+  const relation = relations.find(r => r.name === relationName && r.otherColumnName === columnName)
   if (!relation) {
     throw createError({
       statusCode: 404,

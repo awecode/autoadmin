@@ -44,7 +44,8 @@ export interface AdminModelOptions<T extends Table = Table> {
   create?: Partial<CreateOptions>
   update?: Partial<UpdateOptions>
   delete?: Partial<DeleteOptions>
-  relations?: Record<string, Relations<string, Record<string, Relation>>>
+  m2m?: Record<string, Table>
+  o2m?: Record<string, Table>
 }
 
 // export type TableWithColumns<T extends Table = Table>
@@ -60,7 +61,8 @@ export interface AdminModelConfig<T extends Table = Table> {
   create: CreateOptions
   update: UpdateOptions
   delete: DeleteOptions
-  relations?: Record<string, Relations<string, Record<string, Relation>>>
+  m2m?: Record<string, Table>
+  o2m?: Record<string, Table>
 }
 
 const staticDefaultOptions = {
