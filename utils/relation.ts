@@ -1,5 +1,4 @@
 import type { AnyColumn, Table } from 'drizzle-orm'
-
 import type { FieldSpec, FormSpec } from './form'
 import { eq, getTableColumns, inArray } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
@@ -24,16 +23,6 @@ export interface M2MRelation extends M2MRelationSelf {
   otherColumnName: string
   otherForeignColumn: AnyColumn
   otherForeignColumnName: string
-}
-
-export function parseO2mRelations(model: Table, o2mTables: Record<string, Table>) {
-  let o2mRelations = []
-
-  Object.entries(o2mTables).forEach(([name, table]) => {
-    console.log(name, table)
-    debugger
-  })
-  return o2mRelations
 }
 
 export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>) {

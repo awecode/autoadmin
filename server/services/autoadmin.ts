@@ -1,10 +1,20 @@
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
+import type { Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
-import { parseM2mRelations } from '#layers/autoadmin/utils/relation'
-import { and, count, eq, getTableColumns, inArray } from 'drizzle-orm'
+import { getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
+import { and, count, eq, getTableColumns, getTableName, inArray } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
+
+async function syncO2MRelation(db: DrizzleD1Database, table: Table, primaryKeyColumn: string, relatedColumnName: string, selfValue: any, newValues: any[]) {
+  // Step 1 : Unset `relatedColumnName` in `table` for the current selfValue
+  await db.update(table).set({ [relatedColumnName]: null }).where(eq(table[relatedColumnName], selfValue))
+  // Step 2 : Set `relatedColumnName` in `table` for the new values for the current selfValue
+  if (newValues.length > 0) {
+    await db.update(table).set({ [relatedColumnName]: selfValue }).where(inArray(table[primaryKeyColumn], newValues))
+  }
+}
 
 async function syncM2MRelation(db: DrizzleD1Database, relation: M2MRelation, selfValue: any, newValues: any[]) {
   // if the m2m table has only two columns, we can delete and insert all at once
@@ -172,6 +182,37 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
       if (preprocessed[fieldName]) {
         const selfValue = result[0][relation.selfForeignColumnName]
         await syncM2MRelation(db, relation, selfValue, preprocessed[fieldName])
+      }
+    }
+  }
+
+  if (modelConfig.o2m) {
+    for (const [name, table] of Object.entries(modelConfig.o2m)) {
+      const foreignPrimaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+      if (foreignPrimaryColumns.length === 0) {
+        throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
+      }
+      if (foreignPrimaryColumns.length > 1) {
+        throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
+      }
+      const foreignPrimaryColumn = foreignPrimaryColumns[0]
+      const fieldName = `___o2m___${name}___${foreignPrimaryColumn.name}`
+      if (preprocessed[fieldName]) {
+        const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+        if (selfPrimaryColumns.length === 0) {
+          throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
+        }
+        if (selfPrimaryColumns.length > 1) {
+          throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
+        }
+        const selfPrimaryColumn = selfPrimaryColumns[0]
+        const selfValue = result[0][selfPrimaryColumn.name]
+        const foreignKeys = getTableForeignKeys(table)
+        const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model)
+        if (!foreignRelatedColumn) {
+          throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
+        }
+        await syncO2MRelation(db, table, foreignPrimaryColumn.name, foreignRelatedColumn.name, selfValue, preprocessed[fieldName])
       }
     }
   }
