@@ -177,10 +177,11 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
       throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
     }
     const primaryColumn = primaryColumns[0]
+    const fieldName = `___o2m___${name}___${primaryColumn.name}`
     const field: FieldSpec = {
-      name,
+      name: fieldName,
       type: 'relation-many' as const,
-      label: name,
+      label: toTitleCase(name),
       choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${primaryColumn.name}`,
       required: false,
       rules: {},
