@@ -1,5 +1,5 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { getRowLabel, getTableRelationsByColumn, parseRelations } from '#layers/autoadmin/utils/relation'
+import { getRowLabel, parseRelations } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')

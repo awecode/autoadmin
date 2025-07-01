@@ -1,4 +1,4 @@
-import type { AnyColumn, Relation, RelationConfig, Relations, Table } from 'drizzle-orm'
+import type { AnyColumn, Relations, Table } from 'drizzle-orm'
 
 import type { FieldSpec, FormSpec } from './form'
 import { eq, inArray } from 'drizzle-orm'

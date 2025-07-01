@@ -113,6 +113,17 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
 
   const result = await db.insert(model).values(validatedData).returning()
 
+  if (modelConfig.relations) {
+    const relations = parseRelations(model, modelConfig.relations)
+    for (const relation of relations.m2m) {
+      const fieldName = `___${relation.name}___${relation.otherColumnName}`
+      if (preprocessed[fieldName]) {
+        const selfValue = result[0][relation.selfForeignColumnName]
+        await syncM2MRelation(db, relation, selfValue, preprocessed[fieldName])
+      }
+    }
+  }
+
   return {
     success: true,
     message: `${modelLabel} created successfully`,
