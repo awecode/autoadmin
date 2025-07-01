@@ -7,6 +7,47 @@ import { getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/
 import { and, count, eq, getTableColumns, getTableName, inArray } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
+async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
+  if (modelConfig.o2m) {
+    const modelLabel = modelConfig.label
+    const model = modelConfig.model
+    for (const [name, table] of Object.entries(modelConfig.o2m)) {
+      const foreignPrimaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+      if (foreignPrimaryColumns.length === 0) {
+        throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
+      }
+      if (foreignPrimaryColumns.length > 1) {
+        throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
+      }
+      const foreignPrimaryColumn = foreignPrimaryColumns[0]
+      const fieldName = `___o2m___${name}___${foreignPrimaryColumn.name}`
+      if (preprocessed[fieldName]) {
+        const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+        if (selfPrimaryColumns.length === 0) {
+          throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
+        }
+        if (selfPrimaryColumns.length > 1) {
+          throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
+        }
+        const selfPrimaryColumn = selfPrimaryColumns[0]
+        const selfValue = result[0][selfPrimaryColumn.name]
+        const foreignKeys = getTableForeignKeys(table)
+        const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model)
+        if (!foreignRelatedColumn) {
+          throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
+        }
+        // await syncO2MRelation(db, table, foreignPrimaryColumn.name, foreignRelatedColumn.name, selfValue, preprocessed[fieldName])
+        // Step 1 : Unset `relatedColumnName` in `table` for the current selfValue
+        await db.update(table).set({ [foreignRelatedColumn.name]: null }).where(eq(table[foreignRelatedColumn.name], selfValue))
+        // Step 2 : Set `relatedColumnName` in `table` for the new values for the current selfValue
+        if (preprocessed[fieldName].length > 0) {
+          await db.update(table).set({ [foreignRelatedColumn.name]: selfValue }).where(inArray(table[foreignPrimaryColumn.name], preprocessed[fieldName]))
+        }
+      }
+    }
+  }
+}
+
 async function syncO2MRelation(db: DrizzleD1Database, table: Table, primaryKeyColumn: string, relatedColumnName: string, selfValue: any, newValues: any[]) {
   // Step 1 : Unset `relatedColumnName` in `table` for the current selfValue
   await db.update(table).set({ [relatedColumnName]: null }).where(eq(table[relatedColumnName], selfValue))
@@ -186,36 +227,7 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
     }
   }
 
-  if (modelConfig.o2m) {
-    for (const [name, table] of Object.entries(modelConfig.o2m)) {
-      const foreignPrimaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-      if (foreignPrimaryColumns.length === 0) {
-        throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
-      }
-      if (foreignPrimaryColumns.length > 1) {
-        throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
-      }
-      const foreignPrimaryColumn = foreignPrimaryColumns[0]
-      const fieldName = `___o2m___${name}___${foreignPrimaryColumn.name}`
-      if (preprocessed[fieldName]) {
-        const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-        if (selfPrimaryColumns.length === 0) {
-          throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
-        }
-        if (selfPrimaryColumns.length > 1) {
-          throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
-        }
-        const selfPrimaryColumn = selfPrimaryColumns[0]
-        const selfValue = result[0][selfPrimaryColumn.name]
-        const foreignKeys = getTableForeignKeys(table)
-        const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model)
-        if (!foreignRelatedColumn) {
-          throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
-        }
-        await syncO2MRelation(db, table, foreignPrimaryColumn.name, foreignRelatedColumn.name, selfValue, preprocessed[fieldName])
-      }
-    }
-  }
+  await saveO2MRelation(db, modelConfig, preprocessed, result)
 
   return {
     success: true,
