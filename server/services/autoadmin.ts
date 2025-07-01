@@ -37,7 +37,20 @@ async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
           throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
         }
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
-        await db.update(table).set({ [foreignRelatedColumn.name]: null }).where(and(eq(table[foreignRelatedColumn.name], selfValue), not(inArray(table[foreignPrimaryColumn.name], newValues))))
+        try {
+          await db.update(table).set({ [foreignRelatedColumn.name]: null }).where(and(eq(table[foreignRelatedColumn.name], selfValue), not(inArray(table[foreignPrimaryColumn.name], newValues))))
+        } catch (error) {
+          if (error instanceof DrizzleQueryError) {
+            if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_NOTNULL') {
+              throw createError({
+                statusCode: 400,
+                // statusMessage: `Cannot unset this ${foreignRelatedColumn.name} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
+                statusMessage: `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`,
+              })
+            }
+          }
+          throw handleDrizzleError(error)
+        }
         // Step 2 : Set `relatedColumnName` in `table` for the new values for selfValue
         if (newValues.length > 0) {
           await db.update(table).set({ [foreignRelatedColumn.name]: selfValue }).where(inArray(table[foreignPrimaryColumn.name], newValues))
