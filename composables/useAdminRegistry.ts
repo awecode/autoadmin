@@ -1,5 +1,5 @@
 import type { TableColumn } from '#ui/types'
-import type { InferInsertModel, Relation, Relations, Table } from 'drizzle-orm'
+import type { InferInsertModel, Table } from 'drizzle-orm'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
