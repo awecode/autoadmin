@@ -11,7 +11,6 @@ import { createInsertSchema } from 'drizzle-zod'
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
 async function getM2mRelationValues(db: DrizzleD1Database, relation: M2MRelation, selfValue: any) {
-  // if the m2m table has only two columns, we can delete and insert all at once
   // const values = db.select(relation.otherColumn).from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
   const values = db.select().from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
   return values
