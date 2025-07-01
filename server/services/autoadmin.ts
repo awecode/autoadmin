@@ -113,9 +113,9 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
 
   const result = await db.insert(model).values(validatedData).returning()
 
-  if (modelConfig.relations) {
-    const relations = parseM2mRelations(model, modelConfig.relations)
-    for (const relation of relations.m2m) {
+  if (modelConfig.m2m) {
+    const relations = parseM2mRelations(model, modelConfig.m2m)
+    for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {
         const selfValue = result[0][relation.selfForeignColumnName]
@@ -165,9 +165,9 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
 
   const result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
 
-  if (modelConfig.relations) {
-    const relations = parseM2mRelations(model, modelConfig.relations)
-    for (const relation of relations.m2m) {
+  if (modelConfig.m2m) {
+    const relations = parseM2mRelations(model, modelConfig.m2m)
+    for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {
         const selfValue = result[0][relation.selfForeignColumnName]

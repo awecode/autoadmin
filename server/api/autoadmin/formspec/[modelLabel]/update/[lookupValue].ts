@@ -33,9 +33,9 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
   const values = result[0]
 
   // also get m2m values
-  if (cfg.relations) {
-    const relations = parseM2mRelations(model, cfg.relations)
-    for (const relation of relations.m2m) {
+  if (cfg.m2m) {
+    const relations = parseM2mRelations(model, cfg.m2m)
+    for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       const selfValue = result[0][relation.selfForeignColumnName]
       const m2mValues = await getM2mRelationValues(db, relation, selfValue)
@@ -73,9 +73,9 @@ export default defineEventHandler(async (event) => {
   const spec = zodToFormSpec(insertSchema as any)
   const relations = getTableRelations(model)
   const values = await getTableValues(cfg, spec, lookupValue)
-  const parsedRelations = cfg.relations ? parseM2mRelations(cfg.model, cfg.relations) : { m2m: [] }
+  const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
   const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations, values)
-  const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, parsedRelations.m2m, values)
+  const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, m2mRelations, values)
   const metadata = getTableMetadata(model)
   const processedSpec = await useMetadataOnFormSpec(specWithRelationsMany, metadata)
   return {
