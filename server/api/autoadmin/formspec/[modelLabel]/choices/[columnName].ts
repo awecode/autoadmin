@@ -1,5 +1,5 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { getRowLabel, getTableRelationsByColumn } from '#layers/autoadmin/utils/relation'
+import { getRowLabel, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
-  const relations = getTableRelationsByColumn(cfg.model, columnName)
+  const relations = getTableForeignKeysByColumn(cfg.model, columnName)
   if (relations.length === 0) {
     throw createError({
       statusCode: 404,

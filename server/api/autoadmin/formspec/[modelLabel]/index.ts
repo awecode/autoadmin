@@ -1,7 +1,7 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addManyRelationsToFormSpec, addRelationToFormSpec, getTableRelations, parseM2mRelations } from '#layers/autoadmin/utils/relation'
+import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
 import { createInsertSchema } from 'drizzle-zod'
 
 export default defineEventHandler(async (event) => {
@@ -22,14 +22,16 @@ export default defineEventHandler(async (event) => {
   const model = cfg.model
   const insertSchema = createInsertSchema(model)
   const spec = zodToFormSpec(insertSchema as any)
-  const relations = getTableRelations(model)
+
+  const foreignKeys = getTableForeignKeys(model)
+  const specWithForeignKeys = await addForeignKeysToFormSpec(spec, modelLabel, foreignKeys)
+
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
-  const specWithRelations = await addRelationToFormSpec(spec, modelLabel, relations)
-  const specWithRelationsMany = await addManyRelationsToFormSpec(specWithRelations, modelLabel, m2mRelations)
+  const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithForeignKeys, modelLabel, m2mRelations)
 
   const metadata = getTableMetadata(model)
+  const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, metadata)
   return {
-    spec: await useMetadataOnFormSpec(specWithRelationsMany, metadata),
-    schema: insertSchema.shape,
+    spec: specWithMetadata,
   }
 })

@@ -31,7 +31,7 @@ export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>
   const m2mRelations: M2MRelation[] = []
 
   Object.entries(m2mTables).forEach(([name, table]) => {
-    const rels = getTableRelations(table, 'many')
+    const rels = getTableForeignKeys(table, 'many')
     let selfData: M2MRelationSelf
     rels.forEach((relation) => {
       if (relation.foreignTable === model) {
@@ -62,11 +62,11 @@ export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>
   })
   return m2mRelations
 
-  // const relationData = m2mTables.map(table => getTableRelations(table, 'many'))
+  // const relationData = m2mTables.map(table => getTableForeignKeys(table, 'many'))
   // const m2mRelationsInJunctionTable: M2MRelation[] = []
 
   // // debugger
-  // const rels = getTableRelations(value.target, 'many')
+  // const rels = getTableForeignKeys(value.target, 'many')
   // let selfData: M2MRelationSelf
   // rels.forEach((relation) => {
   //   if (relation.foreignTable === model) {
@@ -99,7 +99,7 @@ export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>
   // return { m2m: m2mRelationsInJunctionTable }
 }
 
-export function getTableRelations(table: Table, type?: 'one' | 'many') {
+export function getTableForeignKeys(table: Table, type?: 'one' | 'many') {
   type = type || 'one'
   const relations = []
   const foreignKeys = getTableConfig(table).foreignKeys
@@ -134,7 +134,7 @@ export function getTableRelations(table: Table, type?: 'one' | 'many') {
   return relations
 }
 
-export function getTableRelationsByColumn(table: Table, columnName: string) {
+export function getTableForeignKeysByColumn(table: Table, columnName: string) {
   const relations = []
   const foreignKeys = getTableConfig(table).foreignKeys
 
@@ -166,7 +166,7 @@ export function getTableRelationsByColumn(table: Table, columnName: string) {
   return relations
 }
 
-export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableRelations>, values?: Record<string, any>) => {
+export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableForeignKeys>, values?: Record<string, any>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
@@ -207,7 +207,7 @@ export const addRelationToFormSpec = async (formSpec: FormSpec, modelLabel: stri
   return updatedFormSpec
 }
 
-export const addManyRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[], values?: Record<string, any[]>) => {
+export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[], values?: Record<string, any[]>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
