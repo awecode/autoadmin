@@ -1,10 +1,9 @@
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
-import type { Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
-import { and, count, eq, getTableColumns, getTableName, inArray } from 'drizzle-orm'
+import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
@@ -21,7 +20,8 @@ async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
       }
       const foreignPrimaryColumn = foreignPrimaryColumns[0]
       const fieldName = `___o2m___${name}___${foreignPrimaryColumn.name}`
-      if (preprocessed[fieldName]) {
+      const newValues = preprocessed[fieldName]
+      if (newValues) {
         const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
         if (selfPrimaryColumns.length === 0) {
           throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
@@ -36,24 +36,14 @@ async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
         if (!foreignRelatedColumn) {
           throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
         }
-        // await syncO2MRelation(db, table, foreignPrimaryColumn.name, foreignRelatedColumn.name, selfValue, preprocessed[fieldName])
-        // Step 1 : Unset `relatedColumnName` in `table` for the current selfValue
-        await db.update(table).set({ [foreignRelatedColumn.name]: null }).where(eq(table[foreignRelatedColumn.name], selfValue))
-        // Step 2 : Set `relatedColumnName` in `table` for the new values for the current selfValue
-        if (preprocessed[fieldName].length > 0) {
-          await db.update(table).set({ [foreignRelatedColumn.name]: selfValue }).where(inArray(table[foreignPrimaryColumn.name], preprocessed[fieldName]))
+        // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
+        await db.update(table).set({ [foreignRelatedColumn.name]: null }).where(and(eq(table[foreignRelatedColumn.name], selfValue), not(inArray(table[foreignPrimaryColumn.name], newValues))))
+        // Step 2 : Set `relatedColumnName` in `table` for the new values for selfValue
+        if (newValues.length > 0) {
+          await db.update(table).set({ [foreignRelatedColumn.name]: selfValue }).where(inArray(table[foreignPrimaryColumn.name], newValues))
         }
       }
     }
-  }
-}
-
-async function syncO2MRelation(db: DrizzleD1Database, table: Table, primaryKeyColumn: string, relatedColumnName: string, selfValue: any, newValues: any[]) {
-  // Step 1 : Unset `relatedColumnName` in `table` for the current selfValue
-  await db.update(table).set({ [relatedColumnName]: null }).where(eq(table[relatedColumnName], selfValue))
-  // Step 2 : Set `relatedColumnName` in `table` for the new values for the current selfValue
-  if (newValues.length > 0) {
-    await db.update(table).set({ [relatedColumnName]: selfValue }).where(inArray(table[primaryKeyColumn], newValues))
   }
 }
 
