@@ -1,11 +1,11 @@
-import type { M2MRelation } from '#layers/autoadmin/utils/relation'
+import type { M2MRelation, O2MRelation } from '#layers/autoadmin/utils/relation'
 import type { Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getPrimaryKeyColumn, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
-import { eq, getTableColumns } from 'drizzle-orm'
+import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getPrimaryKeyColumn, getTableForeignKeys, parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
+import { eq } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -13,6 +13,11 @@ type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 async function getM2mRelationValues(db: DrizzleD1Database, relation: M2MRelation, selfValue: any) {
   // const values = db.select(relation.otherColumn).from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
   const values = db.select().from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+  return values
+}
+
+async function getO2mRelationValues(db: DrizzleD1Database, relation: O2MRelation, selfValue: any) {
+  const values = db.select().from(relation.foreignTable).where(eq(relation.foreignTable[relation.foreignRelatedColumn.name], selfValue))
   return values
 }
 
@@ -39,6 +44,15 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
       const selfValue = result[0][relation.selfForeignColumnName]
       const m2mValues = await getM2mRelationValues(db, relation, selfValue)
       values[fieldName] = m2mValues.map(value => value[relation.otherColumnName])
+    }
+  }
+
+  if (cfg.o2m) {
+    for (const [name, table] of Object.entries(cfg.o2m)) {
+      const relationData = parseO2mRelation(cfg, table, name)
+      const selfValue = result[0][relationData.selfPrimaryColumn.name]
+      const o2mValues = await getO2mRelationValues(db, relationData, selfValue)
+      values[relationData.fieldName] = o2mValues.map(value => value[relationData.foreignPrimaryColumn.name])
     }
   }
 
