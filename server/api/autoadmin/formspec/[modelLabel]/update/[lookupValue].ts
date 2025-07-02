@@ -5,7 +5,7 @@ import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
-import { eq } from 'drizzle-orm'
+import { eq, getTableColumns } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -75,7 +75,26 @@ export default defineEventHandler(async (event) => {
   const foreignKeys = getTableForeignKeys(model)
   const specWithForeignKeys = await addForeignKeysToFormSpec(spec, modelLabel, foreignKeys, values)
 
-  const specWithO2mRelations = cfg.o2m ? await addO2mRelationsToFormSpec(specWithForeignKeys, modelLabel, cfg.o2m) : specWithForeignKeys
+  let specWithO2mRelations: FormSpec
+  if (cfg.o2m) {
+    // find primary key value, required for initial selection of o2m relations
+    const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+    if (selfPrimaryColumns.length === 0) {
+      throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
+    }
+    if (selfPrimaryColumns.length > 1) {
+      throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
+    }
+    const selfPrimaryColumn = selfPrimaryColumns[0]
+    const selfPrimaryValue = values[selfPrimaryColumn.name]
+    // if selfPrimaryValue is not null, get o2m values
+    if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
+      throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelLabel}.`)
+    }
+    specWithO2mRelations = await addO2mRelationsToFormSpec(specWithForeignKeys, cfg, values, selfPrimaryValue)
+  } else {
+    specWithO2mRelations = specWithForeignKeys
+  }
 
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
   const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, modelLabel, m2mRelations, values)

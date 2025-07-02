@@ -2,43 +2,22 @@ import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
-import { getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
+import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
   if (modelConfig.o2m) {
     const modelLabel = modelConfig.label
-    const model = modelConfig.model
     for (const [name, table] of Object.entries(modelConfig.o2m)) {
-      const foreignPrimaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-      if (foreignPrimaryColumns.length === 0) {
-        throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
-      }
-      if (foreignPrimaryColumns.length > 1) {
-        throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
-      }
-      const foreignPrimaryColumn = foreignPrimaryColumns[0]
-      const fieldName = `___o2m___${name}___${foreignPrimaryColumn.name}`
+      const relationData = parseO2mRelation(modelConfig, table, name)
+      const fieldName = relationData.fieldName
       const newValues = preprocessed[fieldName]
       if (newValues) {
-        const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-        if (selfPrimaryColumns.length === 0) {
-          throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
-        }
-        if (selfPrimaryColumns.length > 1) {
-          throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
-        }
-        const selfPrimaryColumn = selfPrimaryColumns[0]
-        const selfValue = result[0][selfPrimaryColumn.name]
-        const foreignKeys = getTableForeignKeys(table)
-        const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model)
-        if (!foreignRelatedColumn) {
-          throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
-        }
+        const selfValue = result[0][relationData.selfPrimaryColumn.name]
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
         try {
-          await db.update(table).set({ [foreignRelatedColumn.name]: null }).where(and(eq(table[foreignRelatedColumn.name], selfValue), not(inArray(table[foreignPrimaryColumn.name], newValues))))
+          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: null }).where(and(eq(table[relationData.foreignRelatedColumn.name], selfValue), not(inArray(table[relationData.foreignPrimaryColumn.name], newValues))))
         } catch (error) {
           if (error instanceof DrizzleQueryError) {
             if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_NOTNULL') {
@@ -53,7 +32,7 @@ async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
         }
         // Step 2 : Set `relatedColumnName` in `table` for the new values for selfValue
         if (newValues.length > 0) {
-          await db.update(table).set({ [foreignRelatedColumn.name]: selfValue }).where(inArray(table[foreignPrimaryColumn.name], newValues))
+          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: selfValue }).where(inArray(table[relationData.foreignPrimaryColumn.name], newValues))
         }
       }
     }

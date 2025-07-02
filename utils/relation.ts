@@ -1,6 +1,6 @@
 import type { AnyColumn, Table } from 'drizzle-orm'
 import type { FieldSpec, FormSpec } from './form'
-import { eq, getTableColumns, inArray } from 'drizzle-orm'
+import { eq, getTableColumns, getTableName, inArray } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { toTitleCase } from './string'
 
@@ -23,6 +23,50 @@ export interface M2MRelation extends M2MRelationSelf {
   otherColumnName: string
   otherForeignColumn: AnyColumn
   otherForeignColumnName: string
+}
+
+export interface O2MRelation {
+  selfTable: Table
+  foreignTable: Table
+  selfPrimaryColumn: AnyColumn
+  foreignPrimaryColumn: AnyColumn
+  foreignRelatedColumn: AnyColumn
+  fieldName: string
+}
+
+export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, name: string): O2MRelation {
+  const model = modelConfig.model
+  const modelLabel = modelConfig.label
+  const foreignPrimaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+  if (foreignPrimaryColumns.length === 0) {
+    throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
+  }
+  if (foreignPrimaryColumns.length > 1) {
+    throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
+  }
+  const foreignPrimaryColumn = foreignPrimaryColumns[0]
+
+  const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+  if (selfPrimaryColumns.length === 0) {
+    throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
+  }
+  if (selfPrimaryColumns.length > 1) {
+    throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
+  }
+  const selfPrimaryColumn = selfPrimaryColumns[0]
+  const foreignKeys = getTableForeignKeys(table)
+  const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model) as unknown as AnyColumn
+  if (!foreignRelatedColumn) {
+    throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
+  }
+  return {
+    selfTable: model,
+    foreignTable: table,
+    selfPrimaryColumn,
+    foreignPrimaryColumn,
+    foreignRelatedColumn,
+    fieldName: `___o2m___${name}___${foreignPrimaryColumn.name}`,
+  }
 }
 
 export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>) {
@@ -153,40 +197,35 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: s
   return updatedFormSpec
 }
 
-export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, o2mTables: Record<string, Table>, values?: Record<string, any[]>) => {
+export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig: AdminModelConfig, values?: Record<string, any[]>, selfPrimaryValue?: any) => {
+  const o2mTables = modelConfig.o2m
+  if (!o2mTables) {
+    return formSpec
+  }
+  const modelLabel = modelConfig.label
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
   await Promise.all(Object.entries(o2mTables).map(async ([name, table]) => {
-    const primaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-    if (primaryColumns.length === 0) {
-      throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
-    }
-    if (primaryColumns.length > 1) {
-      throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
-    }
-    const primaryColumn = primaryColumns[0]
-    const fieldName = `___o2m___${name}___${primaryColumn.name}`
+    const relationData = parseO2mRelation(modelConfig, table, name)
+
     const field: FieldSpec = {
-      name: fieldName,
+      name: relationData.fieldName,
       type: 'relation-many' as const,
       label: toTitleCase(name),
-      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${primaryColumn.name}`,
+      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
       required: false,
       rules: {},
       selectItems: [],
     }
-    // if (values?.[name]) {
-    //   const db = useDb()
-    //   // Handle array of values for many-to-many relations
-    //   const rows = await db.select().from(table).where(
-    //     inArray(table[name], values[name]),
-    //   )
-    //   field.selectItems = rows.map(row => ({
-    //     label: getRowLabel(row),
-    //     value: row[relation.otherForeignColumnName],
-    //   }))
-    // }
+    if (selfPrimaryValue) {
+      const db = useDb()
+      const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
+      field.selectItems = rows.map(row => ({
+        label: getRowLabel(row),
+        value: row[relationData.foreignPrimaryColumn.name],
+      }))
+    }
     updatedFormSpec.fields.push(field)
   }))
 

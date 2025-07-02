@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   const foreignKeys = getTableForeignKeys(model)
   const specWithForeignKeys = await addForeignKeysToFormSpec(spec, modelLabel, foreignKeys)
 
-  const specWithO2mRelations = cfg.o2m ? await addO2mRelationsToFormSpec(specWithForeignKeys, modelLabel, cfg.o2m) : specWithForeignKeys
+  const specWithO2mRelations = cfg.o2m ? await addO2mRelationsToFormSpec(specWithForeignKeys, cfg) : specWithForeignKeys
 
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
   const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, modelLabel, m2mRelations)
