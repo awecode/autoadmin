@@ -1,6 +1,6 @@
 import type { AnyColumn, Table } from 'drizzle-orm'
 import type { FieldSpec, FormSpec } from './form'
-import { eq, getTableColumns, getTableName, inArray } from 'drizzle-orm'
+import { and, eq, getTableColumns, getTableName } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { toTitleCase } from './string'
 
@@ -255,19 +255,27 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
     if (formSpec.values) {
       const db = useDb()
       const selfValue = formSpec.values[relation.selfForeignColumnName]
-      const m2mValues = await db.select().from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
-      const otherValues = m2mValues.map(value => value[relation.otherColumnName])
-      let rows: any[] = []
-      if (otherValues.length > 0) {
-        rows = await db.select().from(relation.otherTable).where(
-          inArray(relation.otherTable[relation.otherForeignColumnName], otherValues),
+      const result = await db
+        .select({ other: relation.otherTable })
+        .from(relation.otherTable)
+        .innerJoin(
+          relation.m2mTable,
+          and(
+            eq(relation.m2mTable[relation.selfColumnName], selfValue),
+            eq(
+              relation.otherTable[relation.otherForeignColumnName],
+              relation.m2mTable[relation.otherColumnName],
+            ),
+          ),
         )
+      if (result.length > 0) {
+        const rows = result.map(row => row.other)
+        field.selectItems = rows.map(row => ({
+          label: getRowLabel(row),
+          value: row[relation.otherForeignColumnName],
+        }))
+        formSpec.values[fieldName] = field.selectItems.map(item => item.value)
       }
-      field.selectItems = rows.map(row => ({
-        label: getRowLabel(row),
-        value: row[relation.otherForeignColumnName],
-      }))
-      formSpec.values[fieldName] = field.selectItems.map(item => item.value)
     }
     updatedFields.push(field)
   }))
