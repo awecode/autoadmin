@@ -25,15 +25,6 @@ export interface M2MRelation extends M2MRelationSelf {
   otherForeignColumnName: string
 }
 
-export interface O2MRelation {
-  selfTable: Table
-  foreignTable: Table
-  selfPrimaryColumn: AnyColumn
-  foreignPrimaryColumn: AnyColumn
-  foreignRelatedColumn: AnyColumn
-  fieldName: string
-}
-
 export function getPrimaryKeyColumn(table: Table) {
   const primaryKeyColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
   if (primaryKeyColumns.length === 0) {
@@ -45,13 +36,13 @@ export function getPrimaryKeyColumn(table: Table) {
   return primaryKeyColumns[0]
 }
 
-export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, name: string): O2MRelation {
+export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, name: string) {
   const model = modelConfig.model
   const modelLabel = modelConfig.label
   const foreignPrimaryColumn = getPrimaryKeyColumn(table)
   const selfPrimaryColumn = getPrimaryKeyColumn(model)
   const foreignKeys = getTableForeignKeys(table)
-  const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model) as unknown as AnyColumn
+  const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model)
   if (!foreignRelatedColumn) {
     throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
   }
