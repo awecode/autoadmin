@@ -85,31 +85,24 @@ export default defineEventHandler(async (event) => {
   const insertSchema = createInsertSchema(model)
   const spec = zodToFormSpec(insertSchema as any)
   const values = await getTableValues(cfg, spec, lookupValue)
+  spec.values = values
 
   const foreignKeys = getTableForeignKeys(model)
-  const specWithForeignKeys = await addForeignKeysToFormSpec(spec, modelLabel, foreignKeys, values)
+  const specWithForeignKeys = await addForeignKeysToFormSpec(spec, modelLabel, foreignKeys)
 
   let specWithO2mRelations: FormSpec
   if (cfg.o2m) {
-    // find primary key value, required for initial selection of o2m relations
-    const selfPrimaryColumn = getPrimaryKeyColumn(model)
-    const selfPrimaryValue = values[selfPrimaryColumn.name]
-    // if selfPrimaryValue is not null, get o2m values
-    if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
-      throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelLabel}.`)
-    }
-    specWithO2mRelations = await addO2mRelationsToFormSpec(specWithForeignKeys, cfg, values, selfPrimaryValue)
+    specWithO2mRelations = await addO2mRelationsToFormSpec(specWithForeignKeys, cfg)
   } else {
     specWithO2mRelations = specWithForeignKeys
   }
 
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
-  const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, modelLabel, m2mRelations, values)
+  const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, modelLabel, m2mRelations)
 
   const metadata = getTableMetadata(model)
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, metadata)
   return {
     spec: specWithMetadata,
-    values,
   }
 })

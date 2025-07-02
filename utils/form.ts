@@ -16,6 +16,7 @@ export interface FieldSpec {
 }
 export interface FormSpec {
   fields: FieldSpec[]
+  values?: Record<string, any>
 }
 
 function getDef(zodType: ZodTypeAny) {

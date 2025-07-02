@@ -164,7 +164,7 @@ export function getTableForeignKeysByColumn(table: Table, columnName: string) {
   return relations
 }
 
-export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableForeignKeys>, values?: Record<string, any>) => {
+export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableForeignKeys>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   await Promise.all(relations.map(async (relation) => {
@@ -174,9 +174,9 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: s
       field.type = 'relation'
       //   strip id from field label
       field.label = field.label.replace(' Id', '')
-      if (values?.[relation.columnName]) {
+      if (formSpec.values?.[relation.columnName]) {
         const db = useDb()
-        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignTable[relation.foreignColumnName], values[relation.columnName]))
+        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignTable[relation.foreignColumnName], formSpec.values[relation.columnName]))
         field.selectItems = rows.map(row => ({
           label: getRowLabel(row),
           value: row[relation.foreignColumnName],
@@ -193,7 +193,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: s
   return updatedFormSpec
 }
 
-export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig: AdminModelConfig, values?: Record<string, any[]>, selfPrimaryValue?: any) => {
+export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig: AdminModelConfig) => {
   const o2mTables = modelConfig.o2m
   if (!o2mTables) {
     return formSpec
@@ -214,7 +214,15 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       rules: {},
       selectItems: [],
     }
-    if (selfPrimaryValue) {
+    // if values are provided, use them to get the initial selection of o2m relations
+    if (formSpec.values) {
+      // find primary key value, required for initial selection of o2m relations
+      const selfPrimaryColumn = getPrimaryKeyColumn(modelConfig.model)
+      const selfPrimaryValue = formSpec.values[selfPrimaryColumn.name]
+      // if selfPrimaryValue is available, get o2m values
+      if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
+        throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelLabel}.`)
+      }
       const db = useDb()
       const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
       field.selectItems = rows.map(row => ({
@@ -228,7 +236,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
   return updatedFormSpec
 }
 
-export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[], values?: Record<string, any[]>) => {
+export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[]) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   // Process all relations in parallel
@@ -243,11 +251,11 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
       rules: {},
       selectItems: [],
     }
-    if (values?.[name]) {
+    if (formSpec.values?.[name]) {
       const db = useDb()
       // Handle array of values for many-to-many relations
       const rows = await db.select().from(relation.otherTable).where(
-        inArray(relation.otherTable[relation.otherForeignColumnName], values[name]),
+        inArray(relation.otherTable[relation.otherForeignColumnName], formSpec.values[name]),
       )
       field.selectItems = rows.map(row => ({
         label: getRowLabel(row),

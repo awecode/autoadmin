@@ -12,15 +12,14 @@ const props = defineProps<{
   redirectPath?: RouteLocationRaw
   endpoint: string
   schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }>
-  values?: Record<string, any>
 }>()
 
 const loading = ref(false)
 
 // Initialize state with values for update and default values for create
 const initializeState = () => {
-  if (props.values) {
-    return reactive(props.values) as Record<string, any>
+  if (props.spec.values) {
+    return reactive(props.spec.values) as Record<string, any>
   }
 
   const initialState: Record<string, any> = {}
