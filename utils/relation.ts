@@ -199,7 +199,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
     return formSpec
   }
   const modelLabel = modelConfig.label
-  const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
+  const updatedFields = formSpec.fields
 
   // Process all relations in parallel
   await Promise.all(Object.entries(o2mTables).map(async ([name, table]) => {
@@ -229,41 +229,48 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
         label: getRowLabel(row),
         value: row[relationData.foreignPrimaryColumn.name],
       }))
+      formSpec.values[relationData.fieldName] = field.selectItems.map(item => item.value)
     }
-    updatedFormSpec.fields.push(field)
+    updatedFields.push(field)
   }))
 
-  return updatedFormSpec
+  return { ...formSpec, fields: updatedFields }
 }
 
 export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[]) => {
-  const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
+  const updatedFields = formSpec.fields
 
   // Process all relations in parallel
   await Promise.all(relations.map(async (relation) => {
-    const name = `___${relation.name}___${relation.otherColumnName}`
+    const fieldName = `___${relation.name}___${relation.otherColumnName}`
     const field: FieldSpec = {
-      name,
+      name: fieldName,
       type: 'relation-many' as const,
       label: toTitleCase(relation.name),
-      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${name}`,
+      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${fieldName}`,
       required: false,
       rules: {},
       selectItems: [],
     }
-    if (formSpec.values?.[name]) {
+    if (formSpec.values) {
       const db = useDb()
-      // Handle array of values for many-to-many relations
-      const rows = await db.select().from(relation.otherTable).where(
-        inArray(relation.otherTable[relation.otherForeignColumnName], formSpec.values[name]),
-      )
+      const selfValue = formSpec.values[relation.selfForeignColumnName]
+      const m2mValues = await db.select().from(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+      const otherValues = m2mValues.map(value => value[relation.otherColumnName])
+      let rows: any[] = []
+      if (otherValues.length > 0) {
+        rows = await db.select().from(relation.otherTable).where(
+          inArray(relation.otherTable[relation.otherForeignColumnName], otherValues),
+        )
+      }
       field.selectItems = rows.map(row => ({
         label: getRowLabel(row),
         value: row[relation.otherForeignColumnName],
       }))
+      formSpec.values[fieldName] = field.selectItems.map(item => item.value)
     }
-    updatedFormSpec.fields.push(field)
+    updatedFields.push(field)
   }))
 
-  return updatedFormSpec
+  return { ...formSpec, fields: updatedFields }
 }
