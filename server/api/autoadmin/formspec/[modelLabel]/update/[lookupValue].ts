@@ -4,7 +4,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
+import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getPrimaryKeyColumn, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
 import { eq, getTableColumns } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 
@@ -78,14 +78,7 @@ export default defineEventHandler(async (event) => {
   let specWithO2mRelations: FormSpec
   if (cfg.o2m) {
     // find primary key value, required for initial selection of o2m relations
-    const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-    if (selfPrimaryColumns.length === 0) {
-      throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
-    }
-    if (selfPrimaryColumns.length > 1) {
-      throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
-    }
-    const selfPrimaryColumn = selfPrimaryColumns[0]
+    const selfPrimaryColumn = getPrimaryKeyColumn(model)
     const selfPrimaryValue = values[selfPrimaryColumn.name]
     // if selfPrimaryValue is not null, get o2m values
     if (selfPrimaryValue === undefined || selfPrimaryValue === null) {

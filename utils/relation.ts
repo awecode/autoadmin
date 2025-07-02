@@ -34,26 +34,22 @@ export interface O2MRelation {
   fieldName: string
 }
 
+export function getPrimaryKeyColumn(table: Table) {
+  const primaryKeyColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
+  if (primaryKeyColumns.length === 0) {
+    throw new Error(`Table ${getTableName(table)} has no primary key.`)
+  }
+  if (primaryKeyColumns.length > 1) {
+    throw new Error(`Table ${getTableName(table)} has multiple primary keys.`)
+  }
+  return primaryKeyColumns[0]
+}
+
 export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, name: string): O2MRelation {
   const model = modelConfig.model
   const modelLabel = modelConfig.label
-  const foreignPrimaryColumns = Object.entries(getTableColumns(table)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-  if (foreignPrimaryColumns.length === 0) {
-    throw new Error(`One-to-many relation requires a primary key in related table. None found for ${modelLabel} -> ${name}.`)
-  }
-  if (foreignPrimaryColumns.length > 1) {
-    throw new Error(`One-to-many relation requires a single primary key in related table. Multiple found for ${modelLabel} -> ${name}.`)
-  }
-  const foreignPrimaryColumn = foreignPrimaryColumns[0]
-
-  const selfPrimaryColumns = Object.entries(getTableColumns(model)).filter(([_, column]) => column.primary).map(([_, column]) => column)
-  if (selfPrimaryColumns.length === 0) {
-    throw new Error(`One-to-many relation requires a primary key in registered table. None found for ${modelLabel}.`)
-  }
-  if (selfPrimaryColumns.length > 1) {
-    throw new Error(`One-to-many relation requires a single primary key in registered table. Multiple found for ${modelLabel}.`)
-  }
-  const selfPrimaryColumn = selfPrimaryColumns[0]
+  const foreignPrimaryColumn = getPrimaryKeyColumn(table)
+  const selfPrimaryColumn = getPrimaryKeyColumn(model)
   const foreignKeys = getTableForeignKeys(table)
   const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model) as unknown as AnyColumn
   if (!foreignRelatedColumn) {
