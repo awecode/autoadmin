@@ -6,7 +6,7 @@ import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/rel
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
-async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
+async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
   if (modelConfig.o2m) {
     const modelLabel = modelConfig.label
     for (const [name, table] of Object.entries(modelConfig.o2m)) {
@@ -39,7 +39,7 @@ async function saveO2MRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
   }
 }
 
-async function syncM2MRelation(db: DrizzleD1Database, relation: M2MRelation, selfValue: any, newValues: any[]) {
+async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, selfValue: any, newValues: any[]) {
   // if the m2m table has only two columns, we can delete and insert all at once
   if (Object.keys(getTableColumns(relation.m2mTable)).length === 2) {
     await db.delete(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
@@ -152,12 +152,12 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {
         const selfValue = result[0][relation.selfForeignColumnName]
-        await syncM2MRelation(db, relation, selfValue, preprocessed[fieldName])
+        await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }
   }
 
-  await saveO2MRelation(db, modelConfig, preprocessed, result)
+  await saveO2mRelation(db, modelConfig, preprocessed, result)
 
   return {
     success: true,
@@ -206,12 +206,12 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
       const fieldName = `___${relation.name}___${relation.otherColumnName}`
       if (preprocessed[fieldName]) {
         const selfValue = result[0][relation.selfForeignColumnName]
-        await syncM2MRelation(db, relation, selfValue, preprocessed[fieldName])
+        await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }
   }
 
-  await saveO2MRelation(db, modelConfig, preprocessed, result)
+  await saveO2mRelation(db, modelConfig, preprocessed, result)
 
   return {
     success: true,
