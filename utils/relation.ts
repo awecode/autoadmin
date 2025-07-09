@@ -11,18 +11,14 @@ export function getRowLabel(row: Record<string, any>) {
 export interface M2MRelationSelf {
   selfTable: Table
   selfColumn: AnyColumn
-  selfColumnName: string
   selfForeignColumn: AnyColumn
-  selfForeignColumnName: string
 }
 export interface M2MRelation extends M2MRelationSelf {
   name: string
   m2mTable: Table
   otherTable: Table
   otherColumn: AnyColumn
-  otherColumnName: string
   otherForeignColumn: AnyColumn
-  otherForeignColumnName: string
 }
 
 export function getPrimaryKeyColumn(table: Table) {
@@ -67,9 +63,7 @@ export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>
         selfData = {
           selfTable: relation.foreignTable,
           selfColumn: relation.column,
-          selfColumnName: relation.columnName,
           selfForeignColumn: relation.foreignColumn,
-          selfForeignColumnName: relation.foreignColumnName,
         }
       }
     })
@@ -81,9 +75,7 @@ export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>
           ...selfData,
           otherTable: relation.foreignTable,
           otherColumn: relation.column,
-          otherColumnName: relation.columnName,
           otherForeignColumn: relation.foreignColumn,
-          otherForeignColumnName: relation.foreignColumnName,
         }
         m2mRelations.push(m2mRelation)
       }
@@ -112,10 +104,8 @@ export function getTableForeignKeys(table: Table) {
       relations.push({
         name: column.name,
         column,
-        columnName: column.name,
         table,
         foreignColumn,
-        foreignColumnName: foreignColumn.name,
         foreignTable: foreignColumn.table,
       })
     }
@@ -145,7 +135,6 @@ export function getTableForeignKeysByColumn(table: Table, columnName: string) {
           columnName,
           table,
           foreignColumn,
-          foreignColumnName: foreignColumn.name,
           foreignTable: foreignColumn.table,
         })
       }
@@ -159,25 +148,25 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: s
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   await Promise.all(relations.map(async (relation) => {
-    const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === relation.columnName)
+    const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === relation.column.name)
     if (fieldIndex !== -1) {
       const field = { ...updatedFormSpec.fields[fieldIndex] }
       field.type = 'relation'
       //   strip id from field label
       field.label = field.label.replace(' Id', '')
-      if (formSpec.values?.[relation.columnName]) {
+      if (formSpec.values?.[relation.column.name]) {
         const db = useDb()
-        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.columnName]))
+        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.column.name]))
         field.selectItems = rows.map(row => ({
           label: getRowLabel(row),
-          value: row[relation.foreignColumnName],
+          value: row[relation.foreignColumn.name],
         }))
       }
-      field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.columnName}`
+      field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.column.name}`
 
       updatedFormSpec.fields[fieldIndex] = field
     } else {
-      console.error(`Field ${relation.columnName} not found in form spec`)
+      console.error(`Field ${relation.column.name} not found in form spec`)
     }
   }))
 
@@ -234,7 +223,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
 
   // Process all relations in parallel
   await Promise.all(relations.map(async (relation) => {
-    const fieldName = `___${relation.name}___${relation.otherColumnName}`
+    const fieldName = `___${relation.name}___${relation.otherColumn.name}`
     const field: FieldSpec = {
       name: fieldName,
       type: 'relation-many' as const,
@@ -246,7 +235,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
     }
     if (formSpec.values) {
       const db = useDb()
-      const selfValue = formSpec.values[relation.selfForeignColumnName]
+      const selfValue = formSpec.values[relation.selfForeignColumn.name]
       const result = await db
         .select({ other: relation.otherTable })
         .from(relation.otherTable)
@@ -264,7 +253,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
         const rows = result.map(row => row.other)
         field.selectItems = rows.map(row => ({
           label: getRowLabel(row),
-          value: row[relation.otherForeignColumnName],
+          value: row[relation.otherForeignColumn.name],
         }))
         formSpec.values[fieldName] = field.selectItems.map(item => item.value)
       }

@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Invalid column definition ${columnDef}.`,
     })
   }
-  const relation = relations.find(r => r.name === relationName && r.otherColumnName === columnName)
+  const relation = relations.find(r => r.name === relationName && r.otherColumn.name === columnName)
   if (!relation) {
     throw createError({
       statusCode: 404,
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
   const rows = await db.select().from(relation.otherTable)
   choices.push(...rows.map(row => ({
     label: getRowLabel(row),
-    value: row[relation.otherForeignColumnName],
+    value: row[relation.otherForeignColumn.name],
   })))
   return choices
 })

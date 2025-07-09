@@ -45,8 +45,8 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
     await db.delete(relation.m2mTable).where(eq(relation.selfColumn, selfValue))
     if (newValues.length > 0) {
       await db.insert(relation.m2mTable).values(newValues.map(value => ({
-        [relation.selfColumnName]: selfValue,
-        [relation.otherColumnName]: value,
+        [relation.selfColumn.name]: selfValue,
+        [relation.otherColumn.name]: value,
       })))
     }
     return
@@ -59,7 +59,7 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
     .from(relation.m2mTable)
     .where(eq(relation.selfColumn, selfValue))
 
-  const existingOtherIds = existing.map(row => row[relation.otherColumnName])
+  const existingOtherIds = existing.map(row => row[relation.otherColumn.name])
 
   // Find records to delete (exist but not in new set)
   const toDelete = existingOtherIds.filter(id => !newValues.includes(id))
@@ -80,8 +80,8 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
   if (toInsert.length > 0) {
     await db.insert(relation.m2mTable).values(
       toInsert.map((otherForeignColumnValue: any) => ({
-        [relation.otherColumnName]: otherForeignColumnValue,
-        [relation.selfColumnName]: selfValue,
+        [relation.otherColumn.name]: otherForeignColumnValue,
+        [relation.selfColumn.name]: selfValue,
       })),
     )
   }
@@ -149,9 +149,9 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
   if (modelConfig.m2m) {
     const relations = parseM2mRelations(model, modelConfig.m2m)
     for (const relation of relations) {
-      const fieldName = `___${relation.name}___${relation.otherColumnName}`
+      const fieldName = `___${relation.name}___${relation.otherColumn.name}`
       if (preprocessed[fieldName]) {
-        const selfValue = result[0][relation.selfForeignColumnName]
+        const selfValue = result[0][relation.selfForeignColumn.name]
         await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }
@@ -203,9 +203,9 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
   if (modelConfig.m2m) {
     const relations = parseM2mRelations(model, modelConfig.m2m)
     for (const relation of relations) {
-      const fieldName = `___${relation.name}___${relation.otherColumnName}`
+      const fieldName = `___${relation.name}___${relation.otherColumn.name}`
       if (preprocessed[fieldName]) {
-        const selfValue = result[0][relation.selfForeignColumnName]
+        const selfValue = result[0][relation.selfForeignColumn.name]
         await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }

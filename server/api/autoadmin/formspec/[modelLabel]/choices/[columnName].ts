@@ -33,11 +33,11 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
   const choices = []
   for (const relation of relations) {
-    // TODO only select foreignColumnName and labelField
+    // TODO only select foreignColumn.name and labelField
     const rows = await db.select().from(relation.foreignTable)
     choices.push(...rows.map(row => ({
       label: getRowLabel(row),
-      value: row[relation.foreignColumnName],
+      value: row[relation.foreignColumn.name],
     })))
   }
   return choices
