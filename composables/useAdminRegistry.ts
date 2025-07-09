@@ -126,7 +126,7 @@ export function useAdminRegistry() {
     }
     // Check if lookupColumnName is either primary or unique
     const lookupColumn = modelColumns[lookupColumnName]
-    if (!lookupColumn.primary && !lookupColumn.unique) {
+    if (!lookupColumn.primary && !lookupColumn.isUnique) {
       throw new Error(
         `The lookup field "${lookupColumnName}" is not a primary or unique column on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration.`,
       )
