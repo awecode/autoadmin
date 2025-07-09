@@ -216,7 +216,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       }
       const db = useDb()
       // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
-      const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn.column, selfPrimaryValue))
+      const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
       field.selectItems = rows.map(row => ({
         label: getRowLabel(row),
         value: row[relationData.foreignPrimaryColumn.name],
@@ -253,10 +253,10 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
         .innerJoin(
           relation.m2mTable,
           and(
-            eq(relation.m2mTable[relation.selfColumnName], selfValue),
+            eq(relation.selfColumn, selfValue),
             eq(
-              relation.otherTable[relation.otherForeignColumnName],
-              relation.m2mTable[relation.otherColumnName],
+              relation.otherForeignColumn,
+              relation.otherColumn,
             ),
           ),
         )
