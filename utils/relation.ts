@@ -1,4 +1,4 @@
-import type { AnyColumn, Table } from 'drizzle-orm'
+import type { AnyColumn, Column, Table } from 'drizzle-orm'
 import type { FieldSpec, FormSpec } from './form'
 import { and, eq, getTableColumns, getTableName } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
@@ -42,8 +42,8 @@ export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, na
   const foreignPrimaryColumn = getPrimaryKeyColumn(table)
   const selfPrimaryColumn = getPrimaryKeyColumn(model)
   const foreignKeys = getTableForeignKeys(table)
-  const foreignRelatedColumn = foreignKeys.find(fk => fk.foreignTable === model)
-  if (!foreignRelatedColumn) {
+  const foreignRelatedColumnKey = foreignKeys.find(fk => fk.foreignTable === model)
+  if (!foreignRelatedColumnKey) {
     throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
   }
   return {
@@ -51,7 +51,7 @@ export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, na
     foreignTable: table,
     selfPrimaryColumn,
     foreignPrimaryColumn,
-    foreignRelatedColumn,
+    foreignRelatedColumn: foreignRelatedColumnKey.column,
     fieldName: `___o2m___${name}___${foreignPrimaryColumn.name}`,
   }
 }
@@ -167,7 +167,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: s
       field.label = field.label.replace(' Id', '')
       if (formSpec.values?.[relation.columnName]) {
         const db = useDb()
-        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignTable[relation.foreignColumnName], formSpec.values[relation.columnName]))
+        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.columnName]))
         field.selectItems = rows.map(row => ({
           label: getRowLabel(row),
           value: row[relation.foreignColumnName],
@@ -215,7 +215,8 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
         throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelLabel}.`)
       }
       const db = useDb()
-      const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
+      // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
+      const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn.column, selfPrimaryValue))
       field.selectItems = rows.map(row => ({
         label: getRowLabel(row),
         value: row[relationData.foreignPrimaryColumn.name],

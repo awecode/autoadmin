@@ -17,7 +17,7 @@ async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
         const selfValue = result[0][relationData.selfPrimaryColumn.name]
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
         try {
-          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: null }).where(and(eq(table[relationData.foreignRelatedColumn.name], selfValue), not(inArray(table[relationData.foreignPrimaryColumn.name], newValues))))
+          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
         } catch (error) {
           if (error instanceof DrizzleQueryError) {
             if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_NOTNULL') {
@@ -32,7 +32,7 @@ async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
         }
         // Step 2 : Set `relatedColumnName` in `table` for the new values for selfValue
         if (newValues.length > 0) {
-          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: selfValue }).where(inArray(table[relationData.foreignPrimaryColumn.name], newValues))
+          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: selfValue }).where(inArray(relationData.foreignPrimaryColumn, newValues))
         }
       }
     }
@@ -42,7 +42,7 @@ async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
 async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, selfValue: any, newValues: any[]) {
   // if the m2m table has only two columns, we can delete and insert all at once
   if (Object.keys(getTableColumns(relation.m2mTable)).length === 2) {
-    await db.delete(relation.m2mTable).where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+    await db.delete(relation.m2mTable).where(eq(relation.selfColumn, selfValue))
     if (newValues.length > 0) {
       await db.insert(relation.m2mTable).values(newValues.map(value => ({
         [relation.selfColumnName]: selfValue,
@@ -57,7 +57,7 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
   // Get existing relationships
   const existing = await db.select()
     .from(relation.m2mTable)
-    .where(eq(relation.m2mTable[relation.selfColumnName], selfValue))
+    .where(eq(relation.selfColumn, selfValue))
 
   const existingOtherIds = existing.map(row => row[relation.otherColumnName])
 
@@ -71,8 +71,8 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
   if (toDelete.length > 0) {
     await db.delete(relation.m2mTable)
       .where(and(
-        eq(relation.m2mTable[relation.selfColumnName], selfValue),
-        inArray(relation.m2mTable[relation.otherColumnName], toDelete),
+        eq(relation.selfColumn, selfValue),
+        inArray(relation.otherColumn, toDelete),
       ))
   }
 
