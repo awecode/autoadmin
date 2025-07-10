@@ -6,13 +6,15 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
+export type ListFieldDef<T extends Table> = [string, (model: InferSelectModel<T>) => any] | ColKey<T>
+
 // TODO: Make this configurable - maybe global config?
 const defaultLookupColumnName = 'id' as ColKey<Table>
 
 interface ListOptions<T extends Table = Table> {
   enabled: boolean
   showCreateButton: boolean
-  fields: Array<[string, (model: InferSelectModel<T>) => any]> | ColKey<T>[]
+  fields: Array<ListFieldDef<T>>
   title?: string
   endpoint?: string
   columns?: TableColumn<T>[]

@@ -1,10 +1,11 @@
+import type { AdminModelConfig, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
-import { useTitleCase } from '#layers/autoadmin/utils/string'
+import { toTitleCase, useTitleCase } from '#layers/autoadmin/utils/string'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
@@ -105,11 +106,27 @@ function getListColumns(model: Table, cfg: AdminModelConfig) {
   if (cfg.list?.columns) {
     return cfg.list.columns
   }
+  if (cfg.list?.fields) {
+    return cfg.list.fields.map((def: ListFieldDef<typeof model>) => {
+      if (typeof def === 'string') {
+        return {
+          id: def,
+          accessorKey: def,
+          header: toTitleCase(def),
+        }
+      }
+      return {
+        id: def[0],
+        accessorKey: def[0],
+        header: toTitleCase(def[0]),
+      }
+    })
+  }
   const columns = getTableColumns(model)
   return Object.keys(columns).map(key => ({
     id: key,
     accessorKey: key,
-    header: useTitleCase(key),
+    header: toTitleCase(key),
   }))
 }
 
