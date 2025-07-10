@@ -180,6 +180,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
         .filter(key => key in tableColumns)
         .map(key => [key, model[key]]),
     )
+    // add lookup column to the selected columns if it does not exist
+    if (!selectedColumns[cfg.lookupColumnName]) {
+      selectedColumns[cfg.lookupColumnName] = model[cfg.lookupColumnName]
+    }
     baseQuery = db.select(selectedColumns).from(model)
   }
   const countQuery = db.select({ resultCount: count() }).from(model)
