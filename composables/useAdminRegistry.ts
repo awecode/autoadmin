@@ -12,7 +12,7 @@ const defaultLookupColumnName = 'id' as ColKey<Table>
 interface ListOptions<T extends Table = Table> {
   enabled: boolean
   showCreateButton: boolean
-  fields: Array<[string, (model: InferSelectModel<T>) => any]>
+  fields: Array<[string, (model: InferSelectModel<T>) => any]> | ColKey<T>[]
   title?: string
   endpoint?: string
   columns?: TableColumn<T>[]

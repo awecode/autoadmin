@@ -1,4 +1,5 @@
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
+import type { Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
@@ -100,6 +101,18 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
+function getListColumns(model: Table, cfg: AdminModelConfig) {
+  if (cfg.list?.columns) {
+    return cfg.list.columns
+  }
+  const columns = getTableColumns(model)
+  return Object.keys(columns).map(key => ({
+    id: key,
+    accessorKey: key,
+    header: useTitleCase(key),
+  }))
+}
+
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)
   const model = cfg.model
@@ -113,7 +126,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
     deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
     listTitle: cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel),
-    columns: cfg.list?.columns ?? undefined,
+    columns: getListColumns(model, cfg),
     lookupColumnName: cfg.lookupColumnName,
   }
 
