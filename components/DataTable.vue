@@ -6,18 +6,6 @@ import DeleteModal from '~/components/DeleteModal.vue'
 
 type T = Record<string, any>
 
-// interface DataTableProps {
-//   endpoint: string
-//   deleteEndpoint?: string
-//   updatePage?: RouteLocationRaw
-//   title?: string
-//   columns?: Array<TableColumn<T>>
-//   actions?: Array<Omit<Button, 'size'> & { onClick?: () => void }>
-//   filters?: boolean
-//   defaultActions?: Array<'edit' | 'delete'>
-//   lookupColumnName?: string
-// }
-
 interface Data<TData> {
   results: TData[]
   pagination: {
@@ -36,16 +24,6 @@ interface Data<TData> {
     lookupColumnName: string
   }
 }
-
-// const props = withDefaults(defineProps<DataTableProps>(), {
-//   title: '',
-//   columns: () => ([]),
-//   actions: () => ([]),
-//   filters: true,
-//   deleteEndpoint: undefined,
-//   defaultActions: () => ['edit', 'delete'],
-//   lookupColumnName: 'id',
-// })
 
 const filters = true
 const defaultActions = ['edit', 'delete']
@@ -146,11 +124,6 @@ function computeColumns(results: T[]) {
 const computedColumns: Ref<TableColumn<T>[]> = ref([])
 
 const endpoint = `${apiPrefix}/${modelLabel}`
-// const updatePage = cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined
-// const deleteEndpoint = cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined
-// const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
-// const columns = cfg.list?.columns ?? undefined
-// const lookupColumnName = cfg.lookupColumnName
 
 const { data, status, error, refresh } = useFetch<Data<T>>(() => endpoint, {
   query,
