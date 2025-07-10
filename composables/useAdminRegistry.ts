@@ -5,7 +5,11 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
-export type ListFieldDef<T extends Table> = [string, (model: InferSelectModel<T>) => any] | ColKey<T>
+export type ListFieldDef<T extends Table>
+  = | [string, (model: InferSelectModel<T>) => any] // Custom field with label and accessor function
+    | [string, (model: InferSelectModel<T>) => any, string] // Custom field with label, accessor function, and type
+    | ColKey<T> // Column name from current table
+    | `${ColKey<T>}.${string}` // Foreign table reference in format 'foreignKeyColumn.foreignTableColumn'
 
 export interface ListColumnDef<T extends Table> {
   id?: string

@@ -241,7 +241,7 @@ async function handleDelete(id: string) {
             :key="column.id"
             #[`${column.id}-cell`]="{ cell }"
           >
-            <template v-if="cell.column.columnDef.type === 'checkbox'">
+            <template v-if="cell.column.columnDef.type === 'boolean'">
               <span v-if="cell.getValue()">Yes</span>
               <span v-else>No</span>
             </template>

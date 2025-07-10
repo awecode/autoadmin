@@ -1,22 +1,22 @@
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { getDef, unwrapZodType } from './zod'
 
-export type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many'
+export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file'
 
-export function zodToListSpec(schema: ZodObject<any>): Record<string, FieldType> {
+export function zodToListSpec(schema: ZodObject<any>): Record<string, ListFieldType> {
   const shape = getDef(schema)?.shape ?? schema.shape
   if (!shape) {
     // Fallback for safety, though a ZodObject should always have a shape.
     return {}
   }
 
-  const fields: [string, FieldType][] = Object.entries(shape).map(([name, zodType]) => {
+  const fields: [string, ListFieldType][] = Object.entries(shape).map(([name, zodType]) => {
     const { innerType } = unwrapZodType(zodType as ZodTypeAny)
 
     const definition = getDef(innerType)
     const definitionTypeKey = definition?.typeName ?? definition?.type
 
-    let type: FieldType = 'text'
+    let type: ListFieldType = 'text'
 
     switch (definitionTypeKey) {
       case 'ZodString':
@@ -34,7 +34,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, FieldType>
         break
       case 'ZodBoolean':
       case 'boolean':
-        type = 'checkbox'
+        type = 'boolean'
         break
       case 'ZodEnum':
       case 'enum':

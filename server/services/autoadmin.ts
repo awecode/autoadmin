@@ -1,5 +1,5 @@
 import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
-import type { FieldType } from '#layers/autoadmin/utils/list.js'
+import type { ListFieldType } from '#layers/autoadmin/utils/list.js'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { Column, Table } from 'drizzle-orm'
@@ -108,7 +108,7 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, FieldType>, metadata: TableMetadata): ListColumnDef<T>[] {
+function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): ListColumnDef<T>[] {
   let columns: ListColumnDef<T>[] = []
   if (cfg.list?.columns) {
     columns = cfg.list.columns
@@ -127,7 +127,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
         accessorKey: def[0],
         header: toTitleCase(def[0]),
         accessorFn: def[1],
-        type: columnTypes[def[0]],
+        type: def[2] ?? columnTypes[def[0]],
       }
     })
   } else {
