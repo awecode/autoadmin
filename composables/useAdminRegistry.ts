@@ -1,5 +1,5 @@
 import type { TableColumn } from '#ui/types'
-import type { InferInsertModel, Table } from 'drizzle-orm'
+import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
@@ -12,7 +12,7 @@ const defaultLookupColumnName = 'id' as ColKey<Table>
 interface ListOptions<T extends Table = Table> {
   enabled: boolean
   showCreateButton: boolean
-  fields: ColKey<T>[]
+  fields: Array<[string, (model: InferSelectModel<T>) => any]>
   title?: string
   endpoint?: string
   columns?: TableColumn<T>[]

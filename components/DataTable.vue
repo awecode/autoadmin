@@ -1,20 +1,21 @@
-<script setup lang="ts" generic="T extends Record<string, any> = Record<string, any>">
-import type { Button, TableColumn } from '#ui/types'
-import type { RouteLocationRaw } from 'vue-router'
+<script setup lang="ts">
+import type { TableColumn } from '#ui/types'
 import { useRouteQuery } from '@vueuse/router'
 import DeleteModal from '~/components/DeleteModal.vue'
 
-interface DataTableProps {
-  endpoint: string
-  deleteEndpoint?: string
-  updatePage?: RouteLocationRaw
-  title?: string
-  columns?: Array<TableColumn<T>>
-  actions?: Array<Omit<Button, 'size'> & { onClick?: () => void }>
-  filters?: boolean
-  defaultActions?: Array<'edit' | 'delete'>
-  lookupColumnName?: string
-}
+type T = Record<string, any>
+
+// interface DataTableProps {
+//   endpoint: string
+//   deleteEndpoint?: string
+//   updatePage?: RouteLocationRaw
+//   title?: string
+//   columns?: Array<TableColumn<T>>
+//   actions?: Array<Omit<Button, 'size'> & { onClick?: () => void }>
+//   filters?: boolean
+//   defaultActions?: Array<'edit' | 'delete'>
+//   lookupColumnName?: string
+// }
 
 interface Data<TData> {
   results: TData[]
@@ -27,14 +28,47 @@ interface Data<TData> {
   filter_schema?: Record<string, any>
 }
 
-const props = withDefaults(defineProps<DataTableProps>(), {
-  title: '',
-  columns: () => ([]),
-  actions: () => ([]),
-  filters: true,
-  deleteEndpoint: undefined,
-  defaultActions: () => ['edit', 'delete'],
-  lookupColumnName: 'id',
+// const props = withDefaults(defineProps<DataTableProps>(), {
+//   title: '',
+//   columns: () => ([]),
+//   actions: () => ([]),
+//   filters: true,
+//   deleteEndpoint: undefined,
+//   defaultActions: () => ['edit', 'delete'],
+//   lookupColumnName: 'id',
+// })
+
+const filters = true
+const defaultActions = ['edit', 'delete']
+
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
+const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
+const cfg = useAdminRegistry().get(modelLabel)
+
+if (!cfg) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: `Model ${modelLabel} not registered.`,
+  })
+}
+
+const endpoint = cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`
+const updatePage = cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined
+const deleteEndpoint = cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined
+const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
+const columns = cfg.list?.columns ?? undefined
+const lookupColumnName = cfg.lookupColumnName
+
+const actions = [
+  {
+    label: 'Add',
+    to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
+  },
+]
+
+useHead({
+  title: `${listTitle}`,
 })
 
 const route = useRoute()
@@ -91,11 +125,11 @@ const query = computed(() => ({
   page: page.value,
   page_size: pageSize.value,
   search: search.value === '' ? undefined : search.value,
-  ...((props.filters ? filterQuery.value : {}) as Record<string, string>),
+  ...((filters ? filterQuery.value : {}) as Record<string, string>),
 }))
 
 function computeColumns(results: T[]) {
-  let tableColumns = props.columns
+  let tableColumns = columns
 
   // Auto-generate columns from first result if no columns provided
   if ((!tableColumns || tableColumns.length === 0) && results && results.length > 0) {
@@ -112,7 +146,7 @@ function computeColumns(results: T[]) {
 
 const computedColumns: Ref<TableColumn<T>[]> = ref([])
 
-const { data, status, error, refresh } = useFetch<Data<T>>(() => props.endpoint, {
+const { data, status, error, refresh } = useFetch<Data<T>>(() => endpoint, {
   query,
   onResponse({ response }) {
     // Because the UTable component does not seem to support reactive columns, we are rerendering it using loading ref
@@ -146,10 +180,10 @@ async function reset() {
 }
 // TODO: Emit this maybe
 async function deleteObj(id: string) {
-  if (!props.deleteEndpoint) {
+  if (!deleteEndpoint) {
     throw new Error('Delete endpoint not provided')
   }
-  await $fetch(`${props.deleteEndpoint}/${id}`, {
+  await $fetch(`${deleteEndpoint}/${id}`, {
     method: 'DELETE',
   })
 }
@@ -188,9 +222,9 @@ async function handleDelete(id: string) {
   <div class="flex flex-col gap-6">
     <slot name="header">
       <div class="flex items-center justify-between">
-        <slot name="title" :title="title">
+        <slot name="title" :title="listTitle">
           <h1 class="text-2xl font-semibold">
-            {{ title }}
+            {{ listTitle }}
           </h1>
         </slot>
         <slot name="actions">
@@ -238,7 +272,7 @@ async function handleDelete(id: string) {
               <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
               <slot name="actions-cell" v-bind="scope ?? {}">
                 <NuxtLink
-                  v-if="props.defaultActions?.includes('edit') && updatePage"
+                  v-if="defaultActions?.includes('edit') && updatePage"
                   :to="{ ...updatePage, params: { ...updatePage.params, lookupValue: scope.row.original[lookupColumnName] } }"
                 >
                   <UButton
@@ -250,7 +284,7 @@ async function handleDelete(id: string) {
                   </UButton>
                 </NuxtLink>
                 <UButton
-                  v-if="props.defaultActions?.includes('delete') && deleteEndpoint"
+                  v-if="defaultActions?.includes('delete') && deleteEndpoint"
                   color="error"
                   icon="i-heroicons-trash"
                   variant="ghost"
