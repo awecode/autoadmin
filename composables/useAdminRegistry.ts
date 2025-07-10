@@ -1,4 +1,3 @@
-import type { TableColumn } from '#ui/types'
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
@@ -7,6 +6,13 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
 export type ListFieldDef<T extends Table> = [string, (model: InferSelectModel<T>) => any] | ColKey<T>
+
+export interface ListColumnDef<T extends Table> {
+  id: string
+  accessorKey: string
+  header: string
+  accessorFn?: (model: InferSelectModel<T>) => any
+}
 
 // TODO: Make this configurable - maybe global config?
 const defaultLookupColumnName = 'id' as ColKey<Table>
@@ -17,7 +23,7 @@ interface ListOptions<T extends Table = Table> {
   fields: Array<ListFieldDef<T>>
   title?: string
   endpoint?: string
-  columns?: TableColumn<T>[]
+  columns?: ListColumnDef<T>[]
 }
 
 interface CreateOptions<T extends Table = Table> {

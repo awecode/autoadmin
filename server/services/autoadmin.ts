@@ -1,11 +1,11 @@
-import type { AdminModelConfig, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
+import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
-import type { Table } from 'drizzle-orm'
+import type { Column, Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
-import { toTitleCase, useTitleCase } from '#layers/autoadmin/utils/string'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
@@ -102,12 +102,12 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getListColumns(model: Table, cfg: AdminModelConfig) {
+function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>): ListColumnDef<T>[] {
   if (cfg.list?.columns) {
     return cfg.list.columns
   }
   if (cfg.list?.fields) {
-    return cfg.list.fields.map((def: ListFieldDef<typeof model>) => {
+    return cfg.list.fields.map((def: ListFieldDef<T>) => {
       if (typeof def === 'string') {
         return {
           id: def,
@@ -119,11 +119,11 @@ function getListColumns(model: Table, cfg: AdminModelConfig) {
         id: def[0],
         accessorKey: def[0],
         header: toTitleCase(def[0]),
+        accessorFn: def[1],
       }
     })
   }
-  const columns = getTableColumns(model)
-  return Object.keys(columns).map(key => ({
+  return Object.keys(tableColumns).map(key => ({
     id: key,
     accessorKey: key,
     header: toTitleCase(key),
@@ -137,23 +137,57 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const config = useRuntimeConfig()
   const apiPrefix = config.public.apiPrefix
 
+  const tableColumns = getTableColumns(model)
+
   // spec
   const spec = {
     endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
     deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
-    listTitle: cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel),
-    columns: getListColumns(model, cfg),
+    listTitle: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
+    columns: getListColumns(cfg, tableColumns),
     lookupColumnName: cfg.lookupColumnName,
   }
 
   const db = useDb()
 
-  const baseQuery = db.select().from(model)
+  const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
+  const hasAccessorFn = spec.columns.some(column => column.accessorFn)
+  let baseQuery
+  if (hasAccessorFn) {
+    // we need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
+    baseQuery = db.select().from(model)
+  } else {
+  // only select the required column names from the table, not all columns
+    const selectedColumns = Object.fromEntries(
+      columnNames
+        .filter(key => key in tableColumns)
+        .map(key => [key, model[key]]),
+    )
+    baseQuery = db.select(selectedColumns).from(model)
+  }
   const countQuery = db.select({ resultCount: count() }).from(model)
 
   try {
     const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
+    if (hasAccessorFn) {
+    // run the columns through the accessor functions
+      response.results = response.results.map((result) => {
+      // loop through the columns and run the accessor functions
+        spec.columns.forEach((column) => {
+          if (column.accessorFn) {
+            result[column.accessorKey] = column.accessorFn(result)
+          }
+        })
+        return result
+      })
+      // only return the columns that have accessor keys
+      response.results = response.results.map((result) => {
+        return Object.fromEntries(
+          Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key)),
+        )
+      })
+    }
     return {
       ...response,
       spec,
