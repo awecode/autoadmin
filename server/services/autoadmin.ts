@@ -7,7 +7,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
 import { getTableMetadata } from '#layers/autoadmin/utils/metdata'
-import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
+import { getTableForeignKeys, parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { unwrapZodType } from '#layers/autoadmin/utils/zod'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
@@ -138,10 +138,16 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
       type: columnTypes[key],
     }))
   }
-  return columns.filter((column) => {
+  columns = columns.filter((column) => {
     const columnsToExclude = metadata.primaryAutoincrementColumns.concat(metadata.autoTimestampColumns)
     return !columnsToExclude.includes(column.accessorKey)
   })
+  // Also remove foreign keys
+  const foreignKeys = getTableForeignKeys(cfg.model)
+  columns = columns.filter((column) => {
+    return !foreignKeys.some(foreignKey => foreignKey.column.name === column.accessorKey)
+  })
+  return columns
 }
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
