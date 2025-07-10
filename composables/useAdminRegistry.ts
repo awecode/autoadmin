@@ -8,23 +8,31 @@ type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 export type ListFieldDef<T extends Table> = [string, (model: InferSelectModel<T>) => any] | ColKey<T>
 
 export interface ListColumnDef<T extends Table> {
-  id: string
+  id?: string
   accessorKey: string
-  header: string
+  header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
 }
 
 // TODO: Make this configurable - maybe global config?
 const defaultLookupColumnName = 'id' as ColKey<Table>
 
-interface ListOptions<T extends Table = Table> {
+type ListOptions<T extends Table = Table> = {
   enabled: boolean
   showCreateButton: boolean
-  fields: Array<ListFieldDef<T>>
   title?: string
   endpoint?: string
-  columns?: ListColumnDef<T>[]
-}
+  // Do not allow both fields and columns to be set at the same time
+} & (
+  | {
+    fields: Array<ListFieldDef<T>>
+    columns?: never
+  }
+  | {
+    fields?: never
+    columns: ListColumnDef<T>[]
+  }
+)
 
 interface CreateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
