@@ -40,7 +40,6 @@ const actions = [
 
 const route = useRoute()
 const router = useRouter()
-const loading = ref(false)
 
 const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc' | 'desc' } | undefined>('sort', '', {
   route,
@@ -104,8 +103,12 @@ const spec: Ref<Data<T>['spec']> = ref({
   lookupColumnName: 'id',
 })
 
+const endpoint = `${apiPrefix}/${modelLabel}`
+
+const { data, status, error, refresh } = useFetch<Data<T>>(() => endpoint, { query })
+
 function computeColumns(results: T[]) {
-  let tableColumns = spec.value.columns
+  let tableColumns = data.value?.spec.columns
 
   // Auto-generate columns from first result if no columns provided
   if ((!tableColumns || tableColumns.length === 0) && results && results.length > 0) {
@@ -116,37 +119,19 @@ function computeColumns(results: T[]) {
       header: toTitleCase(key),
     }))
   }
-
   return [...(tableColumns || []), { id: 'actions' }]
 }
 
-const computedColumns: Ref<TableColumn<T>[]> = ref([])
-
-const endpoint = `${apiPrefix}/${modelLabel}`
-
-const { data, status, error, refresh } = useFetch<Data<T>>(() => endpoint, {
-  query,
-  onResponse({ response }) {
-    // Because the UTable component does not seem to support reactive columns, we are rerendering it using loading ref
-    loading.value = true
-    spec.value = response._data.spec
-    computedColumns.value = computeColumns(response._data.results ?? [])
-    nextTick(() => {
-      loading.value = false
-    })
-  },
-})
-
-useHead({
-  title: `${spec.value.listTitle}`,
-})
-
-computedColumns.value = computeColumns(data.value?.results ?? [])
+const computedColumns = computed(() => computeColumns(data.value?.results ?? []))
 
 // Keep error for display in template instead of throwing
 if (error.value) {
   console.error(error.value)
 }
+
+useHead({
+  title: `${spec.value.listTitle}`,
+})
 
 defineExpose({ data, status, refresh, sort, page, pageSize, filterQuery, search, reset })
 
@@ -235,17 +220,16 @@ async function handleDelete(id: string) {
           :description="error.message || 'Failed to fetch data'"
           :title="error.statusMessage || 'An error occurred'"
         />
-        <div v-else-if="loading">
-          Loading ...
+        <div v-else-if="status === 'pending'">
+          <UProgress animation="elastic" />
         </div>
         <UTable
-          v-else
+          v-else-if="status === 'success'"
           v-model:sort="sort"
           class="h-full overflow-auto"
           sort-mode="manual"
           :columns="computedColumns"
           :data="data?.results"
-          :loading="status === 'pending'"
           :ui="{
             thead: 'sticky top-0 z-10',
           }"
@@ -258,11 +242,7 @@ async function handleDelete(id: string) {
                   v-if="defaultActions?.includes('edit') && spec.updatePage"
                   :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[spec.lookupColumnName] } }"
                 >
-                  <UButton
-                    color="primary"
-                    icon="i-heroicons-pencil"
-                    variant="ghost"
-                  >
+                  <UButton color="primary" icon="i-heroicons-pencil" variant="ghost">
                     Edit
                   </UButton>
                 </NuxtLink>
