@@ -3,6 +3,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { unwrapZodType } from '#layers/autoadmin/utils/form'
 import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
+import { useTitleCase } from '#layers/autoadmin/utils/string'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
@@ -99,19 +100,34 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getModel(modelLabel: string) {
-  return getModelConfig(modelLabel).model
-}
-
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
-  const model = getModel(modelLabel)
+  const cfg = getModelConfig(modelLabel)
+  const model = cfg.model
+
+  const config = useRuntimeConfig()
+  const apiPrefix = config.public.apiPrefix
+
+  // spec
+  const spec = {
+    endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
+    updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
+    deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
+    listTitle: cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel),
+    columns: cfg.list?.columns ?? undefined,
+    lookupColumnName: cfg.lookupColumnName,
+  }
+
   const db = useDb()
 
   const baseQuery = db.select().from(model)
   const countQuery = db.select({ resultCount: count() }).from(model)
 
   try {
-    return getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
+    const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
+    return {
+      ...response,
+      spec,
+    }
   } catch (error) {
     throw createError({
       statusCode: 500,
