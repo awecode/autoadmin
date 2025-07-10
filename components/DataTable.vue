@@ -234,6 +234,28 @@ async function handleDelete(id: string) {
             thead: 'sticky top-0 z-10',
           }"
         >
+          <!-- Dynamic cell templates for all columns except actions -->
+          <template
+            v-for="column in computedColumns.filter(col => col.id !== 'actions')"
+            :key="column.id"
+            #[`${column.id}-cell`]="{ cell }"
+          >
+            {{ cell.column.columnDef.type }}
+            <template v-if="cell.column.columnDef.type === 'checkbox'">
+              <span v-if="cell.getValue()">Yes</span>
+              <span v-else>No</span>
+            </template>
+            <template v-else-if="cell.column.columnDef.type === 'date'">
+              {{ new Date(cell.getValue()).toLocaleDateString() }}
+            </template>
+            <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
+              {{ new Date(cell.getValue()).toLocaleString() }}
+            </template>
+            <template v-else>
+              {{ cell.getValue() }}
+            </template>
+          </template>
+
           <template #actions-cell="scope">
             <div class="flex items-center gap-2">
               <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
@@ -259,9 +281,9 @@ async function handleDelete(id: string) {
               <slot name="actions-cell-append" v-bind="scope ?? {}"></slot>
             </div>
           </template>
-          <template v-for="(_, name) in $slots" #[name]="scope">
+          <!-- <template v-for="(_, name) in $slots" #[name]="scope">
             <slot :name="name" v-bind="scope ?? {}"></slot>
-          </template>
+          </template> -->
         </UTable>
       </slot>
     </div>
