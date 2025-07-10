@@ -4,7 +4,6 @@ import { zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { getTableMetadata, useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
 import { eq } from 'drizzle-orm'
-import { createInsertSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
@@ -48,8 +47,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   const model = cfg.model
-  const insertSchema = createInsertSchema(model)
-  const spec = zodToFormSpec(insertSchema as any)
+  const spec = zodToFormSpec(cfg.update.schema as any)
   spec.values = await getTableValues(cfg, spec, lookupValue)
 
   const foreignKeys = getTableForeignKeys(model)

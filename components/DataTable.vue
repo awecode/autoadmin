@@ -18,7 +18,7 @@ interface Data<TData> {
     endpoint: string
     updatePage?: { name: string, params: { modelLabel: string } }
     deleteEndpoint?: string
-    listTitle: string
+    title: string
     columns?: Array<TableColumn<T>>
     lookupColumnName: string
   }
@@ -98,7 +98,7 @@ const spec: Ref<Data<T>['spec']> = ref({
   endpoint: `${apiPrefix}/${modelLabel}`,
   updatePage: { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } },
   deleteEndpoint: `${apiPrefix}/${modelLabel}`,
-  listTitle: useTitleCase(modelLabel),
+  title: useTitleCase(modelLabel),
   columns: [],
   lookupColumnName: 'id',
 })
@@ -130,7 +130,7 @@ if (error.value) {
 }
 
 useHead({
-  title: `${spec.value.listTitle}`,
+  title: `${spec.value.title}`,
 })
 
 defineExpose({ data, status, refresh, sort, page, pageSize, filterQuery, search, reset })
@@ -190,9 +190,9 @@ async function handleDelete(id: string) {
   <div class="flex flex-col gap-6">
     <slot name="header">
       <div class="flex items-center justify-between">
-        <slot name="title" :title="spec.listTitle">
+        <slot name="title" :title="spec.title">
           <h1 class="text-2xl font-semibold">
-            {{ spec.listTitle }}
+            {{ spec.title }}
           </h1>
         </slot>
         <slot name="actions">

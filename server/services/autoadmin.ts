@@ -1,11 +1,13 @@
 import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
+import type { FieldType, ListFieldSpec } from '#layers/autoadmin/utils/list.js'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { Column, Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { unwrapZodType } from '#layers/autoadmin/utils/form'
+import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
 import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
+import { unwrapZodType } from '#layers/autoadmin/utils/zod'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
@@ -102,7 +104,7 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>): ListColumnDef<T>[] {
+function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, FieldType>): ListColumnDef<T>[] {
   if (cfg.list?.columns) {
     return cfg.list.columns
   }
@@ -113,6 +115,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
           id: def,
           accessorKey: def,
           header: toTitleCase(def),
+          type: columnTypes[def],
         }
       }
       return {
@@ -120,6 +123,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
         accessorKey: def[0],
         header: toTitleCase(def[0]),
         accessorFn: def[1],
+        type: columnTypes[def[0]],
       }
     })
   }
@@ -127,6 +131,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
     id: key,
     accessorKey: key,
     header: toTitleCase(key),
+    type: columnTypes[key],
   }))
 }
 
@@ -139,13 +144,15 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
   const tableColumns = getTableColumns(model)
 
+  const columnTypes = zodToListSpec(cfg.create?.schema as any)
+
   // spec
   const spec = {
     endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
     deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
-    listTitle: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
-    columns: getListColumns(cfg, tableColumns),
+    title: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
+    columns: getListColumns(cfg, tableColumns, columnTypes),
     lookupColumnName: cfg.lookupColumnName,
   }
 
