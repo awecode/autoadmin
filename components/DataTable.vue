@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '#ui/types'
+import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { useRouteQuery } from '@vueuse/router'
 import DeleteModal from '~/components/DeleteModal.vue'
 
@@ -240,16 +241,15 @@ async function handleDelete(id: string) {
             :key="column.id"
             #[`${column.id}-cell`]="{ cell }"
           >
-            {{ cell.column.columnDef.type }}
             <template v-if="cell.column.columnDef.type === 'checkbox'">
               <span v-if="cell.getValue()">Yes</span>
               <span v-else>No</span>
             </template>
             <template v-else-if="cell.column.columnDef.type === 'date'">
-              {{ new Date(cell.getValue()).toLocaleDateString() }}
+              {{ humanifyDateTime(cell.getValue()) }}
             </template>
             <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
-              {{ new Date(cell.getValue()).toLocaleString() }}
+              {{ humanifyDateTime(cell.getValue()) }}
             </template>
             <template v-else>
               {{ cell.getValue() }}

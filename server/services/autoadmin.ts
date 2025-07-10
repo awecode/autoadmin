@@ -138,6 +138,15 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
       type: columnTypes[key],
     }))
   }
+  // change column type to datetime-local if it is a datetime column
+  const datetimeColumns = metadata.datetimeColumns.concat(metadata.autoTimestampColumns)
+  columns = columns.map((column) => {
+    if (datetimeColumns.includes(column.accessorKey)) {
+      return { ...column, type: 'datetime-local' }
+    }
+    return column
+  })
+
   columns = columns.filter((column) => {
     const columnsToExclude = metadata.primaryAutoincrementColumns.concat(metadata.autoTimestampColumns)
     return !columnsToExclude.includes(column.accessorKey)
