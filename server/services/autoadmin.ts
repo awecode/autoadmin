@@ -1,15 +1,19 @@
 import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
-import type { FieldType, ListFieldSpec } from '#layers/autoadmin/utils/list.js'
+import type { FieldType } from '#layers/autoadmin/utils/list.js'
+import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
 import type { Column, Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
+import { getTableMetadata } from '#layers/autoadmin/utils/metdata'
 import { parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { unwrapZodType } from '#layers/autoadmin/utils/zod'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
+
+const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
 
 async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
   if (modelConfig.o2m) {
@@ -25,7 +29,7 @@ async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
           await db.update(table).set({ [relationData.foreignRelatedColumn.name]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
         } catch (error) {
           if (error instanceof DrizzleQueryError) {
-            if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_NOTNULL') {
+            if (error.cause && 'code' in error.cause && typeof error.cause.code === 'string' && NOTNULL_CONSTRAINT_CODES.includes(error.cause.code)) {
               throw createError({
                 statusCode: 400,
                 // statusMessage: `Cannot unset this ${foreignRelatedColumn.name} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
@@ -104,12 +108,12 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, FieldType>): ListColumnDef<T>[] {
+function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, FieldType>, metadata: TableMetadata): ListColumnDef<T>[] {
+  let columns: ListColumnDef<T>[] = []
   if (cfg.list?.columns) {
-    return cfg.list.columns
-  }
-  if (cfg.list?.fields) {
-    return cfg.list.fields.map((def: ListFieldDef<T>) => {
+    columns = cfg.list.columns
+  } else if (cfg.list?.fields) {
+    columns = cfg.list.fields.map((def: ListFieldDef<T>) => {
       if (typeof def === 'string') {
         return {
           id: def,
@@ -126,13 +130,18 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
         type: columnTypes[def[0]],
       }
     })
+  } else {
+    columns = Object.keys(tableColumns).map(key => ({
+      id: key,
+      accessorKey: key,
+      header: toTitleCase(key),
+      type: columnTypes[key],
+    }))
   }
-  return Object.keys(tableColumns).map(key => ({
-    id: key,
-    accessorKey: key,
-    header: toTitleCase(key),
-    type: columnTypes[key],
-  }))
+  return columns.filter((column) => {
+    const columnsToExclude = metadata.primaryAutoincrementColumns.concat(metadata.autoTimestampColumns)
+    return !columnsToExclude.includes(column.accessorKey)
+  })
 }
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
@@ -145,14 +154,14 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const tableColumns = getTableColumns(model)
 
   const columnTypes = zodToListSpec(cfg.create?.schema as any)
+  const metadata = getTableMetadata(model)
 
-  // spec
   const spec = {
     endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
     deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
     title: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
-    columns: getListColumns(cfg, tableColumns, columnTypes),
+    columns: getListColumns(cfg, tableColumns, columnTypes, metadata),
     lookupColumnName: cfg.lookupColumnName,
   }
 
