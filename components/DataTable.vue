@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { TableColumn } from '#ui/types'
-import type { RouteLocationRaw } from 'vue-router'
 import { useRouteQuery } from '@vueuse/router'
 import DeleteModal from '~/components/DeleteModal.vue'
 
@@ -17,7 +16,7 @@ interface Data<TData> {
   filter_schema?: Record<string, any>
   spec: {
     endpoint: string
-    updatePage?: RouteLocationRaw
+    updatePage?: { name: string, params: { modelLabel: string } }
     deleteEndpoint?: string
     listTitle: string
     columns?: Array<TableColumn<T>>
