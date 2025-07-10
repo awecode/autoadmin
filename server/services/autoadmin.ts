@@ -137,6 +137,16 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
       header: toTitleCase(key),
       type: columnTypes[key],
     }))
+    // Remove primary autoincrement and auto timestamp columns
+    columns = columns.filter((column) => {
+      const columnsToExclude = metadata.primaryAutoincrementColumns.concat(metadata.autoTimestampColumns)
+      return !columnsToExclude.includes(column.accessorKey)
+    })
+    // Also remove foreign keys
+    const foreignKeys = getTableForeignKeys(cfg.model)
+    columns = columns.filter((column) => {
+      return !foreignKeys.some(foreignKey => foreignKey.column.name === column.accessorKey)
+    })
   }
   // change column type to datetime-local if it is a datetime column
   const datetimeColumns = metadata.datetimeColumns.concat(metadata.autoTimestampColumns)
@@ -145,16 +155,6 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
       return { ...column, type: 'datetime-local' }
     }
     return column
-  })
-
-  columns = columns.filter((column) => {
-    const columnsToExclude = metadata.primaryAutoincrementColumns.concat(metadata.autoTimestampColumns)
-    return !columnsToExclude.includes(column.accessorKey)
-  })
-  // Also remove foreign keys
-  const foreignKeys = getTableForeignKeys(cfg.model)
-  columns = columns.filter((column) => {
-    return !foreignKeys.some(foreignKey => foreignKey.column.name === column.accessorKey)
   })
   return columns
 }
@@ -216,10 +216,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
         })
         return result
       })
-      // only return the columns that have accessor keys
+      // only return the columns that have accessor keys or the lookup column
       response.results = response.results.map((result) => {
         return Object.fromEntries(
-          Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key)),
+          Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
         )
       })
     }

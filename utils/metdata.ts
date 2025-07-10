@@ -52,6 +52,8 @@ const isSql = (v: unknown): v is SQL => v instanceof SQL || (
 async function resolveDefault(raw: unknown) {
   if (isSql(raw)) {
     // recognise CURRENT_TIMESTAMP expression and return the current timestamp without involving the database
+    // TODO Maybe do the same for other SQL expressions like NOW(), unixepoch(), etc.
+    // TODO Maybe the user is relying on the database to set using the correct timezone.
     if (raw.queryChunks?.[0]?.value?.[0] === 'CURRENT_TIMESTAMP') {
       return new Date().toISOString()
     } else {
