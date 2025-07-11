@@ -1,5 +1,4 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { getRowLabel } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')
@@ -48,7 +47,7 @@ export default defineEventHandler(async (event) => {
   const choices = []
   const rows = await db.select().from(relation)
   choices.push(...rows.map(row => ({
-    label: getRowLabel(row),
+    label: row[cfg.labelColumn],
     value: row[columnName],
   })))
   return choices

@@ -24,12 +24,12 @@ export default defineEventHandler(async (event) => {
   const spec = zodToFormSpec(insertSchema as any)
 
   const foreignKeys = getTableForeignKeys(model)
-  const specWithForeignKeys = await addForeignKeysToFormSpec(spec, modelLabel, foreignKeys)
+  const specWithForeignKeys = await addForeignKeysToFormSpec(spec, cfg, foreignKeys)
 
   const specWithO2mRelations = cfg.o2m ? await addO2mRelationsToFormSpec(specWithForeignKeys, cfg) : specWithForeignKeys
 
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
-  const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, modelLabel, m2mRelations)
+  const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, cfg, m2mRelations)
 
   const metadata = getTableMetadata(model)
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, metadata)

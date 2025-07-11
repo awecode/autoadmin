@@ -1,5 +1,5 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { getRowLabel, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
+import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     // TODO only select foreignColumn.name and labelField
     const rows = await db.select().from(relation.foreignTable)
     choices.push(...rows.map(row => ({
-      label: getRowLabel(row),
+      label: row[cfg.labelColumn],
       value: row[relation.foreignColumn.name],
     })))
   }

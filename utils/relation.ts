@@ -1,13 +1,9 @@
-import type { AnyColumn, Column, Table } from 'drizzle-orm'
+import type { AnyColumn, Table } from 'drizzle-orm'
 import type { FieldSpec, FormSpec } from './form'
 import { and, eq, getTableColumns, getTableName } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { toTitleCase } from './string'
 
-export function getRowLabel(row: Record<string, any>) {
-  // TODO: get from formspec if available
-  return row.name ?? row.title ?? row.label ?? Object.values(row)[0]
-}
 export interface M2MRelationSelf {
   selfTable: Table
   selfColumn: AnyColumn
@@ -144,7 +140,7 @@ export function getTableForeignKeysByColumn(table: Table, columnName: string) {
   return relations
 }
 
-export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: ReturnType<typeof getTableForeignKeys>) => {
+export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminModelConfig, relations: ReturnType<typeof getTableForeignKeys>) => {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   await Promise.all(relations.map(async (relation) => {
@@ -158,11 +154,11 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, modelLabel: s
         const db = useDb()
         const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.column.name]))
         field.selectItems = rows.map(row => ({
-          label: getRowLabel(row),
+          label: row[cfg.labelColumn],
           value: row[relation.foreignColumn.name],
         }))
       }
-      field.choicesEndpoint = `/api/autoadmin/formspec/${modelLabel}/choices/${relation.column.name}`
+      field.choicesEndpoint = `/api/autoadmin/formspec/${cfg.label}/choices/${relation.column.name}`
 
       updatedFormSpec.fields[fieldIndex] = field
     } else {
@@ -207,7 +203,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
       field.selectItems = rows.map(row => ({
-        label: getRowLabel(row),
+        label: row[modelConfig.labelColumn],
         value: row[relationData.foreignPrimaryColumn.name],
       }))
       formSpec.values[relationData.fieldName] = field.selectItems.map(item => item.value)
@@ -218,7 +214,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
   return { ...formSpec, fields: updatedFields }
 }
 
-export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: string, relations: M2MRelation[]) => {
+export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminModelConfig, relations: M2MRelation[]) => {
   const updatedFields = formSpec.fields
 
   // Process all relations in parallel
@@ -228,7 +224,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
       name: fieldName,
       type: 'relation-many' as const,
       label: toTitleCase(relation.name),
-      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-many/${fieldName}`,
+      choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices-many/${fieldName}`,
       required: false,
       rules: {},
       selectItems: [],
@@ -252,7 +248,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, modelLabel: 
       if (result.length > 0) {
         const rows = result.map(row => row.other)
         field.selectItems = rows.map(row => ({
-          label: getRowLabel(row),
+          label: row[cfg.labelColumn],
           value: row[relation.otherForeignColumn.name],
         }))
         formSpec.values[fieldName] = field.selectItems.map(item => item.value)
