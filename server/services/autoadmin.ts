@@ -143,7 +143,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
             const foreignKey = foreignKeys[0]
             const foreignTable = foreignKey.foreignTable
             const insertSchema = createInsertSchema(foreignTable)
-            const foreignTableListSpec = zodToListSpec(insertSchema)
+            const foreignTableListSpec = zodToListSpec(insertSchema as any)
             toJoin.push([foreignKey, def])
             return {
               id: accessorKey,
@@ -186,7 +186,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
               const foreignKey = foreignKeys[0]
               const foreignTable = foreignKey.foreignTable
               const insertSchema = createInsertSchema(foreignTable)
-              const foreignTableListSpec = zodToListSpec(insertSchema)
+              const foreignTableListSpec = zodToListSpec(insertSchema as any)
               toJoin.push([foreignKey, def.field])
               return {
                 id: accessorKey,
@@ -269,6 +269,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   // Build joins and foreign column selections
   const joins: { table: Table, on: SQL }[] = []
   const foreignColumnSelections: Record<string, any> = {}
+  const addedJoins = new Set<string>() // Track which foreign keys have already been joined
 
   for (const [relation, field] of toJoin) {
     const [fk, foreignColumnName] = field.split('.')
@@ -278,11 +279,17 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     const modelColumns = getTableColumns(model)
     const foreignTableColumns = getTableColumns(foreignTable)
 
-    // Add join
-    joins.push({
-      table: foreignTable,
-      on: eq(modelColumns[fk], foreignTableColumns[relation.foreignColumn.name]),
-    })
+    // Create a unique key for this join based on the foreign key column
+    const joinKey = `${fk}_${relation.foreignColumn.name}`
+
+    // Only add join if we haven't already added it for this foreign key
+    if (!addedJoins.has(joinKey)) {
+      joins.push({
+        table: foreignTable,
+        on: eq(modelColumns[fk], foreignTableColumns[relation.foreignColumn.name]),
+      })
+      addedJoins.add(joinKey)
+    }
 
     // Add foreign column to selection with alias
     const accessorKey = `${fk}__${foreignColumnName}`
