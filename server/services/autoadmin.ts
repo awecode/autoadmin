@@ -12,6 +12,7 @@ import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { unwrapZodType } from '#layers/autoadmin/utils/zod'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
+import { createInsertSchema } from 'drizzle-zod'
 
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
 
@@ -112,9 +113,11 @@ function getForeignValue<T extends Table>(model: InferSelectModel<T>, accessorKe
   return model[accessorKey]
 }
 
-function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: [string, string][] } {
+type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
+
+function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
-  const toJoin: [string, string][] = []
+  const toJoin: JoinDef[] = []
   if (cfg.list?.columns) {
     columns = cfg.list.columns
   } else if (cfg.list?.fields) {
@@ -133,12 +136,20 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
           if (fk in tableColumns) {
             const accessorKey = def.replace('.', '__')
             const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
-            toJoin.push([fk, foreignColumnName])
+            const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
+            if (foreignKeys.length === 0) {
+              throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
+            }
+            const foreignKey = foreignKeys[0]
+            const foreignTable = foreignKey.foreignTable
+            const insertSchema = createInsertSchema(foreignTable)
+            const foreignTableListSpec = zodToListSpec(insertSchema)
+            toJoin.push([foreignKey, def])
             return {
               id: accessorKey,
               accessorKey,
               header,
-              type: columnTypes[accessorKey],
+              type: columnTypes[accessorKey] || foreignTableListSpec[foreignColumnName],
               accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, accessorKey),
             }
           } else {
@@ -168,12 +179,20 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
             if (fk in tableColumns) {
               const accessorKey = def.field.replace('.', '__')
               const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
-              toJoin.push([fk, foreignColumnName])
+              const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
+              if (foreignKeys.length === 0) {
+                throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
+              }
+              const foreignKey = foreignKeys[0]
+              const foreignTable = foreignKey.foreignTable
+              const insertSchema = createInsertSchema(foreignTable)
+              const foreignTableListSpec = zodToListSpec(insertSchema)
+              toJoin.push([foreignKey, def.field])
               return {
                 id: accessorKey,
                 accessorKey,
                 header,
-                type: columnTypes[accessorKey],
+                type: def.type || columnTypes[accessorKey] || foreignTableListSpec[foreignColumnName],
                 accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, accessorKey),
               }
             }
@@ -192,13 +211,6 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
         throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
       }
       throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
-      // return {
-      //   id: def[0],
-      //   accessorKey: def[0],
-      //   header: toTitleCase(def[0]),
-      //   accessorFn: def[1],
-      //   type: def[2] ?? columnTypes[def[0]],
-      // }
     })
   } else {
     columns = Object.keys(tableColumns).map(key => ({
@@ -258,12 +270,8 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const joins: { table: Table, on: SQL }[] = []
   const foreignColumnSelections: Record<string, any> = {}
 
-  for (const [fk, _foreignColumnName] of toJoin) {
-    const relations = getTableForeignKeysByColumn(cfg.model, fk)
-    if (relations.length === 0) {
-      throw new Error(`Invalid field definition, no foreign key ${fk} found in ${cfg.label}.`)
-    }
-    const relation = relations[0]
+  for (const [relation, field] of toJoin) {
+    const [fk, foreignColumnName] = field.split('.')
     const foreignTable = relation.foreignTable
 
     // Get table columns to access them properly
@@ -277,9 +285,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     })
 
     // Add foreign column to selection with alias
-    const accessorKey = `${fk}__${_foreignColumnName}`
-    if (foreignTableColumns[_foreignColumnName]) {
-      foreignColumnSelections[accessorKey] = foreignTableColumns[_foreignColumnName]
+    const accessorKey = `${fk}__${foreignColumnName}`
+    if (foreignTableColumns[foreignColumnName]) {
+      foreignColumnSelections[accessorKey] = foreignTableColumns[foreignColumnName]
     }
   }
 
