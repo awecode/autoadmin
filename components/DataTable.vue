@@ -22,6 +22,9 @@ interface Data<TData> {
     title: string
     columns?: Array<TableColumn<T>>
     lookupColumnName: string
+    enableSearch: boolean
+    searchPlaceholder: string
+    searchFields: string[]
   }
 }
 
@@ -95,18 +98,10 @@ const query = computed(() => ({
   ...((filters ? filterQuery.value : {}) as Record<string, string>),
 }))
 
-const spec: Ref<Data<T>['spec']> = ref({
-  endpoint: `${apiPrefix}/${modelLabel}`,
-  updatePage: { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } },
-  deleteEndpoint: `${apiPrefix}/${modelLabel}`,
-  title: useTitleCase(modelLabel),
-  columns: [],
-  lookupColumnName: 'id',
-})
-
 const endpoint = `${apiPrefix}/${modelLabel}`
 
 const { data, status, error, refresh } = useFetch<Data<T>>(() => endpoint, { query })
+const title = computed(() => data.value?.spec.title || toTitleCase(modelLabel))
 
 function computeColumns(results: T[]) {
   let tableColumns = data.value?.spec.columns
@@ -131,7 +126,7 @@ if (error.value) {
 }
 
 useHead({
-  title: `${spec.value.title}`,
+  title: `${title.value}`,
 })
 
 defineExpose({ data, status, refresh, sort, page, pageSize, filterQuery, search, reset })
@@ -149,10 +144,10 @@ async function reset() {
 }
 // TODO: Emit this maybe
 async function deleteObj(id: string) {
-  if (!spec.value.deleteEndpoint) {
+  if (!data.value?.spec.deleteEndpoint) {
     throw new Error('Delete endpoint not provided')
   }
-  await $fetch(`${spec.value.deleteEndpoint}/${id}`, {
+  await $fetch(`${data.value?.spec.deleteEndpoint}/${id}`, {
     method: 'DELETE',
   })
 }
@@ -191,15 +186,15 @@ async function handleDelete(id: string) {
   <div class="flex flex-col gap-6">
     <slot name="header">
       <div class="flex items-center justify-between">
-        <slot name="title" :title="spec.title">
+        <slot name="title">
           <h1 class="text-2xl font-semibold">
-            {{ spec.title }}
+            {{ title }}
           </h1>
         </slot>
         <slot name="actions">
           <div class="flex items-center gap-2">
             <slot name="actions-prepend"></slot>
-            <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot>
+            <!-- <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot> -->
             <UButton
               v-for="action in actions"
               :key="action.label"
@@ -212,11 +207,11 @@ async function handleDelete(id: string) {
       </div>
     </slot>
     <div class="flex-grow overflow-hidden">
-      <div class="flex py-3 border-b">
+      <div v-if="data?.spec.enableSearch" class="flex py-3 border-b">
         <UInput
           v-model="search"
           class="max-w-xl"
-          placeholder="Search..."
+          :placeholder="data.spec.searchPlaceholder"
         />
       </div>
       <slot name="table" :rows="data?.results">
@@ -232,7 +227,7 @@ async function handleDelete(id: string) {
           <UProgress animation="elastic" />
         </div>
         <UTable
-          v-else-if="status === 'success'"
+          v-else-if="data && status === 'success'"
           v-model:sort="sort"
           class="h-full overflow-auto"
           sort-mode="manual"
@@ -268,19 +263,19 @@ async function handleDelete(id: string) {
               <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
               <slot name="actions-cell" v-bind="scope ?? {}">
                 <NuxtLink
-                  v-if="defaultActions?.includes('edit') && spec.updatePage"
-                  :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[spec.lookupColumnName] } }"
+                  v-if="defaultActions?.includes('edit') && data.spec.updatePage"
+                  :to="{ ...data.spec.updatePage, params: { ...data.spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
                 >
                   <UButton color="primary" icon="i-heroicons-pencil" variant="ghost">
                     Edit
                   </UButton>
                 </NuxtLink>
                 <UButton
-                  v-if="defaultActions?.includes('delete') && spec.deleteEndpoint"
+                  v-if="defaultActions?.includes('delete') && data.spec.deleteEndpoint"
                   color="error"
                   icon="i-heroicons-trash"
                   variant="ghost"
-                  @click="handleDelete(scope.row.original[spec.lookupColumnName])"
+                  @click="handleDelete(scope.row.original[data.spec.lookupColumnName])"
                 >
                   Delete
                 </UButton>
