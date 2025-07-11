@@ -266,10 +266,11 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   }
 
   const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
-  const hasAccessorFn = spec.columns.some(column => column.accessorFn)
+  // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
+  // If the accessor function is for foreign key, we don't need to select all columns because the foreign key is already selected
+  const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn && !column.accessorKey.includes('__'))
   let baseQuery
-  if (hasAccessorFn) {
-    // we need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
+  if (shouldSelectAllColumns) {
     const allColumns = { ...getTableColumns(model), ...foreignColumnSelections }
     baseQuery = db.select(allColumns).from(model)
   } else {
@@ -296,7 +297,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const countQuery = db.select({ resultCount: count() }).from(model)
 
   const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
-  if (hasAccessorFn) {
+  if (shouldSelectAllColumns) {
     // run the columns through the accessor functions
     response.results = response.results.map((result) => {
       // loop through the columns and run the accessor functions
