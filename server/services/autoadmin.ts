@@ -156,11 +156,29 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
         }
       } else if (typeof def === 'object') {
         if (typeof def.field === 'string') {
-          return {
-            id: def.field,
-            accessorKey: def.field,
-            header: def.label ?? toTitleCase(def.field),
-            type: def.type ?? columnTypes[def.field],
+          if (def.field in tableColumns) {
+            return {
+              id: def.field,
+              accessorKey: def.field,
+              header: def.label ?? toTitleCase(def.field),
+              type: def.type ?? columnTypes[def.field],
+            }
+          } else if (def.field.includes('.')) {
+            const [fk, foreignColumnName] = def.field.split('.')
+            if (fk in tableColumns) {
+              const accessorKey = def.field.replace('.', '__')
+              const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
+              toJoin.push([fk, foreignColumnName])
+              return {
+                id: accessorKey,
+                accessorKey,
+                header,
+                type: columnTypes[accessorKey],
+                accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, accessorKey),
+              }
+            }
+          } else {
+            throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
           }
         } else if (typeof def.field === 'function') {
           return {
