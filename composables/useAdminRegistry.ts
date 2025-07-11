@@ -31,6 +31,9 @@ const defaultLookupColumnName = 'id' as ColKey<Table>
 type ListOptions<T extends Table = Table> = {
   enabled: boolean
   showCreateButton: boolean
+  enableSearch: boolean
+  searchPlaceholder?: string
+  searchFields?: ColKey<T>[]
   title?: string
   endpoint?: string
   // Do not allow both fields and columns to be set at the same time
@@ -96,7 +99,7 @@ export interface AdminModelConfig<T extends Table = Table> {
 
 const staticDefaultOptions = {
   lookupColumnName: defaultLookupColumnName,
-  list: { enabled: true, showCreateButton: true },
+  list: { enabled: true, showCreateButton: true, enableSearch: true, searchPlaceholder: 'Search ...' },
   update: { enabled: true, showDeleteButton: true },
   delete: { enabled: true },
 } as const satisfies AdminModelOptions<Table>

@@ -260,6 +260,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
     deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
     title: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
+    enableSearch: cfg.list?.enableSearch,
+    searchPlaceholder: cfg.list?.searchPlaceholder,
+    searchFields: cfg.list?.searchFields,
     columns,
     lookupColumnName: cfg.lookupColumnName,
   }
