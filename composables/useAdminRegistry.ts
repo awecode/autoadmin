@@ -3,6 +3,7 @@ import type { ListFieldType } from '../utils/list'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import { getLabelColumnFromModel } from '../utils/registry'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
@@ -64,6 +65,7 @@ interface DeleteOptions {
 
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
+  labelColumn?: ColKey<T>
   lookupColumnName?: ColKey<T>
   // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T>>
@@ -81,6 +83,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   // model: TableWithColumns<T>
   model: T
   label: string
+  labelColumn: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
   list?: ListOptions<T>
@@ -98,13 +101,18 @@ const staticDefaultOptions = {
   delete: { enabled: true },
 } as const satisfies AdminModelOptions<Table>
 
-const generateDefaultOptions = (model: Table) => {
-  const insertSchema = createInsertSchema(model)
-  const updateSchema = createUpdateSchema(model)
-  return {
-    create: { schema: insertSchema },
-    update: { schema: updateSchema },
+const generateDefaultOptions = <T extends Table>(model: T, opts: AdminModelOptions<T>) => {
+  const dct: Record<string, any> = {}
+  if (!opts.labelColumn) {
+    dct.labelColumn = getLabelColumnFromModel(model)
   }
+  if (!opts.create?.schema) {
+    dct.create = { schema: createInsertSchema(model) }
+  }
+  if (!opts.update?.schema) {
+    dct.update = { schema: createUpdateSchema(model) }
+  }
+  return dct
 }
 
 // Global registry - maintains state across the application
@@ -132,7 +140,7 @@ export function useAdminRegistry() {
     const cfg = defu(
       opts,
       staticDefaultOptions,
-      generateDefaultOptions(model),
+      generateDefaultOptions(model, opts),
       { model, label: key },
     ) as unknown as AdminModelConfig<T>
 
