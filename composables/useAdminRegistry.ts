@@ -1,4 +1,5 @@
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
+import type { ListFieldType } from '../utils/list'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
@@ -13,14 +14,14 @@ export type ListFieldDef<T extends Table>
     | { // Represents a detailed field configuration object
       field: ListField<T> // Can be a column/relation string OR a callable function
       label?: string // Optional: custom display label for the field
-      type?: string // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
+      type?: ListFieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
     }
 export interface ListColumnDef<T extends Table> {
   id?: string
   accessorKey: string
   header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
-  type?: string
+  type?: ListFieldType
 }
 
 // TODO: Make this configurable - maybe global config?

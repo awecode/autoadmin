@@ -121,19 +121,34 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
           header: toTitleCase(def),
           type: columnTypes[def],
         }
+      } else if (typeof def === 'function') {
+        return {
+          id: def.name,
+          accessorKey: def.name,
+          header: toTitleCase(def.name),
+          type: columnTypes[def.name],
+          accessorFn: def,
+        }
       } else if (typeof def === 'object') {
-        const colDef: ListColumnDef<T> = {
-        }
         if (typeof def.field === 'string') {
-          colDef.id = def.field
-          colDef.accessorKey = def.field
-          colDef.header = def.label ?? toTitleCase(def.field)
-          colDef.type = def.type ?? columnTypes[def.field]
+          return {
+            id: def.field,
+            accessorKey: def.field,
+            header: def.label ?? toTitleCase(def.field),
+            type: def.type ?? columnTypes[def.field],
+          }
         } else if (typeof def.field === 'function') {
-          colDef.accessorFn = def.field
+          return {
+            id: def.field.name,
+            accessorKey: def.field.name,
+            header: def.label ?? toTitleCase(def.field.name),
+            type: def.type ?? columnTypes[def.field.name],
+            accessorFn: def.field,
+          }
         }
-        return colDef
+        throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
       }
+      throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
       // return {
       //   id: def[0],
       //   accessorKey: def[0],
