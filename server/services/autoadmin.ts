@@ -2,7 +2,7 @@ import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/auto
 import type { ListFieldType } from '#layers/autoadmin/utils/list.js'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
-import type { Column, InferSelectModel, Table } from 'drizzle-orm'
+import type { Column, InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
@@ -237,10 +237,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const db = useDb()
 
   // Build joins and foreign column selections
-  const joins: { table: any, on: any }[] = []
+  const joins: { table: Table, on: SQL }[] = []
   const foreignColumnSelections: Record<string, any> = {}
 
-  console.log(toJoin)
   for (const [fk, _foreignColumnName] of toJoin) {
     const relations = getTableForeignKeysByColumn(cfg.model, fk)
     if (relations.length === 0) {
@@ -248,8 +247,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     }
     const relation = relations[0]
     const foreignTable = relation.foreignTable
-    const foreignColumn = relation.foreignColumn
-    console.log(foreignTable, foreignColumn)
 
     // Get table columns to access them properly
     const modelColumns = getTableColumns(model)
