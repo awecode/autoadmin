@@ -212,6 +212,13 @@ async function handleDelete(id: string) {
       </div>
     </slot>
     <div class="flex-grow overflow-hidden">
+      <div class="flex py-3 border-b">
+        <UInput
+          v-model="search"
+          class="max-w-xl"
+          placeholder="Search..."
+        />
+      </div>
       <slot name="table" :rows="data?.results">
         <UAlert
           v-if="error"
