@@ -5,17 +5,22 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
-export type ListFieldDef<T extends Table>
-  = | [string, (model: InferSelectModel<T>) => any] // Custom field with label and accessor function
-    | [string, (model: InferSelectModel<T>) => any, string] // Custom field with label, accessor function, and type
-    | ColKey<T> // Column name from current table
-    | `${ColKey<T>}.${string}` // Foreign table reference in format 'foreignKeyColumn.foreignTableColumn'
+// Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
+type ListField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}` | ((model: InferSelectModel<T>) => any)
 
+export type ListFieldDef<T extends Table>
+  = ListField<T>
+    | { // Represents a detailed field configuration object
+      field: ListField<T> // Can be a column/relation string OR a callable function
+      label?: string // Optional: custom display label for the field
+      type?: string // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
+    }
 export interface ListColumnDef<T extends Table> {
   id?: string
   accessorKey: string
   header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
+  type?: string
 }
 
 // TODO: Make this configurable - maybe global config?

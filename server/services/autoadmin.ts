@@ -121,14 +121,26 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
           header: toTitleCase(def),
           type: columnTypes[def],
         }
+      } else if (typeof def === 'object') {
+        const colDef: ListColumnDef<T> = {
+        }
+        if (typeof def.field === 'string') {
+          colDef.id = def.field
+          colDef.accessorKey = def.field
+          colDef.header = def.label ?? toTitleCase(def.field)
+          colDef.type = def.type ?? columnTypes[def.field]
+        } else if (typeof def.field === 'function') {
+          colDef.accessorFn = def.field
+        }
+        return colDef
       }
-      return {
-        id: def[0],
-        accessorKey: def[0],
-        header: toTitleCase(def[0]),
-        accessorFn: def[1],
-        type: def[2] ?? columnTypes[def[0]],
-      }
+      // return {
+      //   id: def[0],
+      //   accessorKey: def[0],
+      //   header: toTitleCase(def[0]),
+      //   accessorFn: def[1],
+      //   type: def[2] ?? columnTypes[def[0]],
+      // }
     })
   } else {
     columns = Object.keys(tableColumns).map(key => ({
