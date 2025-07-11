@@ -108,8 +108,8 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getForeignValue<T extends Table>(model: InferSelectModel<T>, fk: string, foreignColumnName: string): any {
-  return 'xxx'
+function getForeignValue<T extends Table>(model: InferSelectModel<T>, accessorKey: string): any {
+  return model[accessorKey]
 }
 
 function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: [string, string][] } {
@@ -139,7 +139,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
               accessorKey,
               header,
               type: columnTypes[accessorKey],
-              accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, fk, foreignColumnName),
+              accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, accessorKey),
             }
           } else {
             throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.label}.`)
@@ -236,8 +236,12 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
   const db = useDb()
 
+  // Build joins and foreign column selections
+  const joins: { table: any, on: any }[] = []
+  const foreignColumnSelections: Record<string, any> = {}
+
   console.log(toJoin)
-  for (const [fk, foreignColumnName] of toJoin) {
+  for (const [fk, _foreignColumnName] of toJoin) {
     const relations = getTableForeignKeysByColumn(cfg.model, fk)
     if (relations.length === 0) {
       throw new Error(`Invalid field definition, no foreign key ${fk} found in ${cfg.label}.`)
@@ -246,6 +250,22 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     const foreignTable = relation.foreignTable
     const foreignColumn = relation.foreignColumn
     console.log(foreignTable, foreignColumn)
+
+    // Get table columns to access them properly
+    const modelColumns = getTableColumns(model)
+    const foreignTableColumns = getTableColumns(foreignTable)
+
+    // Add join
+    joins.push({
+      table: foreignTable,
+      on: eq(modelColumns[fk], foreignTableColumns[relation.foreignColumn.name]),
+    })
+
+    // Add foreign column to selection with alias
+    const accessorKey = `${fk}__${_foreignColumnName}`
+    if (foreignTableColumns[_foreignColumnName]) {
+      foreignColumnSelections[accessorKey] = foreignTableColumns[_foreignColumnName]
+    }
   }
 
   const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
@@ -253,19 +273,28 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   let baseQuery
   if (hasAccessorFn) {
     // we need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
-    baseQuery = db.select().from(model)
+    const allColumns = { ...getTableColumns(model), ...foreignColumnSelections }
+    baseQuery = db.select(allColumns).from(model)
   } else {
   // only select the required column names from the table, not all columns
     const selectedColumns = Object.fromEntries(
       columnNames
         .filter(key => key in tableColumns)
-        .map(key => [key, model[key]]),
+        .map(key => [key, tableColumns[key]]),
     )
     // add lookup column to the selected columns if it does not exist
-    if (!selectedColumns[cfg.lookupColumnName]) {
-      selectedColumns[cfg.lookupColumnName] = model[cfg.lookupColumnName]
+    if (!(cfg.lookupColumnName in selectedColumns)) {
+      selectedColumns[cfg.lookupColumnName] = tableColumns[cfg.lookupColumnName]
     }
+    // add foreign column selections
+    Object.assign(selectedColumns, foreignColumnSelections)
+
     baseQuery = db.select(selectedColumns).from(model)
+  }
+
+  // Add joins to the query
+  for (const join of joins) {
+    baseQuery = baseQuery.leftJoin(join.table, join.on)
   }
   const countQuery = db.select({ resultCount: count() }).from(model)
 
