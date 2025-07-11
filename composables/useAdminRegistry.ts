@@ -26,7 +26,7 @@ export interface ListColumnDef<T extends Table> {
 }
 
 // TODO: Make this configurable - maybe global config?
-const defaultLookupColumnName = 'id' as ColKey<Table>
+const defaultLookupColumnName = 'id'
 
 type ListOptions<T extends Table = Table> = {
   enabled: boolean
@@ -89,7 +89,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   labelColumn: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
-  list?: ListOptions<T>
+  list: ListOptions<T>
   create: CreateOptions
   update: UpdateOptions
   delete: DeleteOptions
@@ -97,23 +97,25 @@ export interface AdminModelConfig<T extends Table = Table> {
   o2m?: Record<string, Table>
 }
 
-const staticDefaultOptions = {
-  lookupColumnName: defaultLookupColumnName,
-  list: { enabled: true, showCreateButton: true, enableSearch: true, searchPlaceholder: 'Search ...' },
-  update: { enabled: true, showDeleteButton: true },
-  delete: { enabled: true },
-} as const satisfies AdminModelOptions<Table>
-
 const generateDefaultOptions = <T extends Table>(model: T, opts: AdminModelOptions<T>) => {
-  const dct: Record<string, any> = {}
+  const dct = {
+    lookupColumnName: defaultLookupColumnName as ColKey<T>,
+    list: { enabled: true, showCreateButton: true, enableSearch: true, searchPlaceholder: 'Search ...' },
+    update: { enabled: true, showDeleteButton: true },
+    delete: { enabled: true },
+    create: { enabled: true },
+  } as AdminModelConfig<T>
   if (!opts.labelColumn) {
     dct.labelColumn = getLabelColumnFromModel(model)
   }
+  if (opts.list?.enableSearch && !opts.list?.searchFields) {
+    dct.list.searchFields = [ opts.labelColumn || dct.labelColumn ]
+  }
   if (!opts.create?.schema) {
-    dct.create = { schema: createInsertSchema(model) }
+    dct.create.schema = createInsertSchema(model)
   }
   if (!opts.update?.schema) {
-    dct.update = { schema: createUpdateSchema(model) }
+    dct.update.schema = createUpdateSchema(model)
   }
   return dct
 }
@@ -142,10 +144,9 @@ export function useAdminRegistry() {
 
     const cfg = defu(
       opts,
-      staticDefaultOptions,
       generateDefaultOptions(model, opts),
       { model, label: key },
-    ) as unknown as AdminModelConfig<T>
+    ) as AdminModelConfig<T>
 
     // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
