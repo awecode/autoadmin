@@ -2,12 +2,12 @@ import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/auto
 import type { ListFieldType } from '#layers/autoadmin/utils/list.js'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { M2MRelation } from '#layers/autoadmin/utils/relation'
-import type { Column, Table } from 'drizzle-orm'
+import type { Column, InferSelectModel, Table } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
 import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
 import { getTableMetadata } from '#layers/autoadmin/utils/metdata'
-import { getTableForeignKeys, parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
+import { getTableForeignKeys, getTableForeignKeysByColumn, parseM2mRelations, parseO2mRelation } from '#layers/autoadmin/utils/relation'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { unwrapZodType } from '#layers/autoadmin/utils/zod'
 import { and, count, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
@@ -108,19 +108,44 @@ function getModelConfig(modelLabel: string): AdminModelConfig {
   return modelConfig
 }
 
-function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): ListColumnDef<T>[] {
+function getForeignValue<T extends Table>(model: InferSelectModel<T>, fk: string, foreignColumnName: string): any {
+  return 'xxx'
+}
+
+function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: [string, string][] } {
   let columns: ListColumnDef<T>[] = []
+  const toJoin: [string, string][] = []
   if (cfg.list?.columns) {
     columns = cfg.list.columns
   } else if (cfg.list?.fields) {
     columns = cfg.list.fields.map((def: ListFieldDef<T>) => {
       if (typeof def === 'string') {
-        return {
-          id: def,
-          accessorKey: def,
-          header: toTitleCase(def),
-          type: columnTypes[def],
+        if (def in tableColumns) {
+          return {
+            id: def,
+            accessorKey: def,
+            header: toTitleCase(def),
+            type: columnTypes[def],
+          }
+        } else if (def.includes('.')) {
+          const [fk, foreignColumnName] = def.split('.')
+          // TODO Check if fk is a foreign key using getTableForeignKeys
+          if (fk in tableColumns) {
+            const accessorKey = def.replace('.', '__')
+            const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
+            toJoin.push([fk, foreignColumnName])
+            return {
+              id: accessorKey,
+              accessorKey,
+              header,
+              type: columnTypes[accessorKey],
+              accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, fk, foreignColumnName),
+            }
+          } else {
+            throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.label}.`)
+          }
         }
+        throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
       } else if (typeof def === 'function') {
         return {
           id: def.name,
@@ -183,7 +208,7 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
     }
     return column
   })
-  return columns
+  return { columns, toJoin }
 }
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
@@ -198,16 +223,30 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const columnTypes = zodToListSpec(cfg.create?.schema as any)
   const metadata = getTableMetadata(model)
 
+  const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, metadata)
+
   const spec = {
     endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
     deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
     title: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
-    columns: getListColumns(cfg, tableColumns, columnTypes, metadata),
+    columns,
     lookupColumnName: cfg.lookupColumnName,
   }
 
   const db = useDb()
+
+  console.log(toJoin)
+  for (const [fk, foreignColumnName] of toJoin) {
+    const relations = getTableForeignKeysByColumn(cfg.model, fk)
+    if (relations.length === 0) {
+      throw new Error(`Invalid field definition, no foreign key ${fk} found in ${cfg.label}.`)
+    }
+    const relation = relations[0]
+    const foreignTable = relation.foreignTable
+    const foreignColumn = relation.foreignColumn
+    console.log(foreignTable, foreignColumn)
+  }
 
   const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
   const hasAccessorFn = spec.columns.some(column => column.accessorFn)
@@ -230,36 +269,28 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   }
   const countQuery = db.select({ resultCount: count() }).from(model)
 
-  try {
-    const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
-    if (hasAccessorFn) {
+  const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
+  if (hasAccessorFn) {
     // run the columns through the accessor functions
-      response.results = response.results.map((result) => {
+    response.results = response.results.map((result) => {
       // loop through the columns and run the accessor functions
-        spec.columns.forEach((column) => {
-          if (column.accessorFn) {
-            result[column.accessorKey] = column.accessorFn(result)
-          }
-        })
-        return result
+      spec.columns.forEach((column) => {
+        if (column.accessorFn) {
+          result[column.accessorKey] = column.accessorFn(result)
+        }
       })
-      // only return the columns that have accessor keys or the lookup column
-      response.results = response.results.map((result) => {
-        return Object.fromEntries(
-          Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
-        )
-      })
-    }
-    return {
-      ...response,
-      spec,
-    }
-  } catch (error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: `Failed to fetch ${modelLabel}`,
-      data: error,
+      return result
     })
+    // only return the columns that have accessor keys or the lookup column
+    response.results = response.results.map((result) => {
+      return Object.fromEntries(
+        Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
+      )
+    })
+  }
+  return {
+    ...response,
+    spec,
   }
 }
 
