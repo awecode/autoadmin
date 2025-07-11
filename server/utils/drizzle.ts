@@ -5,7 +5,7 @@ export const genericPaginationQuerySchema = z.object({
   size: z.coerce.number().positive().max(
     100,
     `Page size must be less than or equal to 100`,
-  ).default(30),
+  ).default(10),
 }).strip()
 
 interface PaginatedResponse<T> {

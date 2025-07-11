@@ -298,7 +298,7 @@ async function handleDelete(id: string) {
         </div>
         <UPagination
           v-if="data?.pagination.pages! > 1"
-          v-model="page"
+          v-model:page="page"
           size="xs"
           :page-count="data?.pagination.size!"
           :total="data?.pagination.count!"
