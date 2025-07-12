@@ -169,7 +169,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     const foreignTable = relation.foreignTable
 
     // Get table columns to access them properly
-    const modelColumns = getTableColumns(model)
     const foreignTableColumns = getTableColumns(foreignTable)
 
     // Create a unique key for this join based on the foreign key column
@@ -179,7 +178,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     if (!addedJoins.has(joinKey)) {
       joins.push({
         table: foreignTable,
-        on: eq(modelColumns[fk], foreignTableColumns[relation.foreignColumn.name]),
+        on: eq(tableColumns[fk], foreignTableColumns[relation.foreignColumn.name]),
       })
       addedJoins.add(joinKey)
     }
@@ -196,7 +195,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
   const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn)
   if (shouldSelectAllColumns) {
-    const allColumns = { ...getTableColumns(model), ...foreignColumnSelections }
+    const allColumns = { ...tableColumns, ...foreignColumnSelections }
     baseQuery = db.select(allColumns).from(model)
   } else {
     const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
@@ -246,10 +245,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
               // Ensure this foreign table is joined
               const joinKey = `${fk}_${foreignKey.foreignColumn.name}`
               if (!addedJoins.has(joinKey)) {
-                const modelColumns = getTableColumns(model)
                 joins.push({
                   table: foreignTable,
-                  on: eq(modelColumns[fk], foreignTableColumns[foreignKey.foreignColumn.name]),
+                  on: eq(tableColumns[fk], foreignTableColumns[foreignKey.foreignColumn.name]),
                 })
                 addedJoins.add(joinKey)
               }
