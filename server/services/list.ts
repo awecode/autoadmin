@@ -139,22 +139,20 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)
   const model = cfg.model
-  const config = useRuntimeConfig()
 
   const tableColumns = getTableColumns(model)
   const columnTypes = zodToListSpec(cfg.create?.schema as any)
   const metadata = getTableMetadata(model)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, metadata)
 
-  const apiPrefix = config.public.apiPrefix
   const spec = {
-    endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
-    updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
-    deleteEndpoint: cfg.delete?.enabled ? (cfg.delete?.endpoint ?? `${apiPrefix}/${modelLabel}`) : undefined,
-    title: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
-    enableSearch: cfg.list?.enableSearch,
-    searchPlaceholder: cfg.list?.searchPlaceholder,
-    searchFields: cfg.list?.searchFields || [],
+    endpoint: cfg.list.endpoint,
+    updatePage: cfg.update.enabled ? cfg.update.route : undefined,
+    deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
+    title: cfg.list.title,
+    enableSearch: cfg.list.enableSearch,
+    searchPlaceholder: cfg.list.searchPlaceholder,
+    searchFields: cfg.list.searchFields,
     columns,
     lookupColumnName: cfg.lookupColumnName,
   }

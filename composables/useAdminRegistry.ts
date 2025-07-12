@@ -35,7 +35,7 @@ type ListOptions<T extends Table = Table> = {
   showCreateButton: boolean
   enableSearch: boolean
   searchPlaceholder?: string
-  searchFields?: ColField<T>[]
+  searchFields: ColField<T>[]
   title?: string
   endpoint?: string
   // Do not allow both fields and columns to be set at the same time
@@ -60,6 +60,12 @@ interface UpdateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
   showDeleteButton: boolean
+  route?: {
+    name: string
+    params: {
+      modelLabel: string
+    }
+  }
   schema: InferInsertModel<T> // added by generateDefaultOptions
 }
 
@@ -99,12 +105,19 @@ export interface AdminModelConfig<T extends Table = Table> {
   o2m?: Record<string, Table>
 }
 
-const generateDefaultOptions = <T extends Table>(model: T, opts: AdminModelOptions<T>) => {
+const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
   const dct = {
     lookupColumnName: defaultLookupColumnName as ColKey<T>,
-    list: { enabled: true, showCreateButton: true, enableSearch: true, searchPlaceholder: 'Search ...' },
-    update: { enabled: true, showDeleteButton: true },
-    delete: { enabled: true },
+    list: {
+      enabled: true,
+      showCreateButton: true,
+      enableSearch: true,
+      searchPlaceholder: 'Search ...',
+      title: toTitleCase(label),
+      endpoint: `${apiPrefix}/${label}`,
+    },
+    update: { enabled: true, showDeleteButton: true, route: { name: 'autoadmin-update', params: { modelLabel: label } } },
+    delete: { enabled: true, endpoint: `${apiPrefix}/${label}` },
     create: { enabled: true },
   } as AdminModelConfig<T>
   if (!opts.labelColumn) {
@@ -112,6 +125,8 @@ const generateDefaultOptions = <T extends Table>(model: T, opts: AdminModelOptio
   }
   if (opts.list?.enableSearch && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumn || dct.labelColumn]
+  } else if (!opts.list?.searchFields) {
+    dct.list.searchFields = []
   }
   if (!opts.create?.schema) {
     dct.create.schema = createInsertSchema(model)
@@ -137,17 +152,19 @@ function getRegistry(): Map<string, AdminModelConfig> {
 
 export function useAdminRegistry() {
   const registry = getRegistry()
+  const config = useRuntimeConfig()
+  const apiPrefix = config.public.apiPrefix
 
   function registerAdminModel<T extends Table>(
     model: T,
     opts: AdminModelOptions<T> = {},
   ): void {
-    const key = (opts.label ?? getTableName(model)) as string
+    const label = (opts.label ?? getTableName(model)) as string
 
     const cfg = defu(
       opts,
-      generateDefaultOptions(model, opts),
-      { model, label: key },
+      generateDefaultOptions(model, label, apiPrefix, opts),
+      { model, label },
     ) as AdminModelConfig<T>
 
     // Validate that lookupColumnName exists on the model's columns
@@ -160,7 +177,7 @@ export function useAdminRegistry() {
         )
       } else {
         throw new Error(
-          `Invalid lookupColumnName "${lookupColumnName}" provided for model "${key}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+          `Invalid lookupColumnName "${lookupColumnName}" provided for model "${label}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
         )
       }
     }
@@ -174,7 +191,7 @@ export function useAdminRegistry() {
 
     cfg.lookupColumn = modelColumns[lookupColumnName] as T['_']['columns'][ColKey<T>]
 
-    registry.set(key, cfg as unknown as AdminModelConfig<Table>)
+    registry.set(label, cfg as unknown as AdminModelConfig<Table>)
   }
 
   function getAdminConfig<T extends Table = Table>(
