@@ -20,6 +20,14 @@ const formatDateToLocal = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
+// Helper function to format Date to date string (yyyy-MM-dd)
+const formatDateToDateString = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const fieldValue = computed({
   get: () => {
     if (props.field.type === 'datetime-local') {
@@ -31,12 +39,21 @@ const fieldValue = computed({
         return formatDateToLocal(new Date(props.modelValue))
       }
       return props.modelValue
+    } else if (props.field.type === 'date') {
+      // Format Date object to yyyy-MM-dd format for date input
+      if (props.modelValue instanceof Date) {
+        return formatDateToDateString(props.modelValue)
+      } else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
+        // Convert ISO format string to date string
+        return formatDateToDateString(new Date(props.modelValue))
+      }
+      return props.modelValue
     }
     return props.modelValue
   },
   set: (value) => {
-    // Coerce to Date object for datetime-local fields
-    if (props.field.type === 'datetime-local' && value) {
+    // Coerce to Date object for datetime-local and date fields
+    if ((props.field.type === 'datetime-local' || props.field.type === 'date') && value) {
       emit('update:modelValue', new Date(value))
     } else {
       emit('update:modelValue', value)
@@ -44,8 +61,8 @@ const fieldValue = computed({
   },
 })
 
-// Ensure initial datetime-local values are converted to Date objects
-if (props.field.type === 'datetime-local' && props.modelValue && typeof props.modelValue === 'string') {
+// Ensure initial datetime-local and date values are converted to Date objects
+if ((props.field.type === 'datetime-local' || props.field.type === 'date') && props.modelValue && typeof props.modelValue === 'string') {
   emit('update:modelValue', new Date(props.modelValue))
 }
 
