@@ -225,9 +225,42 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const searchFields = cfg.list?.searchFields || []
   let searchCondition: SQL | undefined
   if (searchQuery && searchFields.length > 0) {
-    const searchConditions = searchFields
-      .filter(field => field in tableColumns)
-      .map(field => like(tableColumns[field], `%${searchQuery}%`))
+    const searchConditions = []
+
+    // Handle search fields (both direct fields and foreign key fields)
+    for (const field of searchFields) {
+      if (field in tableColumns) {
+        // Direct column search
+        searchConditions.push(like(tableColumns[field], `%${searchQuery}%`))
+      } else if (field.includes('.')) {
+        // Foreign key field search (e.g., preferredLocationId.name)
+        const [fk, foreignColumnName] = field.split('.')
+        if (fk in tableColumns) {
+          const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
+          if (foreignKeys.length > 0) {
+            const foreignKey = foreignKeys[0]
+            const foreignTable = foreignKey.foreignTable
+            const foreignTableColumns = getTableColumns(foreignTable)
+
+            if (foreignColumnName in foreignTableColumns) {
+              // Ensure this foreign table is joined
+              const joinKey = `${fk}_${foreignKey.foreignColumn.name}`
+              if (!addedJoins.has(joinKey)) {
+                const modelColumns = getTableColumns(model)
+                joins.push({
+                  table: foreignTable,
+                  on: eq(modelColumns[fk], foreignTableColumns[foreignKey.foreignColumn.name]),
+                })
+                addedJoins.add(joinKey)
+              }
+
+              // Add search condition for foreign column
+              searchConditions.push(like(foreignTableColumns[foreignColumnName], `%${searchQuery}%`))
+            }
+          }
+        }
+      }
+    }
 
     if (searchConditions.length > 0) {
       searchCondition = or(...searchConditions)
@@ -238,7 +271,11 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     baseQuery = baseQuery.where(searchCondition)
   }
 
+  // Build count query with search condition
   let countQuery = db.select({ resultCount: count() }).from(model)
+  for (const join of joins) {
+    countQuery = countQuery.leftJoin(join.table, join.on)
+  }
   if (searchCondition) {
     countQuery = countQuery.where(searchCondition)
   }
