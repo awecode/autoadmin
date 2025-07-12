@@ -124,9 +124,6 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
     delete: { enabled: true, endpoint: `${apiPrefix}/${label}` },
     create: { enabled: true },
   } as AdminModelConfig<T>
-  if (!opts.labelColumn) {
-    dct.labelColumn = getLabelColumnFromModel(model)
-  }
   if (opts.list?.enableSearch && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumn || dct.labelColumn]
   } else if (!opts.list?.searchFields) {
@@ -171,17 +168,20 @@ export function useAdminRegistry() {
       { model, label },
     ) as AdminModelConfig<T>
 
+    cfg.columns = getTableColumns(model)
+    if (!cfg.labelColumn) {
+      cfg.labelColumn = getLabelColumnFromModel(cfg.columns) as ColKey<T>
+    }
     // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
-    cfg.columns = getTableColumns(model)
     if (!Object.keys(cfg.columns).includes(lookupColumnName)) {
       if (lookupColumnName === defaultLookupColumnName) {
         throw new Error(
-          `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+          `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
         )
       } else {
         throw new Error(
-          `Invalid lookupColumnName "${lookupColumnName}" provided for model "${label}". Field does not exist on the table. Available columns: ${Object.keys(modelColumns).join(', ')}`,
+          `Invalid lookupColumnName "${lookupColumnName}" provided for model "${label}". Field does not exist on the table. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
         )
       }
     }
