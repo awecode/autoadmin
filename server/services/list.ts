@@ -6,7 +6,7 @@ import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
 import { getTableMetadata } from '#layers/autoadmin/utils/metdata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { count, eq, getTableColumns } from 'drizzle-orm'
+import { count, eq, getTableColumns, like, or } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 import { getModelConfig } from './autoadmin'
 
@@ -154,6 +154,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     title: cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel),
     enableSearch: cfg.list?.enableSearch,
     searchPlaceholder: cfg.list?.searchPlaceholder,
+    searchFields: cfg.list?.searchFields || [],
     columns,
     lookupColumnName: cfg.lookupColumnName,
   }
@@ -218,7 +219,29 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   for (const join of joins) {
     baseQuery = baseQuery.leftJoin(join.table, join.on)
   }
-  const countQuery = db.select({ resultCount: count() }).from(model)
+
+  // Handle search query
+  const searchQuery = query.search
+  const searchFields = cfg.list?.searchFields || []
+  let searchCondition: SQL | undefined
+  if (searchQuery && searchFields.length > 0) {
+    const searchConditions = searchFields
+      .filter(field => field in tableColumns)
+      .map(field => like(tableColumns[field], `%${searchQuery}%`))
+
+    if (searchConditions.length > 0) {
+      searchCondition = or(...searchConditions)
+    }
+  }
+  // Apply search condition to base query
+  if (searchCondition) {
+    baseQuery = baseQuery.where(searchCondition)
+  }
+
+  let countQuery = db.select({ resultCount: count() }).from(model)
+  if (searchCondition) {
+    countQuery = countQuery.where(searchCondition)
+  }
 
   const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
   if (shouldSelectAllColumns) {
