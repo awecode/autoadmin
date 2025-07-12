@@ -46,7 +46,6 @@ async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb
     }
     return filter
   })
-  console.log('parsedFilters', parsedFiltersWithOriginalType)
   return parsedFiltersWithOriginalType
 }
 
@@ -203,36 +202,25 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           // Handle date filters - use date range for datetime columns
           if (typeof filterValue === 'string' && (filter as any).originalType === 'datetime-local') {
             // Parse the date string and create date range (start and end of day)
-            const startOfDay = new Date(filterValue)
-            const endOfDay = new Date(filterValue)
+            // Use the date string directly to avoid timezone issues
+            const startOfDay = `${filterValue} 00:00:00`
+            const endOfDay = `${filterValue} 23:59:59`
 
-            if (!Number.isNaN(startOfDay.getTime())) {
-              // Set to start of day (00:00:00)
-              startOfDay.setHours(0, 0, 0, 0)
-              // Set to end of day (23:59:59.999)
-              endOfDay.setHours(23, 59, 59, 999)
-              console.log('startOfDay', startOfDay)
-              console.log('endOfDay', endOfDay)
-              // Filter for records within this date range
-              filterConditions.push(
-                sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
-              )
-            }
-          } else if (typeof filterValue === 'string' && (filter as any).originalType === 'date') {
-            // Handle date filters - exact date match
+            // Filter for records within this date range using string comparison
+            filterConditions.push(
+              sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
+            )
+          } else if (typeof filterValue === 'string') {
+            // Handle date filters - use date range for consistency
+            const startOfDay = `${filterValue} 00:00:00`
+            const endOfDay = `${filterValue} 23:59:59`
+
+            filterConditions.push(
+              sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
+            )
+          } else {
             filterConditions.push(eq(tableColumns[filter.field], filterValue))
           }
-          // else {
-          //   // If it's already a Date object, still use range
-          //   const startOfDay = new Date(filterValue)
-          //   const endOfDay = new Date(filterValue)
-          //   startOfDay.setHours(0, 0, 0, 0)
-          //   endOfDay.setHours(23, 59, 59, 999)
-
-          //   filterConditions.push(
-          //     sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
-          //   )
-          // }
         } else if (filter.type === 'text') {
           // Handle text filters - exact match
           filterConditions.push(eq(tableColumns[filter.field], filterValue))
@@ -250,10 +238,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   } else if (filterConditions.length > 0) {
     combinedConditions = sql.join(filterConditions, sql` AND `)
   }
-  console.log('combinedConditions', combinedConditions)
   // Apply combined conditions to base query
   if (combinedConditions) {
-    baseQuery = baseQuery.where(combinedConditions.getSQL().toString())
+    baseQuery = baseQuery.where(combinedConditions)
   }
 
   // Build count query with combined conditions
