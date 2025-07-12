@@ -197,8 +197,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
   const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
   // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
-  // If the accessor function is for foreign key, we don't need to select all columns because the foreign key is already selected
-  const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn && !column.accessorKey.includes('__'))
+  const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn)
   let baseQuery
   if (shouldSelectAllColumns) {
     const allColumns = { ...getTableColumns(model), ...foreignColumnSelections }
