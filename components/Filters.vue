@@ -82,45 +82,22 @@ const booleanOptions = [
           @update:model-value="updateFilter(filter.field, $event as string)"
         />
 
-        <UInput
-          v-else-if="filter.type === 'text' || !filter.type"
+        <USelect
+          v-else-if="(filter.type === 'text' || !filter.type) && filter.options"
           class="min-w-32"
           size="xs"
+          :items="filter.options"
           :model-value="getFilterValue(filter.field)"
-          :placeholder="`Filter ${filter.label}`"
+          :placeholder="`${filter.label}`"
           @update:model-value="updateFilter(filter.field, $event as string)"
-        />
-
-        <!-- Number Filter -->
-        <UInput
-          v-else-if="filter.type === 'number'"
-          class="min-w-24"
-          size="xs"
-          type="number"
-          :model-value="getFilterValue(filter.field)"
-          :placeholder="`Filter ${filter.label}`"
-          @update:model-value="updateFilter(filter.field, $event as string)"
-        />
-
-        <!-- Date Filter -->
-        <UInput
-          v-else-if="filter.type === 'date'"
-          class="min-w-32"
-          size="xs"
-          type="date"
-          :model-value="getFilterValue(filter.field)"
-          @update:model-value="updateFilter(filter.field, $event as string)"
-        />
-
-        <!-- DateTime Filter -->
-        <UInput
-          v-else-if="filter.type === 'datetime-local'"
-          class="min-w-40"
-          size="xs"
-          type="datetime-local"
-          :model-value="getFilterValue(filter.field)"
-          @update:model-value="updateFilter(filter.field, $event as string)"
-        />
+        >
+          <template #item-label="{ item }">
+            {{ item.label || item.value }}
+          </template>
+          <template #item-trailing="{ item }">
+            <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
+          </template>
+        </USelect>
 
         <!-- Default fallback -->
         <UInput

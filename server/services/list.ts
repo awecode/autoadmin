@@ -2,25 +2,48 @@ import type { FilterFieldDef } from '#layers/autoadmin/composables/useAdminRegis
 import type { ListFieldType } from '#layers/autoadmin/utils/list'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { SQL, Table } from 'drizzle-orm'
+import { useDb } from '#layers/autoadmin/server/utils/db'
 import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation.js'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { count, eq, getTableColumns, like, or } from 'drizzle-orm'
+import { count, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
 
-function prepareFilters(filters: FilterFieldDef<Table>[]) {
-  return filters.map((filter) => {
+async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
+  return Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
-      return { field: filter }
+      const type = columnTypes[filter]
+      if (type === 'boolean' || type === 'date') {
+        return {
+          field: filter,
+          label: toTitleCase(filter),
+          type,
+        }
+      } else if (type === 'text') {
+        const field = cfg.columns[filter]
+        // TODO Fix for other dialects
+        //   const options = await db.all(
+        //     sql`SELECT DISTINCT ${field} AS value FROM ${cfg.model}`,
+        //   )
+        const options = await db.all(
+          sql`SELECT ${field} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${field}`,
+        )
+        return {
+          field: filter,
+          label: toTitleCase(filter),
+          type: 'text',
+          options,
+        }
+      }
     }
     return filter
-  })
+  }))
 }
 
-function getFilters(cfg: AdminModelConfig, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
+async function getFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
   const filters = cfg.list?.filterFields
   if (filters) {
-    return prepareFilters(filters)
+    return await prepareFilters(cfg, db, filters, columnTypes, metadata)
   }
   // get boolean columns
   const booleanColumns = Object.keys(columnTypes).filter(column => columnTypes[column] === 'boolean')
@@ -34,8 +57,8 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
   const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
-
-  const filters = getFilters(cfg, columnTypes, cfg.metadata)
+  const db = useDb()
+  const filters = await getFilters(cfg, db, columnTypes, cfg.metadata)
   console.log('filters', filters)
 
   const spec = {
@@ -82,7 +105,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   }
 
   let baseQuery
-  const db = useDb()
   // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
   const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn)
   if (shouldSelectAllColumns) {
