@@ -9,7 +9,7 @@ import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { count, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
 
-async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
+async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, ListFieldType>, _metadata: TableMetadata) {
   return Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
       const type = columnTypes[filter]
@@ -176,24 +176,55 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
       searchCondition = or(...searchConditions)
     }
   }
-  // Apply search condition to base query
-  if (searchCondition) {
-    baseQuery = baseQuery.where(searchCondition)
+  // Handle filter conditions
+  const filterConditions: SQL[] = []
+  if (filters && filters.length > 0) {
+    for (const filter of filters) {
+      const filterValue = query[filter.field]
+      if (filterValue !== undefined && filterValue !== null && filterValue !== '') {
+        if (filter.type === 'boolean') {
+          // Handle boolean filters
+          const boolValue = filterValue === 'true' || filterValue === true
+          filterConditions.push(eq(tableColumns[filter.field], boolValue))
+        } else if (filter.type === 'date') {
+          // Handle date filters - exact date match
+          filterConditions.push(eq(tableColumns[filter.field], filterValue))
+        } else if (filter.type === 'text') {
+          // Handle text filters - exact match
+          filterConditions.push(eq(tableColumns[filter.field], filterValue))
+        }
+      }
+    }
   }
 
-  // Build count query with search condition
-  let countQuery = db.select({ resultCount: count() }).from(model)
+  // Combine search and filter conditions
+  let combinedConditions: SQL | undefined
+  if (searchCondition && filterConditions.length > 0) {
+    combinedConditions = sql`${searchCondition} AND ${sql.join(filterConditions, sql` AND `)}`
+  } else if (searchCondition) {
+    combinedConditions = searchCondition
+  } else if (filterConditions.length > 0) {
+    combinedConditions = sql.join(filterConditions, sql` AND `)
+  }
+
+  // Apply combined conditions to base query
+  if (combinedConditions) {
+    baseQuery = baseQuery.where(combinedConditions)
+  }
+
+  // Build count query with combined conditions
+  let countQuery = db.select({ resultCount: count() }).from(model) as any
   for (const join of joins) {
     countQuery = countQuery.leftJoin(join.table, join.on)
   }
-  if (searchCondition) {
-    countQuery = countQuery.where(searchCondition)
+  if (combinedConditions) {
+    countQuery = countQuery.where(combinedConditions)
   }
 
   const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
   if (shouldSelectAllColumns) {
     // run the columns through the accessor functions
-    response.results = response.results.map((result) => {
+    response.results = response.results.map((result: any) => {
       // loop through the columns and run the accessor functions
       spec.columns.forEach((column) => {
         if (column.accessorFn) {
@@ -203,16 +234,15 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
       return result
     })
     // only return the columns that have accessor keys or the lookup column
-    response.results = response.results.map((result) => {
+    response.results = response.results.map((result: any) => {
       return Object.fromEntries(
         Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
       )
-    })
+    }) as any
   }
   return {
-    filters,
     ...response,
-
+    filters,
     spec,
   }
 }
