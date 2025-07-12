@@ -14,7 +14,7 @@ interface Data<TData> {
     page: number
     pages: number
   }
-  filter_schema?: Record<string, any>
+  filters?: Record<string, any>
   spec: {
     endpoint: string
     updatePage?: { name: string, params: { modelLabel: string } }
@@ -206,6 +206,7 @@ async function handleDelete(id: string) {
           <div class="flex items-center gap-2">
             <slot name="actions-prepend"></slot>
             <!-- <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot> -->
+            <Filters :filters="data?.filters" />
             <UButton
               v-for="action in actions"
               :key="action.label"
