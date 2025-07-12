@@ -139,17 +139,14 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)
   const model = cfg.model
-
   const config = useRuntimeConfig()
-  const apiPrefix = config.public.apiPrefix
 
   const tableColumns = getTableColumns(model)
-
   const columnTypes = zodToListSpec(cfg.create?.schema as any)
   const metadata = getTableMetadata(model)
-
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, metadata)
 
+  const apiPrefix = config.public.apiPrefix
   const spec = {
     endpoint: cfg.list?.endpoint ?? `${apiPrefix}/${modelLabel}`,
     updatePage: cfg.update?.enabled ? { name: 'autoadmin-update', params: { modelLabel: `${modelLabel}` } } : undefined,
@@ -160,8 +157,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     columns,
     lookupColumnName: cfg.lookupColumnName,
   }
-
-  const db = useDb()
 
   // Build joins and foreign column selections
   const joins: { table: Table, on: SQL }[] = []
@@ -195,14 +190,15 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     }
   }
 
-  const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
+  let baseQuery
+  const db = useDb()
   // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
   const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn)
-  let baseQuery
   if (shouldSelectAllColumns) {
     const allColumns = { ...getTableColumns(model), ...foreignColumnSelections }
     baseQuery = db.select(allColumns).from(model)
   } else {
+    const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
     // only select the required column names from the table, not all columns
     const selectedColumns = Object.fromEntries(
       columnNames
