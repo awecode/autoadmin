@@ -194,7 +194,7 @@ export function useAdminRegistry() {
     }
 
     cfg.lookupColumn = cfg.columns[lookupColumnName] as T['_']['columns'][ColKey<T>]
-    cfg.metadata = getTableMetadata(model)
+    cfg.metadata = getTableMetadata(cfg.columns)
 
     registry.set(label, cfg as unknown as AdminModelConfig<Table>)
   }

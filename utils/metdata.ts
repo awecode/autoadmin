@@ -1,6 +1,6 @@
-import type { Table } from 'drizzle-orm'
+import type { Column } from 'drizzle-orm'
 import { useDb } from '#layers/autoadmin/server/utils/db'
-import { getTableColumns, sql, SQL } from 'drizzle-orm'
+import { sql, SQL } from 'drizzle-orm'
 
 export interface TableMetadata {
   primaryAutoincrementColumns: string[]
@@ -9,20 +9,15 @@ export interface TableMetadata {
   defaultValues: Record<string, any>
 }
 
-export function getTableMetadata(table: Table): TableMetadata {
+export function getTableMetadata(columns: Record<string, Column>): TableMetadata {
   const metadata: TableMetadata = {
     primaryAutoincrementColumns: [],
     datetimeColumns: [],
     autoTimestampColumns: [],
     defaultValues: {},
   }
-
-  if (!table) {
-    throw new Error('Table object is required')
-  }
-
   // Loop through each column to extract metadata
-  for (const [columnName, column] of Object.entries(getTableColumns(table))) {
+  for (const [columnName, column] of Object.entries(columns)) {
     if (column.dataType === 'number' && column.primary === true && column.config?.autoIncrement === true) {
       metadata.primaryAutoincrementColumns.push(columnName)
     }
