@@ -24,7 +24,6 @@ interface Data<TData> {
     lookupColumnName: string
     enableSearch: boolean
     searchPlaceholder: string
-    searchFields: string[]
   }
 }
 

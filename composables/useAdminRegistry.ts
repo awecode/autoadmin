@@ -7,8 +7,10 @@ import { getLabelColumnFromModel } from '../utils/registry'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
+// Represents a column name or relation string
+type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
-type ListField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}` | ((model: InferSelectModel<T>) => any)
+type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) => any)
 
 export type ListFieldDef<T extends Table>
   = ListField<T>
@@ -33,7 +35,7 @@ type ListOptions<T extends Table = Table> = {
   showCreateButton: boolean
   enableSearch: boolean
   searchPlaceholder?: string
-  searchFields?: ColKey<T>[]
+  searchFields?: ColField<T>[]
   title?: string
   endpoint?: string
   // Do not allow both fields and columns to be set at the same time
@@ -109,7 +111,7 @@ const generateDefaultOptions = <T extends Table>(model: T, opts: AdminModelOptio
     dct.labelColumn = getLabelColumnFromModel(model)
   }
   if (opts.list?.enableSearch && !opts.list?.searchFields) {
-    dct.list.searchFields = [ opts.labelColumn || dct.labelColumn ]
+    dct.list.searchFields = [opts.labelColumn || dct.labelColumn]
   }
   if (!opts.create?.schema) {
     dct.create.schema = createInsertSchema(model)
