@@ -3,7 +3,7 @@ import type { ListFieldType } from '../utils/list'
 import { useRouteQuery } from '@vueuse/router'
 
 const _props = defineProps<{
-  filters: { field: string, label?: string, type?: ListFieldType, options?: { label?: string, value: string | number }[] }[]
+  filters: { field: string, label?: string, type?: ListFieldType, options?: { label?: string, value: string | number, count?: number }[] }[]
 }>()
 
 const route = useRoute()
@@ -41,7 +41,7 @@ function updateFilter(field: string, value: string | null) {
 
 // Get filter value
 function getFilterValue(field: string): string {
-  return filterQuery.value[field] || 'all'
+  return filterQuery.value[field]
 }
 
 // Clear all filters
@@ -78,16 +78,16 @@ const booleanOptions = [
           class="min-w-20"
           size="xs"
           :items="booleanOptions"
-          :model-value="getFilterValue(filter.field)"
+          :model-value="getFilterValue(filter.field) ?? 'all'"
           @update:model-value="updateFilter(filter.field, $event as string)"
         />
 
-        <USelect
+        <USelectMenu
           v-else-if="(filter.type === 'text' || !filter.type) && filter.options"
           class="min-w-32"
           size="xs"
-          :items="filter.options"
-          :model-value="getFilterValue(filter.field)"
+          value-key="value"
+          :items="filter.options.map(option => ({ label: option.label || option.value.toString(), value: option.value.toString(), count: option.count }))"
           :placeholder="`${filter.label}`"
           @update:model-value="updateFilter(filter.field, $event as string)"
         >
@@ -97,7 +97,7 @@ const booleanOptions = [
           <template #item-trailing="{ item }">
             <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
           </template>
-        </USelect>
+        </USelectMenu>
 
         <!-- Default fallback -->
         <UInput

@@ -59,7 +59,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
   const db = useDb()
   const filters = await getFilters(cfg, db, columnTypes, cfg.metadata)
-  console.log('filters', filters)
 
   const spec = {
     endpoint: cfg.list.endpoint,
