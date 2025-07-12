@@ -13,6 +13,13 @@ type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
 type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) => any)
 
+export type FilterFieldDef<T extends Table> = ColField<T> | {
+  field: ColField<T>
+  label?: string
+  type?: ListFieldType
+  options?: { label?: string, value: string | number }[]
+}
+
 export type ListFieldDef<T extends Table>
   = ListField<T>
     | { // Represents a detailed field configuration object
@@ -39,6 +46,7 @@ type ListOptions<T extends Table = Table> = {
   searchFields: ColField<T>[]
   title?: string
   endpoint?: string
+  filterFields?: FilterFieldDef<T>[]
   // Do not allow both fields and columns to be set at the same time
 } & (
   | {

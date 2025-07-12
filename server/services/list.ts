@@ -8,6 +8,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const cfg = getModelConfig(modelLabel)
   const model = cfg.model
   const tableColumns = cfg.columns
+  // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
   const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
 
