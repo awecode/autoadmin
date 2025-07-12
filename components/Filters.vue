@@ -98,6 +98,15 @@ const booleanOptions = [
             <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
           </template>
         </USelectMenu>
+        <UInput
+          v-else-if="filter.type === 'date'"
+          class="min-w-32"
+          size="xs"
+          type="date"
+          :model-value="getFilterValue(filter.field)"
+          :placeholder="`Filter ${filter.label}`"
+          @update:model-value="updateFilter(filter.field, $event as string)"
+        />
 
         <!-- Default fallback -->
         <UInput
