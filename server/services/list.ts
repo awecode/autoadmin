@@ -1,7 +1,7 @@
 import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
 import type { ListFieldType } from '#layers/autoadmin/utils/list.js'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
-import type { Column, InferSelectModel, SQL, Table } from 'drizzle-orm'
+import type { Column, SQL, Table } from 'drizzle-orm'
 import { zodToListSpec } from '#layers/autoadmin/utils/list.js'
 import { getTableMetadata } from '#layers/autoadmin/utils/metdata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
@@ -10,11 +10,7 @@ import { count, eq, getTableColumns } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 import { getModelConfig } from './autoadmin'
 
-function getForeignValue<T extends Table>(model: InferSelectModel<T>, accessorKey: string): any {
-  return model[accessorKey]
-}
-
-  type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
+type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
 function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
@@ -51,7 +47,6 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
               accessorKey,
               header,
               type: columnTypes[accessorKey] || foreignTableListSpec[foreignColumnName],
-              accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, accessorKey),
             }
           } else {
             throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.label}.`)
@@ -94,7 +89,6 @@ function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns:
                 accessorKey,
                 header,
                 type: def.type || columnTypes[accessorKey] || foreignTableListSpec[foreignColumnName],
-                accessorFn: (model: InferSelectModel<T>) => getForeignValue(model, accessorKey),
               }
             }
           } else {
@@ -222,7 +216,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     }
     // add foreign column selections
     Object.assign(selectedColumns, foreignColumnSelections)
-
     baseQuery = db.select(selectedColumns).from(model)
   }
 
