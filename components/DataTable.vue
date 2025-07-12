@@ -100,13 +100,17 @@ const query = computed(() => ({
 
 const endpoint = `${apiPrefix}/${modelLabel}`
 
-const spec: Ref<Record<string, any>> = ref({})
-
-const { data, status, error, refresh } = useFetch<Data<T>>(() => endpoint, { query, onResponse({ response }) {
-  if (response._data?.spec) {
-    spec.value = response._data?.spec
+const { data, status, error, refresh } = useAsyncData<Data<T> & { spec?: Record<string, any> }>(`${modelLabel}-list`, async () => {
+  const response = await $fetch<Data<T>>(endpoint, { query: query.value })
+  return {
+    ...response,
+    spec: response?.spec || {},
   }
-} })
+}, {
+  watch: [query],
+})
+
+const spec = computed(() => data.value?.spec || {} as Record<string, any>)
 
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 
