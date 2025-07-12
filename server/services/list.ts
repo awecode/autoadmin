@@ -1,8 +1,31 @@
+import type { FilterFieldDef } from '#layers/autoadmin/composables/useAdminRegistry.js'
+import type { ListFieldType } from '#layers/autoadmin/utils/list'
+import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { SQL, Table } from 'drizzle-orm'
 import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation.js'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { count, eq, getTableColumns, like, or } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
+
+function prepareFilters(filters: FilterFieldDef<Table>[]) {
+  return filters.map((filter) => {
+    if (typeof filter === 'string') {
+      return { field: filter }
+    }
+    return filter
+  })
+}
+
+function getFilters(cfg: AdminModelConfig, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
+  const filters = cfg.list?.filterFields
+  if (filters) {
+    return prepareFilters(filters)
+  }
+  // get boolean columns
+  const booleanColumns = Object.keys(columnTypes).filter(column => columnTypes[column] === 'boolean')
+  return booleanColumns.map(column => ({ field: column, label: toTitleCase(column), type: 'boolean' }))
+}
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)
@@ -11,6 +34,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
   const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
+
+  const filters = getFilters(cfg, columnTypes, cfg.metadata)
+  console.log('filters', filters)
 
   const spec = {
     endpoint: cfg.list.endpoint,
@@ -163,7 +189,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     })
   }
   return {
+    filters,
     ...response,
+
     spec,
   }
 }
