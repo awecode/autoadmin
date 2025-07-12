@@ -1,5 +1,6 @@
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import type { ListFieldType } from '../utils/list'
+import type { TableMetadata } from '../utils/metdata'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
@@ -103,6 +104,9 @@ export interface AdminModelConfig<T extends Table = Table> {
   delete: DeleteOptions
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
+  // store
+  columns: ReturnType<typeof getTableColumns<T>>
+  metadata: TableMetadata
 }
 
 const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
@@ -169,8 +173,8 @@ export function useAdminRegistry() {
 
     // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
-    const modelColumns = getTableColumns(model)
-    if (!Object.keys(modelColumns).includes(lookupColumnName)) {
+    cfg.columns = getTableColumns(model)
+    if (!Object.keys(cfg.columns).includes(lookupColumnName)) {
       if (lookupColumnName === defaultLookupColumnName) {
         throw new Error(
           `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(modelColumns).join(', ')}`,
@@ -182,14 +186,15 @@ export function useAdminRegistry() {
       }
     }
     // Check if lookupColumnName is either primary or unique
-    const lookupColumn = modelColumns[lookupColumnName]
+    const lookupColumn = cfg.columns[lookupColumnName]
     if (!lookupColumn.primary && !lookupColumn.isUnique) {
       throw new Error(
         `The lookup field "${lookupColumnName}" is not a primary or unique column on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration.`,
       )
     }
 
-    cfg.lookupColumn = modelColumns[lookupColumnName] as T['_']['columns'][ColKey<T>]
+    cfg.lookupColumn = cfg.columns[lookupColumnName] as T['_']['columns'][ColKey<T>]
+    cfg.metadata = getTableMetadata(model)
 
     registry.set(label, cfg as unknown as AdminModelConfig<Table>)
   }

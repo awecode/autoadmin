@@ -1,4 +1,5 @@
 import type { Table } from 'drizzle-orm'
+import { useDb } from '#layers/autoadmin/server/utils/db'
 import { getTableColumns, sql, SQL } from 'drizzle-orm'
 
 export interface TableMetadata {
@@ -7,8 +8,6 @@ export interface TableMetadata {
   autoTimestampColumns: string[]
   defaultValues: Record<string, any>
 }
-
-const db = useDb()
 
 export function getTableMetadata(table: Table): TableMetadata {
   const metadata: TableMetadata = {
@@ -49,7 +48,7 @@ const isSql = (v: unknown): v is SQL => v instanceof SQL || (
   v && typeof v === 'object' && 'queryChunks' in v
 )
 
-async function resolveDefault(raw: unknown) {
+async function resolveDefault(db: ReturnType<typeof useDb>, raw: unknown) {
   if (isSql(raw)) {
     // recognise CURRENT_TIMESTAMP expression and return the current timestamp without involving the database
     // TODO Maybe do the same for other SQL expressions like NOW(), unixepoch(), etc.
@@ -78,6 +77,7 @@ export const useMetadataOnFormSpec = async (
   metadata: TableMetadata,
 ): Promise<FormSpec> => {
   let fields = formSpec.fields
+  const db = useDb()
 
   // Drop primary autoincrement columns
   fields = fields.filter(
@@ -101,7 +101,7 @@ export const useMetadataOnFormSpec = async (
     fields.map(async (field) => {
       const cfgDefault = metadata.defaultValues[field.name]
       if (cfgDefault !== undefined) {
-        const resolvedDefaultValue = await resolveDefault(cfgDefault)
+        const resolvedDefaultValue = await resolveDefault(db, cfgDefault)
         return { ...field, defaultValue: resolvedDefaultValue }
       }
       return field

@@ -140,9 +140,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const cfg = getModelConfig(modelLabel)
   const model = cfg.model
 
-  const tableColumns = getTableColumns(model)
-  const columnTypes = zodToListSpec(cfg.create?.schema as any)
-  const metadata = getTableMetadata(model)
+  const tableColumns = cfg.columns
+  const metadata = cfg.metadata
+  const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, metadata)
 
   const spec = {
