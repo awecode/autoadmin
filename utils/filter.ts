@@ -47,7 +47,14 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       type: 'text',
       options,
     }
+  } else if (type === 'number') {
+    return {
+      field,
+      label: label || toTitleCase(field),
+      type: 'text',
+    }
   }
+
   throw new Error(`Invalid filter: ${JSON.stringify(field)}`)
 }
 
@@ -58,7 +65,6 @@ async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: Filter
     } else if (typeof filter === 'object') {
       return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type)
     }
-    // TODO Remove this once prepareFilter is used everywhere
     throw new Error(`Invalid filter: ${JSON.stringify(filter)}`)
   }))
   // change column type to datetime-local if it is a datetime column
