@@ -14,7 +14,7 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
   const columns = spec.fields.map(field => field.name as ColKey<typeof model>)
 
   const selectObj = Object.fromEntries(
-    columns.map(colName => [colName, model[colName]]),
+    columns.map(colName => [colName, cfg.columns[colName]]),
   )
   const result = await db
     .select(selectObj)
