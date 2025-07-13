@@ -4,7 +4,7 @@ import type { zodToListSpec } from '#layers/autoadmin/utils/list'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { Table } from 'drizzle-orm'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { getTableForeignKeysByColumn } from './relation'
 
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
@@ -12,7 +12,7 @@ type ColTypes = ReturnType<typeof zodToListSpec>
 type DbType = ReturnType<typeof useDb>
 export type FilterSpec = Awaited<ReturnType<typeof prepareFilter>>
 
-async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string) {
+async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, query: Record<string, any> = {}) {
   const type = definedType || columnTypes[field]?.type
   if (type === 'boolean') {
     return {
@@ -60,24 +60,32 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
     if (relations.length === 0) {
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }
+    let options
+    if (query[field]) {
+      const rows = await db.select().from(relations[0].foreignTable).where(eq(relations[0].foreignColumn, query[field]))
+      options = rows.map(row => ({
+        label: row[cfg.labelColumn],
+        value: row[relations[0].foreignColumn.name],
+      }))
+    }
     return {
       field,
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
       choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relations[0].columnName}`,
-      options: [{ label: 'All', value: 1 }],
+      options,
     }
   }
 
   throw new Error(`Invalid filter: ${JSON.stringify(field)}`)
 }
 
-async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata) {
+async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
-      return await prepareFilter(cfg, db, columnTypes, filter)
+      return await prepareFilter(cfg, db, columnTypes, filter, {})
     } else if (typeof filter === 'object') {
-      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type)
+      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, query)
     }
     throw new Error(`Invalid filter: ${JSON.stringify(filter)}`)
   }))
@@ -92,15 +100,15 @@ async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: Filter
   return parsedFiltersWithOriginalType
 }
 
-export async function getFilters(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, metadata: TableMetadata) {
+export async function getFilters(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const filters = cfg.list?.filterFields
   if (filters) {
-    return await prepareFilters(cfg, db, filters, columnTypes, metadata)
+    return await prepareFilters(cfg, db, filters, columnTypes, metadata, query)
   }
   // get boolean, enum, date
   const booleanColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'boolean')
   const enumColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'select')
   const dateColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'date')
   const defaultFilterColumns = [...booleanColumnNames, ...enumColumnNames, ...dateColumnNames]
-  return prepareFilters(cfg, db, defaultFilterColumns, columnTypes, metadata)
+  return prepareFilters(cfg, db, defaultFilterColumns, columnTypes, metadata, {})
 }

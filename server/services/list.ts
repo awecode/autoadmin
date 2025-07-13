@@ -15,7 +15,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
   const db = useDb()
-  const filters = await getFilters(cfg, db, columnTypes, cfg.metadata)
+  const filters = await getFilters(cfg, db, columnTypes, cfg.metadata, query)
 
   const spec = {
     endpoint: cfg.list.endpoint,

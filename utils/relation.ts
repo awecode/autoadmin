@@ -152,8 +152,10 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       field.label = field.label.replace(' Id', '')
       if (formSpec.values?.[relation.column.name]) {
         const db = useDb()
+        // TODO only select the columns that are needed for the form spec
         const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.column.name]))
         field.selectItems = rows.map(row => ({
+          // TODO FIX: labelColumn should be a column of foreign table, not the current model
           label: row[cfg.labelColumn],
           value: row[relation.foreignColumn.name],
         }))
