@@ -260,10 +260,10 @@ async function handleDelete(id: string) {
               <span v-else>No</span>
             </template>
             <template v-else-if="cell.column.columnDef.type === 'date'">
-              {{ humanifyDateTime(cell.getValue()) }}
+              {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
             </template>
             <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
-              {{ humanifyDateTime(cell.getValue()) }}
+              {{ humanifyDateTime(cell.getValue() as string | Date) }}
             </template>
             <template v-else>
               {{ cell.getValue() }}
