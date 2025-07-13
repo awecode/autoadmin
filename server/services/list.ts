@@ -9,15 +9,23 @@ import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { count, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
 
+export type FilterType = 'boolean' | 'text' | 'date' | 'daterange'
+
 async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
       const type = columnTypes[filter]?.type
-      if (type === 'boolean' || type === 'date') {
+      if (type === 'boolean') {
         return {
           field: filter,
           label: toTitleCase(filter),
-          type,
+          type: 'boolean',
+        }
+      } else if (type === 'date') {
+        return {
+          field: filter,
+          label: toTitleCase(filter),
+          type: 'daterange',
         }
       } else if (type === 'text') {
         const field = cfg.columns[filter]
@@ -62,7 +70,7 @@ async function getFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, c
   if (filters) {
     return await prepareFilters(cfg, db, filters, columnTypes, metadata)
   }
-  // get boolean, enum, and date columns
+  // get boolean, enum, date
   const booleanColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'boolean')
   const enumColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'select')
   const dateColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'date')
@@ -231,6 +239,32 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
             )
           } else {
             filterConditions.push(eq(tableColumns[filter.field], filterValue))
+          }
+        } else if (filter.type === 'daterange') {
+          // Handle date range filters - expects format "startDate,endDate"
+          if (typeof filterValue === 'string' && filterValue.includes(',')) {
+            const [startDate, endDate] = filterValue.split(',')
+
+            if (startDate && endDate) {
+              // Both start and end dates provided
+              const startOfDay = `${startDate} 00:00:00`
+              const endOfDay = `${endDate} 23:59:59`
+              filterConditions.push(
+                sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
+              )
+            } else if (startDate) {
+              // Only start date provided
+              const startOfDay = `${startDate} 00:00:00`
+              filterConditions.push(
+                sql`${tableColumns[filter.field]} >= ${startOfDay}`,
+              )
+            } else if (endDate) {
+              // Only end date provided
+              const endOfDay = `${endDate} 23:59:59`
+              filterConditions.push(
+                sql`${tableColumns[filter.field]} <= ${endOfDay}`,
+              )
+            }
           }
         } else if (filter.type === 'text') {
           // Handle text filters - exact match
