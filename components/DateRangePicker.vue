@@ -7,13 +7,14 @@ const props = defineProps<{
     end: Date
   } | `${string},${string}`
   mode?: 'date' | 'string'
+  placeholder?: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [{
     start: Date
     end: Date
-  } | `${string},${string}` | null]
+  } | `${string},${string}` | undefined]
 }>()
 
 const defaultMode = 'string' as const
@@ -31,15 +32,20 @@ if (props.mode) {
   dateMode = defaultMode
 }
 
-const uCalendarValue: Ref<{ start: CalendarDate, end: CalendarDate } | null> = shallowRef(null)
+const uCalendarValue: Ref<{ start: CalendarDate | undefined, end: CalendarDate | undefined }> = shallowRef({
+  start: undefined,
+  end: undefined,
+})
 
 if (typeof props.modelValue === 'string') {
   const [start, end] = props.modelValue.split(',')
-  const startSplits = start.split('-').map(Number)
-  const endSplits = end.split('-').map(Number)
-  uCalendarValue.value = {
-    start: new CalendarDate(startSplits[0], startSplits[1], startSplits[2]),
-    end: new CalendarDate(endSplits[0], endSplits[1], endSplits[2]),
+  if (start && end) {
+    const startSplits = start.split('-').map(Number)
+    const endSplits = end.split('-').map(Number)
+    uCalendarValue.value = {
+      start: new CalendarDate(startSplits[0], startSplits[1], startSplits[2]),
+      end: new CalendarDate(endSplits[0], endSplits[1], endSplits[2]),
+    }
   }
 } else {
   const start = props.modelValue?.start
@@ -60,9 +66,9 @@ const formatDate = (date: CalendarDate) => {
   return date.toDate(getLocalTimeZone())
 }
 
-const formatRange = (value: { start: CalendarDate, end: CalendarDate } | null) => {
-  if (!value) {
-    return null
+const formatRange = (value: { start: CalendarDate | undefined, end: CalendarDate | undefined }) => {
+  if (!value.start || !value.end) {
+    return undefined
   }
   if (dateMode === 'string') {
     return `${formatDate(value.start)},${formatDate(value.end)}` as `${string},${string}`
@@ -83,7 +89,7 @@ watch(uCalendarValue, (value) => {
 </script>
 
 <template>
-  <UPopover v-if="uCalendarValue">
+  <UPopover>
     <UButton color="neutral" icon="i-lucide-calendar" variant="subtle">
       <template v-if="uCalendarValue.start">
         <template v-if="uCalendarValue.end">
@@ -95,7 +101,7 @@ watch(uCalendarValue, (value) => {
         </template>
       </template>
       <template v-else>
-        Pick a date
+        {{ placeholder || 'Pick a date range' }}
       </template>
     </UButton>
 

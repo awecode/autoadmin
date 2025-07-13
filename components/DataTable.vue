@@ -206,7 +206,7 @@ async function handleDelete(id: string) {
           <div class="flex items-center gap-2">
             <slot name="actions-prepend"></slot>
             <!-- <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot> -->
-            <Filters :filters="data?.filters" />
+            <Filters v-if="data?.filters" :filters="data.filters" />
             <UButton
               v-for="action in actions"
               :key="action.label"
