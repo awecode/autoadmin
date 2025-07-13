@@ -3,6 +3,7 @@ import type { ListFieldType } from '#layers/autoadmin/utils/list'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { SQL, Table } from 'drizzle-orm'
 import { useDb } from '#layers/autoadmin/server/utils/db'
+import { createDateFilterCondition } from '#layers/autoadmin/utils/dateFilters.js'
 import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation.js'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
@@ -217,54 +218,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           // Handle boolean filters
           const boolValue = filterValue === 'true' || filterValue === true
           filterConditions.push(eq(tableColumns[filter.field], boolValue))
-        } else if (filter.type === 'date') {
-          // Handle date filters - use date range for datetime columns
-          if (typeof filterValue === 'string' && (filter as any).originalType === 'datetime-local') {
-            // Parse the date string and create date range (start and end of day)
-            // Use the date string directly to avoid timezone issues
-            const startOfDay = `${filterValue} 00:00:00`
-            const endOfDay = `${filterValue} 23:59:59`
-
-            // Filter for records within this date range using string comparison
-            filterConditions.push(
-              sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
-            )
-          } else if (typeof filterValue === 'string') {
-            // Handle date filters - use date range for consistency
-            const startOfDay = `${filterValue} 00:00:00`
-            const endOfDay = `${filterValue} 23:59:59`
-
-            filterConditions.push(
-              sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
-            )
-          } else {
-            filterConditions.push(eq(tableColumns[filter.field], filterValue))
-          }
         } else if (filter.type === 'daterange') {
-          // Handle date range filters - expects format "startDate,endDate"
-          if (typeof filterValue === 'string' && filterValue.includes(',')) {
-            const [startDate, endDate] = filterValue.split(',')
-
-            if (startDate && endDate) {
-              // Both start and end dates provided
-              const startOfDay = `${startDate} 00:00:00`
-              const endOfDay = `${endDate} 23:59:59`
-              filterConditions.push(
-                sql`${tableColumns[filter.field]} >= ${startOfDay} AND ${tableColumns[filter.field]} <= ${endOfDay}`,
-              )
-            } else if (startDate) {
-              // Only start date provided
-              const startOfDay = `${startDate} 00:00:00`
-              filterConditions.push(
-                sql`${tableColumns[filter.field]} >= ${startOfDay}`,
-              )
-            } else if (endDate) {
-              // Only end date provided
-              const endOfDay = `${endDate} 23:59:59`
-              filterConditions.push(
-                sql`${tableColumns[filter.field]} <= ${endOfDay}`,
-              )
-            }
+          const condition = createDateFilterCondition(tableColumns[filter.field], filterValue)
+          if (condition) {
+            filterConditions.push(condition)
           }
         } else if (filter.type === 'text') {
           // Handle text filters - exact match
