@@ -39,7 +39,7 @@ function getFilterModel(filter: { field: string, type?: string }) {
     set: (value: string) => {
       const current = { ...filterQuery.value }
 
-      if (value === null || value === '' || value === 'all') {
+      if (value === null || value === '' || value === undefined) {
         delete current[filter.field]
       } else {
         current[filter.field] = value

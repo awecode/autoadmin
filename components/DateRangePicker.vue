@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
 
+type DateRange = {
+  start: Date | undefined
+  end: Date | undefined
+} | `${string},${string}` | undefined
+
 const props = defineProps<{
-  modelValue?: {
-    start: Date
-    end: Date
-  } | `${string},${string}` | ''
+  modelValue?: DateRange
   mode?: 'date' | 'string'
   placeholder?: string
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [{
-    start: Date | undefined
-    end: Date | undefined
-  } | `${string},${string}` | '']
+  'update:modelValue': [DateRange]
 }>()
 
 const defaultMode = 'string' as const
@@ -86,9 +85,9 @@ const formatDate = (date: CalendarDate) => {
   return date.toDate(getLocalTimeZone())
 }
 
-const formatRange = (value: { start: CalendarDate | undefined, end: CalendarDate | undefined }) => {
+const formatRange = (value: { start: CalendarDate | undefined, end: CalendarDate | undefined }): DateRange => {
   if (!value.start || !value.end) {
-    return dateMode === 'string' ? '' : { start: undefined, end: undefined }
+    return dateMode === 'string' ? undefined : { start: undefined, end: undefined }
   }
   if (dateMode === 'string') {
     return `${formatDate(value.start)},${formatDate(value.end)}` as `${string},${string}`

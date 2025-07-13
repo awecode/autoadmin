@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
 
+type DateDef = Date | string | undefined
+
 const props = defineProps<{
-  modelValue?: Date | string | ''
+  modelValue?: DateDef
   mode?: 'date' | 'string'
   placeholder?: string
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [Date | string | '']
+  'update:modelValue': [DateDef]
 }>()
 
 const defaultMode = 'string' as const
@@ -50,9 +52,9 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
 // Initialize with the initial modelValue
 syncFromModelValue(props.modelValue)
 
-const formatValue = (value: CalendarDate | undefined): Date | string => {
+const formatValue = (value: CalendarDate | undefined): DateDef => {
   if (!value) {
-    return ''
+    return undefined
   }
   if (dateMode === 'string') {
     const d = value.toDate(getLocalTimeZone())
