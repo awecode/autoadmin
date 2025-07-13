@@ -60,6 +60,15 @@ const booleanOptions = [
   { value: 'true', label: 'Yes' },
   { value: 'false', label: 'No' },
 ]
+
+const normalizeOptions = (options: { label?: string, value: string | number, count?: number }[] | string[]) => {
+  return options.map((option) => {
+    if (typeof option === 'string') {
+      return { label: option, value: option }
+    }
+    return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
+  })
+}
 </script>
 
 <template>
@@ -87,7 +96,7 @@ const booleanOptions = [
           class="min-w-32"
           size="xs"
           value-key="value"
-          :items="filter.options.map(option => ({ label: option.label || option.value.toString(), value: option.value.toString(), count: option.count }))"
+          :items="normalizeOptions(filter.options)"
           :placeholder="`${filter.label}`"
           @update:model-value="updateFilter(filter.field, $event as string)"
         >
