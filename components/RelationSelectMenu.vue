@@ -33,13 +33,30 @@ function onSelectMenuOpen() {
   }
 }
 
+// Flag to prevent infinite recursion, or does Vue handle this?
+let isUpdatingFromParent = false
+
 watch(internalValue, (value) => {
-  emit('update:modelValue', value)
+  if (!isUpdatingFromParent) {
+    emit('update:modelValue', value)
+  }
+})
+
+// Watch for external changes to modelValue and sync them to internalValue
+watch(() => props.modelValue, (newValue) => {
+  isUpdatingFromParent = true
+  if (typeof internalValue.value === 'number' && typeof newValue === 'string' && !isNaN(Number(newValue)) && newValue !== '') {
+    internalValue.value = Number(newValue)
+  } else {
+    internalValue.value = newValue
+  }
+  nextTick(() => {
+    isUpdatingFromParent = false
+  })
 })
 </script>
 
 <template>
-  {{ filter }}
   <USelectMenu
     v-model="internalValue"
     class="min-w-32"
