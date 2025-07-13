@@ -21,6 +21,11 @@ const { data: selectMenuItems, status, execute } = await useLazyFetch<{
 
 if (props.filter.options) {
   selectMenuItems.value = props.filter.options
+  // Handle the case where the modelValue is a string and the options are numbers
+  // modelValue can be a string because it is extracted from the url query params
+  if (typeof props.modelValue === 'string' && props.modelValue !== '') {
+    selectMenuItems.value = selectMenuItems.value?.map(item => ({ ...item, value: item.value.toString() }))
+  }
 }
 const selectFetched = ref(false)
 

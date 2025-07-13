@@ -65,6 +65,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
       choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relations[0].columnName}`,
+      options: [{ label: 'All', value: 1 }],
     }
   }
 
