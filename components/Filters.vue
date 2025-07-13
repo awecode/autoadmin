@@ -112,18 +112,16 @@ const normalizeOptions = (options: { label?: string, value: string | number, cou
             <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
           </template>
         </USelectMenu>
-        <UInput
-          v-else-if="filter.type === 'date'"
-          v-model="getFilterModel(filter).value"
-          class="min-w-32"
-          size="xs"
-          type="date"
-          :placeholder="`Filter ${filter.label}`"
-        />
 
         <!-- Date Range Filter -->
         <DateRangePicker
           v-else-if="filter.type === 'daterange'"
+          v-model="getFilterModel(filter).value"
+          :placeholder="`Select ${filter.label || 'Date Range'}`"
+        />
+
+        <DatePicker
+          v-else-if="filter.type === 'date'"
           v-model="getFilterModel(filter).value"
           :placeholder="`Select ${filter.label || 'Date Range'}`"
         />

@@ -124,7 +124,7 @@ watch(() => props.modelValue, (newValue) => {
 
 <template>
   <UPopover>
-    <UButton color="neutral" icon="i-lucide-calendar" variant="subtle">
+    <UButton color="neutral" icon="i-lucide-calendar-days" variant="subtle">
       <template v-if="uCalendarValue.start">
         <template v-if="uCalendarValue.end">
           {{ df.format(uCalendarValue.start.toDate(getLocalTimeZone())) }} - {{ df.format(uCalendarValue.end.toDate(getLocalTimeZone())) }}
