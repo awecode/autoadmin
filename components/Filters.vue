@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FilterType } from '#layers/autoadmin/server/services/list'
+import type { FilterType } from '#layers/autoadmin/utils/filter'
 import { useRouteQuery } from '@vueuse/router'
 
 const _props = defineProps<{
