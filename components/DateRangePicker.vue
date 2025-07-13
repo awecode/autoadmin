@@ -103,13 +103,22 @@ const df = new DateFormatter('en-US', {
   dateStyle: 'medium',
 })
 
+// Flag to prevent infinite recursion, or does Vue handle this?
+let isUpdatingFromParent = false
+
 watch(uCalendarValue, (value) => {
-  emit('update:modelValue', formatRange(value))
+  if (!isUpdatingFromParent) {
+    emit('update:modelValue', formatRange(value))
+  }
 })
 
 // Watch for external changes to modelValue and sync them to uCalendarValue
 watch(() => props.modelValue, (newValue) => {
+  isUpdatingFromParent = true
   syncFromModelValue(newValue)
+  nextTick(() => {
+    isUpdatingFromParent = false
+  })
 })
 </script>
 
