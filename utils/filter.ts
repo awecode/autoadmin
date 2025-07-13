@@ -32,7 +32,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
     //   )
     const options = await db.all(
       sql`SELECT ${column} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${column}`,
-    )
+    ) as { value: string, count: number }[]
     return {
       field,
       label: label || toTitleCase(field),
@@ -40,7 +40,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       options,
     }
   } else if (type === 'select') {
-    const options = columnTypes[field].options
+    const options = columnTypes[field].options || []
     return {
       field,
       label: label || toTitleCase(field),

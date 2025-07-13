@@ -147,7 +147,11 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           const boolValue = filterValue === 'true' || filterValue === true
           filterConditions.push(eq(tableColumns[filter.field], boolValue))
         } else if (filter.type === 'daterange') {
-          const condition = createDateFilterCondition(tableColumns[filter.field], filterValue, filter.originalType === 'datetime-local')
+          const condition = createDateFilterCondition(
+            tableColumns[filter.field],
+            filterValue,
+            'originalType' in filter && filter.originalType === 'datetime-local',
+          )
           if (condition) {
             filterConditions.push(condition)
           }
