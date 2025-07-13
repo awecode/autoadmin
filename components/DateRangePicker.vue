@@ -13,13 +13,14 @@ const emit = defineEmits<{
   'update:modelValue': [{
     start: Date
     end: Date
-  } | `${string},${string}`]
+  } | `${string},${string}` | null]
 }>()
 
 const defaultMode = 'string' as const
 
 let dateMode: 'date' | 'string'
 
+// Get or infer the date mode
 if (props.mode) {
   dateMode = props.mode
 } else if (typeof props.modelValue === 'string') {
@@ -30,14 +31,26 @@ if (props.mode) {
   dateMode = defaultMode
 }
 
-const df = new DateFormatter('en-US', {
-  dateStyle: 'medium',
-})
+const uCalendarValue: Ref<{ start: CalendarDate, end: CalendarDate } | null> = shallowRef(null)
 
-const uCalendarValue = shallowRef({
-  start: new CalendarDate(2022, 1, 20),
-  end: new CalendarDate(2022, 2, 10),
-})
+if (typeof props.modelValue === 'string') {
+  const [start, end] = props.modelValue.split(',')
+  const startSplits = start.split('-').map(Number)
+  const endSplits = end.split('-').map(Number)
+  uCalendarValue.value = {
+    start: new CalendarDate(startSplits[0], startSplits[1], startSplits[2]),
+    end: new CalendarDate(endSplits[0], endSplits[1], endSplits[2]),
+  }
+} else {
+  const start = props.modelValue?.start
+  const end = props.modelValue?.end
+  if (start && end) {
+    uCalendarValue.value = {
+      start: new CalendarDate(start.getFullYear(), start.getMonth() + 1, start.getDate()),
+      end: new CalendarDate(end.getFullYear(), end.getMonth() + 1, end.getDate()),
+    }
+  }
+}
 
 const formatDate = (date: CalendarDate) => {
   if (dateMode === 'string') {
@@ -47,7 +60,10 @@ const formatDate = (date: CalendarDate) => {
   return date.toDate(getLocalTimeZone())
 }
 
-const formatRange = (value: { start: CalendarDate, end: CalendarDate }) => {
+const formatRange = (value: { start: CalendarDate, end: CalendarDate } | null) => {
+  if (!value) {
+    return null
+  }
   if (dateMode === 'string') {
     return `${formatDate(value.start)},${formatDate(value.end)}` as `${string},${string}`
   }
@@ -57,13 +73,17 @@ const formatRange = (value: { start: CalendarDate, end: CalendarDate }) => {
   }
 }
 
+const df = new DateFormatter('en-US', {
+  dateStyle: 'medium',
+})
+
 watch(uCalendarValue, (value) => {
   emit('update:modelValue', formatRange(value))
 })
 </script>
 
 <template>
-  <UPopover>
+  <UPopover v-if="uCalendarValue">
     <UButton color="neutral" icon="i-lucide-calendar" variant="subtle">
       <template v-if="uCalendarValue.start">
         <template v-if="uCalendarValue.end">
