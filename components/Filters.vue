@@ -113,6 +113,12 @@ const normalizeOptions = (options: { label?: string, value: string | number, cou
           </template>
         </USelectMenu>
 
+        <RelationSelectMenu
+          v-else-if="filter.type === 'relation'"
+          v-model="getFilterModel(filter).value"
+          :filter="filter"
+        />
+
         <!-- Date Range Filter -->
         <DateRangePicker
           v-else-if="filter.type === 'daterange'"

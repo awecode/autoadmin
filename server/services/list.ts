@@ -164,8 +164,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           if (condition) {
             filterConditions.push(condition)
           }
-        } else if (filter.type === 'text') {
-          // Handle text filters - exact match
+        } else if (filter.type === 'text' || filter.type === 'relation') {
           filterConditions.push(eq(tableColumns[filter.field], filterValue))
         }
       }

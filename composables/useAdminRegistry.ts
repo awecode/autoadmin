@@ -19,6 +19,7 @@ export type FilterFieldDef<T extends Table> = ColField<T> | {
   label?: string
   type?: FilterType
   options?: { label?: string, value: string | number }[]
+  choicesEndpoint?: string
 }
 
 export type ListFieldDef<T extends Table>

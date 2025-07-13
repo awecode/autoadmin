@@ -10,6 +10,7 @@ import { getTableForeignKeysByColumn } from './relation'
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
 type ColTypes = ReturnType<typeof zodToListSpec>
 type DbType = ReturnType<typeof useDb>
+export type FilterSpec = Awaited<ReturnType<typeof prepareFilter>>
 
 async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string) {
   const type = definedType || columnTypes[field]?.type
