@@ -23,15 +23,15 @@ export function getTableMetadata(columns: Record<string, Column>): TableMetadata
 
     // // Check for datetime columns with timestamp_ms mode
     if (column.dataType === 'date' && column.config?.mode === 'timestamp_ms') {
-      if (column.config?.default) {
+      if (column.hasDefault) {
         metadata.autoTimestampColumns.push(columnName)
       } else {
         metadata.datetimeColumns.push(columnName)
       }
     }
 
-    if (column.config?.default) {
-      metadata.defaultValues[columnName] = column.config?.default
+    if (column.hasDefault) {
+      metadata.defaultValues[columnName] = column.default
     }
   }
 

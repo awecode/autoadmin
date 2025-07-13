@@ -12,7 +12,7 @@ export function processSchema<S extends ZodRawShape>(
   const pickKeys = Object.fromEntries(
     spec.fields
       .map(({ name }) => name)
-      .filter((name): name is keyof S => name in shape) // ignore unknown field names
+      .filter((name): name is Extract<keyof S, string> => name in shape) // ignore unknown field names
       .map(name => [name, true] as const), // keep literal true
   ) as { [K in keyof S]?: true }
 
