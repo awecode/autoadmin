@@ -5,16 +5,16 @@ const props = defineProps<{
   modelValue?: {
     start: Date
     end: Date
-  } | `${string},${string}`
+  } | `${string},${string}` | ''
   mode?: 'date' | 'string'
   placeholder?: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [{
-    start: Date
-    end: Date
-  } | `${string},${string}` | undefined]
+    start: Date | undefined
+    end: Date | undefined
+  } | `${string},${string}` | '']
 }>()
 
 const defaultMode = 'string' as const
@@ -37,26 +37,46 @@ const uCalendarValue: Ref<{ start: CalendarDate | undefined, end: CalendarDate |
   end: undefined,
 })
 
-if (typeof props.modelValue === 'string') {
-  const [start, end] = props.modelValue.split(',')
-  if (start && end) {
-    const startSplits = start.split('-').map(Number)
-    const endSplits = end.split('-').map(Number)
-    uCalendarValue.value = {
-      start: new CalendarDate(startSplits[0], startSplits[1], startSplits[2]),
-      end: new CalendarDate(endSplits[0], endSplits[1], endSplits[2]),
+const syncFromModelValue = (modelValue: typeof props.modelValue) => {
+  if (typeof modelValue === 'string') {
+    const [start, end] = modelValue.split(',')
+    if (start && end) {
+      const startSplits = start.split('-').map(Number)
+      const endSplits = end.split('-').map(Number)
+      uCalendarValue.value = {
+        start: new CalendarDate(startSplits[0], startSplits[1], startSplits[2]),
+        end: new CalendarDate(endSplits[0], endSplits[1], endSplits[2]),
+      }
+    } else {
+      uCalendarValue.value = {
+        start: undefined,
+        end: undefined,
+      }
     }
-  }
-} else {
-  const start = props.modelValue?.start
-  const end = props.modelValue?.end
-  if (start && end) {
+  } else if (modelValue) {
+    const start = modelValue.start
+    const end = modelValue.end
+    if (start && end) {
+      uCalendarValue.value = {
+        start: new CalendarDate(start.getFullYear(), start.getMonth() + 1, start.getDate()),
+        end: new CalendarDate(end.getFullYear(), end.getMonth() + 1, end.getDate()),
+      }
+    } else {
+      uCalendarValue.value = {
+        start: undefined,
+        end: undefined,
+      }
+    }
+  } else {
     uCalendarValue.value = {
-      start: new CalendarDate(start.getFullYear(), start.getMonth() + 1, start.getDate()),
-      end: new CalendarDate(end.getFullYear(), end.getMonth() + 1, end.getDate()),
+      start: undefined,
+      end: undefined,
     }
   }
 }
+
+// Initialize with the initial modelValue
+syncFromModelValue(props.modelValue)
 
 const formatDate = (date: CalendarDate) => {
   if (dateMode === 'string') {
@@ -68,7 +88,7 @@ const formatDate = (date: CalendarDate) => {
 
 const formatRange = (value: { start: CalendarDate | undefined, end: CalendarDate | undefined }) => {
   if (!value.start || !value.end) {
-    return undefined
+    return dateMode === 'string' ? '' : { start: undefined, end: undefined }
   }
   if (dateMode === 'string') {
     return `${formatDate(value.start)},${formatDate(value.end)}` as `${string},${string}`
@@ -86,9 +106,15 @@ const df = new DateFormatter('en-US', {
 watch(uCalendarValue, (value) => {
   emit('update:modelValue', formatRange(value))
 })
+
+// Watch for external changes to modelValue and sync them to uCalendarValue
+watch(() => props.modelValue, (newValue) => {
+  syncFromModelValue(newValue)
+})
 </script>
 
 <template>
+  {{ uCalendarValue }}
   <UPopover>
     <UButton color="neutral" icon="i-lucide-calendar" variant="subtle">
       <template v-if="uCalendarValue.start">
