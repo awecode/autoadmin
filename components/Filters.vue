@@ -26,22 +26,28 @@ const filterQuery = useRouteQuery('filters', '', {
   },
 })
 
-// Update filter value
-function updateFilter(field: string, value: string | null) {
-  const current = { ...filterQuery.value }
+// Create computed property for individual filter field
+function getFilterModel(filter: { field: string, type?: string }) {
+  return computed({
+    get: () => {
+      if (filter.type === 'boolean') {
+        return filterQuery.value[filter.field] || 'all'
+      } else {
+        return filterQuery.value[filter.field] || ''
+      }
+    },
+    set: (value: string) => {
+      const current = { ...filterQuery.value }
 
-  if (value === null || value === '' || value === 'all') {
-    delete current[field]
-  } else {
-    current[field] = value
-  }
+      if (value === null || value === '' || value === 'all') {
+        delete current[filter.field]
+      } else {
+        current[filter.field] = value
+      }
 
-  filterQuery.value = current
-}
-
-// Get filter value
-function getFilterValue(field: string): string {
-  return filterQuery.value[field]
+      filterQuery.value = current
+    },
+  })
 }
 
 // Clear all filters
@@ -84,21 +90,20 @@ const normalizeOptions = (options: { label?: string, value: string | number, cou
         <!-- Boolean Filter -->
         <USelect
           v-if="filter.type === 'boolean'"
+          v-model="getFilterModel(filter).value"
           class="min-w-20"
           size="xs"
           :items="booleanOptions"
-          :model-value="getFilterValue(filter.field) ?? 'all'"
-          @update:model-value="updateFilter(filter.field, $event as string)"
         />
 
         <USelectMenu
           v-else-if="(filter.type === 'text' || !filter.type) && filter.options"
+          v-model="getFilterModel(filter).value"
           class="min-w-32"
           size="xs"
           value-key="value"
           :items="normalizeOptions(filter.options)"
           :placeholder="`${filter.label}`"
-          @update:model-value="updateFilter(filter.field, $event as string)"
         >
           <template #item-label="{ item }">
             {{ item.label || item.value }}
@@ -109,22 +114,20 @@ const normalizeOptions = (options: { label?: string, value: string | number, cou
         </USelectMenu>
         <UInput
           v-else-if="filter.type === 'date'"
+          v-model="getFilterModel(filter).value"
           class="min-w-32"
           size="xs"
           type="date"
-          :model-value="getFilterValue(filter.field)"
           :placeholder="`Filter ${filter.label}`"
-          @update:model-value="updateFilter(filter.field, $event as string)"
         />
 
         <!-- Default fallback -->
         <UInput
           v-else
+          v-model="getFilterModel(filter).value"
           class="min-w-32"
           size="xs"
-          :model-value="getFilterValue(filter.field)"
           :placeholder="`Filter ${filter.label}`"
-          @update:model-value="updateFilter(filter.field, $event as string)"
         />
       </div>
     </div>

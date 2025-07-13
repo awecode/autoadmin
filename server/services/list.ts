@@ -11,14 +11,13 @@ import { getModelConfig } from './autoadmin'
 
 async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
-    console.log('filter', filter)
     if (typeof filter === 'string') {
       const type = columnTypes[filter]?.type
       if (type === 'boolean' || type === 'date') {
         return {
           field: filter,
           label: toTitleCase(filter),
-          type: 'textx',
+          type,
         }
       } else if (type === 'text') {
         const field = cfg.columns[filter]
