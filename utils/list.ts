@@ -10,21 +10,21 @@ type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
 export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file'
 
-export function zodToListSpec(schema: ZodObject<any>): Record<string, ListFieldType> {
+export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: ListFieldType, options?: string[] }> {
   const shape = getDef(schema)?.shape ?? schema.shape
   if (!shape) {
     // Fallback for safety, though a ZodObject should always have a shape.
     return {}
   }
 
-  const fields: [string, ListFieldType][] = Object.entries(shape).map(([name, zodType]) => {
+  const fields: [string, { type: ListFieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
     const { innerType } = unwrapZodType(zodType as ZodTypeAny)
 
     const definition = getDef(innerType)
     const definitionTypeKey = definition?.typeName ?? definition?.type
 
     let type: ListFieldType = 'text'
-
+    let enumValues: string[] | undefined
     switch (definitionTypeKey) {
       case 'ZodString':
       case 'string':
@@ -46,6 +46,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, ListFieldT
       case 'ZodEnum':
       case 'enum':
         type = 'select'
+        enumValues = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
         break
       case 'ZodDate':
       case 'date':
@@ -77,12 +78,12 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, ListFieldT
         break
     }
 
-    return [name, type]
+    return [name, { type, options: enumValues }]
   })
   return Object.fromEntries(fields)
 }
 
-export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
+export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
   if (cfg.list?.columns) {
@@ -95,7 +96,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             id: def,
             accessorKey: def,
             header: toTitleCase(def),
-            type: columnTypes[def],
+            type: columnTypes[def].type,
           }
         } else if (def.includes('.')) {
           const [fk, foreignColumnName] = def.split('.')
@@ -116,7 +117,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               id: accessorKey,
               accessorKey,
               header,
-              type: columnTypes[accessorKey] || foreignTableListSpec[foreignColumnName],
+              type: columnTypes[accessorKey]?.type || foreignTableListSpec[foreignColumnName]?.type,
             }
           } else {
             throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.label}.`)
@@ -128,7 +129,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
           id: def.name,
           accessorKey: def.name,
           header: toTitleCase(def.name),
-          type: columnTypes[def.name],
+          type: columnTypes[def.name]?.type,
           accessorFn: def,
         }
       } else if (typeof def === 'object') {
@@ -138,7 +139,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               id: def.field,
               accessorKey: def.field,
               header: def.label ?? toTitleCase(def.field),
-              type: def.type ?? columnTypes[def.field],
+              type: def.type ?? columnTypes[def.field]?.type,
             }
           } else if (def.field.includes('.')) {
             const [fk, foreignColumnName] = def.field.split('.')
@@ -158,7 +159,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
                 id: accessorKey,
                 accessorKey,
                 header,
-                type: def.type || columnTypes[accessorKey] || foreignTableListSpec[foreignColumnName],
+                type: def.type || columnTypes[accessorKey]?.type || foreignTableListSpec[foreignColumnName]?.type,
               }
             }
           } else {
@@ -169,7 +170,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             id: def.field.name,
             accessorKey: def.field.name,
             header: def.label ?? toTitleCase(def.field.name),
-            type: def.type ?? columnTypes[def.field.name],
+            type: def.type ?? columnTypes[def.field.name]?.type,
             accessorFn: def.field,
           }
         }
@@ -182,7 +183,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
       id: key,
       accessorKey: key,
       header: toTitleCase(key),
-      type: columnTypes[key],
+      type: columnTypes[key]?.type,
     }))
     // Remove primary autoincrement and auto timestamp columns
     columns = columns.filter((column) => {

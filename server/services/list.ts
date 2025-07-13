@@ -9,15 +9,16 @@ import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { count, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
 
-async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
+async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
+    console.log('filter', filter)
     if (typeof filter === 'string') {
-      const type = columnTypes[filter]
+      const type = columnTypes[filter]?.type
       if (type === 'boolean' || type === 'date') {
         return {
           field: filter,
           label: toTitleCase(filter),
-          type,
+          type: 'textx',
         }
       } else if (type === 'text') {
         const field = cfg.columns[filter]
@@ -28,6 +29,14 @@ async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb
         const options = await db.all(
           sql`SELECT ${field} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${field}`,
         )
+        return {
+          field: filter,
+          label: toTitleCase(filter),
+          type: 'text',
+          options,
+        }
+      } else if (type === 'select') {
+        const options = columnTypes[filter].options
         return {
           field: filter,
           label: toTitleCase(filter),
@@ -49,14 +58,17 @@ async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb
   return parsedFiltersWithOriginalType
 }
 
-async function getFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, columnTypes: Record<string, ListFieldType>, metadata: TableMetadata) {
+async function getFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata) {
   const filters = cfg.list?.filterFields
   if (filters) {
     return await prepareFilters(cfg, db, filters, columnTypes, metadata)
   }
-  // get boolean columns
-  const booleanColumns = Object.keys(columnTypes).filter(column => columnTypes[column] === 'boolean')
-  return booleanColumns.map(column => ({ field: column, label: toTitleCase(column), type: 'boolean' }))
+  // get boolean, enum, and date columns
+  const booleanColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'boolean')
+  const enumColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'select')
+  const dateColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'date')
+  const defaultFilterColumns = [...booleanColumnNames, ...enumColumnNames, ...dateColumnNames]
+  return prepareFilters(cfg, db, defaultFilterColumns, columnTypes, metadata)
 }
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
