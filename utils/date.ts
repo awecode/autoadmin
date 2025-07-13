@@ -20,9 +20,9 @@ export function humanifyDateTime(date: string | Date, options: { includeTime?: b
   const timeString = options.includeTime ? inputDate.toLocaleTimeString('en-US', timeOptions) : ''
 
   if (inputDateOnly.getTime() === today.getTime()) {
-    return `Today at ${timeString}`
+    return options.includeTime ? `Today at ${timeString}` : 'Today'
   } else if (inputDateOnly.getTime() === yesterday.getTime()) {
-    return `Yesterday at ${timeString}`
+    return options.includeTime ? `Yesterday at ${timeString}` : 'Yesterday'
   } else {
     // Format as "Jul 3, 2025, 5:45 AM"
     const dateOptions: Intl.DateTimeFormatOptions = {
