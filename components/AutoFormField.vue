@@ -30,22 +30,12 @@ const formatDateToDateString = (date: Date): string => {
 
 const fieldValue = computed({
   get: () => {
-    if (props.field.type === 'datetime-local') {
-      // Format Date object to yyyy-MM-ddThh:mm format for datetime-local input using local time
+    if (props.field.type === 'datetime-local' || props.field.type === 'date') {
+      const formatter = props.field.type === 'datetime-local' ? formatDateToLocal : formatDateToDateString
       if (props.modelValue instanceof Date) {
-        return formatDateToLocal(props.modelValue)
+        return formatter(props.modelValue)
       } else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
-        // Convert ISO format string to local time, then format for datetime-local
-        return formatDateToLocal(new Date(props.modelValue))
-      }
-      return props.modelValue
-    } else if (props.field.type === 'date') {
-      // Format Date object to yyyy-MM-dd format for date input
-      if (props.modelValue instanceof Date) {
-        return formatDateToDateString(props.modelValue)
-      } else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
-        // Convert ISO format string to date string
-        return formatDateToDateString(new Date(props.modelValue))
+        return formatter(new Date(props.modelValue))
       }
       return props.modelValue
     }
@@ -137,6 +127,9 @@ function onSelectMenuOpen() {
       spellcheck="false"
       :rows="6"
     />
+  </UFormField>
+  <UFormField v-else-if="field.type === 'date'" :label="field.label" :name="field.name">
+    <DatePicker v-model="fieldValue" />
   </UFormField>
   <UFormField v-else-if="field.type === 'datetime-local'" :label="field.label" :name="field.name">
     <UInput
