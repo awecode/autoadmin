@@ -5,24 +5,25 @@ import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { Table } from 'drizzle-orm'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { sql } from 'drizzle-orm'
+import { getTableForeignKeysByColumn } from './relation'
 
-export type FilterType = 'boolean' | 'text' | 'date' | 'daterange'
+export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
 type ColTypes = ReturnType<typeof zodToListSpec>
 type DbType = ReturnType<typeof useDb>
 
 async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string) {
-  const type = columnTypes[field]?.type
+  const type = definedType || columnTypes[field]?.type
   if (type === 'boolean') {
     return {
       field,
       label: label || toTitleCase(field),
       type: 'boolean',
     }
-  } else if (type === 'date') {
+  } else if (type === 'date' || type === 'daterange') {
     return {
       field,
       label: label || toTitleCase(field),
-      type: definedType || 'daterange',
+      type: definedType || 'daterange', // uses `daterange` for computed `date` type unless type specifically defined as `date`
     }
   } else if (type === 'text') {
     const column = cfg.columns[field]
@@ -52,6 +53,17 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       field,
       label: label || toTitleCase(field),
       type: 'text',
+    }
+  } else if (type === 'relation') {
+    const relations = getTableForeignKeysByColumn(cfg.model, field)
+    if (relations.length === 0) {
+      throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
+    }
+    return {
+      field,
+      label: label || toTitleCase(field).replace(/ Id/g, ''),
+      type: 'relation',
+      choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relations[0].columnName}`,
     }
   }
 
