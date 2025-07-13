@@ -50,42 +50,6 @@ function getFilterModel(filter: { field: string, type?: string }) {
   })
 }
 
-// Create computed properties for date range fields (start and end)
-function getDateRangeModel(filter: { field: string }, type: 'start' | 'end') {
-  return computed({
-    get: () => {
-      const rangeValue = filterQuery.value[filter.field]
-      if (!rangeValue) return ''
-
-      const [start, end] = rangeValue.split(',')
-      return type === 'start' ? (start || '') : (end || '')
-    },
-    set: (value: string) => {
-      const current = { ...filterQuery.value }
-      const currentRange = current[filter.field] || ','
-      const [currentStart, currentEnd] = currentRange.split(',')
-
-      let newStart = currentStart || ''
-      let newEnd = currentEnd || ''
-
-      if (type === 'start') {
-        newStart = value || ''
-      } else {
-        newEnd = value || ''
-      }
-
-      // Only set the filter if at least one date is provided
-      if (newStart || newEnd) {
-        current[filter.field] = `${newStart},${newEnd}`
-      } else {
-        delete current[filter.field]
-      }
-
-      filterQuery.value = current
-    },
-  })
-}
-
 // Clear all filters
 function clearAllFilters() {
   filterQuery.value = {}
@@ -158,23 +122,11 @@ const normalizeOptions = (options: { label?: string, value: string | number, cou
         />
 
         <!-- Date Range Filter -->
-        <div v-else-if="filter.type === 'daterange'" class="flex items-center gap-1">
-          <UInput
-            v-model="getDateRangeModel(filter, 'start').value"
-            class="min-w-32"
-            placeholder="From"
-            size="xs"
-            type="date"
-          />
-          <span class="text-xs text-gray-500">to</span>
-          <UInput
-            v-model="getDateRangeModel(filter, 'end').value"
-            class="min-w-32"
-            placeholder="To"
-            size="xs"
-            type="date"
-          />
-        </div>
+        <DateRangePicker
+          v-else-if="filter.type === 'daterange'"
+          v-model="getFilterModel(filter).value"
+          :placeholder="`Select ${filter.label || 'Date Range'}`"
+        />
 
         <!-- Default fallback -->
         <UInput
