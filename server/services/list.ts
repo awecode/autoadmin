@@ -1,6 +1,6 @@
 import type { SQL, Table } from 'drizzle-orm'
 import { useDb } from '#layers/autoadmin/server/utils/db'
-import { createDateFilterCondition } from '#layers/autoadmin/utils/dateFilter'
+import { createDateFilterCondition, createDateRangeFilterCondition } from '#layers/autoadmin/utils/dateFilter'
 import { getFilters } from '#layers/autoadmin/utils/filter'
 import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
@@ -147,6 +147,15 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           const boolValue = filterValue === 'true' || filterValue === true
           filterConditions.push(eq(tableColumns[filter.field], boolValue))
         } else if (filter.type === 'daterange') {
+          const condition = createDateRangeFilterCondition(
+            tableColumns[filter.field],
+            filterValue,
+            'originalType' in filter && filter.originalType === 'datetime-local',
+          )
+          if (condition) {
+            filterConditions.push(condition)
+          }
+        } else if (filter.type === 'date') {
           const condition = createDateFilterCondition(
             tableColumns[filter.field],
             filterValue,

@@ -1,7 +1,7 @@
 import type { Column } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
 
-export const createDateFilterCondition = (column: Column, value: string, hasMs: boolean = false) => {
+export const createDateRangeFilterCondition = (column: Column, value: string, hasMs: boolean = false) => {
   // Handle date range filters - expects format "startDate,endDate"
   const isSqlite = column.columnType === 'SQLiteTimestamp'
   const divisor = hasMs ? 1 : 1000
@@ -37,6 +37,25 @@ export const createDateFilterCondition = (column: Column, value: string, hasMs: 
         const endOfDay = `${endDate} 23:59:59`
         return sql`${column} <= ${endOfDay}`
       }
+    }
+  }
+}
+
+export const createDateFilterCondition = (column: Column, value: string, hasMs: boolean = false) => {
+  // Handle single date filter - expects format "YYYY-MM-DD"
+  const isSqlite = column.columnType === 'SQLiteTimestamp'
+  const divisor = hasMs ? 1 : 1000
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    // Single date - match the entire day
+    if (isSqlite) {
+      const startTimestamp = Math.floor(new Date(`${value} 00:00:00`).getTime() / divisor)
+      const endTimestamp = Math.floor(new Date(`${value} 23:59:59`).getTime() / divisor)
+      return sql`${column} >= ${startTimestamp} AND ${column} <= ${endTimestamp}`
+    } else {
+      const startOfDay = `${value} 00:00:00`
+      const endOfDay = `${value} 23:59:59`
+      return sql`${column} >= ${startOfDay} AND ${column} <= ${endOfDay}`
     }
   }
 }
