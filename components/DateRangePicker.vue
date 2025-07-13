@@ -123,7 +123,6 @@ watch(() => props.modelValue, (newValue) => {
 </script>
 
 <template>
-  {{ uCalendarValue }}
   <UPopover>
     <UButton color="neutral" icon="i-lucide-calendar" variant="subtle">
       <template v-if="uCalendarValue.start">

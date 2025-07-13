@@ -136,8 +136,6 @@ const normalizeOptions = (options: { label?: string, value: string | number, cou
           size="xs"
           :placeholder="`Filter ${filter.label}`"
         />
-
-        {{ getFilterModel(filter).value }}
       </div>
     </div>
 
