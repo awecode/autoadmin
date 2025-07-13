@@ -1,6 +1,5 @@
 import type { Column } from 'drizzle-orm'
-import { useDb } from '#layers/autoadmin/server/utils/db'
-import { sql, SQL } from 'drizzle-orm'
+import { SQL } from 'drizzle-orm'
 
 export interface TableMetadata {
   primaryAutoincrementColumns: string[]
@@ -39,30 +38,30 @@ export function getTableMetadata(columns: Record<string, Column>): TableMetadata
   return metadata
 }
 
-const isSql = (v: unknown): v is SQL => v instanceof SQL || (
-  v && typeof v === 'object' && 'queryChunks' in v
-)
+const isSql = (v: unknown) => v instanceof SQL || (v && typeof v === 'object' && 'queryChunks' in v)
 
-async function resolveDefault(db: ReturnType<typeof useDb>, raw: unknown) {
+async function resolveDefault(raw: unknown) {
   if (isSql(raw)) {
+    // do not return anything
+    return undefined
     // recognise CURRENT_TIMESTAMP expression and return the current timestamp without involving the database
     // TODO Maybe do the same for other SQL expressions like NOW(), unixepoch(), etc.
     // TODO Maybe the user is relying on the database to set using the correct timezone.
-    if (raw.queryChunks?.[0]?.value?.[0] === 'CURRENT_TIMESTAMP') {
-      return new Date().toISOString()
-    } else {
-      const selectSql = sql`SELECT ${raw}`
-      // TODO db.execute for other dialects
-      try {
-        const result = await db.run(selectSql)
-        return result.rows?.[0]?.[0]
-      } catch (error) {
-        console.error('Error resolving default value', error)
-        return raw
-      }
-    }
-    // any other SQL default → let the DB handle it
-    return undefined
+    // if (raw.queryChunks?.[0]?.value?.[0] === 'CURRENT_TIMESTAMP') {
+    //   return new Date().toISOString()
+    // } else {
+    //   const selectSql = sql`SELECT ${raw}`
+    //   // TODO db.execute for other dialects
+    //   try {
+    //     const result = await db.run(selectSql)
+    //     return result.rows?.[0]?.[0]
+    //   } catch (error) {
+    //     console.error('Error resolving default value', error)
+    //     return raw
+    //   }
+    // }
+    // // any other SQL default → let the DB handle it
+    // return undefined
   }
   return raw
 }
@@ -72,7 +71,6 @@ export const useMetadataOnFormSpec = async (
   metadata: TableMetadata,
 ): Promise<FormSpec> => {
   let fields = formSpec.fields
-  const db = useDb()
 
   // Drop primary autoincrement columns
   fields = fields.filter(
@@ -96,7 +94,7 @@ export const useMetadataOnFormSpec = async (
     fields.map(async (field) => {
       const cfgDefault = metadata.defaultValues[field.name]
       if (cfgDefault !== undefined) {
-        const resolvedDefaultValue = await resolveDefault(db, cfgDefault)
+        const resolvedDefaultValue = await resolveDefault(cfgDefault)
         return { ...field, defaultValue: resolvedDefaultValue }
       }
       return field
