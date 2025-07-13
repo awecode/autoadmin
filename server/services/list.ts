@@ -1,5 +1,4 @@
 import type { FilterFieldDef } from '#layers/autoadmin/composables/useAdminRegistry.js'
-import type { ListFieldType } from '#layers/autoadmin/utils/list'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { SQL, Table } from 'drizzle-orm'
 import { useDb } from '#layers/autoadmin/server/utils/db'
@@ -11,48 +10,58 @@ import { count, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
 
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange'
+type ColTypes = ReturnType<typeof zodToListSpec>
+type DbType = ReturnType<typeof useDb>
 
-async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, filters: FilterFieldDef<Table>[], columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata) {
+async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string) {
+  const type = columnTypes[field]?.type
+  if (type === 'boolean') {
+    return {
+      field,
+      label: label || toTitleCase(field),
+      type: 'boolean',
+    }
+  } else if (type === 'date') {
+    return {
+      field,
+      label: label || toTitleCase(field),
+      type: definedType || 'daterange',
+    }
+  } else if (type === 'text') {
+    const column = cfg.columns[field]
+    // TODO Fix for other dialects
+    //   const options = await db.all(
+    //     sql`SELECT DISTINCT ${column} AS value FROM ${cfg.model}`,
+    //   )
+    const options = await db.all(
+      sql`SELECT ${column} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${column}`,
+    )
+    return {
+      field,
+      label: label || toTitleCase(field),
+      type: 'text',
+      options,
+    }
+  } else if (type === 'select') {
+    const options = columnTypes[field].options
+    return {
+      field,
+      label: label || toTitleCase(field),
+      type: 'text',
+      options,
+    }
+  }
+  throw new Error(`Invalid filter: ${JSON.stringify(field)}`)
+}
+
+async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
-      const type = columnTypes[filter]?.type
-      if (type === 'boolean') {
-        return {
-          field: filter,
-          label: toTitleCase(filter),
-          type: 'boolean',
-        }
-      } else if (type === 'date') {
-        return {
-          field: filter,
-          label: toTitleCase(filter),
-          type: 'daterange',
-        }
-      } else if (type === 'text') {
-        const field = cfg.columns[filter]
-        // TODO Fix for other dialects
-        //   const options = await db.all(
-        //     sql`SELECT DISTINCT ${field} AS value FROM ${cfg.model}`,
-        //   )
-        const options = await db.all(
-          sql`SELECT ${field} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${field}`,
-        )
-        return {
-          field: filter,
-          label: toTitleCase(filter),
-          type: 'text',
-          options,
-        }
-      } else if (type === 'select') {
-        const options = columnTypes[filter].options
-        return {
-          field: filter,
-          label: toTitleCase(filter),
-          type: 'text',
-          options,
-        }
-      }
+      return await prepareFilter(cfg, db, columnTypes, filter)
+    } else if (typeof filter === 'object') {
+      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type)
     }
+    // TODO Remove this once prepareFilter is used everywhere
     throw new Error(`Invalid filter: ${JSON.stringify(filter)}`)
   }))
   // change column type to datetime-local if it is a datetime column
@@ -66,7 +75,7 @@ async function prepareFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb
   return parsedFiltersWithOriginalType
 }
 
-async function getFilters(cfg: AdminModelConfig, db: ReturnType<typeof useDb>, columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata) {
+async function getFilters(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, metadata: TableMetadata) {
   const filters = cfg.list?.filterFields
   if (filters) {
     return await prepareFilters(cfg, db, filters, columnTypes, metadata)

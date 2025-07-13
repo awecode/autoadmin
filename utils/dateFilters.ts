@@ -5,7 +5,6 @@ export const createDateFilterCondition = (column: Column, value: string, hasMs: 
   // Handle date range filters - expects format "startDate,endDate"
   const isSqlite = column.columnType === 'SQLiteTimestamp'
   const divisor = hasMs ? 1 : 1000
-  console.log('isSqlite', column.columnType)
   if (typeof value === 'string' && value.includes(',')) {
     const [startDate, endDate] = value.split(',')
 
