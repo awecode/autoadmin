@@ -2,7 +2,7 @@ import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composa
 import type { useDb } from '#layers/autoadmin/server/utils/db'
 import type { zodToListSpec } from '#layers/autoadmin/utils/list'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
-import type { Table } from 'drizzle-orm'
+import type { SQL, Table } from 'drizzle-orm'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { eq, sql } from 'drizzle-orm'
 import { getTableForeignKeysByColumn } from './relation'
@@ -15,16 +15,19 @@ export type FilterSpec = Awaited<ReturnType<typeof prepareFilter>>
 export interface CustomFilter {
   parameterName: string
   label: string
-  options: (db: DbType, query: Record<string, any>) => Promise<{ label?: string, value: string }[] | string[]>
+  type?: FilterType
+  // options is optional because it is not required for all types like boolean, date, daterange
+  options?: (db: DbType, query: Record<string, any>) => Promise<{ label?: string, value: string }[] | string[]>
+  queryConditions: (db: DbType, query: Record<string, any>) => Promise<SQL[]>
 }
 
 async function prepareCustomFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
-  console.log('=================== Custom Filter ===================')
   return {
     field: filter.parameterName,
     label: filter.label,
-    type: 'text',
-    options: await filter.options(db, query),
+    type: filter.type || 'text',
+    options: filter.options ? await filter.options(db, query) : undefined,
+    queryConditions: filter.queryConditions,
   }
 }
 
@@ -101,10 +104,8 @@ async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: Filter
     if (typeof filter === 'string') {
       return await prepareFilter(cfg, db, columnTypes, filter)
     } else if (typeof filter === 'object') {
-      console.log('=================== Filter ===================')
-      console.log(filter)
       if ('parameterName' in filter && 'label' in filter) {
-        return await prepareCustomFilter(cfg, db, columnTypes, filter, query)
+        return await prepareCustomFilter(cfg, db, columnTypes, filter as unknown as CustomFilter, query)
       }
       return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, query)
     }
