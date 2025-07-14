@@ -49,6 +49,7 @@ type ListOptions<T extends Table = Table> = {
   showCreateButton: boolean
   enableSearch: boolean
   enableSort: boolean
+  enableFilter: boolean
   searchPlaceholder?: string
   searchFields: ColField<T>[]
   title?: string
@@ -130,6 +131,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
     list: {
       enabled: true,
       enableSort: true,
+      enableFilter: true,
       showCreateButton: true,
       enableSearch: true,
       searchPlaceholder: 'Search ...',

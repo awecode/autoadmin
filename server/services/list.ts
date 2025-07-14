@@ -15,7 +15,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
   const db = useDb()
-  const filters = await getFilters(cfg, db, columnTypes, cfg.metadata, query)
+  const filters = cfg.list.enableFilter ? await getFilters(cfg, db, columnTypes, cfg.metadata, query) : undefined
 
   const spec = {
     endpoint: cfg.list.endpoint,
@@ -132,7 +132,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   }
   // Handle filter conditions
   const filterConditions: SQL[] = []
-  if (filters && filters.length > 0) {
+  if (cfg.list.enableFilter && filters && filters.length > 0) {
     for (const filter of filters) {
       // Skip if filter is a string (shouldn't happen after prepareFilters, but type safety)
       if (typeof filter === 'string') continue
@@ -194,9 +194,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const ordering = query.ordering
   if (ordering && typeof ordering === 'string') {
     const [columnAccessorKey, direction] = ordering.split(':')
-    console.log('ordering', columnAccessorKey, direction)
     const column = spec.columns.find(column => column.accessorKey === columnAccessorKey)
-    console.log('column', column)
 
     if (column?.sortKey && (direction === 'asc' || direction === 'desc')) {
       const orderFn = direction === 'desc' ? desc : asc
