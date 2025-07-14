@@ -95,7 +95,7 @@ const filterQuery = useRouteQuery('filters', '', {
 })
 
 const query = computed(() => ({
-  ordering: sort.value?.map(s => `${s.id}:${s.desc ? 'desc' : 'asc'}`).join(','),
+  ordering: route.query.sort,
   page: page.value,
   page_size: pageSize.value,
   search: search.value === '' ? undefined : search.value,
