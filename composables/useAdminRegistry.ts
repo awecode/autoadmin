@@ -1,5 +1,5 @@
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
-import type { FilterType } from '../utils/filter'
+import type { CustomFilter, FilterType } from '../utils/filter'
 import type { ListFieldType } from '../utils/list'
 import type { TableMetadata } from '../utils/metdata'
 import { defu } from 'defu'
@@ -20,7 +20,7 @@ export type FilterFieldDef<T extends Table> = ColField<T> | {
   type?: FilterType
   options?: { label?: string, value: string | number }[]
   choicesEndpoint?: string
-}
+} | CustomFilter
 
 export type ListFieldDef<T extends Table>
   = ListField<T>

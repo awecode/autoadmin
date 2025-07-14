@@ -18,7 +18,7 @@ export interface CustomFilter {
   type?: FilterType
   // options is optional because it is not required for all types like boolean, date, daterange
   options?: (db: DbType, query: Record<string, any>) => Promise<{ label?: string, value: string }[] | string[]>
-  queryConditions: (db: DbType, query: Record<string, any>) => Promise<SQL[]>
+  queryConditions: (db: DbType, value: any) => Promise<SQL[]>
 }
 
 async function prepareCustomFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
