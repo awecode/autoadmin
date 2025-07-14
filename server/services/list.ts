@@ -23,8 +23,8 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
     title: cfg.list.title,
     enableSearch: cfg.list.enableSearch,
-    searchPlaceholder: cfg.list.searchPlaceholder,
-    searchFields: cfg.list.searchFields,
+    searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
+    searchFields: cfg.list.enableSearch ? cfg.list.searchFields : undefined,
     columns,
     lookupColumnName: cfg.lookupColumnName,
   }
@@ -89,7 +89,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   const searchQuery = query.search
   const searchFields = cfg.list?.searchFields || []
   let searchCondition: SQL | undefined
-  if (searchQuery && searchFields.length > 0) {
+  if (cfg.list.enableSearch && searchQuery && searchFields.length > 0) {
     const searchConditions = []
 
     // Handle search fields (both direct fields and foreign key fields)
