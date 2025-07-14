@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import type { TableColumn } from '#ui/types'
+import type { Column } from '@tanstack/vue-table'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { useRouteQuery } from '@vueuse/router'
+import { h, resolveComponent } from 'vue'
 import DeleteModal from '~/components/DeleteModal.vue'
+
+const UButton = resolveComponent('UButton')
 
 type T = Record<string, any>
 
@@ -45,7 +49,7 @@ const actions = [
 const route = useRoute()
 const router = useRouter()
 
-const sort = useRouteQuery<string | undefined, { column: string, direction: 'asc' | 'desc' } | undefined>('sort', '', {
+const sort = useRouteQuery('sort', '', {
   route,
   router,
   transform: {
@@ -114,18 +118,41 @@ const spec = computed(() => data.value?.spec || {} as Record<string, any>)
 
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 
+function getHeader(column: Column<T>, label: string) {
+  const isSorted = column.getIsSorted()
+
+  return h(UButton, {
+    'color': 'neutral',
+    'variant': 'ghost',
+    label,
+    'icon': isSorted
+      ? isSorted === 'asc'
+        ? 'i-lucide-arrow-up-narrow-wide'
+        : 'i-lucide-arrow-down-wide-narrow'
+      : 'i-lucide-arrow-up-down',
+    'class': '-mx-2.5',
+    'aria-label': `Sort by ${label}`,
+    'onClick': () => {
+      // Cycle through: no sort → asc → desc → no sort
+      if (!isSorted) {
+        column.toggleSorting(false) // asc
+      } else if (isSorted === 'asc') {
+        column.toggleSorting(true) // desc
+      } else {
+        column.clearSorting() // no sort
+      }
+    },
+  })
+}
+
 function computeColumns(results: T[]) {
   let tableColumns = spec.value.columns
+  tableColumns = tableColumns?.map((col: TableColumn<T>) => ({
+    ...col,
 
-  // Auto-generate columns from first result if no columns provided
-  if ((!tableColumns || tableColumns.length === 0) && results && results.length > 0) {
-    const firstResult = results[0]
-    tableColumns = Object.keys(firstResult).map(key => ({
-      id: key,
-      accessorKey: key,
-      header: toTitleCase(key),
-    }))
-  }
+    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header),
+  }))
+
   return [...(tableColumns || []), { id: 'actions' }]
 }
 
@@ -191,6 +218,13 @@ async function handleDelete(id: string) {
     onConfirm: doDelete,
   })
 }
+
+const sorting = ref([
+  {
+    id: 'status',
+    desc: false,
+  },
+])
 </script>
 
 <template>
@@ -240,11 +274,12 @@ async function handleDelete(id: string) {
         </div>
         <UTable
           v-else-if="data && status === 'success'"
-          v-model:sort="sort"
           class="h-full overflow-auto"
-          sort-mode="manual"
           :columns="computedColumns"
           :data="data?.results"
+          :sorting-options="{
+            manualSorting: true,
+          }"
           :ui="{
             thead: 'sticky top-0 z-10',
           }"

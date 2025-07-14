@@ -28,6 +28,7 @@ if (props.filter.options) {
   selectMenuItemsRaw.value = props.filter.options
   // Handle the case where the modelValue is a string and the options are numbers
   // modelValue can be a string because it is extracted from the url query params
+  // convert relation select menu value to number if options suggest it is a number
   if (typeof props.modelValue === 'string' && props.modelValue !== '' && props.filter.options.length && typeof props.filter.options[0] === 'object' && typeof props.filter.options[0].value === 'number') {
     internalValue.value = Number(props.modelValue)
   }
