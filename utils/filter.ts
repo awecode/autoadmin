@@ -12,6 +12,22 @@ type ColTypes = ReturnType<typeof zodToListSpec>
 type DbType = ReturnType<typeof useDb>
 export type FilterSpec = Awaited<ReturnType<typeof prepareFilter>>
 
+export interface CustomFilter {
+  parameterName: string
+  label: string
+  options: (db: DbType, query: Record<string, any>) => Promise<{ label?: string, value: string }[] | string[]>
+}
+
+async function prepareCustomFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
+  console.log('=================== Custom Filter ===================')
+  return {
+    field: filter.parameterName,
+    label: filter.label,
+    type: 'text',
+    options: await filter.options(db, query),
+  }
+}
+
 async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, query: Record<string, any> = {}) {
   const type = definedType || columnTypes[field]?.type
   if (type === 'boolean') {
@@ -83,8 +99,13 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
 async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
-      return await prepareFilter(cfg, db, columnTypes, filter, {})
+      return await prepareFilter(cfg, db, columnTypes, filter)
     } else if (typeof filter === 'object') {
+      console.log('=================== Filter ===================')
+      console.log(filter)
+      if ('parameterName' in filter && 'label' in filter) {
+        return await prepareCustomFilter(cfg, db, columnTypes, filter, query)
+      }
       return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, query)
     }
     throw new Error(`Invalid filter: ${JSON.stringify(filter)}`)
