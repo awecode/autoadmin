@@ -49,26 +49,26 @@ const actions = [
 const route = useRoute()
 const router = useRouter()
 
-const sort = useRouteQuery('sort', '', {
+const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] | undefined>('sort', '', {
   route,
   router,
   transform: {
-    get(value) {
+    get(value: string | undefined) {
       if (!value) {
         return undefined
       }
 
       const [column, direction] = value.split(':')
-      return {
-        column,
-        direction: direction === 'desc' ? 'desc' : 'asc',
-      }
+      return [{
+        id: column,
+        desc: direction === 'desc',
+      }]
     },
     set(value) {
-      if (!value?.column) {
+      if (!value?.length) {
         return undefined
       }
-      return `${value.column}:${value.direction}`
+      return `${value[0].id}:${value[0].desc ? 'desc' : 'asc'}`
     },
   },
 })
@@ -95,7 +95,7 @@ const filterQuery = useRouteQuery('filters', '', {
 })
 
 const query = computed(() => ({
-  ordering: sort.value?.column ? `${sort.value?.direction === 'desc' ? '-' : ''}${sort.value?.column}` : undefined,
+  ordering: sort.value?.map(s => `${s.id}:${s.desc ? 'desc' : 'asc'}`).join(','),
   page: page.value,
   page_size: pageSize.value,
   search: search.value === '' ? undefined : search.value,
@@ -218,13 +218,6 @@ async function handleDelete(id: string) {
     onConfirm: doDelete,
   })
 }
-
-const sorting = ref([
-  {
-    id: 'status',
-    desc: false,
-  },
-])
 </script>
 
 <template>
@@ -274,6 +267,7 @@ const sorting = ref([
         </div>
         <UTable
           v-else-if="data && status === 'success'"
+          v-model:sorting="sort"
           class="h-full overflow-auto"
           :columns="computedColumns"
           :data="data?.results"
@@ -283,6 +277,7 @@ const sorting = ref([
           :ui="{
             thead: 'sticky top-0 z-10',
           }"
+          @update:sorting="sort = $event"
         >
           <!-- Dynamic cell templates for all columns except actions -->
           <template
