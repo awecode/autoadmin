@@ -14,13 +14,22 @@ const internalValue = ref(props.modelValue)
 
 const { data: selectMenuItems, status, execute } = await useLazyFetch<{
   label: string
-  value: string
+  value: string | number
 }[]>(props.filter.choicesEndpoint ?? '', {
   immediate: false,
 })
 
+const normalizeOptions = (options: { label?: string, value: string | number, count?: number }[] | string[]) => {
+  return options.map((option) => {
+    if (typeof option === 'string') {
+      return { label: option, value: option }
+    }
+    return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
+  })
+}
+
 if (props.filter.options) {
-  selectMenuItems.value = props.filter.options
+  selectMenuItems.value = normalizeOptions(props.filter.options)
   // Handle the case where the modelValue is a string and the options are numbers
   // modelValue can be a string because it is extracted from the url query params
   if (typeof props.modelValue === 'string' && props.modelValue !== '') {
