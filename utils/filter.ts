@@ -5,8 +5,8 @@ import type { TableMetadata } from '#layers/autoadmin/utils/metdata'
 import type { SQL, Table } from 'drizzle-orm'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { eq, sql } from 'drizzle-orm'
-import { getTableForeignKeysByColumn } from './relation'
 import { getLabelColumnFromModel } from './registry'
+import { getTableForeignKeysByColumn } from './relation'
 
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
 type ColTypes = ReturnType<typeof zodToListSpec>

@@ -13,19 +13,23 @@ const emit = defineEmits<{
 
 const internalValue = ref(props.modelValue)
 
-const { data: selectMenuItems, status, execute } = await useLazyFetch<{
-  label: string
+const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
+  label?: string
   value: string | number
-}[]>(props.filter.choicesEndpoint ?? '', {
+}[] | string[]>(props.filter.choicesEndpoint ?? '', {
   immediate: false,
 })
 
+const selectMenuItems = computed(() =>
+  selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
+)
+
 if (props.filter.options) {
-  selectMenuItems.value = normalizeOptions(props.filter.options)
+  selectMenuItemsRaw.value = props.filter.options
   // Handle the case where the modelValue is a string and the options are numbers
   // modelValue can be a string because it is extracted from the url query params
   if (typeof props.modelValue === 'string' && props.modelValue !== '') {
-    selectMenuItems.value = selectMenuItems.value?.map(item => ({ ...item, value: item.value.toString() }))
+    selectMenuItemsRaw.value = selectMenuItems.value?.map(item => ({ ...item, value: item.value.toString() }))
   }
 }
 const selectFetched = ref(false)
