@@ -117,3 +117,12 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
 
   return { fields }
 }
+
+export const normalizeOptions = (options: { label?: string, value: string | number, count?: number }[] | string[]) => {
+  return options.map((option) => {
+    if (typeof option === 'string') {
+      return { label: option, value: option }
+    }
+    return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
+  })
+}

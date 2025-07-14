@@ -5,7 +5,7 @@ import type { TableMetadata } from '../utils/metdata'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
-import { getLabelColumnFromModel } from '../utils/registry'
+import { getLabelColumnFromColumns } from '../utils/registry'
 
 type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
@@ -180,7 +180,7 @@ export function useAdminRegistry() {
 
     cfg.columns = getTableColumns(model)
     if (!cfg.labelColumn) {
-      cfg.labelColumn = getLabelColumnFromModel(cfg.columns) as ColKey<T>
+      cfg.labelColumn = getLabelColumnFromColumns(cfg.columns) as ColKey<T>
     }
     // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName

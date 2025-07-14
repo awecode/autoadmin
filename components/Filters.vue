@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FilterType } from '#layers/autoadmin/utils/filter'
+import { normalizeOptions } from '#layers/autoadmin/utils/form'
 import { useRouteQuery } from '@vueuse/router'
 
 const _props = defineProps<{
@@ -66,15 +67,6 @@ const booleanOptions = [
   { value: 'true', label: 'Yes' },
   { value: 'false', label: 'No' },
 ]
-
-const normalizeOptions = (options: { label?: string, value: string | number, count?: number }[] | string[]) => {
-  return options.map((option) => {
-    if (typeof option === 'string') {
-      return { label: option, value: option }
-    }
-    return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
-  })
-}
 </script>
 
 <template>

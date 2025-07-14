@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FilterSpec } from '#layers/autoadmin/utils/filter'
+import { normalizeOptions } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
   modelValue: any
@@ -18,15 +19,6 @@ const { data: selectMenuItems, status, execute } = await useLazyFetch<{
 }[]>(props.filter.choicesEndpoint ?? '', {
   immediate: false,
 })
-
-const normalizeOptions = (options: { label?: string, value: string | number, count?: number }[] | string[]) => {
-  return options.map((option) => {
-    if (typeof option === 'string') {
-      return { label: option, value: option }
-    }
-    return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
-  })
-}
 
 if (props.filter.options) {
   selectMenuItems.value = normalizeOptions(props.filter.options)
