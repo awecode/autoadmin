@@ -14,6 +14,8 @@ type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
 type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) => any)
 
+type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
+
 export type FilterFieldDef<T extends Table> = ColField<T> | {
   field: ColField<T>
   label?: string
@@ -28,6 +30,7 @@ export type ListFieldDef<T extends Table>
       field: ListField<T> // Can be a column/relation string OR a callable function
       label?: string // Optional: custom display label for the field
       type?: ListFieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
+      sortKey?: SortKey<T>
     }
 export interface ListColumnDef<T extends Table> {
   id?: string
@@ -35,7 +38,7 @@ export interface ListColumnDef<T extends Table> {
   header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
   type?: ListFieldType
-  sortKey?: string
+  sortKey?: SortKey<T>
 }
 
 // TODO: Make this configurable - maybe global config?

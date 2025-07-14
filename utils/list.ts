@@ -119,6 +119,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               accessorKey,
               header,
               type: columnTypes[accessorKey]?.type || foreignTableListSpec[foreignColumnName]?.type,
+              sortKey: cfg.list.enableSort ? def : undefined,
             }
           } else {
             throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.label}.`)
@@ -141,6 +142,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               accessorKey: def.field,
               header: def.label ?? toTitleCase(def.field),
               type: def.type ?? columnTypes[def.field]?.type,
+              sortKey: cfg.list.enableSort ? def.sortKey ?? def.field : undefined,
             }
           } else if (def.field.includes('.')) {
             const [fk, foreignColumnName] = def.field.split('.')
@@ -161,7 +163,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
                 accessorKey,
                 header,
                 type: def.type || columnTypes[accessorKey]?.type || foreignTableListSpec[foreignColumnName]?.type,
-                sortKey: cfg.list.enableSort ? def.field : undefined,
+                sortKey: cfg.list.enableSort ? def.sortKey ?? def.field : undefined,
               }
             }
           } else {
@@ -174,6 +176,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             header: def.label ?? toTitleCase(def.field.name),
             type: def.type ?? columnTypes[def.field.name]?.type,
             accessorFn: def.field,
+            sortKey: cfg.list.enableSort && def.sortKey ? def.sortKey : undefined,
           }
         }
         throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
