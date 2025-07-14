@@ -142,7 +142,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
       const filterValue = query[filter.field]
       if (filterValue !== undefined && filterValue !== null && filterValue !== '') {
-        if (filter.type === 'boolean') {
+        if ('queryConditions' in filter) {
+          const conditions = await filter.queryConditions(db, filterValue)
+          filterConditions.push(...conditions)
+        } else if (filter.type === 'boolean') {
           // Handle boolean filters
           const boolValue = filterValue === 'true' || filterValue === true
           filterConditions.push(eq(tableColumns[filter.field], boolValue))
@@ -164,9 +167,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           if (condition) {
             filterConditions.push(condition)
           }
-        } else if ('queryConditions' in filter) {
-          const conditions = await filter.queryConditions(db, filterValue)
-          filterConditions.push(...conditions)
         } else if (filter.type === 'text' || filter.type === 'relation') {
           filterConditions.push(eq(tableColumns[filter.field], filterValue))
         }
