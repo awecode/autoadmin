@@ -4,7 +4,7 @@ import { createDateFilterCondition, createDateRangeFilterCondition } from '#laye
 import { getFilters } from '#layers/autoadmin/utils/filter'
 import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
-import { count, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
+import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from './autoadmin'
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
@@ -186,6 +186,20 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   // Apply combined conditions to base query
   if (combinedConditions) {
     baseQuery = baseQuery.where(combinedConditions)
+  }
+
+  // Handle ordering
+  const ordering = query.ordering
+  if (ordering && typeof ordering === 'string') {
+    const [columnName, direction] = ordering.split(':')
+
+    if (columnName && (direction === 'asc' || direction === 'desc')) {
+      // Check if the column exists in the table
+      if (columnName in tableColumns) {
+        const orderFn = direction === 'desc' ? desc : asc
+        baseQuery = baseQuery.orderBy(orderFn(tableColumns[columnName]))
+      }
+    }
   }
 
   // Build count query with combined conditions
