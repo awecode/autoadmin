@@ -22,6 +22,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     updatePage: cfg.update.enabled ? cfg.update.route : undefined,
     deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
     title: cfg.list.title,
+    enableSort: cfg.list.enableSort,
     enableSearch: cfg.list.enableSearch,
     searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
     searchFields: cfg.list.enableSearch ? cfg.list.searchFields : undefined,
@@ -192,7 +193,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
   // Handle ordering (after joins are applied)
   const ordering = query.ordering
-  if (ordering && typeof ordering === 'string') {
+  if (spec.enableSort && ordering && typeof ordering === 'string') {
     const [columnAccessorKey, direction] = ordering.split(':')
     const column = spec.columns.find(column => column.accessorKey === columnAccessorKey)
 

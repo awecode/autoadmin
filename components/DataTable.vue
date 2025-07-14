@@ -27,6 +27,7 @@ interface Data<TData> {
     columns?: Array<TableColumn<T>>
     lookupColumnName: string
     enableSearch: boolean
+    enableSort: boolean
     searchPlaceholder: string
     searchFields: string[]
   }
@@ -121,7 +122,7 @@ const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 function getHeader(column: Column<T>, label: string, sortKey: string) {
   const isSorted = column.getIsSorted()
 
-  if (sortKey) {
+  if (spec.value.enableSort && sortKey) {
     return h(UButton, {
       'color': 'neutral',
       'variant': 'ghost',
