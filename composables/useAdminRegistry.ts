@@ -35,6 +35,7 @@ export interface ListColumnDef<T extends Table> {
   header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
   type?: ListFieldType
+  sortKey?: string
 }
 
 // TODO: Make this configurable - maybe global config?

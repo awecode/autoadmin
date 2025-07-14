@@ -83,10 +83,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     baseQuery = db.select(selectedColumns).from(model)
   }
 
-  // Add joins to the query
-  for (const join of joins) {
-    baseQuery = baseQuery.leftJoin(join.table, join.on)
-  }
+
 
   // Handle search query
   const searchQuery = query.search
@@ -183,21 +180,54 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
   } else if (filterConditions.length > 0) {
     combinedConditions = sql.join(filterConditions, sql` AND `)
   }
+  // Add joins to the query and prepare ordering
+  for (const join of joins) {
+    baseQuery = baseQuery.leftJoin(join.table, join.on)
+  }
+
   // Apply combined conditions to base query
   if (combinedConditions) {
     baseQuery = baseQuery.where(combinedConditions)
   }
 
-  // Handle ordering
+  // Handle ordering (after joins are applied)
   const ordering = query.ordering
   if (ordering && typeof ordering === 'string') {
-    const [columnName, direction] = ordering.split(':')
+    const [columnAccessorKey, direction] = ordering.split(':')
+    console.log('ordering', columnAccessorKey, direction)
+    const column = spec.columns.find(column => column.accessorKey === columnAccessorKey)
+    console.log('column', column)
 
-    if (columnName && (direction === 'asc' || direction === 'desc')) {
-      // Check if the column exists in the table
-      if (columnName in tableColumns) {
-        const orderFn = direction === 'desc' ? desc : asc
-        baseQuery = baseQuery.orderBy(orderFn(tableColumns[columnName]))
+    if (column?.sortKey && (direction === 'asc' || direction === 'desc')) {
+      const orderFn = direction === 'desc' ? desc : asc
+
+      // Check if sortKey is a foreign key relation (contains dot)
+      if (column.sortKey.includes('.')) {
+        const [fk, foreignColumnName] = column.sortKey.split('.')
+
+        // Get foreign key relations for this column
+        const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
+        if (foreignKeys.length > 0) {
+          const foreignKey = foreignKeys[0]
+          const foreignTable = foreignKey.foreignTable
+          const foreignTableColumns = getTableColumns(foreignTable)
+
+          // Ensure the foreign table is joined
+          const joinKey = `${fk}_${foreignKey.foreignColumn.name}`
+          if (!addedJoins.has(joinKey)) {
+            baseQuery = baseQuery.leftJoin(foreignTable, eq(tableColumns[fk], foreignTableColumns[foreignKey.foreignColumn.name]))
+          }
+
+          // Apply ordering on foreign column
+          if (foreignColumnName in foreignTableColumns) {
+            baseQuery = baseQuery.orderBy(orderFn(foreignTableColumns[foreignColumnName]))
+          }
+        }
+      } else {
+        // Direct column sorting
+        if (column.sortKey in tableColumns) {
+          baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]))
+        }
       }
     }
   }

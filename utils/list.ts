@@ -146,7 +146,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             const [fk, foreignColumnName] = def.field.split('.')
             if (fk in tableColumns) {
               const accessorKey = def.field.replace('.', '__')
-              const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
+              const header = def.label ?? toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
               const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
               if (foreignKeys.length === 0) {
                 throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
@@ -161,6 +161,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
                 accessorKey,
                 header,
                 type: def.type || columnTypes[accessorKey]?.type || foreignTableListSpec[foreignColumnName]?.type,
+                sortKey: cfg.list.enableSort ? def.field : undefined,
               }
             }
           } else {
