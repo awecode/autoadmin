@@ -59,7 +59,7 @@ watch(internalValue, (value) => {
 // Watch for external changes to modelValue and sync them to internalValue
 watch(() => props.modelValue, (newValue) => {
   isUpdatingFromParent = true
-  if (typeof internalValue.value === 'number' && typeof newValue === 'string' && !isNaN(Number(newValue)) && newValue !== '') {
+  if (typeof internalValue.value === 'number' && typeof newValue === 'string' && newValue.trim() !== '' && !Number.isNaN(Number(newValue))) {
     internalValue.value = Number(newValue)
   } else {
     internalValue.value = newValue
