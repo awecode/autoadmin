@@ -1,4 +1,5 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
+import { getLabelColumnFromModel } from '#layers/autoadmin/utils/registry'
 import { parseM2mRelations } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {
@@ -49,7 +50,7 @@ export default defineEventHandler(async (event) => {
   const choices = []
   const rows = await db.select().from(relation.otherTable)
   choices.push(...rows.map(row => ({
-    label: row[cfg.labelColumn],
+    label: row[getLabelColumnFromModel(relation.otherTable)],
     value: row[relation.otherForeignColumn.name],
   })))
   return choices

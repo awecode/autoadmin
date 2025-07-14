@@ -6,6 +6,7 @@ import type { SQL, Table } from 'drizzle-orm'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { eq, sql } from 'drizzle-orm'
 import { getTableForeignKeysByColumn } from './relation'
+import { getLabelColumnFromModel } from './registry'
 
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
 type ColTypes = ReturnType<typeof zodToListSpec>
@@ -83,7 +84,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
     if (query[field]) {
       const rows = await db.select().from(relations[0].foreignTable).where(eq(relations[0].foreignColumn, query[field]))
       options = rows.map(row => ({
-        label: row[cfg.labelColumn],
+        label: row[getLabelColumnFromModel(relations[0].foreignTable)],
         value: row[relations[0].foreignColumn.name],
       }))
     }

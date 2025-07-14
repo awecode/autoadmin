@@ -2,6 +2,7 @@ import type { AnyColumn, Table } from 'drizzle-orm'
 import type { FieldSpec, FormSpec } from './form'
 import { and, eq, getTableColumns, getTableName } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
+import { getLabelColumnFromModel } from './registry'
 import { toTitleCase } from './string'
 
 export interface M2MRelationSelf {
@@ -155,8 +156,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
         // TODO only select the columns that are needed for the form spec
         const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.column.name]))
         field.selectItems = rows.map(row => ({
-          // TODO FIX: labelColumn should be a column of foreign table, not the current model
-          label: row[cfg.labelColumn],
+          label: row[getLabelColumnFromModel(relation.foreignTable)],
           value: row[relation.foreignColumn.name],
         }))
       }
@@ -205,7 +205,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
       field.selectItems = rows.map(row => ({
-        label: row[modelConfig.labelColumn],
+        label: row[getLabelColumnFromModel(table)],
         value: row[relationData.foreignPrimaryColumn.name],
       }))
       formSpec.values[relationData.fieldName] = field.selectItems.map(item => item.value)
@@ -250,7 +250,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       if (result.length > 0) {
         const rows = result.map(row => row.other)
         field.selectItems = rows.map(row => ({
-          label: row[cfg.labelColumn],
+          label: row[getLabelColumnFromModel(relation.otherTable)],
           value: row[relation.otherForeignColumn.name],
         }))
         formSpec.values[fieldName] = field.selectItems.map(item => item.value)

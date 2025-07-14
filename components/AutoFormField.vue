@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormSpec } from '~/utils/form'
+import { normalizeOptions } from '~/utils/form'
 
 const props = defineProps<{
   field: FormSpec['fields'][number]
@@ -56,15 +57,19 @@ if ((props.field.type === 'datetime-local' || props.field.type === 'date') && pr
   emit('update:modelValue', new Date(props.modelValue))
 }
 
-const { data: selectMenuItems, status, execute } = await useLazyFetch<{
+const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
   label: string
   value: string | number
 }[]>(props.field.choicesEndpoint ?? '', {
   immediate: false,
 })
 
+const selectMenuItems = computed(() =>
+  selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
+)
+
 if (props.field.selectItems) {
-  selectMenuItems.value = props.field.selectItems
+  selectMenuItemsRaw.value = props.field.selectItems
 }
 const selectFetched = ref(false)
 
