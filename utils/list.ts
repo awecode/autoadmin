@@ -97,6 +97,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             accessorKey: def,
             header: toTitleCase(def),
             type: columnTypes[def].type,
+            sortKey: cfg.list.enableSort ? def : undefined,
           }
         } else if (def.includes('.')) {
           const [fk, foreignColumnName] = def.split('.')

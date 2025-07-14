@@ -118,39 +118,43 @@ const spec = computed(() => data.value?.spec || {} as Record<string, any>)
 
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 
-function getHeader(column: Column<T>, label: string) {
+function getHeader(column: Column<T>, label: string, sortKey: string) {
   const isSorted = column.getIsSorted()
 
-  return h(UButton, {
-    'color': 'neutral',
-    'variant': 'ghost',
-    label,
-    'icon': isSorted
-      ? isSorted === 'asc'
-        ? 'i-lucide-arrow-up-narrow-wide'
-        : 'i-lucide-arrow-down-wide-narrow'
-      : 'i-lucide-arrow-up-down',
-    'class': '-mx-2.5',
-    'aria-label': `Sort by ${label}`,
-    'onClick': () => {
+  if (sortKey) {
+    return h(UButton, {
+      'color': 'neutral',
+      'variant': 'ghost',
+      label,
+      'icon': isSorted
+        ? isSorted === 'asc'
+          ? 'i-lucide-arrow-up-narrow-wide'
+          : 'i-lucide-arrow-down-wide-narrow'
+        : 'i-lucide-arrow-up-down',
+      'class': '-mx-2.5',
+      'aria-label': `Sort by ${label}`,
+      'onClick': () => {
       // Cycle through: no sort → asc → desc → no sort
-      if (!isSorted) {
-        column.toggleSorting(false) // asc
-      } else if (isSorted === 'asc') {
-        column.toggleSorting(true) // desc
-      } else {
-        column.clearSorting() // no sort
-      }
-    },
-  })
+        if (!isSorted) {
+          column.toggleSorting(false) // asc
+        } else if (isSorted === 'asc') {
+          column.toggleSorting(true) // desc
+        } else {
+          column.clearSorting() // no sort
+        }
+      },
+    })
+  } else {
+    return label
+  }
 }
 
 function computeColumns() {
   let tableColumns = spec.value.columns
-  tableColumns = tableColumns?.map((col: TableColumn<T>) => ({
+  tableColumns = tableColumns?.map((col: TableColumn<T> & { header: string, sortKey?: string }) => ({
     ...col,
 
-    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header as string),
+    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header, col.sortKey as string),
   }))
 
   return [...(tableColumns || []), { id: 'actions' }]
