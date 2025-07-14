@@ -145,18 +145,18 @@ function getHeader(column: Column<T>, label: string) {
   })
 }
 
-function computeColumns(results: T[]) {
+function computeColumns() {
   let tableColumns = spec.value.columns
   tableColumns = tableColumns?.map((col: TableColumn<T>) => ({
     ...col,
 
-    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header),
+    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header as string),
   }))
 
   return [...(tableColumns || []), { id: 'actions' }]
 }
 
-const computedColumns = computed(() => computeColumns(data.value?.results ?? []))
+const computedColumns = computed(() => computeColumns())
 
 // Keep error for display in template instead of throwing
 if (error.value) {
@@ -285,15 +285,20 @@ async function handleDelete(id: string) {
             :key="column.id"
             #[`${column.id}-cell`]="{ cell }"
           >
-            <template v-if="cell.column.columnDef.type === 'boolean'">
-              <span v-if="cell.getValue()">Yes</span>
-              <span v-else>No</span>
-            </template>
-            <template v-else-if="cell.column.columnDef.type === 'date'">
-              {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
-            </template>
-            <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
-              {{ humanifyDateTime(cell.getValue() as string | Date) }}
+            <template v-if="'type' in cell.column.columnDef">
+              <template v-if="cell.column.columnDef.type === 'boolean'">
+                <span v-if="cell.getValue()">Yes</span>
+                <span v-else>No</span>
+              </template>
+              <template v-else-if="cell.column.columnDef.type === 'date'">
+                {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
+              </template>
+              <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
+                {{ humanifyDateTime(cell.getValue() as string | Date) }}
+              </template>
+              <template v-else>
+                {{ cell.getValue() }}
+              </template>
             </template>
             <template v-else>
               {{ cell.getValue() }}
