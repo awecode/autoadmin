@@ -164,6 +164,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           if (condition) {
             filterConditions.push(condition)
           }
+        } else if ('queryConditions' in filter) {
+          const conditions = await filter.queryConditions(db, filterValue)
+          filterConditions.push(...conditions)
         } else if (filter.type === 'text' || filter.type === 'relation') {
           filterConditions.push(eq(tableColumns[filter.field], filterValue))
         }
