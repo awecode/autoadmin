@@ -40,12 +40,7 @@ const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 
-const actions = [
-  {
-    label: 'Add',
-    to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
-  },
-]
+const actions: { label: string, to?: { name: string, params: { modelLabel: string } } }[] = []
 
 const route = useRoute()
 const router = useRouter()
@@ -118,6 +113,12 @@ const { data, status, error, refresh } = useAsyncData<Data<T> & { spec?: Record<
 const spec = computed(() => data.value?.spec || {} as Record<string, any>)
 
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
+if (spec.value.showCreateButton) {
+  actions.push({
+    label: 'Add',
+    to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
+  })
+}
 
 function getHeader(column: Column<T>, label: string, sortKey: string) {
   const isSorted = column.getIsSorted()

@@ -5,7 +5,7 @@ import { getIconForLabel, toTitleCase } from '~/utils/string'
 const modelLinks = useState<NavigationMenuItem[]>('modelLinks', () => [])
 
 const appConfig = useAppConfig()
-const allModels = useAdminRegistry().all()
+
 const collapsed = useCookie<boolean>('sidebar-collapsed', {
   default: () => false,
   sameSite: true,
@@ -13,6 +13,7 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
 })
 
 await callOnce(async () => {
+  const allModels = useAdminRegistry().all()
   const links = allModels.map(model => ({
     label: toTitleCase(model.label),
     icon: `i-lucide-${getIconForLabel(model.label)}`,

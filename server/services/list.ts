@@ -22,6 +22,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     updatePage: cfg.update.enabled ? cfg.update.route : undefined,
     deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
     title: cfg.list.title,
+    showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
     enableSort: cfg.list.enableSort,
     enableSearch: cfg.list.enableSearch,
     searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
@@ -83,8 +84,6 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     Object.assign(selectedColumns, foreignColumnSelections)
     baseQuery = db.select(selectedColumns).from(model)
   }
-
-
 
   // Handle search query
   const searchQuery = query.search
