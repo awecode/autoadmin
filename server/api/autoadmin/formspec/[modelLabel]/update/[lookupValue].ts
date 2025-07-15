@@ -46,6 +46,12 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
+  if (!cfg.update.enabled) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} does not allow updates.`,
+    })
+  }
   const model = cfg.model
   const spec = zodToFormSpec(cfg.update.schema as any)
   spec.values = await getTableValues(cfg, spec, lookupValue)

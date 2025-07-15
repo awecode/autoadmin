@@ -103,6 +103,12 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
 }
 export async function createRecord(modelLabel: string, data: any): Promise<any> {
   const modelConfig = getModelConfig(modelLabel)
+  if (!modelConfig.create.enabled) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} does not allow creation.`,
+    })
+  }
   const model = modelConfig.model
   const db = useDb()
 
@@ -157,6 +163,12 @@ export async function getRecordDetail(modelLabel: string, lookupValue: string): 
 
 export async function updateRecord(modelLabel: string, lookupValue: string, data: any): Promise<any> {
   const modelConfig = getModelConfig(modelLabel)
+  if (!modelConfig.update.enabled) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} does not allow updates.`,
+    })
+  }
   const model = modelConfig.model
   const db = useDb()
 

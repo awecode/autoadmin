@@ -12,9 +12,16 @@ const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 
-const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}/update/${lookupValue}`, {
+const { data, error } = await useFetch(`/api/autoadmin/formspec/${modelLabel}/update/${lookupValue}`, {
   key: `formspec-update-${modelLabel}-${lookupValue}`,
 })
+
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode,
+    statusMessage: error.value.statusMessage,
+  })
+}
 const formSpec = data.value?.spec as FormSpec
 const values = data.value?.values as Record<string, any>
 const schema = cfg.update.schema

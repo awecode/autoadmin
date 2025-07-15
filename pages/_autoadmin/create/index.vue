@@ -11,9 +11,17 @@ if (!cfg) {
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 
-const { data } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
+const { data, error } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
   key: `formspec-${modelLabel}`,
 })
+
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode,
+    statusMessage: error.value.statusMessage,
+  })
+}
+
 const formSpec = data.value?.spec as FormSpec
 const schema = cfg.create.schema
 

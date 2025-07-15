@@ -19,6 +19,12 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
+  if (!cfg.create.enabled) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} does not allow creation.`,
+    })
+  }
   const model = cfg.model
   const insertSchema = createInsertSchema(model)
   const spec = zodToFormSpec(insertSchema as any)
