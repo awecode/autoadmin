@@ -112,16 +112,16 @@ const spec = computed(() => data.value?.spec || {} as Record<string, any>)
 
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 
-const actions = computed(() => {
-  const actionList: { label: string, to?: { name: string, params: { modelLabel: string } } }[] = []
+const pageActions = computed(() => {
+  const actions: { label: string, to?: { name: string, params: { modelLabel: string } } }[] = []
 
   if (spec.value.showCreateButton) {
-    actionList.push({
+    actions.push({
       label: 'Add',
       to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
     })
   }
-  return actionList
+  return actions
 })
 
 function getHeader(column: Column<T>, label: string, sortKey: string) {
@@ -251,7 +251,7 @@ async function handleDelete(id: string) {
             <!-- <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot> -->
             <Filters v-if="data?.filters" :filters="data.filters" />
             <UButton
-              v-for="action in actions"
+              v-for="action in pageActions"
               :key="action.label"
               v-bind="action"
               size="xs"
