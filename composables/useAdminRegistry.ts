@@ -142,7 +142,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
     delete: { enabled: true, endpoint: `${apiPrefix}/${label}` },
     create: { enabled: true },
   } as AdminModelConfig<T>
-  if (opts.list?.enableSearch && !opts.list?.searchFields) {
+  if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumn || dct.labelColumn]
   } else if (!opts.list?.searchFields) {
     dct.list.searchFields = []
@@ -180,16 +180,19 @@ export function useAdminRegistry() {
   ): void {
     const label = (opts.label ?? getTableName(model)) as string
 
+    const columns = getTableColumns(model)
+    if (!opts.labelColumn) {
+      opts.labelColumn = getLabelColumnFromColumns(columns) as ColKey<T>
+    }
+
     const cfg = defu(
       opts,
       generateDefaultOptions(model, label, apiPrefix, opts),
       { model, label },
     ) as AdminModelConfig<T>
 
-    cfg.columns = getTableColumns(model)
-    if (!cfg.labelColumn) {
-      cfg.labelColumn = getLabelColumnFromColumns(cfg.columns) as ColKey<T>
-    }
+    cfg.columns = columns
+
     // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
     if (!Object.keys(cfg.columns).includes(lookupColumnName)) {
