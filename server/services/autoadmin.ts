@@ -130,7 +130,12 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
 
   const validatedData = schema.parse(preprocessed)
 
-  const result = await db.insert(model).values(validatedData).returning()
+  let result
+  try {
+    result = await db.insert(model).values(validatedData).returning()
+  } catch (error) {
+    throw handleDrizzleError(error)
+  }
 
   if (modelConfig.m2m) {
     const relations = parseM2mRelations(model, modelConfig.m2m)
