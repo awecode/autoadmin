@@ -29,12 +29,19 @@ const items = ref<NavigationMenuItem[][]>([
 </script>
 
 <template>
-  <div class="rounded-lg border border-gray-200 dark:border-gray-800 py-4" :class="{ 'px-4': !collapsed }">
-    <div class="flex justify-between items-center mb-4">
-      <div v-if="!collapsed" class="text-lg font-bold">
+  <div
+    class="rounded-lg border border-gray-200 dark:border-gray-800 py-4 transition-all duration-300 ease-in-out"
+    :class="{ 'px-4': !collapsed }"
+  >
+    <div class="flex justify-between items-center mb-4 transition-all duration-300 ease-in-out">
+      <div
+        v-if="!collapsed"
+        class="text-lg font-bold transition-opacity duration-300 ease-in-out"
+      >
         AutoAdmin
       </div>
       <UButton
+        class="transition-all duration-300 ease-in-out"
         color="neutral"
         variant="ghost"
         :class="{ 'mx-auto': collapsed }"
@@ -43,11 +50,11 @@ const items = ref<NavigationMenuItem[][]>([
         @click="collapsed = !collapsed"
       />
     </div>
-    <div>
+    <div class="transition-all duration-300 ease-in-out">
       <UNavigationMenu
         popover
         tooltip
-        class="data-[orientation=vertical]:w-48 gap-4"
+        class="data-[orientation=vertical]:w-48 gap-4 transition-all duration-300 ease-in-out"
         orientation="vertical"
         :class="{ 'data-[orientation=vertical]:w-12 items-center': collapsed }"
         :collapsed="collapsed"
