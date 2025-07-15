@@ -1,4 +1,4 @@
-import type { AdminModelConfig, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
+import type { AdminModelConfig, ColKey, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
 import type { Column, Table } from 'drizzle-orm'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
@@ -189,6 +189,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
       accessorKey: key,
       header: toTitleCase(key),
       type: columnTypes[key]?.type,
+      sortKey: cfg.list.enableSort ? key as ColKey<T> : undefined,
     }))
     // Remove primary autoincrement and auto timestamp columns
     columns = columns.filter((column) => {

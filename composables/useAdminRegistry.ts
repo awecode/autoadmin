@@ -7,7 +7,7 @@ import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 import { getLabelColumnFromColumns } from '../utils/registry'
 
-type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
+export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 
 // Represents a column name or relation string
 type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
