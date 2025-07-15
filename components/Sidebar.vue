@@ -20,6 +20,7 @@ await callOnce(async () => {
 
 const items = ref<NavigationMenuItem[][]>([
   [
+    ...appConfig.sidebar.topItems,
     appConfig.sidebar.modelLabel,
     ...modelLinks.value,
   ],
@@ -32,6 +33,7 @@ const items = ref<NavigationMenuItem[][]>([
     <UNavigationMenu
       class="data-[orientation=vertical]:w-48"
       orientation="vertical"
+      :class="{ 'data-[orientation=vertical]:w-12': collapsed }"
       :collapsed="collapsed"
       :items="items"
     />

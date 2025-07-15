@@ -1,5 +1,13 @@
 export default defineAppConfig({
   sidebar: {
+    topItems: [
+      {
+        label: 'Dashboard',
+        icon: 'i-lucide-home',
+        to: { name: 'autoadmin-index' },
+        type: 'link' as const,
+      },
+    ],
     modelLabel: {
       label: 'Entities',
       type: 'label' as const,
