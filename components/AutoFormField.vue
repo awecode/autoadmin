@@ -150,6 +150,12 @@ function onSelectMenuOpen() {
   <UFormField v-else-if="field.type === 'checkbox'" :label="field.label" :name="field.name" :required="field.required">
     <UCheckbox v-model="fieldValue" />
   </UFormField>
+  <UFormField v-else-if="field.type === 'text'" :label="field.label" :name="field.name" :required="field.required">
+    <UInput
+      v-model.nullify="fieldValue"
+      type="text"
+    />
+  </UFormField>
   <UFormField v-else :label="field.label" :name="field.name" :required="field.required">
     <UInput
       v-model="fieldValue"

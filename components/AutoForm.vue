@@ -101,7 +101,6 @@ const performUpdate = async () => {
       class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
       :schema="processedSchema"
       :state="state"
-      @error="console.error"
       @submit="mode === 'create' ? performCreate() : performUpdate()"
     >
       <div v-for="field in spec.fields" :key="field.name">
