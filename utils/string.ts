@@ -85,12 +85,28 @@ const defaultIconMap: Record<string, string> = {
   blog: 'pen-line',
   post: 'file-text',
   article: 'newspaper',
+  news: 'newspaper',
+  event: 'calendar-clock',
+
+  person: 'user-round',
+  customer: 'file-user',
+  client: 'file-user',
+  supplier: 'contact-round',
+  vendor: 'contact-round',
+  partner: 'user-lock',
+  employee: 'shield-user',
+  staff: 'shield-user',
+  account: 'shield-user',
+
+  video: 'video',
+  audio: 'music',
 
   banner: 'image',
   ad: 'badge-dollar-sign',
 
-  seo: 'search',
-  sitemap: 'sitemap',
+  company: 'building',
+  organization: 'building',
+  party: 'building',
 }
 
 export function getIconForLabel(name: string): string {
