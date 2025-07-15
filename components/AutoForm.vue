@@ -42,7 +42,7 @@ const state = initializeState()
 // Process schema to only include fields defined in spec
 const processedSchema = computed(() => processSchema(props.schema, props.spec))
 
-type ApiErrorResponse = {
+interface ApiErrorResponse {
   statusCode: number
   statusMessage: string
   stack: string[]
@@ -151,7 +151,8 @@ onUnmounted(() => {
         <button
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
           type="submit"
-          :disabled="loading"
+          :class="{ 'cursor-not-allowed': loading || form?.errors?.length }"
+          :disabled="loading || !!form?.errors?.length"
         >
           {{ loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
         </button>
