@@ -107,11 +107,7 @@ const performUpdate = async () => {
       }
     }
   } catch (error) {
-    if (error instanceof Error) {
-      toast.add({ title: 'Error', description: `Failed to update: ${error.message}`, color: 'error' })
-    } else {
-      toast.add({ title: 'Error', description: `Failed to update: ${error}`, color: 'error' })
-    }
+    handleError(error as Error)
   } finally {
     loading.value = false
   }

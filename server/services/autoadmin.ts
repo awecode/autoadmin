@@ -195,7 +195,12 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
 
   const validatedData = schema.parse(preprocessed)
 
-  const result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
+  let result
+  try {
+    result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
+  } catch (error) {
+    throw handleDrizzleError(error)
+  }
 
   if (modelConfig.m2m) {
     const relations = parseM2mRelations(model, modelConfig.m2m)
