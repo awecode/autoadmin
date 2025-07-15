@@ -57,7 +57,6 @@ interface ApiErrorResponse {
 
 const toast = useToast()
 
-// Track unsaved changes
 const originalState = ref<Record<string, any>>({})
 const hasUnsavedChanges = ref(false)
 const navigationWarningEnabled = true
@@ -76,7 +75,6 @@ watch(state, (newState) => {
     hasUnsavedChanges.value = false
     return
   }
-
   // Check if current state differs from original
   hasUnsavedChanges.value = JSON.stringify(newState) !== JSON.stringify(originalState.value)
 }, { deep: true })
@@ -94,7 +92,6 @@ const handleError = (error: Error) => {
   }
 }
 
-// Router navigation warning
 const router = useRouter()
 const performCreate = async () => {
   loading.value = true
@@ -105,9 +102,7 @@ const performCreate = async () => {
     })
 
     if (response.success) {
-      // Disable navigation warning on successful submission
       hasUnsavedChanges.value = false
-
       toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
       if (props.redirectPath) {
         await router.push(props.redirectPath)
@@ -129,9 +124,7 @@ const performUpdate = async () => {
     })
 
     if (response.success) {
-      // Disable navigation warning on successful submission
       hasUnsavedChanges.value = false
-
       toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
       if (props.redirectPath) {
         await router.push(props.redirectPath)
@@ -149,7 +142,6 @@ const handleFocus = (event: FocusEvent) => focusedEl.value = event.target as HTM
 const handleBlur = () => focusedEl.value = null
 const isInputFocused = computed(() => ['INPUT', 'TEXTAREA'].includes(focusedEl.value?.tagName || ''))
 
-// Browser beforeunload warning
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   if (hasUnsavedChanges.value && navigationWarningEnabled) {
     event.preventDefault()
@@ -158,7 +150,6 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   }
 }
 
-// Router navigation warning
 onMounted(() => {
   window.addEventListener('focusin', handleFocus)
   window.addEventListener('focusout', handleBlur)

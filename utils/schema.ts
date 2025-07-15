@@ -1,4 +1,5 @@
 import type { ZodObject, ZodRawShape } from 'zod'
+import type { FormSpec } from './form'
 import { z } from 'zod'
 
 export function processSchema<S extends ZodRawShape>(
@@ -16,5 +17,5 @@ export function processSchema<S extends ZodRawShape>(
       .map(name => [name, true] as const), // keep literal true
   ) as { [K in keyof S]?: true }
 
-  return schema.pick(pickKeys)
+  return schema.pick(pickKeys as any)
 }
