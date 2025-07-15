@@ -57,6 +57,30 @@ interface ApiErrorResponse {
 
 const toast = useToast()
 
+// Track unsaved changes
+const originalState = ref<Record<string, any>>({})
+const hasUnsavedChanges = ref(false)
+const navigationWarningEnabled = true
+
+// Initialize original state and track changes
+watchEffect(() => {
+  if (props.spec.values && Object.keys(originalState.value).length === 0) {
+    originalState.value = { ...props.spec.values }
+  }
+})
+
+// Watch for changes in form state
+watch(state, (newState) => {
+  if (Object.keys(originalState.value).length === 0) {
+    originalState.value = { ...newState }
+    hasUnsavedChanges.value = false
+    return
+  }
+
+  // Check if current state differs from original
+  hasUnsavedChanges.value = JSON.stringify(newState) !== JSON.stringify(originalState.value)
+}, { deep: true })
+
 const handleError = (error: Error) => {
   if (error instanceof Error) {
     if ('data' in error) {
@@ -70,6 +94,7 @@ const handleError = (error: Error) => {
   }
 }
 
+// Router navigation warning
 const router = useRouter()
 const performCreate = async () => {
   loading.value = true
@@ -80,6 +105,9 @@ const performCreate = async () => {
     })
 
     if (response.success) {
+      // Disable navigation warning on successful submission
+      hasUnsavedChanges.value = false
+
       toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
       if (props.redirectPath) {
         await router.push(props.redirectPath)
@@ -101,6 +129,9 @@ const performUpdate = async () => {
     })
 
     if (response.success) {
+      // Disable navigation warning on successful submission
+      hasUnsavedChanges.value = false
+
       toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
       if (props.redirectPath) {
         await router.push(props.redirectPath)
@@ -118,14 +149,40 @@ const handleFocus = (event: FocusEvent) => focusedEl.value = event.target as HTM
 const handleBlur = () => focusedEl.value = null
 const isInputFocused = computed(() => ['INPUT', 'TEXTAREA'].includes(focusedEl.value?.tagName || ''))
 
+// Browser beforeunload warning
+const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (hasUnsavedChanges.value && navigationWarningEnabled) {
+    event.preventDefault()
+    event.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+    return event.returnValue
+  }
+}
+
+// Router navigation warning
 onMounted(() => {
   window.addEventListener('focusin', handleFocus)
   window.addEventListener('focusout', handleBlur)
+  window.addEventListener('beforeunload', handleBeforeUnload)
+
+  // Add router beforeEach guard for navigation warning
+  router.beforeEach((to, from, next) => {
+    if (hasUnsavedChanges.value && navigationWarningEnabled) {
+      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?')
+      if (confirmed) {
+        next()
+      } else {
+        next(false)
+      }
+    } else {
+      next()
+    }
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('focusin', handleFocus)
   window.removeEventListener('focusout', handleBlur)
+  window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 </script>
 
