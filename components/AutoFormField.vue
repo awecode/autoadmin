@@ -88,6 +88,7 @@ function onSelectMenuOpen() {
     v-if="field.type === 'relation'"
     :label="field.label"
     :name="field.name"
+    :required="field.required"
   >
     <USelectMenu
       v-model="fieldValue"
@@ -104,6 +105,7 @@ function onSelectMenuOpen() {
     v-else-if="field.type === 'relation-many'"
     :label="field.label"
     :name="field.name"
+    :required="field.required"
   >
     <USelectMenu
       v-model="fieldValue"
@@ -117,13 +119,14 @@ function onSelectMenuOpen() {
       @update:open="onSelectMenuOpen"
     />
   </UFormField>
-  <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name">
+  <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name" :required="field.required">
     <USelect v-model="fieldValue" class="w-full" :items="field.enumValues" />
   </UFormField>
   <UFormField
     v-else-if="field.type === 'json'"
     :label="field.label"
     :name="field.name"
+    :required="field.required"
   >
     <UTextarea
       v-model="fieldValue"
@@ -133,10 +136,10 @@ function onSelectMenuOpen() {
       :rows="6"
     />
   </UFormField>
-  <UFormField v-else-if="field.type === 'date'" :label="field.label" :name="field.name">
+  <UFormField v-else-if="field.type === 'date'" :label="field.label" :name="field.name" :required="field.required">
     <DatePicker v-model="fieldValue" />
   </UFormField>
-  <UFormField v-else-if="field.type === 'datetime-local'" :label="field.label" :name="field.name">
+  <UFormField v-else-if="field.type === 'datetime-local'" :label="field.label" :name="field.name" :required="field.required">
     <UInput
       v-model="fieldValue"
       :max="field.rules?.max"
@@ -144,10 +147,10 @@ function onSelectMenuOpen() {
       :type="field.type"
     />
   </UFormField>
-  <UFormField v-else-if="field.type === 'checkbox'" :label="field.label" :name="field.name">
+  <UFormField v-else-if="field.type === 'checkbox'" :label="field.label" :name="field.name" :required="field.required">
     <UCheckbox v-model="fieldValue" />
   </UFormField>
-  <UFormField v-else :label="field.label" :name="field.name">
+  <UFormField v-else :label="field.label" :name="field.name" :required="field.required">
     <UInput
       v-model="fieldValue"
       :max="field.rules?.max"

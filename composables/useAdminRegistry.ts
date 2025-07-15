@@ -4,7 +4,7 @@ import type { ListFieldType } from '../utils/list'
 import type { TableMetadata } from '../utils/metdata'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
-import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import { createInsertSchema } from 'drizzle-zod'
 import { getLabelColumnFromColumns } from '../utils/registry'
 
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -156,7 +156,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
     dct.create.schema = createInsertSchema(model)
   }
   if (!opts.update?.schema) {
-    dct.update.schema = createUpdateSchema(model)
+    dct.update.schema = createInsertSchema(model)
   }
   return dct
 }

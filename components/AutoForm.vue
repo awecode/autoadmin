@@ -97,9 +97,8 @@ const performUpdate = async () => {
 
 <template>
   <div>
-    {{ state }}
     <UForm
-      class="space-y-4"
+      class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
       :schema="processedSchema"
       :state="state"
       @error="console.error"
