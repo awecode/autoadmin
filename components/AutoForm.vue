@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { FormError } from '@nuxt/ui';
 import type { RouteLocationRaw } from 'vue-router'
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
@@ -59,7 +58,6 @@ type ApiErrorResponse = {
 const handleError = (error: Error) => {
   if (error instanceof Error) {
     if ('data' in error){
-      console.log("======Error=======")
       const errorData = error.data as ApiErrorResponse
       if (errorData.data?.errors) {
         form.value?.setErrors(errorData.data.errors)
@@ -89,15 +87,13 @@ const performCreate = async () => {
       }
     }
   } catch (error) {
-    // handleError(error as Error)
-    form.value?.setErrors(error.data.data.errors)
+    handleError(error as Error)
   } finally {
     loading.value = false
   }
 }
 
 const performUpdate = async () => {
-  console.log("======Update=======")
   loading.value = true
   try {
     const response = await $fetch<{ success: boolean }>(props.endpoint, {
@@ -121,12 +117,37 @@ const performUpdate = async () => {
     loading.value = false
   }
 }
+
+const focusedEl = ref<HTMLElement | null>(null)
+
+const handleFocus = (event: FocusEvent) => {
+  focusedEl.value = event.target as HTMLElement
+}
+
+const handleBlur = () => {
+  focusedEl.value = null
+}
+
+onMounted(() => {
+  window.addEventListener('focusin', handleFocus)
+  window.addEventListener('focusout', handleBlur)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('focusin', handleFocus)
+  window.removeEventListener('focusout', handleBlur)
+})
+
+const isInputFocused = computed(() => {
+  return focusedEl.value?.tagName === 'INPUT' || focusedEl.value?.tagName === 'TEXTAREA'
+})
 </script>
 
 <template>
   <div>
-    {{ form?.errors }}
+    <!-- Do not validate on input change when input is focused because it clears any server side validation error messages received from api -->
     <UForm
+      :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
       ref="form"
       class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
       :schema="processedSchema"
