@@ -55,21 +55,20 @@ type ApiErrorResponse = {
   }
 }
 
+const toast = useToast()
+
 const handleError = (error: Error) => {
   if (error instanceof Error) {
-    if ('data' in error){
+    if ('data' in error) {
       const errorData = error.data as ApiErrorResponse
       if (errorData.data?.errors) {
         form.value?.setErrors(errorData.data.errors)
       }
-    }else{
+    } else {
       toast.add({ title: 'Error', description: `Failed to create: ${error.message || error}`, color: 'error' })
     }
   }
-  
 }
-
-const toast = useToast()
 
 const router = useRouter()
 const performCreate = async () => {
@@ -119,14 +118,9 @@ const performUpdate = async () => {
 }
 
 const focusedEl = ref<HTMLElement | null>(null)
-
-const handleFocus = (event: FocusEvent) => {
-  focusedEl.value = event.target as HTMLElement
-}
-
-const handleBlur = () => {
-  focusedEl.value = null
-}
+const handleFocus = (event: FocusEvent) => focusedEl.value = event.target as HTMLElement
+const handleBlur = () => focusedEl.value = null
+const isInputFocused = computed(() => ['INPUT', 'TEXTAREA'].includes(focusedEl.value?.tagName || ''))
 
 onMounted(() => {
   window.addEventListener('focusin', handleFocus)
@@ -137,21 +131,17 @@ onUnmounted(() => {
   window.removeEventListener('focusin', handleFocus)
   window.removeEventListener('focusout', handleBlur)
 })
-
-const isInputFocused = computed(() => {
-  return focusedEl.value?.tagName === 'INPUT' || focusedEl.value?.tagName === 'TEXTAREA'
-})
 </script>
 
 <template>
   <div>
     <!-- Do not validate on input change when input is focused because it clears any server side validation error messages received from api -->
     <UForm
-      :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
       ref="form"
       class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
       :schema="processedSchema"
       :state="state"
+      :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
       @submit="mode === 'create' ? performCreate() : performUpdate()"
     >
       <div v-for="field in spec.fields" :key="field.name">
