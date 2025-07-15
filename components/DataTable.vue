@@ -297,7 +297,7 @@ async function handleDelete(id: string) {
         >
           <!-- Dynamic cell templates for all columns except actions -->
           <template
-            v-for="column in computedColumns.filter(col => col.id !== 'actions')"
+            v-for="column in computedColumns.filter((col: TableColumn<T>) => col.id !== 'actions')"
             :key="column.id"
             #[`${column.id}-cell`]="{ cell }"
           >
