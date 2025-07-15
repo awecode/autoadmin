@@ -45,15 +45,16 @@ const items = ref<NavigationMenuItem[][]>([
       >
         AutoAdmin
       </div>
-      <UButton
-        class="transition-all duration-300 ease-in-out"
-        color="neutral"
-        variant="ghost"
-        :class="{ 'mx-auto': collapsed }"
-        :icon="collapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
-        :title="collapsed ? 'Expand' : 'Collapse'"
-        @click="collapsed = !collapsed"
-      />
+      <UTooltip :delay="0" :text="collapsed ? 'Expand' : 'Collapse'">
+        <UButton
+          class="transition-all duration-300 ease-in-out"
+          color="neutral"
+          variant="ghost"
+          :class="{ 'mx-auto': collapsed }"
+          :icon="collapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
+          @click="collapsed = !collapsed"
+        />
+      </UTooltip>
     </div>
     <div class="transition-all duration-300 ease-in-out">
       <UNavigationMenu
