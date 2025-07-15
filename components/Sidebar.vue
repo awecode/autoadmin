@@ -2,27 +2,26 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getIconForLabel, toTitleCase } from '~/utils/string'
 
-const emit = defineEmits<{
-  modelLinks: [NavigationMenuItem[]]
-}>()
+const modelLinks = useState<NavigationMenuItem[]>('modelLinks', () => [])
 
 const appConfig = useAppConfig()
 const allModels = useAdminRegistry().all()
 const collapsed = ref(false)
 
-const modelLinks = allModels.map(model => ({
-  label: toTitleCase(model.label),
-  icon: `i-lucide-${getIconForLabel(model.label)}`,
-  to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
-  type: 'link' as const,
-}))
-
-emit('modelLinks', modelLinks)
+await callOnce(async () => {
+  const links = allModels.map(model => ({
+    label: toTitleCase(model.label),
+    icon: `i-lucide-${getIconForLabel(model.label)}`,
+    to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
+    type: 'link' as const,
+  }))
+  modelLinks.value = links
+})
 
 const items = ref<NavigationMenuItem[][]>([
   [
     appConfig.sidebar.modelLabel,
-    ...modelLinks,
+    ...modelLinks.value,
   ],
   appConfig.sidebar.additionalItems,
 ])
