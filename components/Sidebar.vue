@@ -6,7 +6,11 @@ const modelLinks = useState<NavigationMenuItem[]>('modelLinks', () => [])
 
 const appConfig = useAppConfig()
 const allModels = useAdminRegistry().all()
-const collapsed = ref(false)
+const collapsed = useCookie<boolean>('sidebar-collapsed', {
+  default: () => false,
+  sameSite: true,
+  httpOnly: false,
+})
 
 await callOnce(async () => {
   const links = allModels.map(model => ({
