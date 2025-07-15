@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormError } from '@nuxt/ui';
 import type { RouteLocationRaw } from 'vue-router'
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
@@ -14,6 +15,7 @@ const props = defineProps<{
   schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }>
 }>()
 
+const form = useTemplateRef('form')
 const loading = ref(false)
 
 // Initialize state with values for update and default values for create
@@ -41,6 +43,34 @@ const state = initializeState()
 // Process schema to only include fields defined in spec
 const processedSchema = computed(() => processSchema(props.schema, props.spec))
 
+type ApiErrorResponse = {
+  statusCode: number
+  statusMessage: string
+  stack: string[]
+  data?: {
+    message?: string
+    errors?: {
+      name: string
+      message: string
+    }[]
+  }
+}
+
+const handleError = (error: Error) => {
+  if (error instanceof Error) {
+    if ('data' in error){
+      console.log("======Error=======")
+      const errorData = error.data as ApiErrorResponse
+      if (errorData.data?.errors) {
+        form.value?.setErrors(errorData.data.errors)
+      }
+    }else{
+      toast.add({ title: 'Error', description: `Failed to create: ${error.message || error}`, color: 'error' })
+    }
+  }
+  
+}
+
 const toast = useToast()
 
 const router = useRouter()
@@ -59,17 +89,15 @@ const performCreate = async () => {
       }
     }
   } catch (error) {
-    if (error instanceof Error) {
-      toast.add({ title: 'Error', description: `Failed to create: ${error.message}`, color: 'error' })
-    } else {
-      toast.add({ title: 'Error', description: `Failed to create: ${error}`, color: 'error' })
-    }
+    // handleError(error as Error)
+    form.value?.setErrors(error.data.data.errors)
   } finally {
     loading.value = false
   }
 }
 
 const performUpdate = async () => {
+  console.log("======Update=======")
   loading.value = true
   try {
     const response = await $fetch<{ success: boolean }>(props.endpoint, {
@@ -97,7 +125,9 @@ const performUpdate = async () => {
 
 <template>
   <div>
+    {{ form?.errors }}
     <UForm
+      ref="form"
       class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
       :schema="processedSchema"
       :state="state"

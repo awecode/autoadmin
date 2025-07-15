@@ -51,16 +51,24 @@ export function handleDrizzleError(error: any) {
     // const fullMessage = 'SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: customers.phoneNumber'
     // Programatically extract the table name and column name from the full message
     let userFriendlyMessage = 'Operation failed'
+    let errorData = {
+      name: '',
+      message: '',
+    }
     if (fullMessage.includes('SQLITE_CONSTRAINT_UNIQUE')) {
-      // TODO Parse camelCase/snake_case column name to human readable
       const [table, column] = fullMessage.split(' ').at(-1).split('.')
-      userFriendlyMessage = `One of the ${table} with this ${column} already exists`
+      userFriendlyMessage = `One of the ${table} with this ${column} already exists.`
+      errorData.name = column
+      errorData.message = 'This value must be unique but is already in use.'
     }
     return {
       statusCode: 400,
-      message: 'Validation Error',
-      statusMessage: userFriendlyMessage,
+      statusMessage: 'Validation Error',
       stack: '',
+      data: {
+        message: userFriendlyMessage,
+        errors: [errorData],
+      },
     }
   }
   // Format other database errors with code and message for debugging
