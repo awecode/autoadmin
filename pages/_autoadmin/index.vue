@@ -1,7 +1,20 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import { getIconForLabel, toTitleCase } from '~/utils/string'
 
-const modelLinks = useState<NavigationMenuItem[]>('modelLinks', () => [])
+const { data: modelLinks } = await useAsyncData('model-links', async () => {
+  const allCfg = useAdminRegistry().all()
+  const links = allCfg.filter(cfg => cfg.enableIndex).map(cfg => ({
+    label: toTitleCase(cfg.label),
+    icon: cfg.icon || getIconForLabel(cfg.label),
+    to: { name: 'autoadmin-list', params: { modelLabel: `${cfg.label}` } },
+    type: 'link' as const,
+    createPath: cfg.create?.enabled ? { name: 'autoadmin-create', params: { modelLabel: `${cfg.label}` } } : undefined,
+  }))
+
+  return links
+}, {
+  default: () => [],
+})
 </script>
 
 <template>
@@ -34,18 +47,21 @@ const modelLinks = useState<NavigationMenuItem[]>('modelLinks', () => [])
                 </div>
               </UCard>
             </NuxtLink>
-
             <!-- Plus button for adding new instance -->
-            <UTooltip text="Add new" :delay="0">
-              <UButton
-                square
+            <UTooltip v-if="link.createPath" text="Add new" :delay="0">
+              <NuxtLink
+                v-if="link.createPath"
                 class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
-                color="primary"
-                icon="i-lucide-plus"
-                size="xs"
-                variant="ghost"
-                @click.stop="navigateTo({ name: 'autoadmin-create', params: { modelLabel: (link.to as any)?.params?.modelLabel || '' } })"
-              />
+                :to="link.createPath"
+              >
+                <UButton
+                  square
+                  color="primary"
+                  icon="i-lucide-plus"
+                  size="xs"
+                  variant="ghost"
+                />
+              </NuxtLink>
             </UTooltip>
           </div>
         </div>

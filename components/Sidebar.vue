@@ -2,8 +2,6 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getIconForLabel, toTitleCase } from '~/utils/string'
 
-const modelLinks = useState<NavigationMenuItem[]>('modelLinks', () => [])
-
 const appConfig = useAppConfig()
 
 const collapsed = useCookie<boolean>('sidebar-collapsed', {
@@ -12,7 +10,7 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-await callOnce(async () => {
+const { data: items } = await useAsyncData<NavigationMenuItem[][]>('sidebar-items', async () => {
   const allModels = useAdminRegistry().all()
   const links = allModels.filter(model => model.enableIndex).map(model => ({
     label: toTitleCase(model.label),
@@ -20,17 +18,18 @@ await callOnce(async () => {
     to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
     type: 'link' as const,
   }))
-  modelLinks.value = links
-})
 
-const items = ref<NavigationMenuItem[][]>([
-  appConfig.sidebar.topItems,
-  [
-    appConfig.sidebar.modelLabel,
-    ...modelLinks.value,
-  ],
-  appConfig.sidebar.additionalItems,
-])
+  return [
+    appConfig.sidebar.topItems,
+    [
+      appConfig.sidebar.modelLabel,
+      ...links,
+    ],
+    appConfig.sidebar.additionalItems,
+  ]
+}, {
+  default: () => [],
+})
 </script>
 
 <template>
