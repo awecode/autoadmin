@@ -214,6 +214,12 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
 
 export async function deleteRecord(modelLabel: string, lookupValue: string): Promise<any> {
   const modelConfig = getModelConfig(modelLabel)
+  if (!modelConfig.delete.enabled) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} does not allow deletion.`,
+    })
+  }
   const model = modelConfig.model
   const db = useDb()
   const lookupColumn = modelConfig.lookupColumn
