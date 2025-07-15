@@ -163,7 +163,13 @@ function computeColumns() {
     header: ({ column }: { column: Column<T> }) => getHeader(column, col.header, col.sortKey as string),
   }))
 
-  return [...(tableColumns || []), { id: 'actions' }]
+  if (spec.value.updatePage || spec.value.deleteEndpoint) {
+    tableColumns.push({
+      id: 'actions',
+    })
+  }
+
+  return tableColumns
 }
 
 const computedColumns = computed(() => computeColumns())
