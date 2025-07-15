@@ -94,6 +94,7 @@ interface DeleteOptions {
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
   icon?: string
+  enableIndex?: boolean
   labelColumn?: ColKey<T>
   lookupColumnName?: ColKey<T>
   // searchFields?: ColKey<T>[]
@@ -113,6 +114,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   model: T
   label: string
   icon?: string
+  enableIndex: boolean
   labelColumn: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
@@ -129,6 +131,7 @@ export interface AdminModelConfig<T extends Table = Table> {
 
 const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
   const dct = {
+    enableIndex: true,
     lookupColumnName: defaultLookupColumnName as ColKey<T>,
     list: {
       enabled: true,

@@ -14,7 +14,7 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
 
 await callOnce(async () => {
   const allModels = useAdminRegistry().all()
-  const links = allModels.map(model => ({
+  const links = allModels.filter(model => model.enableIndex).map(model => ({
     label: toTitleCase(model.label),
     icon: model.icon || getIconForLabel(model.label),
     to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
