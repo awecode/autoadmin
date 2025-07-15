@@ -1,3 +1,5 @@
+import { defu } from 'defu'
+
 export function useTitleCase(str: string): string {
   return str.replace(/\w\S*/g, txt =>
     txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase())
@@ -7,8 +9,8 @@ export function toTitleCase(str: string): string {
   return str.split(/(?=[A-Z])/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
 
-const iconMap: Record<string, string> = {
-  user: 'user',
+const defaultIconMap: Record<string, string> = {
+  user: 'user-circle',
   profile: 'user-circle',
 
   product: 'box',
@@ -52,7 +54,6 @@ const iconMap: Record<string, string> = {
   location: 'map-pin',
   address: 'map',
 
-  platform: 'monitor',
   device: 'smartphone',
 
   feedback: 'message-circle',
@@ -94,7 +95,8 @@ const iconMap: Record<string, string> = {
 
 export function getIconForLabel(name: string): string {
   const singular = toSingular(name.toLowerCase())
-  return iconMap[singular] ?? 'database'
+  const iconMap = defu(defaultIconMap) as Record<string, string>
+  return `i-lucide-${iconMap[singular] ?? 'database'}`
 }
 
 // Naive plural → singular converter

@@ -16,7 +16,7 @@ await callOnce(async () => {
   const allModels = useAdminRegistry().all()
   const links = allModels.map(model => ({
     label: toTitleCase(model.label),
-    icon: `i-lucide-${getIconForLabel(model.label)}`,
+    icon: model.icon || getIconForLabel(model.label),
     to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
     type: 'link' as const,
   }))

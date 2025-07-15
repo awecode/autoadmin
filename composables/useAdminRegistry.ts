@@ -93,6 +93,7 @@ interface DeleteOptions {
 
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
+  icon?: string
   labelColumn?: ColKey<T>
   lookupColumnName?: ColKey<T>
   // searchFields?: ColKey<T>[]
@@ -111,6 +112,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   // model: TableWithColumns<T>
   model: T
   label: string
+  icon?: string
   labelColumn: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
