@@ -101,6 +101,7 @@ function toSingular(word: string): string {
 
 const appConfig = useAppConfig()
 const allModels = useAdminRegistry().all()
+const collapsed = ref(false)
 
 const modelLinks = allModels.map(model => ({
   label: toTitleCase(model.label),
@@ -119,5 +120,22 @@ const items = ref<NavigationMenuItem[][]>([
 </script>
 
 <template>
-  <UNavigationMenu class="data-[orientation=vertical]:w-48" orientation="vertical" :items="items" />
+  <div class="relative">
+    <UNavigationMenu
+      class="data-[orientation=vertical]:w-48"
+      orientation="vertical"
+      :collapsed="collapsed"
+      :items="items"
+    />
+
+    <!-- Collapse/Uncollapse button -->
+    <UButton
+      square
+      class="absolute top-4 right-4 z-10"
+      size="sm"
+      variant="ghost"
+      :icon="collapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'"
+      @click="collapsed = !collapsed"
+    />
+  </div>
 </template>
