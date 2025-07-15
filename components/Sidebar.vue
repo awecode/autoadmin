@@ -2,6 +2,10 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getIconForLabel, toTitleCase } from '~/utils/string'
 
+const emit = defineEmits<{
+  modelLinks: [NavigationMenuItem[]]
+}>()
+
 const appConfig = useAppConfig()
 const allModels = useAdminRegistry().all()
 const collapsed = ref(false)
@@ -12,6 +16,8 @@ const modelLinks = allModels.map(model => ({
   to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
   type: 'link' as const,
 }))
+
+emit('modelLinks', modelLinks)
 
 const items = ref<NavigationMenuItem[][]>([
   [
