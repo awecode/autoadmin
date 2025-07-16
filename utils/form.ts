@@ -4,7 +4,7 @@ import { getPrimaryKeyColumn } from './relation'
 import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many'
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many' | 'textarea'
 export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export interface FieldSpec {

@@ -90,12 +90,12 @@ function onSelectMenuOpen() {
     :name="field.name"
     :required="field.required"
   >
-    <!-- Error slot with error message transformation -->
-    <template #error="{ error }">
+    <!-- Error slot with error message transformation, client only to avoid hydration errors -->
+    <ClientOnly #error="{ error }">
       <span v-if="error && typeof error === 'string'">
         {{ transformErrorMessage(error, field.type) }}
       </span>
-    </template>
+    </ClientOnly>
 
     <!-- Relation (single select) -->
     <USelectMenu
