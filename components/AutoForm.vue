@@ -4,6 +4,7 @@ import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
 import type { FormSpec } from '~/utils/form'
 import { useWarnOnUnsavedChanges } from '~/composables/warnOnUnsavedChanges'
+import { getErrorMessage } from '~/utils/form'
 import { processSchema } from '~/utils/schema'
 
 const props = defineProps<{
@@ -76,10 +77,7 @@ const handleError = (error: Error) => {
         }
       }
     }
-    const errorMessage = typeof error === 'object' && error !== null
-      ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
-      : String(error)
-    toast.add({ title: 'Error', description: `Failed to save: ${errorMessage}`, color: 'error' })
+    toast.add({ title: 'Error', description: `Failed to save: ${getErrorMessage(error)}`, color: 'error' })
   }
 }
 

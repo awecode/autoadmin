@@ -127,3 +127,9 @@ export const normalizeOptions = (options: { label?: string, value: string | numb
     return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
   })
 }
+
+export const getErrorMessage = (error: Error) => {
+  return typeof error === 'object' && error !== null
+    ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
+    : String(error)
+}

@@ -5,6 +5,7 @@ import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { useRouteQuery } from '@vueuse/router'
 import { h, resolveComponent } from 'vue'
 import DeleteModal from '~/components/DeleteModal.vue'
+import { getErrorMessage } from '~/utils/form'
 
 const UButton = resolveComponent('UButton')
 
@@ -222,7 +223,7 @@ async function handleDelete(id: string) {
     } catch (err: any) {
       useToast().add({
         title: 'Error',
-        description: err.message || 'Failed to delete',
+        description: getErrorMessage(err) || 'Failed to delete',
         color: 'error',
       })
     } finally {
