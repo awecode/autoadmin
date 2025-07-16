@@ -1,7 +1,7 @@
 import type { ColKey } from '#layers/autoadmin/composables/useAdminRegistry'
 import type { Table } from 'drizzle-orm'
 import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { zodToFormSpec } from '#layers/autoadmin/utils/form'
+import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
 import { eq } from 'drizzle-orm'
@@ -53,6 +53,9 @@ export default defineEventHandler(async (event) => {
   }
   const model = cfg.model
   const spec = zodToFormSpec(cfg.update.schema as any)
+  if (cfg.update.formFields) {
+    spec.fields = useDefinedFields(spec, cfg)
+  }
   spec.values = await getTableValues(cfg, spec, lookupValue)
 
   const foreignKeys = getTableForeignKeys(model)

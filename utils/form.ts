@@ -1,4 +1,6 @@
 import type { ZodObject, ZodTypeAny } from 'zod'
+import { defu } from 'defu'
+import { getPrimaryKeyColumn } from './relation'
 import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
@@ -133,4 +135,36 @@ export const getErrorMessage = (error: Error) => {
   return typeof error === 'object' && error !== null
     ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
     : String(error)
+}
+
+export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
+  const definedFieldSpecs = cfg!.update!.formFields!.map((field) => {
+    if (typeof field === 'string') {
+      const fieldSpec = spec.fields.find(f => f.name === field)
+      if (fieldSpec) {
+        return fieldSpec
+      }
+    } else if (typeof field === 'object' && field !== null && 'name' in field) {
+      const fieldSpec = spec.fields.find(f => f.name === field.name)
+      if (fieldSpec) {
+        return defu(field, fieldSpec)
+      }
+    }
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Invalid form field: ${field}`,
+    })
+  })
+  if (cfg.o2m || cfg.m2m) {
+    // If the primary key is not in the form fields, add it to the end of the form fields for o2m/m2m relations
+    const pkColumnName = getPrimaryKeyColumn(cfg.model).name
+    if (!definedFieldSpecs.some(f => f.name === pkColumnName)) {
+      const pkFieldSpec = spec.fields.find(f => f.name === pkColumnName)
+      spec.fields = definedFieldSpecs
+      if (pkFieldSpec) {
+        definedFieldSpecs.push(pkFieldSpec)
+      }
+    }
+  }
+  return definedFieldSpecs
 }
