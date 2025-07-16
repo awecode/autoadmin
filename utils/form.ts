@@ -18,6 +18,8 @@ export interface FieldSpec {
   choicesEndpoint?: string
   attrs?: Record<string, any>
   help?: string
+  hint?: string
+  description?: string
 }
 export interface FormSpec {
   fields: FieldSpec[]

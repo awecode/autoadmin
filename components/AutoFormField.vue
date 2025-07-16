@@ -90,6 +90,8 @@ function onSelectMenuOpen() {
     :name="field.name"
     :required="field.required"
     :help="field.help"
+    :hint="field.hint"
+    :description="field.description"
   >
     <!-- Error slot with error message transformation, causes hydration errors, using client only to does not override the slot -->
     <!-- <ClientOnly> -->
