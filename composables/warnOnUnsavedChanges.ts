@@ -2,10 +2,12 @@ export function useWarnOnUnsavedChanges(
   formState: Ref<Record<string, any>>,
   initialValues?: Record<string, any>,
 ) {
-  // Track unsaved changes
+  const navigationWarningEnabled = true
+  const warnOnEmptyForm = false
+  const warnOnSingleChange = false
+
   const originalState = ref<Record<string, any>>({})
   const hasUnsavedChanges = ref(false)
-  const navigationWarningEnabled = true
 
   // Initialize original state and track changes
   watchEffect(() => {
@@ -16,7 +18,12 @@ export function useWarnOnUnsavedChanges(
 
   // Watch for changes in form state
   watch(formState, (newState) => {
-    if (Object.keys(originalState.value).length === 0) {
+    if (!warnOnEmptyForm && Object.keys(initialValues || {}).length === 0) {
+      originalState.value = { ...newState }
+      hasUnsavedChanges.value = false
+      return
+    }
+    if (!warnOnSingleChange && Object.keys(originalState.value).length === 0) {
       originalState.value = { ...newState }
       hasUnsavedChanges.value = false
       return

@@ -74,42 +74,21 @@ const handleError = (error: Error) => {
 }
 
 const router = useRouter()
-const performCreate = async () => {
+
+const performSave = async () => {
   loading.value = true
   try {
     const response = await $fetch<{ success: boolean }>(props.endpoint, {
-      method: 'POST',
+      method: props.mode === 'create' ? 'POST' : 'PUT',
       body: state,
     })
 
     if (response.success) {
       hasUnsavedChanges.value = false
       toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
-      if (props.redirectPath) {
-        await router.push(props.redirectPath)
-      }
-    }
-  } catch (error) {
-    handleError(error as Error)
-  } finally {
-    loading.value = false
-  }
-}
-
-const performUpdate = async () => {
-  loading.value = true
-  try {
-    const response = await $fetch<{ success: boolean }>(props.endpoint, {
-      method: 'PUT',
-      body: state,
-    })
-
-    if (response.success) {
-      hasUnsavedChanges.value = false
-      toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
-      if (props.redirectPath) {
-        await router.push(props.redirectPath)
-      }
+      // if (props.redirectPath) {
+      //   await router.push(props.redirectPath)
+      // }
     }
   } catch (error) {
     handleError(error as Error)
@@ -142,7 +121,7 @@ onUnmounted(() => {
       :schema="processedSchema"
       :state="state"
       :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
-      @submit="mode === 'create' ? performCreate() : performUpdate()"
+      @submit="performSave()"
     >
       <div v-for="field in spec.fields" :key="field.name">
         <AutoFormField v-model="state[field.name]" :field="field" />
