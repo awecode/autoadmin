@@ -85,12 +85,13 @@ function onSelectMenuOpen() {
 
 <template>
   <UFormField
-    v-if="field.type === 'relation'"
     :label="field.label"
     :name="field.name"
     :required="field.required"
   >
+    <!-- Relation (single select) -->
     <USelectMenu
+      v-if="field.type === 'relation'"
       v-model="fieldValue"
       trailing
       class="w-full"
@@ -100,14 +101,10 @@ function onSelectMenuOpen() {
       :loading="status === 'pending'"
       @update:open="onSelectMenuOpen"
     />
-  </UFormField>
-  <UFormField
-    v-else-if="field.type === 'relation-many'"
-    :label="field.label"
-    :name="field.name"
-    :required="field.required"
-  >
+
+    <!-- Relation (multi-select) -->
     <USelectMenu
+      v-else-if="field.type === 'relation-many'"
       v-model="fieldValue"
       multiple
       trailing
@@ -118,46 +115,47 @@ function onSelectMenuOpen() {
       :loading="status === 'pending'"
       @update:open="onSelectMenuOpen"
     />
-  </UFormField>
-  <UFormField v-else-if="field.type === 'select'" :label="field.label" :name="field.name" :required="field.required">
-    <USelect v-model="fieldValue" class="w-full" :items="field.enumValues" />
-  </UFormField>
-  <UFormField
-    v-else-if="field.type === 'json'"
-    :label="field.label"
-    :name="field.name"
-    :required="field.required"
-  >
+
+    <!-- Select dropdown -->
+    <USelect
+      v-else-if="field.type === 'select'"
+      v-model="fieldValue"
+      class="w-full"
+      :items="field.enumValues"
+    />
+
+    <!-- JSON textarea -->
     <UTextarea
+      v-else-if="field.type === 'json'"
       v-model="fieldValue"
       class="w-full font-mono"
       placeholder="{}"
       spellcheck="false"
       :rows="6"
     />
-  </UFormField>
-  <UFormField v-else-if="field.type === 'date'" :label="field.label" :name="field.name" :required="field.required">
-    <DatePicker v-model="fieldValue" />
-  </UFormField>
-  <UFormField v-else-if="field.type === 'datetime-local'" :label="field.label" :name="field.name" :required="field.required">
-    <UInput
+
+    <!-- Date picker -->
+    <DatePicker
+      v-else-if="field.type === 'date'"
       v-model="fieldValue"
-      :max="field.rules?.max"
-      :min="field.rules?.min"
-      :type="field.type"
     />
-  </UFormField>
-  <UFormField v-else-if="field.type === 'checkbox'" :label="field.label" :name="field.name" :required="field.required">
-    <UCheckbox v-model="fieldValue" />
-  </UFormField>
-  <UFormField v-else-if="field.type === 'text'" :label="field.label" :name="field.name" :required="field.required">
+
+    <!-- Checkbox -->
+    <UCheckbox
+      v-else-if="field.type === 'checkbox'"
+      v-model="fieldValue"
+    />
+
+    <!-- Text input with nullify modifier -->
     <UInput
+      v-else-if="field.type === 'text'"
       v-model.nullify="fieldValue"
       type="text"
     />
-  </UFormField>
-  <UFormField v-else :label="field.label" :name="field.name" :required="field.required">
+
+    <!-- Default input (datetime-local, number, etc.) -->
     <UInput
+      v-else
       v-model="fieldValue"
       :max="field.rules?.max"
       :min="field.rules?.min"
