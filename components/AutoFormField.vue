@@ -86,16 +86,16 @@ function onSelectMenuOpen() {
 
 <template>
   <UFormField
+    :description="field.description"
+    :help="field.help"
+    :hint="field.hint"
     :label="field.label"
     :name="field.name"
     :required="field.required"
-    :help="field.help"
-    :hint="field.hint"
-    :description="field.description"
   >
     <!-- Error slot with error message transformation, causes hydration errors, using client only to does not override the slot -->
     <!-- <ClientOnly> -->
-      <!-- <template #error="{ error }">
+    <!-- <template #error="{ error }">
         <span v-if="error && typeof error === 'string'">
           {{ transformErrorMessage(error, field.type) }}
         </span>
@@ -177,6 +177,13 @@ function onSelectMenuOpen() {
     <UTextarea
       v-else-if="field.type === 'textarea'"
       v-model.nullify="fieldValue"
+      v-bind="field.attrs"
+    />
+
+    <!-- Rich text editor -->
+    <RichTextEditor
+      v-else-if="field.type === 'rich-text'"
+      v-model="fieldValue"
       v-bind="field.attrs"
     />
 
