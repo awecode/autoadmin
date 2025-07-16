@@ -3,17 +3,20 @@ defineEmits<{
   close: []
   confirm: []
 }>()
+
+const title = 'Confirm Delete'
+const description = 'Are you sure you want to delete this item? This action cannot be undone.'
 </script>
 
 <template>
-  <UModal>
+  <UModal :description="description" :title="title">
     <template #content>
       <div class="p-4">
         <h3 class="text-lg font-medium mb-2">
-          Confirm Delete
+          {{ title }}
         </h3>
         <p class="text-gray-600 dark:text-gray-400 mb-4">
-          Are you sure you want to delete this item? This action cannot be undone.
+          {{ description }}
         </p>
         <div class="flex justify-end gap-3">
           <UButton
