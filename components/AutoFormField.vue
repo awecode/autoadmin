@@ -69,8 +69,8 @@ const selectMenuItems = computed(() =>
   selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
 )
 
-if (props.field.selectItems) {
-  selectMenuItemsRaw.value = props.field.selectItems
+if (props.field.options) {
+  selectMenuItemsRaw.value = normalizeOptions(props.field.options)
 }
 const selectFetched = ref(false)
 

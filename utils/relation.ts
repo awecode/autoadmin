@@ -155,7 +155,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
         const db = useDb()
         // TODO only select the columns that are needed for the form spec
         const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.column.name]))
-        field.selectItems = rows.map(row => ({
+        field.options = rows.map(row => ({
           label: row[getLabelColumnFromModel(relation.foreignTable)],
           value: row[relation.foreignColumn.name],
         }))
@@ -190,7 +190,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
       required: false,
       rules: {},
-      selectItems: [],
+      options: [],
     }
     // if values are provided, use them to get the initial selection of o2m relations
     if (formSpec.values) {
@@ -204,11 +204,11 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       const db = useDb()
       // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
-      field.selectItems = rows.map(row => ({
+      field.options = rows.map(row => ({
         label: row[getLabelColumnFromModel(table)],
         value: row[relationData.foreignPrimaryColumn.name],
       }))
-      formSpec.values[relationData.fieldName] = field.selectItems.map(item => item.value)
+      formSpec.values[relationData.fieldName] = field.options.map(item => item.value)
     }
     updatedFields.push(field)
   }))
@@ -229,7 +229,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices-many/${fieldName}`,
       required: false,
       rules: {},
-      selectItems: [],
+      options: [],
     }
     if (formSpec.values) {
       const db = useDb()
@@ -249,11 +249,11 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
         )
       if (result.length > 0) {
         const rows = result.map(row => row.other)
-        field.selectItems = rows.map(row => ({
+        field.options = rows.map(row => ({
           label: row[getLabelColumnFromModel(relation.otherTable)],
           value: row[relation.otherForeignColumn.name],
         }))
-        formSpec.values[fieldName] = field.selectItems.map(item => item.value)
+        formSpec.values[fieldName] = field.options.map(item => item.value)
       }
     }
     updatedFields.push(field)

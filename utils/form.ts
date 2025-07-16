@@ -5,6 +5,7 @@ import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
 type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many'
+export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export interface FieldSpec {
   name: string
@@ -12,8 +13,7 @@ export interface FieldSpec {
   type: FieldType
   required?: boolean
   rules?: Rules
-  options?: string[] | number[] | { label?: string, value: string | number, count?: number }[]
-  selectItems?: { label: string, value: string }[]
+  options?: Option[]
   defaultValue?: unknown
   choicesEndpoint?: string
 }
@@ -121,10 +121,13 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
   return { fields }
 }
 
-export const normalizeOptions = (options: { label?: string, value: string | number, count?: number }[] | string[]) => {
+export const normalizeOptions = (options: Option[]) => {
   return options.map((option) => {
     if (typeof option === 'string') {
       return { label: option, value: option }
+    }
+    if (typeof option === 'number') {
+      return { label: option.toString(), value: option }
     }
     return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
   })
