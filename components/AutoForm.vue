@@ -68,7 +68,7 @@ const handleError = (error: Error) => {
         form.value?.setErrors(errorData.data.errors)
       }
     } else {
-      toast.add({ title: 'Error', description: `Failed to create: ${error.message || error}`, color: 'error' })
+      toast.add({ title: 'Error', description: `Failed to save: ${error.message || error}`, color: 'error' })
     }
   }
 }
@@ -85,10 +85,11 @@ const performSave = async () => {
 
     if (response.success) {
       updateOriginalState(state)
-      toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
-      // if (props.redirectPath) {
-      //   await router.push(props.redirectPath)
-      // }
+      const description = props.mode === 'create' ? 'Created successfully.' : 'Updated successfully.'
+      toast.add({ title: 'Success', description, color: 'success' })
+      if (props.redirectPath) {
+        await router.push(props.redirectPath)
+      }
     }
   } catch (error) {
     handleError(error as Error)
