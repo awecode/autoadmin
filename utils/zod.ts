@@ -68,3 +68,29 @@ export function unwrapZodType<T extends ZodTypeAny>(zodType: T): {
     defaultValue,
   }
 }
+
+// Transform Zod error messages to be more user-friendly
+export const transformErrorMessage = (message: string): string => {
+  // Handle common Zod error patterns
+  if (message.includes('expected string, received null')
+    || message.includes('expected string, received undefined')) {
+    return 'This field is required'
+  }
+
+  if (message.includes('expected number, received null')
+    || message.includes('expected number, received undefined')) {
+    return 'Please enter a number'
+  }
+
+  if (message.includes('expected boolean, received null')
+    || message.includes('expected boolean, received undefined')) {
+    return 'Please select an option'
+  }
+
+  if (message.includes('expected array, received null')
+    || message.includes('expected array, received undefined')) {
+    return 'Please select at least one option'
+  }
+  // Return original message if no pattern matches
+  return message
+}
