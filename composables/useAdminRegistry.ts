@@ -77,7 +77,7 @@ interface CreateOptions<T extends Table = Table> {
 interface UpdateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
-  showDeleteButton: boolean
+  // showDeleteButton: boolean
   route?: {
     name: string
     params: {
@@ -144,7 +144,10 @@ const staticDefaultOptions = {
     enableSearch: true,
     searchPlaceholder: 'Search ...',
   },
-  update: { enabled: true, showDeleteButton: true },
+  update: {
+    enabled: true,
+    // showDeleteButton: true,
+  },
   delete: { enabled: true },
   create: { enabled: true },
   warnOnUnsavedChanges: false,
