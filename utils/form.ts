@@ -16,6 +16,7 @@ export interface FieldSpec {
   options?: Option[]
   defaultValue?: unknown
   choicesEndpoint?: string
+  attrs?: Record<string, any>
 }
 export interface FormSpec {
   fields: FieldSpec[]

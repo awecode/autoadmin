@@ -208,7 +208,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
         label: row[getLabelColumnFromModel(table)],
         value: row[relationData.foreignPrimaryColumn.name],
       }))
-      formSpec.values[relationData.fieldName] = field.options.map(item => item.value)
+      formSpec.values[relationData.fieldName] = (field.options as { label: string, value: string }[]).map(item => item.value)
     }
     updatedFields.push(field)
   }))
@@ -253,7 +253,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
           label: row[getLabelColumnFromModel(relation.otherTable)],
           value: row[relation.otherForeignColumn.name],
         }))
-        formSpec.values[fieldName] = field.options.map(item => item.value)
+        formSpec.values[fieldName] = (field.options as { label: string, value: string }[]).map(item => item.value)
       }
     }
     updatedFields.push(field)

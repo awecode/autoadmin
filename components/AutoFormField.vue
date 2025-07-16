@@ -90,12 +90,14 @@ function onSelectMenuOpen() {
     :name="field.name"
     :required="field.required"
   >
-    <!-- Error slot with error message transformation, client only to avoid hydration errors -->
-    <ClientOnly #error="{ error }">
-      <span v-if="error && typeof error === 'string'">
-        {{ transformErrorMessage(error, field.type) }}
-      </span>
-    </ClientOnly>
+    <!-- Error slot with error message transformation, causes hydration errors, using client only to does not override the slot -->
+    <!-- <ClientOnly> -->
+      <!-- <template #error="{ error }">
+        <span v-if="error && typeof error === 'string'">
+          {{ transformErrorMessage(error, field.type) }}
+        </span>
+      </template> -->
+    <!-- </ClientOnly> -->
 
     <!-- Relation (single select) -->
     <USelectMenu
@@ -159,6 +161,13 @@ function onSelectMenuOpen() {
       v-else-if="field.type === 'text'"
       v-model.nullify="fieldValue"
       type="text"
+    />
+
+    <!-- Textarea input with nullify modifier -->
+    <UTextarea
+      v-else-if="field.type === 'textarea'"
+      v-model.nullify="fieldValue"
+      v-bind="field.attrs"
     />
 
     <!-- Default input (datetime-local, number, etc.) -->

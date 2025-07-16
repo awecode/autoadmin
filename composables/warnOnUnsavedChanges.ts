@@ -6,7 +6,7 @@ export function useWarnOnUnsavedChanges(
     warnOnEmptyForm?: boolean
   },
 ) {
-  const enabled = config?.enabled ?? true
+  const enabled = config?.enabled ?? false
   const warnOnEmptyForm = config?.warnOnEmptyForm ?? enabled
   //   const warnOnSingleChangeOnEmptyForm = false
 
