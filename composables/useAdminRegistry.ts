@@ -1,5 +1,6 @@
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import type { CustomFilter, FilterType } from '../utils/filter'
+import type { FieldSpec } from '../utils/form'
 import type { ListFieldType } from '../utils/list'
 import type { TableMetadata } from '../utils/metdata'
 import { defu } from 'defu'
@@ -7,14 +8,15 @@ import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 import { getLabelColumnFromColumns } from '../utils/registry'
 
+// Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
-
 // Represents a column name or relation string
 type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
 type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) => any)
-
+// Represents a sort key for a column or relation string
 type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
+// type TableWithColumns<T extends Table = Table> = T & { [K in ColKey<T>]: T['_']['columns'][K] }
 
 export type FilterFieldDef<T extends Table> = ColField<T> | {
   field: ColField<T>
@@ -72,6 +74,7 @@ interface CreateOptions<T extends Table = Table> {
   endpoint?: string
   schema: InferInsertModel<T> // added by generateDefaultOptions
   warnOnUnsavedChanges: boolean
+  formFields?: (ColKey<T> | FieldSpec)[]
 }
 
 interface UpdateOptions<T extends Table = Table> {
@@ -86,6 +89,7 @@ interface UpdateOptions<T extends Table = Table> {
   }
   schema: InferInsertModel<T> // added by generateDefaultOptions
   warnOnUnsavedChanges: boolean
+  formFields?: (ColKey<T> | FieldSpec)[]
 }
 
 interface DeleteOptions {
@@ -93,6 +97,7 @@ interface DeleteOptions {
   endpoint?: string
 }
 
+// AdminModelOptions is the options passed to the registerAdminModel function
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
   icon?: string
@@ -107,11 +112,10 @@ export interface AdminModelOptions<T extends Table = Table> {
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
   warnOnUnsavedChanges?: boolean
+  formFields?: (ColKey<T> | FieldSpec)[]
 }
 
-// export type TableWithColumns<T extends Table = Table>
-//   = T & { [K in ColKey<T>]: T['_']['columns'][K] }
-
+// AdminModelConfig is the config available in the registry after processing AdminModelOptions
 export interface AdminModelConfig<T extends Table = Table> {
   // model: TableWithColumns<T>
   model: T
@@ -176,6 +180,8 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
   dct.warnOnUnsavedChanges = opts.warnOnUnsavedChanges ?? dct.warnOnUnsavedChanges
   dct.create.warnOnUnsavedChanges = opts.create?.warnOnUnsavedChanges ?? dct.warnOnUnsavedChanges
   dct.update.warnOnUnsavedChanges = opts.update?.warnOnUnsavedChanges ?? dct.warnOnUnsavedChanges
+  dct.create.formFields = opts.create?.formFields ?? opts.formFields
+  dct.update.formFields = opts.update?.formFields ?? opts.formFields
   return dct
 }
 

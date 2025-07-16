@@ -8,9 +8,10 @@ export interface FieldSpec {
   name: string
   label: string
   type: FieldType
-  required: boolean
-  rules: Rules
+  required?: boolean
+  rules?: Rules
   enumValues?: string[]
+  options?: string[] | number[] | { label?: string, value: string | number, count?: number }[]
   selectItems?: { label: string, value: string }[]
   defaultValue?: unknown
   choicesEndpoint?: string
