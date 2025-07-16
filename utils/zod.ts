@@ -70,7 +70,7 @@ export function unwrapZodType<T extends ZodTypeAny>(zodType: T): {
 }
 
 // Transform Zod error messages to be more user-friendly
-export const transformErrorMessage = (message: string): string => {
+export const transformErrorMessage = (message: string, fieldType?: string): string => {
   // Handle common Zod error patterns
   if (message.includes('expected string, received null')
     || message.includes('expected string, received undefined')) {
@@ -79,7 +79,13 @@ export const transformErrorMessage = (message: string): string => {
 
   if (message.includes('expected number, received null')
     || message.includes('expected number, received undefined')) {
-    return 'Please enter a number'
+    if (fieldType === 'relation') {
+      return 'Please select an option'
+    } else if (fieldType === 'relation-many') {
+      return 'Please select at least one option'
+    } else {
+      return 'Please enter a number'
+    }
   }
 
   if (message.includes('expected boolean, received null')

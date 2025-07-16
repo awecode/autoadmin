@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormSpec } from '~/utils/form'
 import { normalizeOptions } from '~/utils/form'
+import { transformErrorMessage } from '~/utils/zod'
 
 const props = defineProps<{
   field: FormSpec['fields'][number]
@@ -89,6 +90,13 @@ function onSelectMenuOpen() {
     :name="field.name"
     :required="field.required"
   >
+    <!-- Error slot with error message transformation -->
+    <template #error="{ error }">
+      <span v-if="error && typeof error === 'string'">
+        {{ transformErrorMessage(error, field.type) }}
+      </span>
+    </template>
+
     <!-- Relation (single select) -->
     <USelectMenu
       v-if="field.type === 'relation'"

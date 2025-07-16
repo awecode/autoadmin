@@ -5,7 +5,6 @@ import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 import type { FormSpec } from '~/utils/form'
 import { useWarnOnUnsavedChanges } from '~/composables/warnOnUnsavedChanges'
 import { processSchema } from '~/utils/schema'
-import { transformErrorMessage } from '~/utils/zod'
 
 const props = defineProps<{
   spec: FormSpec
@@ -75,30 +74,6 @@ const handleError = (error: Error) => {
     }
   }
 }
-
-// Watch for form errors and transform them to user-friendly messages
-watch(() => form.value?.errors, (errors) => {
-  if (!errors || !Array.isArray(errors)) return
-
-  let hasChanges = false
-  const transformedErrors = errors.map((error) => {
-    const originalMessage = error.message
-    const friendlyMessage = transformErrorMessage(originalMessage)
-
-    if (friendlyMessage !== originalMessage) {
-      hasChanges = true
-      return { ...error, message: friendlyMessage }
-    }
-    return error
-  })
-
-  // Only update if we actually transformed any messages
-  if (hasChanges) {
-    nextTick(() => {
-      form.value?.setErrors(transformedErrors)
-    })
-  }
-}, { deep: true, immediate: false })
 
 const router = useRouter()
 
