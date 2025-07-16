@@ -58,7 +58,7 @@ interface ApiErrorResponse {
 
 const toast = useToast()
 
-const { hasUnsavedChanges } = useWarnOnUnsavedChanges(toRef(() => state), props.spec.values)
+const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), props.spec.values)
 
 const handleError = (error: Error) => {
   if (error instanceof Error) {
@@ -84,7 +84,7 @@ const performSave = async () => {
     })
 
     if (response.success) {
-      hasUnsavedChanges.value = false
+      updateOriginalState(state)
       toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
       // if (props.redirectPath) {
       //   await router.push(props.redirectPath)

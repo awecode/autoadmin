@@ -69,7 +69,13 @@ export function useWarnOnUnsavedChanges(
     window.removeEventListener('beforeunload', handleBeforeUnload)
   })
 
+  const updateOriginalState = (newState: Record<string, any>) => {
+    originalState.value = { ...newState }
+    hasUnsavedChanges.value = false
+  }
+
   return {
     hasUnsavedChanges,
+    updateOriginalState,
   }
 }
