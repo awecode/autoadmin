@@ -68,10 +68,13 @@ const handleError = (error: Error) => {
       const errorData = error.data as ApiErrorResponse
       if (errorData.data?.errors) {
         form.value?.setErrors(errorData.data.errors)
+        return
       }
-    } else {
-      toast.add({ title: 'Error', description: `Failed to save: ${error.message || error}`, color: 'error' })
     }
+    const errorMessage = typeof error === 'object' && error !== null
+      ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
+      : String(error)
+    toast.add({ title: 'Error', description: `Failed to save: ${errorMessage}`, color: 'error' })
   }
 }
 
