@@ -68,7 +68,12 @@ const handleError = (error: Error) => {
       const errorData = error.data as ApiErrorResponse
       if (errorData.data?.errors) {
         form.value?.setErrors(errorData.data.errors)
-        return
+        // Return not to show toast
+        // Return only if all values for name key on errors match the name of a field in the form
+        // Because the error may not bind to a field in the form and user may not see it
+        if (errorData.data.errors.every(error => props.spec.fields?.some(field => field.name === error.name))) {
+          return
+        }
       }
     }
     const errorMessage = typeof error === 'object' && error !== null

@@ -36,10 +36,18 @@ async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelCon
         } catch (error) {
           if (error instanceof DrizzleQueryError) {
             if (error.cause && 'code' in error.cause && typeof error.cause.code === 'string' && NOTNULL_CONSTRAINT_CODES.includes(error.cause.code)) {
+              const userFriendlyMessage = `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`
               throw createError({
                 statusCode: 400,
                 // statusMessage: `Cannot unset this ${foreignRelatedColumn.name} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
                 statusMessage: `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`,
+                data: {
+                  message: userFriendlyMessage,
+                  errors: [{
+                    name: relationData.fieldName,
+                    message: userFriendlyMessage,
+                  }],
+                },
               })
             }
           }
