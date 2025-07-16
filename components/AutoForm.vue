@@ -3,6 +3,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
 import type { FormSpec } from '~/utils/form'
+import { useWarnOnUnsavedChanges } from '~/composables/warnOnUnsavedChanges'
 import { processSchema } from '~/utils/schema'
 
 const props = defineProps<{
@@ -57,27 +58,7 @@ interface ApiErrorResponse {
 
 const toast = useToast()
 
-const originalState = ref<Record<string, any>>({})
-const hasUnsavedChanges = ref(false)
-const navigationWarningEnabled = true
-
-// Initialize original state and track changes
-watchEffect(() => {
-  if (props.spec.values && Object.keys(originalState.value).length === 0) {
-    originalState.value = { ...props.spec.values }
-  }
-})
-
-// Watch for changes in form state
-watch(state, (newState) => {
-  if (Object.keys(originalState.value).length === 0) {
-    originalState.value = { ...newState }
-    hasUnsavedChanges.value = false
-    return
-  }
-  // Check if current state differs from original
-  hasUnsavedChanges.value = JSON.stringify(newState) !== JSON.stringify(originalState.value)
-}, { deep: true })
+const { hasUnsavedChanges } = useWarnOnUnsavedChanges(toRef(() => state), props.spec.values)
 
 const handleError = (error: Error) => {
   if (error instanceof Error) {
@@ -141,39 +122,14 @@ const focusedEl = ref<HTMLElement | null>(null)
 const handleFocus = (event: FocusEvent) => focusedEl.value = event.target as HTMLElement
 const handleBlur = () => focusedEl.value = null
 const isInputFocused = computed(() => ['INPUT', 'TEXTAREA'].includes(focusedEl.value?.tagName || ''))
-
-const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (hasUnsavedChanges.value && navigationWarningEnabled) {
-    event.preventDefault()
-    event.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
-    return event.returnValue
-  }
-}
-
 onMounted(() => {
   window.addEventListener('focusin', handleFocus)
   window.addEventListener('focusout', handleBlur)
-  window.addEventListener('beforeunload', handleBeforeUnload)
-
-  // Add router beforeEach guard for navigation warning
-  router.beforeEach((to, from, next) => {
-    if (hasUnsavedChanges.value && navigationWarningEnabled) {
-      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?')
-      if (confirmed) {
-        next()
-      } else {
-        next(false)
-      }
-    } else {
-      next()
-    }
-  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('focusin', handleFocus)
   window.removeEventListener('focusout', handleBlur)
-  window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 </script>
 
