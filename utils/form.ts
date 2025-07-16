@@ -18,6 +18,7 @@ export interface FieldSpec {
 export interface FormSpec {
   fields: FieldSpec[]
   values?: Record<string, any>
+  warnOnUnsavedChanges?: boolean
 }
 
 export function zodToFormSpec(schema: ZodObject<any>): FormSpec {

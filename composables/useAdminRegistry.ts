@@ -71,6 +71,7 @@ interface CreateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
   schema: InferInsertModel<T> // added by generateDefaultOptions
+  warnOnUnsavedChanges: boolean
 }
 
 interface UpdateOptions<T extends Table = Table> {
@@ -84,6 +85,7 @@ interface UpdateOptions<T extends Table = Table> {
     }
   }
   schema: InferInsertModel<T> // added by generateDefaultOptions
+  warnOnUnsavedChanges: boolean
 }
 
 interface DeleteOptions {
@@ -104,6 +106,7 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
+  warnOnUnsavedChanges?: boolean
 }
 
 // export type TableWithColumns<T extends Table = Table>
@@ -127,26 +130,35 @@ export interface AdminModelConfig<T extends Table = Table> {
   // store
   columns: ReturnType<typeof getTableColumns<T>>
   metadata: TableMetadata
+  warnOnUnsavedChanges: boolean
+}
+
+const staticDefaultOptions = {
+  enableIndex: true,
+  lookupColumnName: defaultLookupColumnName,
+  list: {
+    enabled: true,
+    enableSort: true,
+    enableFilter: true,
+    showCreateButton: true,
+    enableSearch: true,
+    searchPlaceholder: 'Search ...',
+  },
+  update: { enabled: true, showDeleteButton: true },
+  delete: { enabled: true },
+  create: { enabled: true },
+  warnOnUnsavedChanges: false,
 }
 
 const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
-  const dct = {
-    enableIndex: true,
-    lookupColumnName: defaultLookupColumnName as ColKey<T>,
+  const dct = defu(staticDefaultOptions, {
     list: {
-      enabled: true,
-      enableSort: true,
-      enableFilter: true,
-      showCreateButton: true,
-      enableSearch: true,
-      searchPlaceholder: 'Search ...',
       title: toTitleCase(label),
       endpoint: `${apiPrefix}/${label}`,
     },
-    update: { enabled: true, showDeleteButton: true, route: { name: 'autoadmin-update', params: { modelLabel: label } } },
-    delete: { enabled: true, endpoint: `${apiPrefix}/${label}` },
-    create: { enabled: true },
-  } as AdminModelConfig<T>
+    update: { route: { name: 'autoadmin-update', params: { modelLabel: label } } },
+    delete: { endpoint: `${apiPrefix}/${label}` },
+  }) as AdminModelConfig<T>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumn || dct.labelColumn]
   } else if (!opts.list?.searchFields) {
@@ -158,6 +170,9 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
   if (!opts.update?.schema) {
     dct.update.schema = createInsertSchema(model)
   }
+  dct.warnOnUnsavedChanges = opts.warnOnUnsavedChanges ?? dct.warnOnUnsavedChanges
+  dct.create.warnOnUnsavedChanges = opts.create?.warnOnUnsavedChanges ?? dct.warnOnUnsavedChanges
+  dct.update.warnOnUnsavedChanges = opts.update?.warnOnUnsavedChanges ?? dct.warnOnUnsavedChanges
   return dct
 }
 

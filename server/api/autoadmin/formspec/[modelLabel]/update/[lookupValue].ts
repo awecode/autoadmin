@@ -69,6 +69,7 @@ export default defineEventHandler(async (event) => {
   const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, cfg, m2mRelations)
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
+  specWithMetadata.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
   return {
     spec: specWithMetadata,
   }

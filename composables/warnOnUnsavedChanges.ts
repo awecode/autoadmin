@@ -1,10 +1,14 @@
 export function useWarnOnUnsavedChanges(
   formState: Ref<Record<string, any>>,
   initialValues?: Record<string, any>,
+  config?: {
+    enabled?: boolean
+    warnOnEmptyForm?: boolean
+  },
 ) {
-  const navigationWarningEnabled = true
-  const warnOnEmptyForm = false
-  const warnOnSingleChange = false
+  const enabled = config?.enabled ?? true
+  const warnOnEmptyForm = config?.warnOnEmptyForm ?? enabled
+  //   const warnOnSingleChangeOnEmptyForm = false
 
   const originalState = ref<Record<string, any>>({})
   const hasUnsavedChanges = ref(false)
@@ -23,11 +27,11 @@ export function useWarnOnUnsavedChanges(
       hasUnsavedChanges.value = false
       return
     }
-    if (!warnOnSingleChange && Object.keys(originalState.value).length === 0) {
-      originalState.value = { ...newState }
-      hasUnsavedChanges.value = false
-      return
-    }
+    // if (!warnOnSingleChangeOnEmptyForm && Object.keys(originalState.value).length === 0) {
+    //   originalState.value = { ...newState }
+    //   hasUnsavedChanges.value = false
+    //   return
+    // }
 
     // Check if current state differs from original
     hasUnsavedChanges.value = JSON.stringify(newState) !== JSON.stringify(originalState.value)
@@ -50,7 +54,7 @@ export function useWarnOnUnsavedChanges(
 
     // Add router beforeEach guard for navigation warning
     router.beforeEach((to, from, next) => {
-      if (hasUnsavedChanges.value && navigationWarningEnabled) {
+      if (hasUnsavedChanges.value && enabled) {
         // eslint-disable-next-line no-alert
         const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?')
         if (confirmed) {

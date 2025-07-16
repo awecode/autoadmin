@@ -58,7 +58,9 @@ interface ApiErrorResponse {
 
 const toast = useToast()
 
-const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), props.spec.values)
+const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), props.spec.values, {
+  enabled: props.spec.warnOnUnsavedChanges ?? false,
+})
 
 const handleError = (error: Error) => {
   if (error instanceof Error) {
