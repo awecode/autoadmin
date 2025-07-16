@@ -24,7 +24,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
     const definitionTypeKey = definition?.typeName ?? definition?.type
 
     let type: ListFieldType = 'text'
-    let enumValues: string[] | undefined
+    let options: string[] | undefined
     switch (definitionTypeKey) {
       case 'ZodString':
       case 'string':
@@ -46,7 +46,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
       case 'ZodEnum':
       case 'enum':
         type = 'select'
-        enumValues = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
+        options = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
         break
       case 'ZodDate':
       case 'date':
@@ -78,7 +78,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
         break
     }
 
-    return [name, { type, options: enumValues }]
+    return [name, { type, options }]
   })
   return Object.fromEntries(fields)
 }

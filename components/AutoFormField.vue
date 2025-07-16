@@ -129,7 +129,7 @@ function onSelectMenuOpen() {
       v-else-if="field.type === 'select'"
       v-model="fieldValue"
       class="w-full"
-      :items="field.enumValues"
+      :items="field.options"
     />
 
     <!-- JSON textarea -->

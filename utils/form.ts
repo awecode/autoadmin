@@ -12,7 +12,6 @@ export interface FieldSpec {
   type: FieldType
   required?: boolean
   rules?: Rules
-  enumValues?: string[]
   options?: string[] | number[] | { label?: string, value: string | number, count?: number }[]
   selectItems?: { label: string, value: string }[]
   defaultValue?: unknown
@@ -39,7 +38,7 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
 
     let type: FieldType = 'text'
     const rules: Rules = {}
-    let enumValues: string[] | undefined
+    let options: string[] | undefined
 
     switch (definitionTypeKey) {
       case 'ZodString':
@@ -76,7 +75,7 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       case 'ZodEnum':
       case 'enum':
         type = 'select'
-        enumValues = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
+        options = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
         break
       case 'ZodDate':
       case 'date':
@@ -114,7 +113,7 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       type,
       required: !isOptional,
       rules,
-      enumValues,
+      options,
       defaultValue,
     }
   })
@@ -151,8 +150,8 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
       }
     }
     throw createError({
-      statusCode: 400,
-      statusMessage: `Invalid form field: ${field}`,
+      statusCode: 500,
+      statusMessage: `Invalid form field: ${typeof field === 'object' && 'name' in field ? field.name : field}`,
     })
   })
   if (cfg.o2m || cfg.m2m) {
