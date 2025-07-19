@@ -195,6 +195,15 @@ function onSelectMenuOpen() {
       v-bind="field.attrs"
     />
 
+    <Uploader
+      v-else-if="field.type === 'file'"
+      v-model="fieldValue"
+      v-bind="field.attrs"
+      type="file"
+      :label="field.label"
+      :name="field.name"
+    />
+
     <UInput
       v-else-if="field.type === 'blob'"
       v-model="fieldValue"

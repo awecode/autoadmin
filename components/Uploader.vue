@@ -1,22 +1,26 @@
 <script setup lang="ts">
-const { modelValue = undefined, allowedExtensions = ['.jpg', '.jpeg', '.png'], prefix, type = undefined } = defineProps<{
+const props = defineProps<{
   label: string
   name: string
   modelValue?: string | number | undefined | null
   allowedExtensions?: string[]
   prefix?: string
-  type?: string
+  type?: 'file' | 'image'
+  attrs?: Record<string, any>
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | undefined]
 }>()
 
-const imageRef = useTemplateRef('imageRef')
+const allowedExtensions = props.allowedExtensions ?? props.type === 'image' ? ['.jpg', '.jpeg', '.png'] : []
+const type = props.type ?? 'file'
 
-const uploadedFile = ref(modelValue)
+const fileRef = useTemplateRef('fileRef')
 
-const fileUrl = ref(typeof modelValue === 'string' ? modelValue : undefined)
+const uploadedFile = ref(props.modelValue)
+
+const fileUrl = ref(typeof props.modelValue === 'string' ? props.modelValue : undefined)
 
 const isFileUploading = ref(false)
 
@@ -48,15 +52,15 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
 
   const currentExtension = `.${file.name.split('.').pop()}` as string
 
-  if (file && !allowedExtensions.includes(currentExtension)) {
+  if (file && allowedExtensions.length > 0 && !allowedExtensions.includes(currentExtension)) {
     toast.add({
-      title: 'Invalid file type',
+      title: `Invalid file type - ${currentExtension}`,
       icon: 'i-heroicons-exclamation-triangle',
-      color: 'red',
+      color: 'error',
     })
     isFileUploading.value = false
-    if (imageRef.value) {
-      imageRef.value.input.value = ''
+    if (fileRef.value?.inputRef) {
+      fileRef.value.inputRef.value = ''
     }
     return
   }
@@ -66,11 +70,11 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       title: 'File size is too large',
       description: 'Please upload a file smaller than 2MB',
       icon: 'i-heroicons-exclamation-triangle',
-      color: 'red',
+      color: 'error',
     })
     isFileUploading.value = false
-    if (imageRef.value) {
-      imageRef.value.input.value = ''
+    if (fileRef.value?.inputRef) {
+      fileRef.value.inputRef.value = ''
     }
     return
   }
@@ -78,7 +82,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file) {
     const formData = new FormData()
     formData.append('file', file)
-    const { data: uploadedImageUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${prefix || ''}`, {
+    const { data: uploadedImageUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}`, {
       method: 'POST',
       body: formData,
     })
@@ -86,11 +90,11 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       toast.add({
         title: error.value.data?.message || 'Something went wrong!',
         icon: 'i-heroicons-exclamation-triangle',
-        color: 'red',
+        color: 'error',
       })
       onImageClear()
-      if (imageRef.value?.inputRef) {
-        imageRef.value.inputRef.value = ''
+      if (fileRef.value?.inputRef) {
+        fileRef.value.inputRef.value = ''
       }
     }
     if (uploadedImageUrl.value) {
@@ -106,7 +110,7 @@ const allowedExtensionsString = allowedExtensions.join(',')
 
 function onClick() {
   if (isFileUploading.value) return
-  imageRef.value?.inputRef?.click()
+  fileRef.value?.inputRef?.click()
 }
 
 const onFileDrop = (event: DragEvent) => {
@@ -119,7 +123,7 @@ const onFileDrop = (event: DragEvent) => {
       toast.add({
         title: 'Upload Error!',
         description: 'Please upload single file.',
-        color: 'red',
+        color: 'error',
       })
     }
   }
@@ -137,10 +141,11 @@ const dragOverHandler = (event: Event) => {
     @click="onClick"
   >
     <UInput
-      ref="imageRef"
+      ref="fileRef"
       class="hidden"
       type="file"
       :accept="allowedExtensionsString"
+      v-bind="attrs"
       @change="handleFileChange"
     />
     <div v-if="isFileUploading">
@@ -236,7 +241,7 @@ const dragOverHandler = (event: Event) => {
           <path d="m21 17.105l-1.967-1.967a.46.46 0 0 0-.652 0l-1.967 1.967" stroke-linejoin="miter" />
         </g>
       </svg>
-      <span class="text-base text-heading-tertiary">{{ `Drag and drop ${type || 'image'} here` }}</span>
+      <span class="text-base text-heading-tertiary">{{ `Drag and drop ${type} here` }}</span>
       <span class="text-base text-heading-tertiary">OR</span>
       <UButton
         class="text-swa-cerulean hover:bg-transparent"
