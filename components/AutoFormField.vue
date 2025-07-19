@@ -190,6 +190,8 @@ function onSelectMenuOpen() {
     <Uploader
       v-else-if="field.type === 'image'"
       v-model="fieldValue"
+      :label="field.label"
+      :name="field.name"
       v-bind="field.attrs"
     />
 
