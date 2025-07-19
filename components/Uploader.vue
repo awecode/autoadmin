@@ -90,25 +90,25 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     const formData = new FormData()
     formData.append('file', file)
     const fileType = encodeURIComponent(file.type)
-    const { data: uploadedFileUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}&fileType=${fileType}`, {
+    const uploadedFileUrl = await $fetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}&fileType=${fileType}`, {
       method: 'POST',
       body: formData,
+      onResponseError: (error) => {
+        toast.add({
+          title: error.response._data?.message || error.response._data?.statusMessage || 'Upload failed!',
+          icon: 'i-heroicons-exclamation-triangle',
+          color: 'error',
+        })
+        clearFile()
+        if (fileRef.value?.inputRef) {
+          fileRef.value.inputRef.value = ''
+        }
+      },
     })
-    if (error.value) {
-      toast.add({
-        title: error.value.data?.message || 'Something went wrong!',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'error',
-      })
-      clearFile()
-      if (fileRef.value?.inputRef) {
-        fileRef.value.inputRef.value = ''
-      }
-    }
-    if (uploadedFileUrl.value) {
-      uploadedFile.value = uploadedFileUrl.value
-      fileUrl.value = uploadedFileUrl.value
-      emit('update:modelValue', uploadedFileUrl.value)
+    if (uploadedFileUrl) {
+      uploadedFile.value = uploadedFileUrl
+      fileUrl.value = uploadedFileUrl
+      emit('update:modelValue', uploadedFileUrl)
     }
   }
 
