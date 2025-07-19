@@ -8,7 +8,7 @@ import { getDef, unwrapZodType } from './zod'
 
 type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
-export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file'
+export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob'
 
 export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: ListFieldType, options?: string[] }> {
   const shape = getDef(schema)?.shape ?? schema.shape
@@ -59,7 +59,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
       case 'ZodCustom':
       case 'custom':
         // Drizzle-zod uses a custom type for blobs, which we'll map to 'file'.
-        type = 'file'
+        type = 'blob'
         break
       case 'ZodRecord':
       case 'record':

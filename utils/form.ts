@@ -4,12 +4,12 @@ import { getPrimaryKeyColumn } from './relation'
 import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many' | 'textarea' | 'rich-text'
+type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many' | 'textarea' | 'rich-text' | 'blob' | 'image'
 export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export interface FieldSpec {
   name: string
-  label: string
+  label?: string
   type: FieldType
   required?: boolean
   rules?: Rules
@@ -92,7 +92,7 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
       case 'ZodCustom':
       case 'custom':
         // Drizzle-zod uses a custom type for blobs, which we'll map to 'file'.
-        type = 'file'
+        type = 'blob'
         break
       case 'ZodRecord':
       case 'record':

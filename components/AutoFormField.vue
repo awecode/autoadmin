@@ -187,6 +187,20 @@ function onSelectMenuOpen() {
       v-bind="field.attrs"
     />
 
+    <Uploader
+      v-else-if="field.type === 'image'"
+      v-model="fieldValue"
+      v-bind="field.attrs"
+    />
+
+    <UInput
+      v-else-if="field.type === 'blob'"
+      v-model="fieldValue"
+      v-bind="field.attrs"
+      type="file"
+      :accept="field.attrs?.accept"
+    />
+
     <!-- Default input (datetime-local, number, etc.) -->
     <UInput
       v-else
