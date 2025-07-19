@@ -140,14 +140,35 @@ const previewFile = () => {
   }
 }
 
-const downloadFile = () => {
+const downloadFile = async () => {
   if (fileUrl.value) {
-    const link = document.createElement('a')
-    link.href = fileUrl.value
-    link.download = fileUrl.value.split('/').pop() || 'file'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      // Fetch the file as a blob to force download regardless of Content-Disposition
+      const response = await fetch(fileUrl.value)
+      const blob = await response.blob()
+
+      // Create a blob URL and download it
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = fileUrl.value.split('/').pop() || 'file'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      console.error('Download failed:', error)
+      // Fallback to direct link if fetch fails
+      const link = document.createElement('a')
+      link.href = fileUrl.value
+      link.download = fileUrl.value.split('/').pop() || 'file'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
 }
 
@@ -238,7 +259,7 @@ const replaceFile = () => {
       <img
         v-if="['jpg', 'png', 'jpeg', 'svg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded File"
-        class="max-w-full max-h-full object-contain"
+        class="max-w-full max-h-full object-contain p-2"
         :src="fileUrl"
       />
       <UIcon v-else class="text-5xl text-heading-tertiary" name="i-heroicons-document-check" />
