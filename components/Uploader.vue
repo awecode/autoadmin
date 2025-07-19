@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatBytes } from '../utils/string'
+
 const props = defineProps<{
   label: string
   name: string
@@ -80,11 +82,12 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     }
     return
   }
+
   //  check file size
-  if (file && file.size > 2 * 1024 * 1024) {
+  if (props.config?.maxSize && file && file.size > props.config.maxSize) {
     toast.add({
       title: 'File size is too large',
-      description: 'Please upload a file smaller than 2MB',
+      description: `Please upload a file smaller than ${formatBytes(props.config.maxSize)}`,
       icon: 'i-heroicons-exclamation-triangle',
       color: 'error',
     })
