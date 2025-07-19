@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
 
   const url = await uploadToObjectStorage(parts[0].data, {
     extension: parts[0].filename?.split('.').pop() || 'bin',
+    filename: parts[0].filename,
     fileType: query.fileType,
     prefix: query.prefix,
   })
