@@ -26,7 +26,7 @@ const isFileUploading = ref(false)
 
 const toast = useToast()
 // const { t } = useI18n()
-const onImageClear = () => {
+const clearFile = () => {
   uploadedFile.value = undefined
   fileUrl.value = undefined
   emit('update:modelValue', undefined)
@@ -82,7 +82,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file) {
     const formData = new FormData()
     formData.append('file', file)
-    const { data: uploadedImageUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}`, {
+    const { data: uploadedFileUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}`, {
       method: 'POST',
       body: formData,
     })
@@ -92,15 +92,15 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
         icon: 'i-heroicons-exclamation-triangle',
         color: 'error',
       })
-      onImageClear()
+      clearFile()
       if (fileRef.value?.inputRef) {
         fileRef.value.inputRef.value = ''
       }
     }
-    if (uploadedImageUrl.value) {
-      uploadedFile.value = uploadedImageUrl.value
-      fileUrl.value = uploadedImageUrl.value
-      emit('update:modelValue', uploadedImageUrl.value)
+    if (uploadedFileUrl.value) {
+      uploadedFile.value = uploadedFileUrl.value
+      fileUrl.value = uploadedFileUrl.value
+      emit('update:modelValue', uploadedFileUrl.value)
     }
   }
 
@@ -213,7 +213,7 @@ const dragOverHandler = (event: Event) => {
     <div v-else-if="fileUrl">
       <img
         v-if="['jpg', 'png', 'jpeg'].includes(fileUrl.split('.').pop() || '%%^^')"
-        alt="Uploaded Image"
+        alt="Uploaded File"
         class="absolute left-0 top-0 h-full w-full object-contain"
         :src="fileUrl"
       />
