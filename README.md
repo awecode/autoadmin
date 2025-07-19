@@ -1,0 +1,1 @@
+- File config max size and accept are only validated on the client side.

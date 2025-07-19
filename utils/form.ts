@@ -20,6 +20,12 @@ export interface FieldSpec {
   help?: string
   hint?: string
   description?: string
+  /** Configuration for file/image upload fields. Only applicable when type is 'file' or 'image' */
+  fileConfig?: {
+    accept?: string[]
+    prefix?: string
+    maxSize?: number
+  }
 }
 export interface FormSpec {
   fields: FieldSpec[]
