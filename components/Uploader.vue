@@ -233,17 +233,17 @@ const replaceFile = () => {
         Uploading...
       </div>
     </div>
-    <div v-else-if="fileUrl" class="relative h-full w-full">
+    <div v-else-if="fileUrl" class="absolute inset-0 flex items-center justify-center">
       <img
         v-if="['jpg', 'png', 'jpeg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded File"
-        class="absolute left-0 top-0 h-full w-full object-contain"
+        class="max-w-full max-h-full object-contain"
         :src="fileUrl"
       />
       <UIcon v-else class="text-5xl text-heading-tertiary" name="i-heroicons-document-check" />
 
       <!-- Hover overlay with action icons -->
-      <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+      <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 pointer-events-none group-hover:pointer-events-auto">
         <UButton
           class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
           icon="i-lucide-eye"
