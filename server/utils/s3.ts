@@ -9,9 +9,9 @@ if (typeof globalThis.crypto === 'undefined') {
   globalThis.crypto = new Crypto()
 }
 
-const imageExtensions = ['jpeg', 'jpg', 'png']
+const inlineTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml']
 
-export default async function uploadToObjectStorage(file: Buffer | File, extension: string = 'jpeg', prefix?: string) {
+export default async function uploadToObjectStorage(file: Buffer | File, extension: string = 'jpeg', fileType?: string, prefix?: string) {
   const { s3 } = useRuntimeConfig()
   if (!s3.accessKey || !s3.secretKey || !s3.bucketName || !s3.endpointUrl || !s3.region) {
     throw new Error('Object storage is not configured correctly. Please check your environment variables.')
@@ -41,8 +41,8 @@ export default async function uploadToObjectStorage(file: Buffer | File, extensi
     'X-Amz-Acl': 'public-read',
   }
 
-  if (imageExtensions.includes(extension)) {
-    headers['Content-Type'] = `image/${extension}`
+  if (fileType && inlineTypes.includes(fileType)) {
+    headers['Content-Type'] = fileType
     headers['Content-Disposition'] = 'inline'
   }
 

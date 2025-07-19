@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
 
   const query = await getValidatedQuery(event, z.object({
     prefix: z.string().optional(),
+    fileType: z.string().optional(),
   }).parse)
 
   if (!contentType?.startsWith('multipart/form-data')) {
@@ -28,7 +29,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const url = await uploadToObjectStorage(parts[0].data, parts[0].filename?.split('.').pop() || 'bin', query.prefix)
+  const url = await uploadToObjectStorage(parts[0].data, parts[0].filename?.split('.').pop() || 'bin', query.fileType, query.prefix)
 
   return url
 })

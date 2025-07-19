@@ -13,7 +13,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string | undefined]
 }>()
 
-const allowedExtensions = props.allowedExtensions ?? props.type === 'image' ? ['.jpg', '.jpeg', '.png'] : []
+const allowedExtensions = props.allowedExtensions ?? props.type === 'image' ? ['.jpg', '.jpeg', '.png', '.svg'] : []
 const type = props.type ?? 'file'
 
 const fileRef = useTemplateRef('fileRef')
@@ -82,7 +82,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file) {
     const formData = new FormData()
     formData.append('file', file)
-    const { data: uploadedFileUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}`, {
+    const fileType = encodeURIComponent(file.type)
+    const { data: uploadedFileUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}&fileType=${fileType}`, {
       method: 'POST',
       body: formData,
     })
@@ -235,7 +236,7 @@ const replaceFile = () => {
     </div>
     <div v-else-if="fileUrl" class="absolute inset-0 flex items-center justify-center">
       <img
-        v-if="['jpg', 'png', 'jpeg'].includes(fileUrl.split('.').pop() || '%%^^')"
+        v-if="['jpg', 'png', 'jpeg', 'svg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded File"
         class="max-w-full max-h-full object-contain"
         :src="fileUrl"
