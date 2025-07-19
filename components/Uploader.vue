@@ -3,8 +3,11 @@ const props = defineProps<{
   label: string
   name: string
   modelValue?: string | number | undefined | null
-  allowedExtensions?: string[]
-  prefix?: string
+  config?: {
+    accept?: string[]
+    prefix?: string
+    maxSize?: number
+  }
   type?: 'file' | 'image'
   attrs?: Record<string, any>
 }>()
@@ -15,7 +18,8 @@ const emit = defineEmits<{
 
 const dialogPreviewExtensions = ['jpg', 'png', 'jpeg', 'svg', 'pdf', 'txt', 'md']
 
-const allowedExtensions = props.allowedExtensions ?? props.type === 'image' ? ['.jpg', '.jpeg', '.png', '.svg'] : []
+const allowedExtensions = props.config?.accept ?? (props.type === 'image' ? ['.jpg', '.jpeg', '.png', '.svg'] : [])
+const allowedExtensionsString = allowedExtensions.join(', ')
 const type = props.type ?? 'file'
 
 const fileRef = useTemplateRef('fileRef')
@@ -95,7 +99,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     const formData = new FormData()
     formData.append('file', file)
     const fileType = encodeURIComponent(file.type)
-    const uploadedFileUrl = await $fetch(`/api/autoadmin/file-upload?prefix=${props.prefix || ''}&fileType=${fileType}`, {
+    const uploadedFileUrl = await $fetch(`/api/autoadmin/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
       method: 'POST',
       body: formData,
       onResponseError: (error) => {
@@ -119,7 +123,6 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
 
   isFileUploading.value = false
 }
-const allowedExtensionsString = allowedExtensions.join(',')
 
 function onClick() {
   if (isFileUploading.value) return

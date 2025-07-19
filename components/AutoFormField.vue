@@ -190,9 +190,11 @@ function onSelectMenuOpen() {
     <Uploader
       v-else-if="field.type === 'image'"
       v-model="fieldValue"
+      v-bind="field.attrs"
+      type="image"
+      :config="field.fileConfig"
       :label="field.label"
       :name="field.name"
-      v-bind="field.attrs"
     />
 
     <Uploader
@@ -200,6 +202,7 @@ function onSelectMenuOpen() {
       v-model="fieldValue"
       v-bind="field.attrs"
       type="file"
+      :config="field.fileConfig"
       :label="field.label"
       :name="field.name"
     />
