@@ -29,7 +29,6 @@ const isFileUploading = ref(false)
 // Dialog preview state
 const isPreviewDialogOpen = ref(false)
 const previewContent = ref('')
-const previewFileType = ref('')
 
 // Computed file name
 const fileName = computed(() => {
@@ -146,16 +145,17 @@ const dragOverHandler = (event: Event) => {
   event.preventDefault()
 }
 
+const extension = computed(() => {
+  if (!fileUrl.value) return ''
+  return fileUrl.value.split('.').pop()?.toLowerCase() || ''
+})
+
 // Add new functions for the hover actions
 const previewFile = async () => {
   if (fileUrl.value) {
-    const extension = fileUrl.value.split('.').pop()?.toLowerCase() || ''
-
-    if (dialogPreviewExtensions.includes(extension)) {
+    if (dialogPreviewExtensions.includes(extension.value)) {
       // Show in dialog for supported extensions
-      previewFileType.value = extension
-
-      if (['txt', 'md'].includes(extension)) {
+      if (['txt', 'md'].includes(extension.value)) {
         // Fetch text content for text files
         try {
           const response = await fetch(fileUrl.value)
@@ -295,7 +295,7 @@ const replaceFile = () => {
     <div v-else-if="fileUrl" class="absolute inset-0 flex items-center justify-center">
       <!-- Image display -->
       <img
-        v-if="['jpg', 'png', 'jpeg', 'svg'].includes(fileUrl.split('.').pop() || '%%^^')"
+        v-if="['jpg', 'png', 'jpeg', 'svg'].includes(extension)"
         alt="Uploaded File"
         class="max-w-full max-h-full object-contain px-2"
         :src="fileUrl"
@@ -308,8 +308,8 @@ const replaceFile = () => {
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-all">
             {{ fileName }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {{ fileUrl.split('.').pop()?.toUpperCase() }} File
+          <p v-if="extension?.length > 0 && extension.length < 10" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {{ extension.toUpperCase() }} File
           </p>
         </div>
       </div>
@@ -399,15 +399,15 @@ const replaceFile = () => {
     <UModal
       v-model:open="isPreviewDialogOpen"
       fullscreen
-      :description="`Preview of the file ${previewFileType}`"
-      :title="`Preview ${previewFileType}`"
+      :description="`Preview of the file ${extension}`"
+      :title="`Preview ${extension}`"
     >
       <template #content>
         <div class="flex flex-col h-full">
           <div class="flex-1 flex items-center justify-center p-4 overflow-auto">
             <!-- Image preview -->
             <img
-              v-if="['jpg', 'png', 'jpeg', 'svg'].includes(previewFileType)"
+              v-if="['jpg', 'png', 'jpeg', 'svg'].includes(extension)"
               alt="Preview"
               class="max-w-full max-h-[80vh] object-contain"
               :src="previewContent"
@@ -415,7 +415,7 @@ const replaceFile = () => {
 
             <!-- PDF preview -->
             <iframe
-              v-else-if="previewFileType === 'pdf'"
+              v-else-if="extension === 'pdf'"
               class="w-full h-[80vh]"
               frameborder="0"
               :src="previewContent"
@@ -423,7 +423,7 @@ const replaceFile = () => {
 
             <!-- Text content preview -->
             <div
-              v-else-if="['txt', 'md'].includes(previewFileType)"
+              v-else-if="['txt', 'md'].includes(extension)"
               class="w-full max-h-full"
             >
               <pre class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded dark:bg-gray-800 dark:text-white">{{ previewContent }}</pre>
