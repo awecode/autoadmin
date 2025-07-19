@@ -374,42 +374,47 @@ const replaceFile = () => {
       :title="`Preview ${previewFileType}`"
     >
       <template #content>
-        <div>
-          <!-- Image preview -->
-          <img
-            v-if="['jpg', 'png', 'jpeg', 'svg'].includes(previewFileType)"
-            alt="Preview"
-            :src="previewContent"
-          />
+        <div class="flex flex-col h-full">
+          <div class="flex-1 flex items-center justify-center p-4 overflow-auto">
+            <!-- Image preview -->
+            <img
+              v-if="['jpg', 'png', 'jpeg', 'svg'].includes(previewFileType)"
+              alt="Preview"
+              class="max-w-full max-h-[80vh] object-contain"
+              :src="previewContent"
+            />
 
-          <!-- PDF preview -->
-          <iframe
-            v-else-if="previewFileType === 'pdf'"
-            class="w-full h-[90vh]"
-            frameborder="0"
-            :src="previewContent"
-          ></iframe>
+            <!-- PDF preview -->
+            <iframe
+              v-else-if="previewFileType === 'pdf'"
+              class="w-full h-[80vh]"
+              frameborder="0"
+              :src="previewContent"
+            ></iframe>
 
-          <!-- Text content preview -->
-          <pre
-            v-else-if="['txt', 'md'].includes(previewFileType)"
-            class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded dark:bg-gray-800 dark:text-white"
-          >{{ previewContent }}</pre>
-        </div>
+            <!-- Text content preview -->
+            <div
+              v-else-if="['txt', 'md'].includes(previewFileType)"
+              class="w-full max-h-full"
+            >
+              <pre class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded dark:bg-gray-800 dark:text-white">{{ previewContent }}</pre>
+            </div>
+          </div>
 
-        <div class="flex justify-end gap-2 m-2">
-          <UButton
-            variant="outline"
-            @click="isPreviewDialogOpen = false"
-          >
-            Close
-          </UButton>
-          <UButton
-            icon="i-lucide-download"
-            @click="downloadFile"
-          >
-            Download
-          </UButton>
+          <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+            <UButton
+              variant="outline"
+              @click="isPreviewDialogOpen = false"
+            >
+              Close
+            </UButton>
+            <UButton
+              icon="i-lucide-download"
+              @click="downloadFile"
+            >
+              Download
+            </UButton>
+          </div>
         </div>
       </template>
     </UModal>
