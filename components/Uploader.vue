@@ -78,7 +78,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file) {
     const formData = new FormData()
     formData.append('file', file)
-    const { data: uploadedImageUrl, error } = await useFetch(`/api/file-upload?folder=${folder || ''}`, {
+    const { data: uploadedImageUrl, error } = await useFetch(`/api/autoadmin/file-upload?folder=${folder || ''}`, {
       method: 'POST',
       body: formData,
     })
@@ -206,7 +206,7 @@ const dragOverHandler = (event: Event) => {
       </div>
     </div>
     <div v-else-if="fileUrl">
-      <NuxtImg
+      <img
         v-if="['jpg', 'png', 'jpeg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded Image"
         class="absolute left-0 top-0 h-full w-full object-contain"

@@ -16,6 +16,14 @@ export default defineNuxtConfig({
     public: {
       apiPrefix: '/api/autoadmin',
     },
+    s3: {
+      accessKey: undefined,
+      secretKey: undefined,
+      bucketName: undefined,
+      endpointUrl: undefined,
+      region: 'us-east-1',
+      publicUrl: undefined,
+    },
   },
   $meta: {
     name: 'autoadmin',

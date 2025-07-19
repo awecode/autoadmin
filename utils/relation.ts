@@ -150,7 +150,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       const field = { ...updatedFormSpec.fields[fieldIndex] }
       field.type = 'relation'
       //   strip id from field label
-      field.label = field.label.replace(' Id', '')
+      field.label = (field.label || field.name).replace(' Id', '')
       if (formSpec.values?.[relation.column.name]) {
         const db = useDb()
         // TODO only select the columns that are needed for the form spec
