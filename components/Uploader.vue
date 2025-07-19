@@ -131,11 +131,34 @@ const onFileDrop = (event: DragEvent) => {
 const dragOverHandler = (event: Event) => {
   event.preventDefault()
 }
+
+// Add new functions for the hover actions
+const previewFile = () => {
+  if (fileUrl.value) {
+    window.open(fileUrl.value, '_blank')
+  }
+}
+
+const downloadFile = () => {
+  if (fileUrl.value) {
+    const link = document.createElement('a')
+    link.href = fileUrl.value
+    link.download = fileUrl.value.split('/').pop() || 'file'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+}
+
+const replaceFile = () => {
+  if (isFileUploading.value) return
+  fileRef.value?.inputRef?.click()
+}
 </script>
 
 <template>
   <div
-    class="relative grid h-28 w-full cursor-pointer place-content-center border border-dashed"
+    class="relative grid h-28 w-full cursor-pointer place-content-center border border-dashed group"
     :ondragover="dragOverHandler"
     :ondrop="onFileDrop"
     @click="onClick"
@@ -210,7 +233,7 @@ const dragOverHandler = (event: Event) => {
         Uploading...
       </div>
     </div>
-    <div v-else-if="fileUrl">
+    <div v-else-if="fileUrl" class="relative h-full w-full">
       <img
         v-if="['jpg', 'png', 'jpeg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded File"
@@ -218,6 +241,38 @@ const dragOverHandler = (event: Event) => {
         :src="fileUrl"
       />
       <UIcon v-else class="text-5xl text-heading-tertiary" name="i-heroicons-document-check" />
+
+      <!-- Hover overlay with action icons -->
+      <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+        <UButton
+          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
+          icon="i-lucide-eye"
+          size="xl"
+          variant="ghost"
+          @click.stop="previewFile"
+        />
+        <UButton
+          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
+          icon="i-lucide-download"
+          size="xl"
+          variant="ghost"
+          @click.stop="downloadFile"
+        />
+        <UButton
+          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
+          icon="i-lucide-trash"
+          size="xl"
+          variant="ghost"
+          @click.stop="clearFile"
+        />
+        <UButton
+          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
+          icon="i-lucide-refresh-cw"
+          size="xl"
+          variant="ghost"
+          @click.stop="replaceFile"
+        />
+      </div>
     </div>
     <div v-else class="flex items-center gap-4 text-xl md:text-3xl" draggable="false">
       <svg
