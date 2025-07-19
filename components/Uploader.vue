@@ -367,63 +367,50 @@ const replaceFile = () => {
     </div>
 
     <!-- Preview Dialog -->
-    <UModal v-model:open="isPreviewDialogOpen" :description="`Preview of the file ${previewFileType}`" :title="`Preview ${previewFileType}`">
-      <template #header>
-        <UCard class="max-w-4xl w-full">
-          <template #body>
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold">
-                File Preview
-              </h3>
-              <UButton
-                icon="i-lucide-x"
-                variant="ghost"
-                @click="isPreviewDialogOpen = false"
-              />
-            </div>
-          </template>
+    <UModal
+      v-model:open="isPreviewDialogOpen"
+      fullscreen
+      :description="`Preview of the file ${previewFileType}`"
+      :title="`Preview ${previewFileType}`"
+    >
+      <template #content>
+        <div>
+          <!-- Image preview -->
+          <img
+            v-if="['jpg', 'png', 'jpeg', 'svg'].includes(previewFileType)"
+            alt="Preview"
+            :src="previewContent"
+          />
 
-          <div class="max-h-96 overflow-auto">
-            <!-- Image preview -->
-            <img
-              v-if="['jpg', 'png', 'jpeg', 'svg'].includes(previewFileType)"
-              alt="Preview"
-              class="w-full h-auto object-contain"
-              :src="previewContent"
-            />
+          <!-- PDF preview -->
+          <iframe
+            v-else-if="previewFileType === 'pdf'"
+            class="w-full h-[90vh]"
+            frameborder="0"
+            :src="previewContent"
+          ></iframe>
 
-            <!-- PDF preview -->
-            <iframe
-              v-else-if="previewFileType === 'pdf'"
-              class="w-full h-96"
-              frameborder="0"
-              :src="previewContent"
-            ></iframe>
+          <!-- Text content preview -->
+          <pre
+            v-else-if="['txt', 'md'].includes(previewFileType)"
+            class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded dark:bg-gray-800 dark:text-white"
+          >{{ previewContent }}</pre>
+        </div>
 
-            <!-- Text content preview -->
-            <pre
-              v-else-if="['txt', 'md'].includes(previewFileType)"
-              class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded"
-            >{{ previewContent }}</pre>
-          </div>
-
-          <template #footer>
-            <div class="flex justify-end gap-2">
-              <UButton
-                variant="outline"
-                @click="isPreviewDialogOpen = false"
-              >
-                Close
-              </UButton>
-              <UButton
-                icon="i-lucide-download"
-                @click="downloadFile"
-              >
-                Download
-              </UButton>
-            </div>
-          </template>
-        </UCard>
+        <div class="flex justify-end gap-2 m-2">
+          <UButton
+            variant="outline"
+            @click="isPreviewDialogOpen = false"
+          >
+            Close
+          </UButton>
+          <UButton
+            icon="i-lucide-download"
+            @click="downloadFile"
+          >
+            Download
+          </UButton>
+        </div>
       </template>
     </UModal>
   </div>
