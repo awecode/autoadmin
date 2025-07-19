@@ -13,6 +13,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: string | undefined]
 }>()
 
+const dialogPreviewExtensions = ['jpg', 'png', 'jpeg', 'svg', 'pdf', 'txt', 'md']
+
 const allowedExtensions = props.allowedExtensions ?? props.type === 'image' ? ['.jpg', '.jpeg', '.png', '.svg'] : []
 const type = props.type ?? 'file'
 
@@ -23,6 +25,11 @@ const uploadedFile = ref(props.modelValue)
 const fileUrl = ref(typeof props.modelValue === 'string' ? props.modelValue : undefined)
 
 const isFileUploading = ref(false)
+
+// Dialog preview state
+const isPreviewDialogOpen = ref(false)
+const previewContent = ref('')
+const previewFileType = ref('')
 
 const toast = useToast()
 // const { t } = useI18n()
@@ -134,9 +141,33 @@ const dragOverHandler = (event: Event) => {
 }
 
 // Add new functions for the hover actions
-const previewFile = () => {
+const previewFile = async () => {
   if (fileUrl.value) {
-    window.open(fileUrl.value, '_blank')
+    const extension = fileUrl.value.split('.').pop()?.toLowerCase() || ''
+
+    if (dialogPreviewExtensions.includes(extension)) {
+      // Show in dialog for supported extensions
+      previewFileType.value = extension
+
+      if (['txt', 'md'].includes(extension)) {
+        // Fetch text content for text files
+        try {
+          const response = await fetch(fileUrl.value)
+          previewContent.value = await response.text()
+        } catch (error) {
+          console.error('Failed to fetch text content:', error)
+          previewContent.value = 'Failed to load file content'
+        }
+      } else {
+        // For images, SVG, PDF - use the URL directly
+        previewContent.value = fileUrl.value
+      }
+
+      isPreviewDialogOpen.value = true
+    } else {
+      // Fall back to opening in new tab for unsupported extensions
+      window.open(fileUrl.value, '_blank')
+    }
   }
 }
 
@@ -259,7 +290,7 @@ const replaceFile = () => {
       <img
         v-if="['jpg', 'png', 'jpeg', 'svg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded File"
-        class="max-w-full max-h-full object-contain p-2"
+        class="max-w-full max-h-full object-contain px-2"
         :src="fileUrl"
       />
       <UIcon v-else class="text-5xl text-heading-tertiary" name="i-heroicons-document-check" />
@@ -284,10 +315,10 @@ const replaceFile = () => {
             @click.stop="downloadFile"
           />
         </UTooltip>
-        <UTooltip text="Delete">
+        <UTooltip text="Clear">
           <UButton
             class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
-            icon="i-lucide-trash"
+            icon="i-lucide-x"
             size="xl"
             variant="ghost"
             @click.stop="clearFile"
@@ -334,5 +365,66 @@ const replaceFile = () => {
         variant="outline"
       />
     </div>
+
+    <!-- Preview Dialog -->
+    <UModal v-model:open="isPreviewDialogOpen" :description="`Preview of the file ${previewFileType}`" :title="`Preview ${previewFileType}`">
+      <template #header>
+        <UCard class="max-w-4xl w-full">
+          <template #body>
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold">
+                File Preview
+              </h3>
+              <UButton
+                icon="i-lucide-x"
+                variant="ghost"
+                @click="isPreviewDialogOpen = false"
+              />
+            </div>
+          </template>
+
+          <div class="max-h-96 overflow-auto">
+            <!-- Image preview -->
+            <img
+              v-if="['jpg', 'png', 'jpeg', 'svg'].includes(previewFileType)"
+              alt="Preview"
+              class="w-full h-auto object-contain"
+              :src="previewContent"
+            />
+
+            <!-- PDF preview -->
+            <iframe
+              v-else-if="previewFileType === 'pdf'"
+              class="w-full h-96"
+              frameborder="0"
+              :src="previewContent"
+            ></iframe>
+
+            <!-- Text content preview -->
+            <pre
+              v-else-if="['txt', 'md'].includes(previewFileType)"
+              class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded"
+            >{{ previewContent }}</pre>
+          </div>
+
+          <template #footer>
+            <div class="flex justify-end gap-2">
+              <UButton
+                variant="outline"
+                @click="isPreviewDialogOpen = false"
+              >
+                Close
+              </UButton>
+              <UButton
+                icon="i-lucide-download"
+                @click="downloadFile"
+              >
+                Download
+              </UButton>
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
   </div>
 </template>
