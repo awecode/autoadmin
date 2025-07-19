@@ -16,6 +16,11 @@ const emit = defineEmits<{
 
 const editor = useEditor({
   content: props.modelValue || '',
+  editorProps: {
+    attributes: {
+      class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
+    },
+  },
   extensions: [
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle.configure({ types: [ListItem.name] }),
