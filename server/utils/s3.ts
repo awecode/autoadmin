@@ -1,3 +1,4 @@
+import type { Buffer } from 'node:buffer'
 import { Crypto } from '@peculiar/webcrypto'
 
 import { AwsClient } from 'aws4fetch'
@@ -10,7 +11,7 @@ if (typeof globalThis.crypto === 'undefined') {
 
 const imageExtensions = ['jpeg', 'jpg', 'png']
 
-export default async function uploadToObjectStorage(file: Buffer | File, extension: string = 'jpeg', folder?: string) {
+export default async function uploadToObjectStorage(file: Buffer | File, extension: string = 'jpeg', prefix?: string) {
   const { s3 } = useRuntimeConfig()
   if (!s3.accessKey || !s3.secretKey || !s3.bucketName || !s3.endpointUrl || !s3.region) {
     throw new Error('Object storage is not configured correctly. Please check your environment variables.')
@@ -22,7 +23,11 @@ export default async function uploadToObjectStorage(file: Buffer | File, extensi
     region: s3.region,
   })
 
-  let filename = folder ? `${folder}/${uuid()}` : uuid()
+  if (prefix && prefix.endsWith('/')) {
+    prefix = prefix.slice(0, -1)
+  }
+
+  let filename = prefix ? `${prefix}/${uuid()}` : uuid()
 
   filename = `${filename}.${extension}`
 

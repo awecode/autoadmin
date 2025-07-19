@@ -1,10 +1,10 @@
 <script setup lang="ts">
-const { modelValue = undefined, allowedExtensions = ['.jpg', '.jpeg', '.png'], folder, type = undefined } = defineProps<{
+const { modelValue = undefined, allowedExtensions = ['.jpg', '.jpeg', '.png'], prefix, type = undefined } = defineProps<{
   label: string
   name: string
   modelValue?: string | number | undefined | null
   allowedExtensions?: string[]
-  folder?: string
+  prefix?: string
   type?: string
 }>()
 
@@ -78,7 +78,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file) {
     const formData = new FormData()
     formData.append('file', file)
-    const { data: uploadedImageUrl, error } = await useFetch(`/api/autoadmin/file-upload?folder=${folder || ''}`, {
+    const { data: uploadedImageUrl, error } = await useFetch(`/api/autoadmin/file-upload?prefix=${prefix || ''}`, {
       method: 'POST',
       body: formData,
     })
@@ -89,8 +89,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
         color: 'red',
       })
       onImageClear()
-      if (imageRef.value) {
-        imageRef.value.input.value = ''
+      if (imageRef.value?.inputRef) {
+        imageRef.value.inputRef.value = ''
       }
     }
     if (uploadedImageUrl.value) {
@@ -210,7 +210,7 @@ const dragOverHandler = (event: Event) => {
         v-if="['jpg', 'png', 'jpeg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded Image"
         class="absolute left-0 top-0 h-full w-full object-contain"
-        :src="getMediaUrl(fileUrl)"
+        :src="fileUrl"
       />
       <UIcon v-else class="text-5xl text-heading-tertiary" name="i-heroicons-document-check" />
     </div>

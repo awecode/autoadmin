@@ -15,6 +15,9 @@ export function useWarnOnUnsavedChanges(
 
   // Initialize original state and track changes
   watchEffect(() => {
+    if (!enabled) {
+      return
+    }
     if (initialValues && Object.keys(originalState.value).length === 0) {
       originalState.value = { ...initialValues }
     }
@@ -22,6 +25,9 @@ export function useWarnOnUnsavedChanges(
 
   // Watch for changes in form state
   watch(formState, (newState) => {
+    if (!enabled) {
+      return
+    }
     if (!warnOnEmptyForm && Object.keys(initialValues || {}).length === 0) {
       originalState.value = { ...newState }
       hasUnsavedChanges.value = false
@@ -39,7 +45,7 @@ export function useWarnOnUnsavedChanges(
 
   // Browser beforeunload warning
   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-    if (hasUnsavedChanges.value) {
+    if (enabled && hasUnsavedChanges.value) {
       event.preventDefault()
       event.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
       return event.returnValue
@@ -54,7 +60,7 @@ export function useWarnOnUnsavedChanges(
 
     // Add router beforeEach guard for navigation warning
     router.beforeEach((to, from, next) => {
-      if (hasUnsavedChanges.value && enabled) {
+      if (enabled && hasUnsavedChanges.value) {
         // eslint-disable-next-line no-alert
         const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?')
         if (confirmed) {
@@ -74,8 +80,10 @@ export function useWarnOnUnsavedChanges(
   })
 
   const updateOriginalState = (newState: Record<string, any>) => {
-    originalState.value = { ...newState }
-    hasUnsavedChanges.value = false
+    if (enabled) {
+      originalState.value = { ...newState }
+      hasUnsavedChanges.value = false
+    }
   }
 
   return {
