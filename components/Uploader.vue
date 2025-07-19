@@ -31,6 +31,12 @@ const isPreviewDialogOpen = ref(false)
 const previewContent = ref('')
 const previewFileType = ref('')
 
+// Computed file name
+const fileName = computed(() => {
+  if (!fileUrl.value) return ''
+  return decodeURIComponent(fileUrl.value.split('/').pop() || '')
+})
+
 const toast = useToast()
 // const { t } = useI18n()
 const clearFile = () => {
@@ -287,52 +293,75 @@ const replaceFile = () => {
       </div>
     </div>
     <div v-else-if="fileUrl" class="absolute inset-0 flex items-center justify-center">
+      <!-- Image display -->
       <img
         v-if="['jpg', 'png', 'jpeg', 'svg'].includes(fileUrl.split('.').pop() || '%%^^')"
         alt="Uploaded File"
         class="max-w-full max-h-full object-contain px-2"
         :src="fileUrl"
       />
-      <UIcon v-else class="text-5xl text-heading-tertiary" name="i-heroicons-document-check" />
+
+      <!-- Non-image file display -->
+      <div v-else class="flex flex-col items-center justify-center text-center px-4 py-2">
+        <UIcon class="mb-3 text-2xl" name="i-heroicons-document-check" />
+        <div class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 max-w-full">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-all">
+            {{ fileName }}
+          </p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {{ fileUrl.split('.').pop()?.toUpperCase() }} File
+          </p>
+        </div>
+      </div>
 
       <!-- Hover overlay with action icons -->
-      <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 pointer-events-none group-hover:pointer-events-auto">
-        <UTooltip text="Preview">
-          <UButton
-            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
-            icon="i-lucide-eye"
-            size="xl"
-            variant="ghost"
-            @click.stop="previewFile"
-          />
-        </UTooltip>
-        <UTooltip text="Download">
-          <UButton
-            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
-            icon="i-lucide-download"
-            size="xl"
-            variant="ghost"
-            @click.stop="downloadFile"
-          />
-        </UTooltip>
-        <UTooltip text="Clear">
-          <UButton
-            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
-            icon="i-lucide-x"
-            size="xl"
-            variant="ghost"
-            @click.stop="clearFile"
-          />
-        </UTooltip>
-        <UTooltip text="Replace">
-          <UButton
-            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
-            icon="i-lucide-refresh-cw"
-            size="xl"
-            variant="ghost"
-            @click.stop="replaceFile"
-          />
-        </UTooltip>
+      <div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-4 pointer-events-none group-hover:pointer-events-auto">
+        <!-- File name display -->
+        <div class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 rounded-lg px-4 py-2 shadow-lg max-w-[80%]">
+          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 text-center break-all">
+            {{ fileName }}
+          </p>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex items-center gap-3">
+          <UTooltip text="Preview">
+            <UButton
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+              icon="i-lucide-eye"
+              size="xl"
+              variant="ghost"
+              @click.stop="previewFile"
+            />
+          </UTooltip>
+          <UTooltip text="Download">
+            <UButton
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+              icon="i-lucide-download"
+              size="xl"
+              variant="ghost"
+              @click.stop="downloadFile"
+            />
+          </UTooltip>
+          <UTooltip text="Clear">
+            <UButton
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+              icon="i-lucide-x"
+              size="xl"
+              variant="ghost"
+              @click.stop="clearFile"
+            />
+          </UTooltip>
+          <UTooltip text="Replace">
+            <UButton
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+              icon="i-lucide-refresh-cw"
+              size="xl"
+              variant="ghost"
+              @click.stop="replaceFile"
+            />
+          </UTooltip>
+        </div>
       </div>
     </div>
     <div v-else class="flex items-center gap-4 text-xl md:text-3xl" draggable="false">
