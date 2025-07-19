@@ -266,34 +266,42 @@ const replaceFile = () => {
 
       <!-- Hover overlay with action icons -->
       <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 pointer-events-none group-hover:pointer-events-auto">
-        <UButton
-          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
-          icon="i-lucide-eye"
-          size="xl"
-          variant="ghost"
-          @click.stop="previewFile"
-        />
-        <UButton
-          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
-          icon="i-lucide-download"
-          size="xl"
-          variant="ghost"
-          @click.stop="downloadFile"
-        />
-        <UButton
-          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
-          icon="i-lucide-trash"
-          size="xl"
-          variant="ghost"
-          @click.stop="clearFile"
-        />
-        <UButton
-          class="text-white hover:bg-white hover:bg-opacity-20 rounded-full"
-          icon="i-lucide-refresh-cw"
-          size="xl"
-          variant="ghost"
-          @click.stop="replaceFile"
-        />
+        <UTooltip text="Preview">
+          <UButton
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+            icon="i-lucide-eye"
+            size="xl"
+            variant="ghost"
+            @click.stop="previewFile"
+          />
+        </UTooltip>
+        <UTooltip text="Download">
+          <UButton
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+            icon="i-lucide-download"
+            size="xl"
+            variant="ghost"
+            @click.stop="downloadFile"
+          />
+        </UTooltip>
+        <UTooltip text="Delete">
+          <UButton
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+            icon="i-lucide-trash"
+            size="xl"
+            variant="ghost"
+            @click.stop="clearFile"
+          />
+        </UTooltip>
+        <UTooltip text="Replace">
+          <UButton
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
+            icon="i-lucide-refresh-cw"
+            size="xl"
+            variant="ghost"
+            @click.stop="replaceFile"
+          />
+        </UTooltip>
       </div>
     </div>
     <div v-else class="flex items-center gap-4 text-xl md:text-3xl" draggable="false">
