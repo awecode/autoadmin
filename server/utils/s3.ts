@@ -49,8 +49,13 @@ export default async function uploadToObjectStorage(file: Buffer | File, extensi
 
   const response = await fetch(request)
 
+  let publicUrl = s3.publicUrl || ''
+  if (publicUrl.endsWith('/')) {
+    publicUrl = publicUrl.slice(0, -1)
+  }
+
   if (response.ok) {
-    return `${filename}`
+    return `${publicUrl}/${filename}`
   } else {
     throw new Error(`Error uploading file to object storage: ${response.statusText}`)
   }
