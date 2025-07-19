@@ -42,132 +42,113 @@ watch(() => props.modelValue, (value) => {
   <div v-bind="attrs">
     <div v-if="editor" class="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
       <!-- Toolbar -->
-      <div class="flex flex-wrap gap-1 p-3 border-b bg-gray-50 dark:bg-gray-800">
+      <div class="toolbar flex flex-wrap gap-1 p-3 border-b bg-gray-50 dark:bg-gray-800">
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('bold') }"
+          :data-active="editor.isActive('bold')"
           :disabled="!editor.can().chain().focus().toggleBold().run()"
           @click="editor.chain().focus().toggleBold().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:bold" />
+          <Icon name="lucide:bold" />
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('italic') }"
+          :data-active="editor.isActive('italic')"
           :disabled="!editor.can().chain().focus().toggleItalic().run()"
           @click="editor.chain().focus().toggleItalic().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:italic" />
+          <Icon name="lucide:italic" />
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('strike') }"
+          :data-active="editor.isActive('strike')"
           :disabled="!editor.can().chain().focus().toggleStrike().run()"
           @click="editor.chain().focus().toggleStrike().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:strikethrough" />
+          <Icon name="lucide:strikethrough" />
         </button>
 
-        <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
-          type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('code') }"
-          :disabled="!editor.can().chain().focus().toggleCode().run()"
-          @click="editor.chain().focus().toggleCode().run()"
-        >
-          <Icon class="w-4 h-4" name="lucide:code" />
-        </button>
-
-        <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+        <div data-divider></div>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-semibold"
+          data-text-btn="true"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('heading', { level: 1 }) }"
+          :data-active="editor.isActive('heading', { level: 1 })"
           @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
         >
           H1
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-semibold"
+          data-text-btn="true"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('heading', { level: 2 }) }"
+          :data-active="editor.isActive('heading', { level: 2 })"
           @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
         >
           H2
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-semibold"
+          data-text-btn="true"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('heading', { level: 3 }) }"
+          :data-active="editor.isActive('heading', { level: 3 })"
           @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
         >
           H3
         </button>
 
-        <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+        <div data-divider></div>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('bulletList') }"
+          :data-active="editor.isActive('bulletList')"
           @click="editor.chain().focus().toggleBulletList().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:list" />
+          <Icon name="lucide:list" />
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('orderedList') }"
+          :data-active="editor.isActive('orderedList')"
           @click="editor.chain().focus().toggleOrderedList().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:list-ordered" />
+          <Icon name="lucide:list-ordered" />
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('blockquote') }"
+          :data-active="editor.isActive('blockquote')"
           @click="editor.chain().focus().toggleBlockquote().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:quote" />
+          <Icon name="lucide:quote" />
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           type="button"
-          :class="{ 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300': editor.isActive('codeBlock') }"
+          :data-active="editor.isActive('codeBlock')"
           @click="editor.chain().focus().toggleCodeBlock().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:code-2" />
+          <Icon name="lucide:code-2" />
         </button>
 
-        <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+        <div data-divider></div>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
           type="button"
           :disabled="!editor.can().chain().focus().undo().run()"
           @click="editor.chain().focus().undo().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:undo-2" />
+          <Icon name="lucide:undo-2" />
         </button>
 
         <button
-          class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
           type="button"
           :disabled="!editor.can().chain().focus().redo().run()"
           @click="editor.chain().focus().redo().run()"
         >
-          <Icon class="w-4 h-4" name="lucide:redo-2" />
+          <Icon name="lucide:redo-2" />
         </button>
       </div>
 
@@ -176,9 +157,63 @@ watch(() => props.modelValue, (value) => {
         <EditorContent :editor="editor" />
       </div>
     </div>
+    {{ modelValue }}
   </div>
 </template>
 
-<style>
+<style scoped>
+.toolbar button {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease-in-out;
+}
 
+.toolbar button:hover:not(:disabled) {
+  background-color: rgb(229 231 235);
+}
+
+.toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar button[data-active="true"] {
+  background-color: rgb(219 234 254);
+  color: rgb(37 99 235);
+}
+
+.toolbar button[data-text-btn="true"] {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Icon styling */
+.toolbar button :deep(svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Divider styling */
+.toolbar div[data-divider] {
+  width: 1px;
+  height: 1.5rem;
+  background-color: rgb(209 213 219);
+  margin: 0 0.25rem;
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .toolbar button:hover:not(:disabled) {
+    background-color: rgb(55 65 81);
+  }
+
+  .toolbar button[data-active="true"] {
+    background-color: rgb(30 58 138);
+    color: rgb(147 197 253);
+  }
+
+  .toolbar div[data-divider] {
+    background-color: rgb(75 85 99);
+  }
+}
 </style>
