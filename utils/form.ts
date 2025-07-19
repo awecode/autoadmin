@@ -22,8 +22,11 @@ export interface FieldSpec {
   description?: string
   /** Configuration for file/image upload fields. Only applicable when type is 'file' or 'image' */
   fileConfig?: {
-    accept?: string[]
+    /** Accept is a list of file extensions, e.g. ['.jpg', '.jpeg', '.png', '.svg'] */
+    accept?: `.${string}`[]
+    /** Prefix is a path that will be added used to store the file in the object storage bucket, e.g. 'uploads/' */
     prefix?: string
+    /** Max size is the maximum size of the file in bytes, e.g. 1024 * 1024 for 1MB */
     maxSize?: number
   }
 }
