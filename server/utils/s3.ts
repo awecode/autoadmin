@@ -11,7 +11,12 @@ if (typeof globalThis.crypto === 'undefined') {
 
 const inlineTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml']
 
-export default async function uploadToObjectStorage(file: Buffer | File, extension: string = 'jpeg', fileType?: string, prefix?: string) {
+export default async function uploadToObjectStorage(file: Buffer | File, config: {
+  extension?: string
+  filename?: string
+  fileType?: string
+  prefix?: string
+}) {
   const { s3 } = useRuntimeConfig()
   if (!s3.accessKey || !s3.secretKey || !s3.bucketName || !s3.endpointUrl || !s3.region) {
     throw new Error('Object storage is not configured correctly. Please check your environment variables.')
@@ -23,16 +28,21 @@ export default async function uploadToObjectStorage(file: Buffer | File, extensi
     region: s3.region,
   })
 
-  if (prefix && prefix.endsWith('/')) {
-    prefix = prefix.slice(0, -1)
+  const prefix = config.prefix ? (config.prefix.endsWith('/') ? config.prefix : `${config.prefix}/`) : ''
+
+  let fullFileName: string
+  if (config.filename) {
+    fullFileName = prefix ? `${prefix}${config.filename}` : config.filename
+  } else {
+    const filename = uuid()
+    fullFileName = prefix ? `${prefix}${filename}` : filename
+    if (config.extension) {
+      fullFileName = `${fullFileName}.${config.extension}`
+    }
   }
 
-  let filename = prefix ? `${prefix}/${uuid()}` : uuid()
-
-  filename = `${filename}.${extension}`
-
-  if (filename.startsWith('/')) {
-    filename = filename.slice(1)
+  if (!fullFileName.startsWith('/')) {
+    fullFileName = `/${fullFileName}`
   }
 
   const url = `${s3.endpointUrl}/${s3.bucketName}`
@@ -41,12 +51,14 @@ export default async function uploadToObjectStorage(file: Buffer | File, extensi
     'X-Amz-Acl': 'public-read',
   }
 
-  if (fileType && inlineTypes.includes(fileType)) {
-    headers['Content-Type'] = fileType
+  if (config.fileType && inlineTypes.includes(config.fileType)) {
+    headers['Content-Type'] = config.fileType
     headers['Content-Disposition'] = 'inline'
   }
 
-  const request = await client.sign(`${url}/${filename}`, {
+  console.log(`${url}${fullFileName}`, fullFileName)
+
+  const request = await client.sign(`${url}${fullFileName}`, {
     method: 'PUT',
     body: file,
     headers,
@@ -60,7 +72,7 @@ export default async function uploadToObjectStorage(file: Buffer | File, extensi
   }
 
   if (response.ok) {
-    return `${publicUrl}/${filename}`
+    return `${publicUrl}${fullFileName}`
   } else {
     throw new Error(`Error uploading file to object storage: ${response.statusText}`)
   }
