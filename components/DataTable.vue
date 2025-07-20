@@ -304,6 +304,7 @@ const performBulkAction = async () => {
     const rows = selectedRows.value
     const rowLookups = rows.map(row => row.original[spec.value.lookupColumnName])
     await bulkActions.find(action => action.value === actionValue)?.action?.({ rowLookups, rows })
+    bulkAction.value = undefined
   }
 }
 </script>
@@ -334,18 +335,24 @@ const performBulkAction = async () => {
       </div>
     </slot>
     <div class="flex-grow overflow-hidden">
-      <div v-if="spec.enableSearch" class="flex py-3">
+      <div class="flex justify-between py-3">
         <UInput
+          v-if="spec.enableSearch"
           v-model="search"
           class="max-w-xl"
           :placeholder="spec.searchPlaceholder"
         />
         <!-- Multi-row Actions -->
-        <div v-if="selectedRows.length > 0" class="flex items-center gap-2">
+        <div v-if="selectedRows.length > 0" class="flex items-center gap-2 ml-auto">
           <span class="text-sm text-muted">
             {{ selectedRows.length }} {{ selectedRows.length === 1 ? 'row' : 'rows' }} selected
           </span>
-          <USelect v-model="bulkAction" class="min-w-24" :items="bulkActions" />
+          <USelect
+            v-model="bulkAction"
+            class="min-w-24"
+            placeholder="Select an action"
+            :items="bulkActions"
+          />
           <UButton
             v-if="bulkAction"
             color="neutral"
