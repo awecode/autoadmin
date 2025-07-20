@@ -54,6 +54,11 @@ type ListOptions<T extends Table = Table> = {
   enableFilter: boolean
   searchPlaceholder?: string
   searchFields: ColField<T>[]
+  bulkActions: {
+    label: string
+    icon?: string
+    action: (rowIds: string[] | number[]) => Promise<{ message?: string, refresh?: boolean }>
+  }[]
   title?: string
   endpoint?: string
   filterFields?: FilterFieldDef<T>[]
@@ -149,6 +154,7 @@ const getStaticDefaultOptions = () => ({
     showCreateButton: true,
     enableSearch: true,
     searchPlaceholder: 'Search ...',
+    bulkActions: [],
   },
   update: {
     enabled: true,
@@ -168,7 +174,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
     },
     update: { route: { name: 'autoadmin-update', params: { modelLabel: label } } },
     delete: { endpoint: `${apiPrefix}/${label}` },
-  }) as AdminModelConfig<T>
+  }) as unknown as AdminModelConfig<T>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumnName || dct.labelColumnName]
   } else if (!opts.list?.searchFields) {

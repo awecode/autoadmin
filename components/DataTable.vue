@@ -33,6 +33,7 @@ interface ListApiResponse {
     lookupColumnName: string
     enableDelete: boolean
     enableSearch: boolean
+    bulkActions: { label: string, icon?: string }[]
     enableSort: boolean
     searchPlaceholder: string
     searchFields: string[]
@@ -158,16 +159,50 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
   }
 }
 
+const genericBulkAction = async ({ action, rowLookups }: { action: string, rowLookups: string[] }) => {
+  try {
+    const response = await $fetch<{ message: string, refresh?: boolean }>(`${apiPrefix}/bulk-actions`, {
+      method: 'POST',
+      body: {
+        modelLabel,
+        rowLookups,
+        action,
+      },
+    })
+    toast.add({
+      title: 'Success',
+      description: response.message || 'Action performed successfully',
+      color: 'success',
+    })
+    if (response.refresh) {
+      refresh()
+    }
+  } catch (err: any) {
+    toast.add({
+      title: 'Error',
+      description: getErrorMessage(err) || 'Failed to perform action',
+      color: 'error',
+    })
+  }
+}
+
 const bulkActions = computed(() => {
-  const actions: { label: string, value: string, icon: string, action: (props: { rowLookups: string[], rows: Row<T>[] }) => Promise<void> }[] = []
+  const actions: { label: string, icon?: string, action: (props: { action: string, rowLookups: string[], rows: Row<T>[] }) => Promise<void> }[] = []
 
   if (spec.value.enableDelete) {
     actions.push({
       label: 'Delete',
-      value: 'delete',
       icon: 'i-lucide-trash',
       action: bulkDelete,
     })
+  }
+  if (spec.value.bulkActions.length) {
+    const userDefinedActions = spec.value.bulkActions.map(action => ({
+      label: action.label,
+      icon: action.icon,
+      action: genericBulkAction,
+    }))
+    actions.push(...userDefinedActions)
   }
   return actions
 })
@@ -311,7 +346,7 @@ const performBulkAction = async () => {
   if (actionValue) {
     const rows = selectedRows.value
     const rowLookups = rows.map(row => row.original[spec.value.lookupColumnName])
-    await bulkActions.value.find(action => action.value === actionValue)?.action?.({ rowLookups, rows })
+    await bulkActions.value.find(action => action.label === actionValue)?.action?.({ action: actionValue, rowLookups, rows })
     bulkAction.value = undefined
   }
 }
@@ -359,6 +394,7 @@ const performBulkAction = async () => {
             v-model="bulkAction"
             class="min-w-24"
             placeholder="Select an action"
+            value-key="label"
             :items="bulkActions"
           />
           <UButton

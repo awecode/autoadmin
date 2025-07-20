@@ -22,6 +22,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     updatePage: cfg.update.enabled ? cfg.update.route : undefined,
     deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
     enableDelete: cfg.delete.enabled,
+    bulkActions: cfg.list.bulkActions.map(action => ({
+      label: action.label,
+      icon: action.icon,
+    })),
     title: cfg.list.title,
     showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
     enableSort: cfg.list.enableSort,
