@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { FormSpec } from '~/utils/form'
+import AutoFormModal from '#layers/autoadmin/components/AutoFormModal.vue'
 import { normalizeOptions } from '~/utils/form'
 import { transformErrorMessage } from '~/utils/zod'
-import AutoFormModal from '#layers/autoadmin/components/AutoFormModal.vue'
 
 const props = defineProps<{
   field: FormSpec['fields'][number]
@@ -86,19 +86,25 @@ function onSelectMenuOpen() {
 
 const overlay = useOverlay()
 
-async function createRelation() {
+async function openRelationModal(mode: 'create' | 'update', lookupValue?: string | number) {
   const registry = useAdminRegistry()
-  const relatedConfigKey = props.field.relationConfig?.relatedConfigKey
+  const relationConfig = props.field.relationConfig
+  if (!relationConfig) {
+    return
+  }
+  const relatedConfigKey = relationConfig.relatedConfigKey
   const modelConfig = registry.get(relatedConfigKey!)!
   const label = modelConfig.label
   const modal = overlay.create(AutoFormModal, {
-  props: {
+    props: {
       modelLabel: label,
+      mode,
+      lookupValue,
       onSave: (data) => {
-        const value = data[props.field.relationConfig?.foreignRelatedColumnName!]
+        const value = data[relationConfig.foreignRelatedColumnName!]
         const option = {
-          label: data[props.field.relationConfig?.foreignLabelColumnName!],
-          value: value,
+          label: data[relationConfig.foreignLabelColumnName!],
+          value,
         }
         selectMenuItemsRaw.value = normalizeOptions([...(selectMenuItemsRaw.value ?? []), option])
         fieldValue.value = value
@@ -128,38 +134,33 @@ async function createRelation() {
 
     <template #default>
       <!-- Relation (single select) -->
-      <USelectMenu
-        v-if="field.type === 'relation'"
-        v-model="fieldValue"
-        trailing
-        class="w-full"
-        label-key="label"
-        value-key="value"
-        v-bind="field.attrs"
-        :items="selectMenuItems ?? []"
-        :loading="status === 'pending'"
-        @update:open="onSelectMenuOpen"
-      >
-        <template #trailing="{ modelValue: value }">
-          <ClientOnly>
-            <div>
-              <UButton
-                v-if="field.relationConfig?.enableCreate"
-                color="primary"
-                icon="i-lucide-square-plus"
-                variant="ghost"
-                @click.prevent="createRelation"
-              />
-              <UButton
-                v-if="field.relationConfig?.enableUpdate && value"
-                color="primary"
-                icon="i-lucide-edit"
-                variant="ghost"
-              />
-            </div>
-          </ClientOnly>
-        </template>
-      </USelectMenu>
+      <div v-if="field.type === 'relation'" class="flex items-center">
+        <USelectMenu
+          v-model="fieldValue"
+          trailing
+          class="w-full"
+          label-key="label"
+          value-key="value"
+          v-bind="field.attrs"
+          :items="selectMenuItems ?? []"
+          :loading="status === 'pending'"
+          @update:open="onSelectMenuOpen"
+        />
+        <UButton
+          v-if="field.relationConfig?.enableCreate"
+          color="primary"
+          icon="i-lucide-square-plus"
+          variant="ghost"
+          @click.prevent="openRelationModal('create')"
+        />
+        <UButton
+          v-if="field.relationConfig?.enableUpdate && fieldValue"
+          color="primary"
+          icon="i-lucide-edit"
+          variant="ghost"
+          @click.prevent="openRelationModal('update', fieldValue)"
+        />
+      </div>
 
       <!-- Relation (multi-select) -->
       <USelectMenu

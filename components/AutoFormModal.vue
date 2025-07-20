@@ -1,10 +1,10 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelLabel: string
+  mode: 'create' | 'update'
+  lookupValue?: string | number
   onSave: (data: Record<string, any>) => void
 }>()
-
-const emit = defineEmits<{close:[boolean]}>()
 
 const modelLabel = props.modelLabel
 const cfg = useAdminRegistry().get(modelLabel)
@@ -16,25 +16,28 @@ if (!cfg) {
   })
 }
 
-const data = await $fetch(`/api/autoadmin/formspec/${modelLabel}`)
-const formSpec = data.spec as FormSpec
-const schema = cfg.create.schema
+const fetchEndpoint = props.mode === 'create' ? `/api/autoadmin/formspec/${modelLabel}` : `/api/autoadmin/formspec/${modelLabel}/update/${props.lookupValue}`
+const data = await $fetch(fetchEndpoint) as { spec: FormSpec, values?: Record<string, any> }
+const formSpec = data.spec
+const schema = props.mode === 'create' ? cfg.create.schema : cfg.update.schema
+const values = props.mode === 'create' ? {} : data.values
 
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
-const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
+const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${props.lookupValue}`)
 </script>
 
 <template>
   <UModal>
     <template #content>
       <AutoForm
-      class="border border-gray-500 rounded-lg"
         v-if="formSpec"
-        mode="create"
+        class="border border-gray-500 rounded-lg"
         :endpoint="endpoint"
+        :mode="mode"
         :schema="schema"
         :spec="formSpec"
+        :values="values"
         @save="onSave"
       />
     </template>
