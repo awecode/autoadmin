@@ -161,7 +161,7 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
   return {
     success: true,
     message: `${modelLabel} created successfully`,
-    data: result,
+    data: result[0],
   }
 }
 
@@ -226,7 +226,7 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
   return {
     success: true,
     message: `${modelLabel} updated successfully`,
-    data: result,
+    data: result[0],
   }
 }
 

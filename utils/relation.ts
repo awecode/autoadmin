@@ -167,6 +167,8 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
         relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
+        foreignRelatedColumnName: relation.foreignColumn.name,
+        foreignLabelColumnName: getLabelColumnFromModel(relation.foreignTable),
       }
 
       updatedFormSpec.fields[fieldIndex] = field
@@ -195,8 +197,8 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       label: toTitleCase(name),
       relationConfig: {
         choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
-        enableCreate: enabledStatuses.create,
-        enableUpdate: enabledStatuses.update,
+        enableCreate: enabledStatuses?.create,
+        enableUpdate: enabledStatuses?.update,
       },
       required: false,
       rules: {},
@@ -213,6 +215,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       }
       const db = useDb()
       // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
+      // TODO only select the columns that are needed for the form spec
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
       field.options = rows.map(row => ({
         label: row[getLabelColumnFromModel(table)],
@@ -239,8 +242,8 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       label: toTitleCase(relation.name),
       relationConfig: {
         choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices-many/${fieldName}`,
-        enableCreate: enabledStatuses.create,
-        enableUpdate: enabledStatuses.update,
+        enableCreate: enabledStatuses?.create,
+        enableUpdate: enabledStatuses?.update,
       },
       required: false,
       rules: {},
@@ -249,6 +252,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
     if (formSpec.values) {
       const db = useDb()
       const selfValue = formSpec.values[relation.selfForeignColumn.name]
+      // TODO only select the columns that are needed for the form spec
       const result = await db
         .select({ other: relation.otherTable })
         .from(relation.otherTable)

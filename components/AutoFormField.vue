@@ -95,7 +95,13 @@ async function createRelation() {
   props: {
       modelLabel: label,
       onSave: (data) => {
-        console.log('savedx', data)
+        const value = data[props.field.relationConfig?.foreignRelatedColumnName!]
+        const option = {
+          label: data[props.field.relationConfig?.foreignLabelColumnName!],
+          value: value,
+        }
+        selectMenuItemsRaw.value = normalizeOptions([...(selectMenuItemsRaw.value ?? []), option])
+        fieldValue.value = value
         modal.close()
       },
     },

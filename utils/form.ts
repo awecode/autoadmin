@@ -37,6 +37,10 @@ export interface FieldSpec {
     enableCreate?: boolean
     /** Whether to enable the edit button for the relation */
     enableUpdate?: boolean
+    /** The name of the foreign column */
+    foreignRelatedColumnName?: string
+    /** The name of the foreign label column */
+    foreignLabelColumnName?: string
     // /** Whether to enable the delete button for the relation */
     // enableDelete?: boolean
     // /** Whether to enable the view button for the relation */
