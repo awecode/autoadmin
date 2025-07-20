@@ -31,6 +31,8 @@ export interface FieldSpec {
   relationConfig?: {
     /** The endpoint to fetch the choices for the relation */
     choicesEndpoint?: string
+    /** The key of the related model */
+    relatedConfigKey?: string
     /** Whether to enable the create button for the relation */
     enableCreate?: boolean
     /** Whether to enable the edit button for the relation */

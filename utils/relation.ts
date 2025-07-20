@@ -164,8 +164,9 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       const enabledStatuses = getEnabledStatuses(relation.foreignTable)
       field.relationConfig = {
         choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relation.column.name}`,
-        enableCreate: enabledStatuses.create,
-        enableUpdate: enabledStatuses.update,
+        relatedConfigKey: enabledStatuses?.key,
+        enableCreate: enabledStatuses?.create,
+        enableUpdate: enabledStatuses?.update,
       }
 
       updatedFormSpec.fields[fieldIndex] = field

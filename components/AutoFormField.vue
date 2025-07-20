@@ -93,8 +93,7 @@ function onSelectMenuOpen() {
     :name="field.name"
     :required="field.required"
   >
-    <!-- Error slot with error message transformation, causes hydration errors, using client only to does not override the slot -->
-
+    <!-- Error slot with error message transformation -->
     <template #error="{ error }">
       <span v-if="error && typeof error === 'string'">
         {{ transformErrorMessage(error, field.type) }}
@@ -123,6 +122,7 @@ function onSelectMenuOpen() {
                 color="primary"
                 icon="i-lucide-square-plus"
                 variant="ghost"
+                @click="createRelation"
               />
               <UButton
                 v-if="field.relationConfig?.enableUpdate && value"

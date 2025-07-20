@@ -260,6 +260,7 @@ export function useAdminRegistry() {
 
   return {
     all: () => Array.from(registry.values()) as AdminModelConfig<Table>[],
+    map: () => registry,
     get: getAdminConfig,
     register: registerAdminModel,
   }
