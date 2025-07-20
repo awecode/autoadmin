@@ -160,7 +160,7 @@ function onSelectMenuOpen() {
 
     <!-- Checkbox -->
     <UCheckbox
-      v-else-if="field.type === 'checkbox'"
+      v-else-if="field.type === 'boolean'"
       v-bind="field.attrs"
       v-model="fieldValue"
     />

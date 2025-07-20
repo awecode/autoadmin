@@ -4,7 +4,7 @@ import { getPrimaryKeyColumn } from './relation'
 import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many' | 'textarea' | 'rich-text' | 'blob' | 'image'
+type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many' | 'textarea' | 'rich-text' | 'blob' | 'image'
 export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export interface FieldSpec {
@@ -84,7 +84,7 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
         break
       case 'ZodBoolean':
       case 'boolean':
-        type = 'checkbox'
+        type = 'boolean'
         break
       case 'ZodEnum':
       case 'enum':
@@ -154,23 +154,37 @@ export const getErrorMessage = (error: Error) => {
 }
 
 export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
-  const definedFieldSpecs = cfg!.update!.formFields!.map((field) => {
-    if (typeof field === 'string') {
-      const fieldSpec = spec.fields.find(f => f.name === field)
-      if (fieldSpec) {
-        return fieldSpec
+  let definedFieldSpecs: FieldSpec[] = []
+  if (cfg.update.formFields) {
+    definedFieldSpecs = cfg!.update!.formFields!.map((field) => {
+      if (typeof field === 'string') {
+        const fieldSpec = spec.fields.find(f => f.name === field)
+        if (fieldSpec) {
+          return fieldSpec
+        }
+      } else if (typeof field === 'object' && field !== null && 'name' in field) {
+        const fieldSpec = spec.fields.find(f => f.name === field.name)
+        if (fieldSpec) {
+          return defu(field, fieldSpec)
+        }
       }
-    } else if (typeof field === 'object' && field !== null && 'name' in field) {
-      const fieldSpec = spec.fields.find(f => f.name === field.name)
-      if (fieldSpec) {
-        return defu(field, fieldSpec)
-      }
-    }
-    throw createError({
-      statusCode: 500,
-      statusMessage: `Invalid form field: ${typeof field === 'object' && 'name' in field ? field.name : field}`,
+      throw createError({
+        statusCode: 500,
+        statusMessage: `Invalid form field: ${typeof field === 'object' && 'name' in field ? field.name : field}`,
+      })
     })
-  })
+  } else {
+    definedFieldSpecs = spec.fields
+  }
+  if (typeof cfg.fields !== 'undefined') {
+    definedFieldSpecs = definedFieldSpecs.map((field) => {
+      const fieldSpec = cfg.fields!.find(f => f.name === field.name)
+      if (fieldSpec) {
+        return defu(fieldSpec, field)
+      }
+      return field
+    })
+  }
   if (cfg.o2m || cfg.m2m) {
     // If the primary key is not in the form fields, add it to the end of the form fields for o2m/m2m relations
     const pkColumnName = getPrimaryKeyColumn(cfg.model).name

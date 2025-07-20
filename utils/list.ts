@@ -86,9 +86,9 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
 export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
-  if (cfg.list?.columns) {
+  if (cfg.list.columns) {
     columns = cfg.list.columns
-  } else if (cfg.list?.fields) {
+  } else if (cfg.list.fields) {
     columns = cfg.list.fields.map((def: ListFieldDef<T>) => {
       if (typeof def === 'string') {
         if (def in tableColumns) {
@@ -200,6 +200,17 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
     const foreignKeys = getTableForeignKeys(cfg.model)
     columns = columns.filter((column) => {
       return !foreignKeys.some(foreignKey => foreignKey.column.name === column.accessorKey)
+    })
+  }
+  if (!cfg.list.columns && (typeof cfg.fields !== 'undefined') && cfg.fields.length > 0) {
+    columns = columns.map((column) => {
+      if (cfg.fields!.some(field => field.name === column.accessorKey)) {
+        return {
+          ...column,
+          type: cfg.fields!.find(field => field.name === column.accessorKey)?.type ?? column.type,
+        }
+      }
+      return column
     })
   }
   // change column type to datetime-local if it is a datetime column

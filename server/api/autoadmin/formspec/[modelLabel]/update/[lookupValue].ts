@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
   }
   const model = cfg.model
   const spec = zodToFormSpec(cfg.update.schema as any)
-  if (cfg.update.formFields) {
+  if (cfg.update.formFields || cfg.fields) {
     spec.fields = useDefinedFields(spec, cfg)
   }
   spec.values = await getTableValues(cfg, spec, lookupValue)

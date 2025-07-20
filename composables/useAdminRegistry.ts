@@ -131,6 +131,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   delete: DeleteOptions
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
+  fields?: { name: ColKey<T>, type: ListFieldType }[]
   // store
   columns: ReturnType<typeof getTableColumns<T>>
   metadata: TableMetadata
@@ -154,6 +155,7 @@ const getStaticDefaultOptions = () => ({
   },
   delete: { enabled: true },
   create: { enabled: true },
+  fields: undefined,
   warnOnUnsavedChanges: false,
 })
 
