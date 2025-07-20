@@ -132,6 +132,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
     :label="field.label"
     :name="field.name"
     :required="field.required"
+    v-bind="field.fieldAttrs"
   >
     <!-- Error slot with error message transformation -->
     <template #error="{ error }">
@@ -149,7 +150,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           class="w-full"
           label-key="label"
           value-key="value"
-          v-bind="field.attrs"
+          v-bind="field.inputAttrs"
           :items="selectMenuItems ?? []"
           :loading="status === 'pending'"
           @update:open="onSelectMenuOpen"
@@ -191,7 +192,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         class="w-full"
         label-key="label"
         value-key="value"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         :items="selectMenuItems ?? []"
         :loading="status === 'pending'"
         @update:open="onSelectMenuOpen"
@@ -202,7 +203,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'select'"
         v-model="fieldValue"
         class="w-full"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         :items="field.options"
       />
 
@@ -213,21 +214,21 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         class="w-full font-mono"
         placeholder="{}"
         spellcheck="false"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         :rows="6"
       />
 
       <!-- Date picker -->
       <DatePicker
         v-else-if="field.type === 'date'"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         v-model="fieldValue"
       />
 
       <!-- Checkbox -->
       <UCheckbox
         v-else-if="field.type === 'boolean'"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         v-model="fieldValue"
       />
 
@@ -235,7 +236,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <UInput
         v-else-if="field.type === 'text'"
         v-model.nullify="fieldValue"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         type="text"
       />
 
@@ -243,20 +244,20 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <UTextarea
         v-else-if="field.type === 'textarea'"
         v-model.nullify="fieldValue"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
       />
 
       <!-- Rich text editor -->
       <RichTextEditor
         v-else-if="field.type === 'rich-text'"
         v-model="fieldValue"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
       />
 
       <Uploader
         v-else-if="field.type === 'image'"
         v-model="fieldValue"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         type="image"
         :config="field.fileConfig"
         :label="field.label"
@@ -266,7 +267,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <Uploader
         v-else-if="field.type === 'file'"
         v-model="fieldValue"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         type="file"
         :config="field.fileConfig"
         :label="field.label"
@@ -276,9 +277,9 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <UInput
         v-else-if="field.type === 'blob'"
         v-model="fieldValue"
-        v-bind="field.attrs"
+        v-bind="field.inputAttrs"
         type="file"
-        :accept="field.attrs?.accept"
+        :accept="field.inputAttrs?.accept"
       />
 
       <!-- Default input (datetime-local, number, etc.) -->

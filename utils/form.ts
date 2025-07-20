@@ -15,7 +15,8 @@ export interface FieldSpec {
   rules?: Rules
   options?: Option[]
   defaultValue?: unknown
-  attrs?: Record<string, any>
+  fieldAttrs?: Record<string, any>
+  inputAttrs?: Record<string, any>
   help?: string
   hint?: string
   description?: string
