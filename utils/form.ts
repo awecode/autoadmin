@@ -15,7 +15,6 @@ export interface FieldSpec {
   rules?: Rules
   options?: Option[]
   defaultValue?: unknown
-  choicesEndpoint?: string
   attrs?: Record<string, any>
   help?: string
   hint?: string
@@ -28,6 +27,19 @@ export interface FieldSpec {
     prefix?: string
     /** Max size is the maximum size of the file in bytes, e.g. 1024 * 1024 for 1MB */
     maxSize?: number
+  }
+  relationConfig?: {
+    /** The endpoint to fetch the choices for the relation */
+    choicesEndpoint?: string
+    /** Whether to enable the create button for the relation */
+    enableCreate?: boolean
+    /** Whether to enable the edit button for the relation */
+    enableUpdate?: boolean
+    // /** Whether to enable the delete button for the relation */
+    // enableDelete?: boolean
+    // /** Whether to enable the view button for the relation */
+    // enableView?: boolean
+    // /** Whether to enable the search button for the relation */
   }
 }
 export interface FormSpec {

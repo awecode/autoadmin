@@ -61,7 +61,7 @@ if ((props.field.type === 'datetime-local' || props.field.type === 'date') && pr
 const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
   label: string
   value: string | number
-}[]>(props.field.choicesEndpoint ?? '', {
+}[]>(props.field.relationConfig?.choicesEndpoint ?? '', {
   immediate: false,
 })
 

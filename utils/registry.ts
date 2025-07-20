@@ -25,3 +25,12 @@ export function getLabelColumnFromModel(model: Table) {
   const modelColumns = getTableColumns(model)
   return getLabelColumnFromColumns(modelColumns)
 }
+
+export function getEnabledStatuses(model: Table) {
+  const registry = useAdminRegistry()
+  const modelConfig = registry.all().find(cfg => cfg.model === model)
+  return {
+    create: modelConfig?.create.enabled,
+    update: modelConfig?.update.enabled,
+  }
+}

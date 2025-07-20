@@ -2,7 +2,7 @@ import type { AnyColumn, Table } from 'drizzle-orm'
 import type { FieldSpec, FormSpec } from './form'
 import { and, eq, getTableColumns, getTableName } from 'drizzle-orm'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
-import { getLabelColumnFromModel } from './registry'
+import { getEnabledStatuses, getLabelColumnFromModel } from './registry'
 import { toTitleCase } from './string'
 
 export interface M2MRelationSelf {
@@ -161,7 +161,12 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
           value: row[relation.foreignColumn.name],
         }))
       }
-      field.choicesEndpoint = `/api/autoadmin/formspec/${cfg.label}/choices/${relation.column.name}`
+      const enabledStatuses = getEnabledStatuses(relation.foreignTable)
+      field.relationConfig = {
+        choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relation.column.name}`,
+        enableCreate: enabledStatuses.create,
+        enableUpdate: enabledStatuses.update,
+      }
 
       updatedFormSpec.fields[fieldIndex] = field
     }
@@ -181,12 +186,17 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
   // Process all relations in parallel
   await Promise.all(Object.entries(o2mTables).map(async ([name, table]) => {
     const relationData = parseO2mRelation(modelConfig, table, name)
+    const enabledStatuses = getEnabledStatuses(table)
 
     const field: FieldSpec = {
       name: relationData.fieldName,
       type: 'relation-many' as const,
       label: toTitleCase(name),
-      choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
+      relationConfig: {
+        choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
+        enableCreate: enabledStatuses.create,
+        enableUpdate: enabledStatuses.update,
+      },
       required: false,
       rules: {},
       options: [],
@@ -221,11 +231,16 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
   // Process all relations in parallel
   await Promise.all(relations.map(async (relation) => {
     const fieldName = `___${relation.name}___${relation.otherColumn.name}`
+    const enabledStatuses = getEnabledStatuses(relation.otherTable)
     const field: FieldSpec = {
       name: fieldName,
       type: 'relation-many' as const,
       label: toTitleCase(relation.name),
-      choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices-many/${fieldName}`,
+      relationConfig: {
+        choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices-many/${fieldName}`,
+        enableCreate: enabledStatuses.create,
+        enableUpdate: enabledStatuses.update,
+      },
       required: false,
       rules: {},
       options: [],
