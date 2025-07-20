@@ -45,9 +45,9 @@ const fileName = computed(() => {
 const toast = useToast()
 // const { t } = useI18n()
 const clearFile = () => {
-  uploadedFile.value = undefined
-  fileUrl.value = undefined
-  emit('update:modelValue', undefined)
+  uploadedFile.value = ''
+  fileUrl.value = ''
+  emit('update:modelValue', '')
 }
 async function handleFileChange(e: Event | undefined, droppedFile: undefined | File = undefined) {
   isFileUploading.value = true
