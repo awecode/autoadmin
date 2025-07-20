@@ -34,6 +34,7 @@ export interface FormSpec {
   fields: FieldSpec[]
   values?: Record<string, any>
   warnOnUnsavedChanges?: boolean
+  labelString?: string
 }
 
 export function zodToFormSpec(schema: ZodObject<any>): FormSpec {

@@ -102,7 +102,7 @@ export interface AdminModelOptions<T extends Table = Table> {
   label?: string
   icon?: string
   enableIndex?: boolean
-  labelColumn?: ColKey<T>
+  labelColumnName?: ColKey<T>
   lookupColumnName?: ColKey<T>
   // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T>>
@@ -122,7 +122,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   label: string
   icon?: string
   enableIndex: boolean
-  labelColumn: ColKey<T>
+  labelColumnName: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
   list: ListOptions<T>
@@ -167,7 +167,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
     delete: { endpoint: `${apiPrefix}/${label}` },
   }) as AdminModelConfig<T>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
-    dct.list.searchFields = [opts.labelColumn || dct.labelColumn]
+    dct.list.searchFields = [opts.labelColumnName || dct.labelColumnName]
   } else if (!opts.list?.searchFields) {
     dct.list.searchFields = []
   }
@@ -210,8 +210,8 @@ export function useAdminRegistry() {
     const label = (opts.label ?? getTableName(model)) as string
 
     const columns = getTableColumns(model)
-    if (!opts.labelColumn) {
-      opts.labelColumn = getLabelColumnFromColumns(columns) as ColKey<T>
+    if (!opts.labelColumnName) {
+      opts.labelColumnName = getLabelColumnFromColumns(columns) as ColKey<T>
     }
 
     const cfg = defu(

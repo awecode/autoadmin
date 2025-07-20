@@ -73,6 +73,10 @@ export default defineEventHandler(async (event) => {
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
   specWithMetadata.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
+  const labelColumnName = cfg.labelColumnName
+  if (labelColumnName && specWithMetadata.values && labelColumnName in specWithMetadata.values) {
+    specWithMetadata.labelString = specWithMetadata.values[labelColumnName]
+  }
   return {
     spec: specWithMetadata,
   }

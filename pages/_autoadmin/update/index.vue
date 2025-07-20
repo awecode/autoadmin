@@ -46,7 +46,7 @@ useHead({
           ← Back to {{ listTitle }}
         </NuxtLink>
         <h1 class="text-3xl font-bold">
-          Update {{ lookupValue }}
+          Update {{ formSpec.labelString ?? lookupValue }}
         </h1>
       </div>
 
