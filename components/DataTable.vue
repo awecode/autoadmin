@@ -260,8 +260,30 @@ async function handleDelete(id: string) {
 
 const selectedRows = computed(() => table.value?.tableApi?.getFilteredSelectedRowModel().rows ?? [])
 
-const bulkDelete = async ({ rowLookups, rows }: { rowLookups: string[], rows: any[] }) => {
-  console.log(rowLookups, rows)
+const toast = useToast()
+
+const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
+  try {
+    await $fetch(`${apiPrefix}/bulk-delete`, {
+      method: 'POST',
+      body: {
+        modelLabel,
+        rowLookups,
+      },
+    })
+    toast.add({
+      title: 'Success',
+      description: 'Deleted successfully',
+      color: 'success',
+    })
+    refresh()
+  } catch (err: any) {
+    toast.add({
+      title: 'Error',
+      description: getErrorMessage(err) || 'Failed to delete',
+      color: 'error',
+    })
+  }
 }
 
 const bulkActions = [

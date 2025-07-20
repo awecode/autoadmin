@@ -71,6 +71,14 @@ export function handleDrizzleError(error: any) {
       },
     }
   }
+
+  if (code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+    return {
+      statusCode: 400,
+      statusMessage: 'Cannot delete record because it is referenced by another record',
+    }
+  }
+
   // Format other database errors with code and message for debugging
   console.error('Database error:', {
     code: error.code || 'UNKNOWN',

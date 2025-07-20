@@ -33,7 +33,7 @@ export async function deleteRecord(modelLabel: string, lookupValue: string): Pro
   }
 }
 
-export async function bulkDelete(modelLabel: string, rowLookups: string[]): Promise<any> {
+export async function bulkDelete(modelLabel: string, rowLookups: (string | number)[]) {
   const modelConfig = getModelConfig(modelLabel)
   if (!modelConfig.delete.enabled) {
     throw createError({
