@@ -114,7 +114,26 @@ function onSelectMenuOpen() {
       :items="selectMenuItems ?? []"
       :loading="status === 'pending'"
       @update:open="onSelectMenuOpen"
-    />
+    >
+      <template #trailing="{ modelValue: value }">
+        <ClientOnly>
+          <div>
+            <UButton
+              v-if="field.relationConfig?.enableCreate"
+              color="primary"
+              icon="i-lucide-square-plus"
+              variant="ghost"
+            />
+            <UButton
+              v-if="field.relationConfig?.enableUpdate && value"
+              color="primary"
+              icon="i-lucide-edit"
+              variant="ghost"
+            />
+          </div>
+        </ClientOnly>
+      </template>
+    </USelectMenu>
 
     <!-- Relation (multi-select) -->
     <USelectMenu
