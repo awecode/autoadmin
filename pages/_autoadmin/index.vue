@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getIconForLabel, toTitleCase } from '~/utils/string'
 
-const { data: modelLinks } = await useAsyncData('model-links', async () => {
+const modelLinks = useState('model-links', () => {
   const allCfg = useAdminRegistry().all()
   const links = allCfg.filter(cfg => cfg.enableIndex).map(cfg => ({
     label: toTitleCase(cfg.label),
@@ -12,8 +12,6 @@ const { data: modelLinks } = await useAsyncData('model-links', async () => {
   }))
 
   return links
-}, {
-  default: () => [],
 })
 </script>
 
