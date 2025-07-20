@@ -274,7 +274,7 @@ async function handleDelete(id: string) {
         <UAlert
           v-if="error"
           color="error"
-          icon="i-heroicons-exclamation-triangle"
+          icon="i-lucide-triangle-alert"
           variant="subtle"
           :description="error.message || 'Failed to fetch data'"
           :title="error.statusMessage || 'An error occurred'"
@@ -330,14 +330,14 @@ async function handleDelete(id: string) {
                   v-if="defaultActions?.includes('edit') && spec.updatePage"
                   :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
                 >
-                  <UButton color="primary" icon="i-heroicons-pencil" variant="ghost">
+                  <UButton color="primary" icon="i-lucide-square-pen" variant="ghost">
                     Edit
                   </UButton>
                 </NuxtLink>
                 <UButton
                   v-if="defaultActions?.includes('delete') && spec.deleteEndpoint"
                   color="error"
-                  icon="i-heroicons-trash"
+                  icon="i-lucide-trash"
                   variant="ghost"
                   @click="handleDelete(scope.row.original[spec.lookupColumnName])"
                 >

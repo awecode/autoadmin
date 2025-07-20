@@ -72,7 +72,7 @@ const booleanOptions = [
 <template>
   <div v-if="filters && filters.length > 0" class="flex items-center gap-2">
     <div class="flex items-center gap-2">
-      <UIcon class="h-4 w-4 text-gray-500" name="i-heroicons-funnel" />
+      <UIcon class="h-4 w-4 text-gray-500" name="i-lucide-funnel" />
       <span class="text-sm font-medium text-gray-700">Filters:</span>
     </div>
 
@@ -139,7 +139,7 @@ const booleanOptions = [
     <UButton
       v-if="hasActiveFilters"
       color="neutral"
-      icon="i-heroicons-x-mark"
+      icon="i-lucide-x"
       size="xs"
       variant="ghost"
       @click="clearAllFilters"

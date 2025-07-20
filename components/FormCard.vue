@@ -109,7 +109,7 @@ function handleCancel() {
 
           <UButton
             class="ml-auto"
-            icon="i-heroicons-x-mark"
+            icon="i-lucide-x"
             variant="ghost"
             @click="handleCancel"
           />

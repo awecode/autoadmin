@@ -15,7 +15,7 @@ export default defineAppConfig({
     additionalItems: [
       {
         label: 'GitHub',
-        icon: 'i-simple-icons-github',
+        icon: 'i-lucide-github',
         to: 'https://github.com/awecode/autoadmin/',
         target: '_blank',
       },

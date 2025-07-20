@@ -73,7 +73,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file && allowedExtensions.length > 0 && !allowedExtensions.includes(currentExtension)) {
     toast.add({
       title: `Invalid file type - ${currentExtension}`,
-      icon: 'i-heroicons-exclamation-triangle',
+      icon: 'i-lucide-triangle-alert',
       color: 'error',
     })
     isFileUploading.value = false
@@ -88,7 +88,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     toast.add({
       title: 'File size is too large',
       description: `Please upload a file smaller than ${formatBytes(props.config.maxSize)}`,
-      icon: 'i-heroicons-exclamation-triangle',
+      icon: 'i-lucide-triangle-alert',
       color: 'error',
     })
     isFileUploading.value = false
@@ -108,7 +108,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       onResponseError: (error) => {
         toast.add({
           title: error.response._data?.message || error.response._data?.statusMessage || 'Upload failed!',
-          icon: 'i-heroicons-exclamation-triangle',
+          icon: 'i-lucide-triangle-alert',
           color: 'error',
         })
         clearFile()
@@ -309,7 +309,7 @@ const replaceFile = () => {
 
       <!-- Non-image file display -->
       <div v-else class="flex flex-col items-center justify-center text-center px-4 py-2">
-        <UIcon class="mb-3 text-2xl" name="i-heroicons-document-check" />
+        <UIcon class="mb-3 text-2xl" name="i-lucide-file-check" />
         <div class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 max-w-full">
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-all">
             {{ fileName }}
