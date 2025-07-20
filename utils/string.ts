@@ -130,3 +130,7 @@ export function formatBytes(bytes: number): string {
   const value = bytes / 1024 ** i
   return `${value % 1 === 0 ? Math.floor(value) : value.toFixed(2)} ${sizes[i]}`
 }
+
+export function getFileNameFromUrl(url: string): string {
+  return url.split('/').pop()?.split('?')[0] || ''
+}

@@ -7,6 +7,7 @@ import { h, resolveComponent } from 'vue'
 import DeleteModal from '~/components/DeleteModal.vue'
 import { getTitle } from '~/utils/autoadmin'
 import { getErrorMessage } from '~/utils/form'
+import { getFileNameFromUrl } from '~/utils/string'
 
 const UButton = resolveComponent('UButton')
 
@@ -310,8 +311,10 @@ async function handleDelete(id: string) {
               </template>
               <template v-else-if="cell.column.columnDef.type === 'file' && cell.getValue()">
                 <!-- Open file in new tab -->
-                <NuxtLink target="_blank" :to="cell.getValue() as string">
-                  <UIcon name="i-lucide-file" />
+                <NuxtLink class="flex items-center underline" target="_blank" :to="cell.getValue() as string">
+                  <UIcon class="inline-block mr-1" name="i-lucide-file" />
+                  <!-- Show file name -->
+                  <span class="text-sm">{{ getFileNameFromUrl(cell.getValue() as string) }}</span>
                 </NuxtLink>
               </template>
               <template v-else-if="cell.column.columnDef.type === 'image' && cell.getValue()">
