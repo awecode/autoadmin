@@ -153,7 +153,19 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           :items="selectMenuItems ?? []"
           :loading="status === 'pending'"
           @update:open="onSelectMenuOpen"
-        />
+        >
+          <template #trailing>
+            <ClientOnly>
+              <button
+                v-if="fieldValue"
+                class="ml-2 px-2 py-1 rounded  hover:text-red-600 cursor-pointer"
+                @click.stop="() => { fieldValue = null }"
+              >
+                ✕
+              </button>
+            </ClientOnly>
+          </template>
+        </USelectMenu>
         <UButton
           v-if="field.relationConfig?.enableCreate"
           color="primary"
