@@ -10,7 +10,7 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const { data: items } = await useAsyncData<NavigationMenuItem[][]>('sidebar-items', async () => {
+const items = useState<NavigationMenuItem[][]>('sidebar-items', () => {
   const allModels = useAdminRegistry().all()
   const links = allModels.filter(model => model.enableIndex).map(model => ({
     label: toTitleCase(model.label),
@@ -27,8 +27,6 @@ const { data: items } = await useAsyncData<NavigationMenuItem[][]>('sidebar-item
     ],
     appConfig.sidebar.additionalItems,
   ]
-}, {
-  default: () => [],
 })
 </script>
 
