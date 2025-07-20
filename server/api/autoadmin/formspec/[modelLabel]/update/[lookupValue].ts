@@ -12,9 +12,16 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
   const lookupColumn = cfg.lookupColumn
   const columns = spec.fields.map(field => field.name as ColKey<typeof model>)
 
+  // Add label column to select because we need it for the label string in update page header, even if it is not included in form fields
+  const labelColumnName = cfg.labelColumnName
+  if (labelColumnName && !columns.includes(labelColumnName)) {
+    columns.push(labelColumnName)
+  }
+
   const selectObj = Object.fromEntries(
     columns.map(colName => [colName, cfg.columns[colName]]),
   )
+
   const result = await db
     .select(selectObj)
     .from(model)
@@ -74,8 +81,12 @@ export default defineEventHandler(async (event) => {
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
   specWithMetadata.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
   const labelColumnName = cfg.labelColumnName
-  if (labelColumnName && specWithMetadata.values && labelColumnName in specWithMetadata.values) {
+  if (specWithMetadata.values && labelColumnName in specWithMetadata.values) {
     specWithMetadata.labelString = specWithMetadata.values[labelColumnName]
+    // Now remove the label column from the spec values if it is not included in form fields
+    if (!specWithMetadata.fields.some(field => field.name === labelColumnName)) {
+      delete specWithMetadata.values[labelColumnName]
+    }
   }
   return {
     spec: specWithMetadata,
