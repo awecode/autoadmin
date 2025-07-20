@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getTitle } from '~/utils/autoadmin'
 import { getIconForLabel, toTitleCase } from '~/utils/string'
 
 const modelLinks = useState('model-links', () => {
@@ -12,6 +13,12 @@ const modelLinks = useState('model-links', () => {
   }))
 
   return links
+})
+
+const title = getTitle()
+
+useHead({
+  title: `Dashboard | ${title}`,
 })
 </script>
 

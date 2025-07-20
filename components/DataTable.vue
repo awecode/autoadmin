@@ -5,6 +5,7 @@ import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { useRouteQuery } from '@vueuse/router'
 import { h, resolveComponent } from 'vue'
 import DeleteModal from '~/components/DeleteModal.vue'
+import { getTitle } from '~/utils/autoadmin'
 import { getErrorMessage } from '~/utils/form'
 
 const UButton = resolveComponent('UButton')
@@ -181,7 +182,7 @@ if (error.value) {
 }
 
 useHead({
-  title: `${title.value}`,
+  title: `${title.value} | ${getTitle()}`,
 })
 
 defineExpose({ data, status, refresh, sort, page, pageSize, filterQuery, search, reset })

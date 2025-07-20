@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { getTitle } from '~/utils/autoadmin'
 import { getIconForLabel, toTitleCase } from '~/utils/string'
 
 const appConfig = useAppConfig()
@@ -40,7 +41,7 @@ const items = useState<NavigationMenuItem[][]>('sidebar-items', () => {
         v-if="!collapsed"
         class="text-lg font-bold transition-opacity duration-300 ease-in-out"
       >
-        AutoAdmin
+        {{ getTitle() }}
       </div>
       <UTooltip :delay="0" :text="collapsed ? 'Expand' : 'Collapse'">
         <UButton

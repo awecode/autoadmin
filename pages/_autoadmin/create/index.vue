@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getTitle } from '~/utils/autoadmin'
+
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
 if (!cfg) {
@@ -30,7 +32,7 @@ const apiPrefix = config.public.apiPrefix
 const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
 
 useHead({
-  title: `${listTitle} > Create`,
+  title: `${listTitle} > Create | ${getTitle()}`,
 })
 </script>
 

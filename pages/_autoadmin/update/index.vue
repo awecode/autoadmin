@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getTitle } from '~/utils/autoadmin'
+
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
 if (!cfg) {
@@ -31,7 +33,7 @@ const apiPrefix = config.public.apiPrefix
 const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${lookupValue}`
 
 useHead({
-  title: `${listTitle} > Update`,
+  title: `${listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getTitle()}`,
 })
 </script>
 
