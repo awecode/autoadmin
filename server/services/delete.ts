@@ -1,5 +1,4 @@
 import { eq, inArray } from 'drizzle-orm'
-import { DrizzleQueryError } from 'drizzle-orm/errors'
 import { getModelConfig } from './autoadmin'
 
 export async function deleteRecord(modelLabel: string, lookupValue: string): Promise<any> {
@@ -16,14 +15,6 @@ export async function deleteRecord(modelLabel: string, lookupValue: string): Pro
   try {
     await db.delete(model).where(eq(lookupColumn, lookupValue))
   } catch (error) {
-    if (error instanceof DrizzleQueryError) {
-      if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Cannot delete record because it is referenced by another record',
-        })
-      }
-    }
     throw handleDrizzleError(error)
   }
 

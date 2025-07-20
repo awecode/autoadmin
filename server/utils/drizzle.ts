@@ -46,12 +46,13 @@ export async function getPaginatedResponse<T>(
 // Careful, this function exposes table names and column names in the error message
 export function handleDrizzleError(error: any) {
   const code = error.cause?.code ?? error.code
+
   if (code === 'SQLITE_CONSTRAINT_UNIQUE' || code === '23505' || code === 'ER_DUP_ENTRY') {
     const fullMessage = error.cause?.message ?? error.message
     // const fullMessage = 'SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: customers.phoneNumber'
     // Programatically extract the table name and column name from the full message
     let userFriendlyMessage = 'Operation failed'
-    let errorData = {
+    const errorData = {
       name: '',
       message: '',
     }
