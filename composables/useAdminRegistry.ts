@@ -111,6 +111,7 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
+  fields?: FieldSpec[] & { name: ColKey<T>, type: ListFieldType }[]
   warnOnUnsavedChanges?: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
 }
