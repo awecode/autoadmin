@@ -308,6 +308,18 @@ async function handleDelete(id: string) {
                 <span v-if="cell.getValue()">Yes</span>
                 <span v-else>No</span>
               </template>
+              <template v-else-if="cell.column.columnDef.type === 'file' && cell.getValue()">
+                <!-- Open file in new tab -->
+                <NuxtLink target="_blank" :to="cell.getValue() as string">
+                  <UIcon name="i-lucide-file" />
+                </NuxtLink>
+              </template>
+              <template v-else-if="cell.column.columnDef.type === 'image' && cell.getValue()">
+                <NuxtLink target="_blank" :to="cell.getValue() as string">
+                  <img class="w-10 h-10 rounded-md" :src="cell.getValue() as string" />
+                </NuxtLink>
+              </template>
+
               <template v-else-if="cell.column.columnDef.type === 'date'">
                 {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
               </template>
