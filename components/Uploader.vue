@@ -370,35 +370,8 @@ const replaceFile = () => {
         </div>
       </div>
     </div>
-    <div v-else class="flex items-center gap-4 text-xl md:text-3xl" draggable="false">
-      <svg
-        height="2em"
-        viewBox="0 0 24 24"
-        width="2em"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          fill="none"
-          stroke="#6ce2a6"
-          stroke-linecap="square"
-          stroke-width="1"
-        >
-          <path d="M21.25 13V8.5a5 5 0 0 0-5-5h-8.5a5 5 0 0 0-5 5v7a5 5 0 0 0 5 5h6.26" stroke-linejoin="miter" />
-          <path
-            d="m3.01 17l2.74-3.2a2.2 2.2 0 0 1 2.77-.27a2.2 2.2 0 0 0 2.77-.27l2.33-2.33a4 4 0 0 1 5.16-.43l2.47 1.91M8.01 10.17a1.66 1.66 0 1 0-.02-3.32a1.66 1.66 0 0 0 .02 3.32"
-            stroke-linejoin="miter"
-          />
-          <path d="M18.707 15v5" stroke-miterlimit="10" />
-          <path d="m21 17.105l-1.967-1.967a.46.46 0 0 0-.652 0l-1.967 1.967" stroke-linejoin="miter" />
-        </g>
-      </svg>
-      <span class="text-base text-heading-tertiary">{{ `Drag and drop ${type} here` }}</span>
-      <span class="text-base text-heading-tertiary">OR</span>
-      <UButton
-        class="text-swa-cerulean hover:bg-transparent"
-        label="Click here to upload"
-        variant="outline"
-      />
+    <div v-else class="flex items-center gap-4 text-xl md:text-3xl">
+      <span class="text-sm text-gray-500">{{ `Drop ${type} here or click to upload` }}</span>
     </div>
 
     <!-- Preview Dialog -->
