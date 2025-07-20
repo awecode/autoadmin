@@ -16,6 +16,10 @@ const props = defineProps<{
   schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }>
 }>()
 
+const emit = defineEmits<{
+  'save': [data: Record<string, any>]
+}>()
+
 const form = useTemplateRef('form')
 const loading = ref(false)
 
@@ -86,7 +90,7 @@ const router = useRouter()
 const performSave = async () => {
   loading.value = true
   try {
-    const response = await $fetch<{ success: boolean }>(props.endpoint, {
+    const response = await $fetch<{ success: boolean, data: Record<string, any> }>(props.endpoint, {
       method: props.mode === 'create' ? 'POST' : 'PUT',
       body: state,
     })
@@ -98,6 +102,7 @@ const performSave = async () => {
       if (props.redirectPath) {
         await router.push(props.redirectPath)
       }
+      emit('save', response.data)
     }
   } catch (error) {
     handleError(error as Error)

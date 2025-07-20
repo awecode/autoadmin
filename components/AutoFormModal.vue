@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelLabel: string
+  onSave: (data: Record<string, any>) => void
 }>()
+
+const emit = defineEmits<{close:[boolean]}>()
 
 const modelLabel = props.modelLabel
 const cfg = useAdminRegistry().get(modelLabel)
@@ -21,6 +24,10 @@ const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
 const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
 
+const handleSaved = (data: Record<string, any>) => {
+  props.onSave(data)
+  emit('close', true)
+}
 </script>
 
 <template>
@@ -33,6 +40,7 @@ const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
         :endpoint="endpoint"
         :schema="schema"
         :spec="formSpec"
+        @save="handleSaved"
       />
     </template>
   </UModal>
