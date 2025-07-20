@@ -31,6 +31,7 @@ interface ListApiResponse {
     // API return header as string, and an optional sortKey
     columns?: Array<TableColumn<T> & { header: string, sortKey?: string }>
     lookupColumnName: string
+    enableDelete: boolean
     enableSearch: boolean
     enableSort: boolean
     searchPlaceholder: string
@@ -131,6 +132,46 @@ const pageActions = computed(() => {
   return actions
 })
 
+const toast = useToast()
+
+const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
+  try {
+    await $fetch(`${apiPrefix}/bulk-delete`, {
+      method: 'POST',
+      body: {
+        modelLabel,
+        rowLookups,
+      },
+    })
+    toast.add({
+      title: 'Success',
+      description: 'Deleted successfully',
+      color: 'success',
+    })
+    refresh()
+  } catch (err: any) {
+    toast.add({
+      title: 'Error',
+      description: getErrorMessage(err) || 'Failed to delete',
+      color: 'error',
+    })
+  }
+}
+
+const bulkActions = computed(() => {
+  const actions: { label: string, value: string, icon: string, action: (props: { rowLookups: string[], rows: Row<T>[] }) => Promise<void> }[] = []
+
+  if (spec.value.enableDelete) {
+    actions.push({
+      label: 'Delete',
+      value: 'delete',
+      icon: 'i-lucide-trash',
+      action: bulkDelete,
+    })
+  }
+  return actions
+})
+
 function getHeader(column: Column<T>, label?: string, sortKey?: string) {
   const isSorted = column.getIsSorted()
 
@@ -177,22 +218,23 @@ function computeColumns() {
       id: 'actions',
     })
   }
-
-  parsedColumns!.unshift({
-    id: 'select',
-    header: ({ table }) => h(UCheckbox, {
-      'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
-      'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-      'aria-label': 'Select all',
-    }),
-    cell: ({ row }: { row: Row<T> }) => h(UCheckbox, {
-      'modelValue': row.getIsSelected(),
-      'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-      'aria-label': 'Select row',
-    }),
-    enableSorting: false,
-    enableHiding: false,
-  })
+  if (bulkActions.value.length) {
+    parsedColumns!.unshift({
+      id: 'select',
+      header: ({ table }) => h(UCheckbox, {
+        'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
+        'aria-label': 'Select all',
+      }),
+      cell: ({ row }: { row: Row<T> }) => h(UCheckbox, {
+        'modelValue': row.getIsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+        'aria-label': 'Select row',
+      }),
+      enableSorting: false,
+      enableHiding: false,
+    })
+  }
 
   return parsedColumns
 }
@@ -262,40 +304,6 @@ async function handleDelete(id: string) {
 
 const selectedRows = computed(() => table.value?.tableApi?.getFilteredSelectedRowModel().rows ?? [])
 
-const toast = useToast()
-
-const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
-  try {
-    await $fetch(`${apiPrefix}/bulk-delete`, {
-      method: 'POST',
-      body: {
-        modelLabel,
-        rowLookups,
-      },
-    })
-    toast.add({
-      title: 'Success',
-      description: 'Deleted successfully',
-      color: 'success',
-    })
-    refresh()
-  } catch (err: any) {
-    toast.add({
-      title: 'Error',
-      description: getErrorMessage(err) || 'Failed to delete',
-      color: 'error',
-    })
-  }
-}
-
-const bulkActions: { label: string, value: string, icon: string, action: (props: { rowLookups: string[], rows: Row<T>[] }) => Promise<void> }[] = [
-  {
-    label: 'Delete',
-    value: 'delete',
-    icon: 'i-lucide-trash',
-    action: bulkDelete,
-  },
-]
 const bulkAction = ref<string | undefined>(undefined)
 
 const performBulkAction = async () => {
@@ -303,7 +311,7 @@ const performBulkAction = async () => {
   if (actionValue) {
     const rows = selectedRows.value
     const rowLookups = rows.map(row => row.original[spec.value.lookupColumnName])
-    await bulkActions.find(action => action.value === actionValue)?.action?.({ rowLookups, rows })
+    await bulkActions.value.find(action => action.value === actionValue)?.action?.({ rowLookups, rows })
     bulkAction.value = undefined
   }
 }
@@ -442,7 +450,7 @@ const performBulkAction = async () => {
                   </UButton>
                 </NuxtLink>
                 <UButton
-                  v-if="defaultActions?.includes('delete') && spec.deleteEndpoint"
+                  v-if="defaultActions?.includes('delete') && spec.deleteEndpoint && spec.enableDelete"
                   color="error"
                   icon="i-lucide-trash"
                   variant="ghost"
