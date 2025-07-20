@@ -17,11 +17,13 @@ export function getTableMetadata(columns: Record<string, Column>): TableMetadata
   }
   // Loop through each column to extract metadata
   for (const [columnName, column] of Object.entries(columns)) {
+    // @ts-expect-error: config is protected
     if (column.dataType === 'number' && column.primary === true && column.config?.autoIncrement === true) {
       metadata.primaryAutoincrementColumns.push(columnName)
     }
 
     // // Check for datetime columns with timestamp_ms mode
+    // @ts-expect-error: config is protected
     if (column.dataType === 'date' && column.config?.mode === 'timestamp_ms') {
       if (column.hasDefault) {
         metadata.autoTimestampColumns.push(columnName)

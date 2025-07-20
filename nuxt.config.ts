@@ -15,6 +15,9 @@ export default defineNuxtConfig({
     adminUrlPrefix,
     public: {
       apiPrefix: '/api/autoadmin',
+      autoAdmin: {
+        title: 'AutoAdmin',
+      },
     },
     s3: {
       accessKey: undefined,
