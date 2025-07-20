@@ -106,7 +106,11 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           label: data[relationConfig.foreignLabelColumnName!],
           value,
         }
-        selectMenuItemsRaw.value = normalizeOptions([...(selectMenuItemsRaw.value ?? []), option])
+        if (mode === 'create') {
+          selectMenuItemsRaw.value = normalizeOptions([...(selectMenuItemsRaw.value ?? []), option])
+        } else if (selectMenuItemsRaw.value) {
+          selectMenuItemsRaw.value = normalizeOptions(selectMenuItemsRaw.value.map(item => item.value === lookupValue ? option : item))
+        }
         fieldValue.value = value
         modal.close()
       },
