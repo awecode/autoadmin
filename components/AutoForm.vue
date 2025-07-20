@@ -137,7 +137,7 @@ onUnmounted(() => {
       @submit="performSave()"
     >
       <div v-for="field in spec.fields" :key="field.name">
-        <AutoFormField v-model="state[field.name]" :field="field" />
+        <AutoFormField v-model="state[field.name]" :field="field" :form="form" />
       </div>
       <div class="flex items-center justify-between mt-8">
         <button

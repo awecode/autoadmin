@@ -7,6 +7,7 @@ import { transformErrorMessage } from '~/utils/zod'
 const props = defineProps<{
   field: FormSpec['fields'][number]
   modelValue: any
+  form?: any
 }>()
 
 const emit = defineEmits<{
@@ -112,6 +113,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           selectMenuItemsRaw.value = normalizeOptions(selectMenuItemsRaw.value.map(item => item.value === lookupValue ? option : item))
         }
         fieldValue.value = value
+        // Clear any validation errors for this field after programmatic value change
+        props.form.setErrors([], props.field.name)
         modal.close()
       },
     },
