@@ -94,153 +94,154 @@ function onSelectMenuOpen() {
     :required="field.required"
   >
     <!-- Error slot with error message transformation, causes hydration errors, using client only to does not override the slot -->
-    <!-- <ClientOnly> -->
-    <!-- <template #error="{ error }">
-        <span v-if="error && typeof error === 'string'">
-          {{ transformErrorMessage(error, field.type) }}
-        </span>
-      </template> -->
-    <!-- </ClientOnly> -->
 
-    <!-- Relation (single select) -->
-    <USelectMenu
-      v-if="field.type === 'relation'"
-      v-model="fieldValue"
-      trailing
-      class="w-full"
-      label-key="label"
-      value-key="value"
-      v-bind="field.attrs"
-      :items="selectMenuItems ?? []"
-      :loading="status === 'pending'"
-      @update:open="onSelectMenuOpen"
-    >
-      <template #trailing="{ modelValue: value }">
-        <ClientOnly>
-          <div>
-            <UButton
-              v-if="field.relationConfig?.enableCreate"
-              color="primary"
-              icon="i-lucide-square-plus"
-              variant="ghost"
-            />
-            <UButton
-              v-if="field.relationConfig?.enableUpdate && value"
-              color="primary"
-              icon="i-lucide-edit"
-              variant="ghost"
-            />
-          </div>
-        </ClientOnly>
-      </template>
-    </USelectMenu>
+    <template #error="{ error }">
+      <span v-if="error && typeof error === 'string'">
+        {{ transformErrorMessage(error, field.type) }}
+      </span>
+    </template>
 
-    <!-- Relation (multi-select) -->
-    <USelectMenu
-      v-else-if="field.type === 'relation-many'"
-      v-model="fieldValue"
-      multiple
-      trailing
-      class="w-full"
-      label-key="label"
-      value-key="value"
-      v-bind="field.attrs"
-      :items="selectMenuItems ?? []"
-      :loading="status === 'pending'"
-      @update:open="onSelectMenuOpen"
-    />
+    <template #default>
+      <!-- Relation (single select) -->
+      <USelectMenu
+        v-if="field.type === 'relation'"
+        v-model="fieldValue"
+        trailing
+        class="w-full"
+        label-key="label"
+        value-key="value"
+        v-bind="field.attrs"
+        :items="selectMenuItems ?? []"
+        :loading="status === 'pending'"
+        @update:open="onSelectMenuOpen"
+      >
+        <template #trailing="{ modelValue: value }">
+          <ClientOnly>
+            <div>
+              <UButton
+                v-if="field.relationConfig?.enableCreate"
+                color="primary"
+                icon="i-lucide-square-plus"
+                variant="ghost"
+              />
+              <UButton
+                v-if="field.relationConfig?.enableUpdate && value"
+                color="primary"
+                icon="i-lucide-edit"
+                variant="ghost"
+              />
+            </div>
+          </ClientOnly>
+        </template>
+      </USelectMenu>
 
-    <!-- Select dropdown -->
-    <USelect
-      v-else-if="field.type === 'select'"
-      v-model="fieldValue"
-      class="w-full"
-      v-bind="field.attrs"
-      :items="field.options"
-    />
+      <!-- Relation (multi-select) -->
+      <USelectMenu
+        v-else-if="field.type === 'relation-many'"
+        v-model="fieldValue"
+        multiple
+        trailing
+        class="w-full"
+        label-key="label"
+        value-key="value"
+        v-bind="field.attrs"
+        :items="selectMenuItems ?? []"
+        :loading="status === 'pending'"
+        @update:open="onSelectMenuOpen"
+      />
 
-    <!-- JSON textarea -->
-    <UTextarea
-      v-else-if="field.type === 'json'"
-      v-model="fieldValue"
-      class="w-full font-mono"
-      placeholder="{}"
-      spellcheck="false"
-      v-bind="field.attrs"
-      :rows="6"
-    />
+      <!-- Select dropdown -->
+      <USelect
+        v-else-if="field.type === 'select'"
+        v-model="fieldValue"
+        class="w-full"
+        v-bind="field.attrs"
+        :items="field.options"
+      />
 
-    <!-- Date picker -->
-    <DatePicker
-      v-else-if="field.type === 'date'"
-      v-bind="field.attrs"
-      v-model="fieldValue"
-    />
+      <!-- JSON textarea -->
+      <UTextarea
+        v-else-if="field.type === 'json'"
+        v-model="fieldValue"
+        class="w-full font-mono"
+        placeholder="{}"
+        spellcheck="false"
+        v-bind="field.attrs"
+        :rows="6"
+      />
 
-    <!-- Checkbox -->
-    <UCheckbox
-      v-else-if="field.type === 'boolean'"
-      v-bind="field.attrs"
-      v-model="fieldValue"
-    />
+      <!-- Date picker -->
+      <DatePicker
+        v-else-if="field.type === 'date'"
+        v-bind="field.attrs"
+        v-model="fieldValue"
+      />
 
-    <!-- Text input with nullify modifier -->
-    <UInput
-      v-else-if="field.type === 'text'"
-      v-model.nullify="fieldValue"
-      v-bind="field.attrs"
-      type="text"
-    />
+      <!-- Checkbox -->
+      <UCheckbox
+        v-else-if="field.type === 'boolean'"
+        v-bind="field.attrs"
+        v-model="fieldValue"
+      />
 
-    <!-- Textarea input with nullify modifier -->
-    <UTextarea
-      v-else-if="field.type === 'textarea'"
-      v-model.nullify="fieldValue"
-      v-bind="field.attrs"
-    />
+      <!-- Text input with nullify modifier -->
+      <UInput
+        v-else-if="field.type === 'text'"
+        v-model.nullify="fieldValue"
+        v-bind="field.attrs"
+        type="text"
+      />
 
-    <!-- Rich text editor -->
-    <RichTextEditor
-      v-else-if="field.type === 'rich-text'"
-      v-model="fieldValue"
-      v-bind="field.attrs"
-    />
+      <!-- Textarea input with nullify modifier -->
+      <UTextarea
+        v-else-if="field.type === 'textarea'"
+        v-model.nullify="fieldValue"
+        v-bind="field.attrs"
+      />
 
-    <Uploader
-      v-else-if="field.type === 'image'"
-      v-model="fieldValue"
-      v-bind="field.attrs"
-      type="image"
-      :config="field.fileConfig"
-      :label="field.label"
-      :name="field.name"
-    />
+      <!-- Rich text editor -->
+      <RichTextEditor
+        v-else-if="field.type === 'rich-text'"
+        v-model="fieldValue"
+        v-bind="field.attrs"
+      />
 
-    <Uploader
-      v-else-if="field.type === 'file'"
-      v-model="fieldValue"
-      v-bind="field.attrs"
-      type="file"
-      :config="field.fileConfig"
-      :label="field.label"
-      :name="field.name"
-    />
+      <Uploader
+        v-else-if="field.type === 'image'"
+        v-model="fieldValue"
+        v-bind="field.attrs"
+        type="image"
+        :config="field.fileConfig"
+        :label="field.label"
+        :name="field.name"
+      />
 
-    <UInput
-      v-else-if="field.type === 'blob'"
-      v-model="fieldValue"
-      v-bind="field.attrs"
-      type="file"
-      :accept="field.attrs?.accept"
-    />
+      <Uploader
+        v-else-if="field.type === 'file'"
+        v-model="fieldValue"
+        v-bind="field.attrs"
+        type="file"
+        :config="field.fileConfig"
+        :label="field.label"
+        :name="field.name"
+      />
 
-    <!-- Default input (datetime-local, number, etc.) -->
-    <UInput
-      v-else
-      v-model="fieldValue"
-      :max="field.rules?.max"
-      :min="field.rules?.min"
-      :type="field.type"
-    />
+      <UInput
+        v-else-if="field.type === 'blob'"
+        v-model="fieldValue"
+        v-bind="field.attrs"
+        type="file"
+        :accept="field.attrs?.accept"
+      />
+
+      <!-- Default input (datetime-local, number, etc.) -->
+      <UInput
+        v-else
+        v-model="fieldValue"
+        :max="field.rules?.max"
+        :min="field.rules?.min"
+        :type="field.type"
+      />
+    </template>
   </UFormField>
 </template>
