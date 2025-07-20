@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '#ui/types'
-import type { Column } from '@tanstack/vue-table'
+import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { useRouteQuery } from '@vueuse/router'
 import { h, resolveComponent } from 'vue'
@@ -14,8 +14,8 @@ const UCheckbox = resolveComponent('UCheckbox')
 
 type T = Record<string, any>
 
-interface Data<TData> {
-  results: TData[]
+interface ListApiResponse {
+  results: T[]
   pagination: {
     count: number
     size: number
@@ -28,17 +28,19 @@ interface Data<TData> {
     updatePage?: { name: string, params: { modelLabel: string } }
     deleteEndpoint?: string
     title: string
-    columns?: Array<TableColumn<T>>
+    // API return header as string, and an optional sortKey
+    columns?: Array<TableColumn<T> & { header: string, sortKey?: string }>
     lookupColumnName: string
     enableSearch: boolean
     enableSort: boolean
     searchPlaceholder: string
     searchFields: string[]
+    showCreateButton: boolean
   }
 }
 
 const filters = true
-const table = useTemplateRef('table')
+const table = useTemplateRef<{ tableApi: Table<T> } | undefined>('table')
 const defaultActions = ['edit', 'delete']
 
 const config = useRuntimeConfig()
@@ -103,8 +105,8 @@ const query = computed(() => ({
 
 const endpoint = `${apiPrefix}/${modelLabel}`
 
-const { data, status, error, refresh } = useAsyncData<Data<T> & { spec?: Record<string, any> }>(`${modelLabel}-list`, async () => {
-  const response = await $fetch<Data<T>>(endpoint, { query: query.value })
+const { data, status, error, refresh } = useAsyncData<ListApiResponse>(`${modelLabel}-list`, async () => {
+  const response = await $fetch<ListApiResponse>(endpoint, { query: query.value })
   return {
     ...response,
     spec: response?.spec || {},
@@ -113,7 +115,7 @@ const { data, status, error, refresh } = useAsyncData<Data<T> & { spec?: Record<
   watch: [query],
 })
 
-const spec = computed(() => data.value?.spec || {} as Record<string, any>)
+const spec = computed(() => data.value?.spec || {} as ListApiResponse['spec'])
 
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 
@@ -129,7 +131,7 @@ const pageActions = computed(() => {
   return actions
 })
 
-function getHeader(column: Column<T>, label: string, sortKey: string) {
+function getHeader(column: Column<T>, label?: string, sortKey?: string) {
   const isSorted = column.getIsSorted()
 
   if (spec.value.enableSort && sortKey) {
@@ -161,38 +163,38 @@ function getHeader(column: Column<T>, label: string, sortKey: string) {
 }
 
 function computeColumns() {
-  let tableColumns = spec.value.columns
-  tableColumns = tableColumns?.map((col: TableColumn<T> & { header: string, sortKey?: string }) => ({
+  const tableColumns = spec.value.columns
+  if (!tableColumns) {
+    return []
+  }
+  const parsedColumns = tableColumns.map(col => ({
     ...col,
-
-    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header, col.sortKey as string),
-  }))
+    header: ({ column }: { column: Column<T> }) => getHeader(column, col.header as string, col.sortKey),
+  })) as unknown as (TableColumn<T> & { header?: (props: HeaderContext<T, unknown>) => any })[]
 
   if (spec.value.updatePage || spec.value.deleteEndpoint) {
-    tableColumns.push({
+    parsedColumns!.push({
       id: 'actions',
     })
   }
 
-  const selectColumn = {
+  parsedColumns!.unshift({
     id: 'select',
     header: ({ table }) => h(UCheckbox, {
       'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
       'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
       'aria-label': 'Select all',
     }),
-    cell: ({ row }) => h(UCheckbox, {
+    cell: ({ row }: { row: Row<T> }) => h(UCheckbox, {
       'modelValue': row.getIsSelected(),
       'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
       'aria-label': 'Select row',
     }),
     enableSorting: false,
     enableHiding: false,
-  }
+  })
 
-  tableColumns.unshift(selectColumn)
-
-  return tableColumns
+  return parsedColumns
 }
 
 const computedColumns = computed(() => computeColumns())
@@ -286,7 +288,7 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
   }
 }
 
-const bulkActions = [
+const bulkActions: { label: string, value: string, icon: string, action: (props: { rowLookups: string[], rows: Row<T>[] }) => Promise<void> }[] = [
   {
     label: 'Delete',
     value: 'delete',
@@ -294,13 +296,13 @@ const bulkActions = [
     action: bulkDelete,
   },
 ]
-const bulkAction = ref<string | null>(null)
+const bulkAction = ref<string | undefined>(undefined)
 
 const performBulkAction = async () => {
   const actionValue = bulkAction.value
-  const rows = selectedRows.value
-  const rowLookups = rows.map(row => row.original[spec.value.lookupColumnName])
   if (actionValue) {
+    const rows = selectedRows.value
+    const rowLookups = rows.map(row => row.original[spec.value.lookupColumnName])
     await bulkActions.find(action => action.value === actionValue)?.action?.({ rowLookups, rows })
   }
 }
