@@ -138,10 +138,10 @@ const onFileDrop = (event: DragEvent) => {
     if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file') {
       const file = event.dataTransfer.items[0].getAsFile() as File
       handleFileChange(undefined, file)
-    } else {
+    } else if (event.dataTransfer.items.length > 1) {
       toast.add({
-        title: 'Upload Error!',
-        description: 'Please upload single file.',
+        title: 'Upload Error',
+        description: 'Please upload a single file.',
         color: 'error',
       })
     }
