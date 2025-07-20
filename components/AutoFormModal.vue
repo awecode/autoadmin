@@ -25,14 +25,19 @@ const values = props.mode === 'create' ? {} : data.values
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
 const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${props.lookupValue}`)
+
+const title = props.mode === 'create' ? `${cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)} > Create` : `${cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)} > Update ${formSpec.labelString ?? lookupValue}`
 </script>
 
 <template>
-  <UModal>
+  <UModal class="max-w-2xl overflow-y-auto border border-gray-500 rounded-lg p-8" :description="title" :title="title">
     <template #content>
+      <div class="text-lg font-bold mb-8">
+        {{ title }}
+      </div>
       <AutoForm
         v-if="formSpec"
-        class="border border-gray-500 rounded-lg"
+        class=""
         :endpoint="endpoint"
         :mode="mode"
         :schema="schema"

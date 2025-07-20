@@ -17,7 +17,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'save': [data: Record<string, any>]
+  save: [data: Record<string, any>]
 }>()
 
 const form = useTemplateRef('form')
@@ -131,7 +131,6 @@ onUnmounted(() => {
     <!-- Do not validate on input change when input is focused because it clears any server side validation error messages received from api -->
     <UForm
       ref="form"
-      class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
       :schema="processedSchema"
       :state="state"
       :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
@@ -140,7 +139,7 @@ onUnmounted(() => {
       <div v-for="field in spec.fields" :key="field.name">
         <AutoFormField v-model="state[field.name]" :field="field" />
       </div>
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between mt-8">
         <button
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
           type="submit"

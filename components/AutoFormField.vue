@@ -122,6 +122,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
 
 <template>
   <UFormField
+    class="my-4"
     :description="field.description"
     :help="field.help"
     :hint="field.hint"
