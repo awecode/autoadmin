@@ -2,6 +2,7 @@
 import type { FormSpec } from '~/utils/form'
 import { normalizeOptions } from '~/utils/form'
 import { transformErrorMessage } from '~/utils/zod'
+import AutoFormModal from '#layers/autoadmin/components/AutoFormModal.vue'
 
 const props = defineProps<{
   field: FormSpec['fields'][number]
@@ -82,6 +83,21 @@ function onSelectMenuOpen() {
     selectFetched.value = true
   }
 }
+
+const overlay = useOverlay()
+
+async function createRelation() {
+  const registry = useAdminRegistry()
+  const relatedConfigKey = props.field.relationConfig?.relatedConfigKey
+  const modelConfig = registry.get(relatedConfigKey!)!
+  const label = modelConfig.label
+  const modal = overlay.create(AutoFormModal, {
+  props: {
+      modelLabel: label,
+    },
+  })
+  const modalInstance = modal.open()
+}
 </script>
 
 <template>
@@ -122,7 +138,7 @@ function onSelectMenuOpen() {
                 color="primary"
                 icon="i-lucide-square-plus"
                 variant="ghost"
-                @click="createRelation"
+                @click.prevent="createRelation"
               />
               <UButton
                 v-if="field.relationConfig?.enableUpdate && value"
