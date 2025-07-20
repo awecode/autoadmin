@@ -146,6 +146,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
 
   await Promise.all(relations.map(async (relation) => {
     const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === relation.column.name)
+    // check if field is in form spec, if not found, ignore because it may not be specified through form fields
     if (fieldIndex !== -1) {
       const field = { ...updatedFormSpec.fields[fieldIndex] }
       field.type = 'relation'
@@ -163,8 +164,6 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       field.choicesEndpoint = `/api/autoadmin/formspec/${cfg.label}/choices/${relation.column.name}`
 
       updatedFormSpec.fields[fieldIndex] = field
-    } else {
-      console.error(`Field ${relation.column.name} not found in form spec`)
     }
   }))
 
