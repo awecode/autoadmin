@@ -23,11 +23,6 @@ const schema = cfg.create.schema
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
 const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
-
-const handleSaved = (data: Record<string, any>) => {
-  props.onSave(data)
-  emit('close', true)
-}
 </script>
 
 <template>
@@ -40,7 +35,7 @@ const handleSaved = (data: Record<string, any>) => {
         :endpoint="endpoint"
         :schema="schema"
         :spec="formSpec"
-        @save="handleSaved"
+        @save="onSave"
       />
     </template>
   </UModal>

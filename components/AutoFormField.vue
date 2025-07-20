@@ -86,10 +86,6 @@ function onSelectMenuOpen() {
 
 const overlay = useOverlay()
 
-async function handleSaved(data: Record<string, any>) {
-  console.log('savedx', data)
-}
-
 async function createRelation() {
   const registry = useAdminRegistry()
   const relatedConfigKey = props.field.relationConfig?.relatedConfigKey
@@ -98,7 +94,10 @@ async function createRelation() {
   const modal = overlay.create(AutoFormModal, {
   props: {
       modelLabel: label,
-      onSave: handleSaved,
+      onSave: (data) => {
+        console.log('savedx', data)
+        modal.close()
+      },
     },
   })
   modal.open()
