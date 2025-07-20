@@ -137,7 +137,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   warnOnUnsavedChanges: boolean
 }
 
-const staticDefaultOptions = {
+const getStaticDefaultOptions = () => ({
   enableIndex: true,
   lookupColumnName: defaultLookupColumnName,
   list: {
@@ -155,10 +155,10 @@ const staticDefaultOptions = {
   delete: { enabled: true },
   create: { enabled: true },
   warnOnUnsavedChanges: false,
-}
+})
 
 const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
-  const dct = defu(staticDefaultOptions, {
+  const dct = defu(getStaticDefaultOptions(), {
     list: {
       title: toTitleCase(label),
       endpoint: `${apiPrefix}/${label}`,
