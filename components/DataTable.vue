@@ -10,6 +10,7 @@ import { getErrorMessage } from '~/utils/form'
 import { getFileNameFromUrl } from '~/utils/string'
 
 const UButton = resolveComponent('UButton')
+const UCheckbox = resolveComponent('UCheckbox')
 
 type T = Record<string, any>
 
@@ -37,6 +38,7 @@ interface Data<TData> {
 }
 
 const filters = true
+const table = useTemplateRef('table')
 const defaultActions = ['edit', 'delete']
 
 const config = useRuntimeConfig()
@@ -172,6 +174,24 @@ function computeColumns() {
     })
   }
 
+  const selectColumn = {
+    id: 'select',
+    header: ({ table }) => h(UCheckbox, {
+      'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
+      'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
+      'aria-label': 'Select all',
+    }),
+    cell: ({ row }) => h(UCheckbox, {
+      'modelValue': row.getIsSelected(),
+      'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+      'aria-label': 'Select row',
+    }),
+    enableSorting: false,
+    enableHiding: false,
+  }
+
+  tableColumns.unshift(selectColumn)
+
   return tableColumns
 }
 
@@ -286,6 +306,7 @@ async function handleDelete(id: string) {
         </div>
         <UTable
           v-else-if="data && status === 'success'"
+          ref="table"
           v-model:sorting="sort"
           class="h-full overflow-auto"
           :columns="computedColumns"
@@ -300,7 +321,7 @@ async function handleDelete(id: string) {
         >
           <!-- Dynamic cell templates for all columns except actions -->
           <template
-            v-for="column in computedColumns.filter((col: TableColumn<T>) => col.id !== 'actions')"
+            v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select'].includes(col.id ?? ''))"
             :key="column.id"
             #[`${column.id}-cell`]="{ cell }"
           >
