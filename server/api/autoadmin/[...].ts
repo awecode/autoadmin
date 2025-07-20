@@ -1,4 +1,6 @@
-import { createRecord, deleteRecord, getRecordDetail, updateRecord } from '#layers/autoadmin/server/services/autoadmin'
+import { createRecord, getRecordDetail, updateRecord } from '#layers/autoadmin/server/services/autoadmin'
+import { deleteRecord } from '#layers/autoadmin/server/services/delete'
+
 import { listRecords } from '#layers/autoadmin/server/services/list'
 import { parseAutoadminRoute } from '#layers/autoadmin/server/utils/router'
 

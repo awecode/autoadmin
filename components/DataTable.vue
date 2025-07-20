@@ -257,6 +257,31 @@ async function handleDelete(id: string) {
     onConfirm: doDelete,
   })
 }
+
+const selectedRows = computed(() => table.value?.tableApi?.getFilteredSelectedRowModel().rows ?? [])
+
+const bulkDelete = async ({ rowLookups, rows }: { rowLookups: string[], rows: any[] }) => {
+  console.log(rowLookups, rows)
+}
+
+const bulkActions = [
+  {
+    label: 'Delete',
+    value: 'delete',
+    icon: 'i-lucide-trash',
+    action: bulkDelete,
+  },
+]
+const bulkAction = ref<string | null>(null)
+
+const performBulkAction = async () => {
+  const actionValue = bulkAction.value
+  const rows = selectedRows.value
+  const rowLookups = rows.map(row => row.original[spec.value.lookupColumnName])
+  if (actionValue) {
+    await bulkActions.find(action => action.value === actionValue)?.action?.({ rowLookups, rows })
+  }
+}
 </script>
 
 <template>
@@ -285,12 +310,26 @@ async function handleDelete(id: string) {
       </div>
     </slot>
     <div class="flex-grow overflow-hidden">
-      <div v-if="spec.enableSearch" class="flex py-3 border-b">
+      <div v-if="spec.enableSearch" class="flex py-3">
         <UInput
           v-model="search"
           class="max-w-xl"
           :placeholder="spec.searchPlaceholder"
         />
+        <!-- Multi-row Actions -->
+        <div v-if="selectedRows.length > 0" class="flex items-center gap-2">
+          <span class="text-sm text-muted">
+            {{ selectedRows.length }} {{ selectedRows.length === 1 ? 'row' : 'rows' }} selected
+          </span>
+          <USelect v-model="bulkAction" class="min-w-24" :items="bulkActions" />
+          <UButton
+            v-if="bulkAction"
+            color="neutral"
+            @click="performBulkAction"
+          >
+            Confirm
+          </UButton>
+        </div>
       </div>
       <slot name="table" :rows="data?.results">
         <UAlert

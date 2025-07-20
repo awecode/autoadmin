@@ -229,34 +229,3 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
     data: result[0],
   }
 }
-
-export async function deleteRecord(modelLabel: string, lookupValue: string): Promise<any> {
-  const modelConfig = getModelConfig(modelLabel)
-  if (!modelConfig.delete.enabled) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow deletion.`,
-    })
-  }
-  const model = modelConfig.model
-  const db = useDb()
-  const lookupColumn = modelConfig.lookupColumn
-  try {
-    await db.delete(model).where(eq(lookupColumn, lookupValue))
-  } catch (error) {
-    if (error instanceof DrizzleQueryError) {
-      if (error.cause && 'code' in error.cause && error.cause.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Cannot delete record because it is referenced by another record',
-        })
-      }
-    }
-    throw handleDrizzleError(error)
-  }
-
-  return {
-    success: true,
-    message: `${modelLabel} ${lookupValue} deleted successfully`,
-  }
-}
