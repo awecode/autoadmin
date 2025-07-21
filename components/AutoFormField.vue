@@ -125,7 +125,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
 
 <template>
   <UFormField
-    class="my-4"
+    class="w-full p-2"
     :description="field.description"
     :help="field.help"
     :hint="field.hint"
@@ -237,6 +237,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'text'"
         v-model.nullify="fieldValue"
         v-bind="field.inputAttrs"
+        class="w-full"
         type="text"
       />
 
@@ -245,6 +246,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'textarea'"
         v-model.nullify="fieldValue"
         v-bind="field.inputAttrs"
+        class="w-full"
       />
 
       <!-- Rich text editor -->
@@ -252,6 +254,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'rich-text'"
         v-model="fieldValue"
         v-bind="field.inputAttrs"
+        class="w-full"
       />
 
       <Uploader
@@ -260,7 +263,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-bind="field.inputAttrs"
         type="image"
         :config="field.fileConfig"
-        :label="field.label"
+        :label="field.label ?? ''"
         :name="field.name"
       />
 
@@ -270,7 +273,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-bind="field.inputAttrs"
         type="file"
         :config="field.fileConfig"
-        :label="field.label"
+        :label="field.label ?? ''"
         :name="field.name"
       />
 
@@ -278,6 +281,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'blob'"
         v-model="fieldValue"
         v-bind="field.inputAttrs"
+        class="w-full"
         type="file"
         :accept="field.inputAttrs?.accept"
       />
@@ -286,6 +290,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <UInput
         v-else
         v-model="fieldValue"
+        class="w-full"
         :max="field.rules?.max"
         :min="field.rules?.min"
         :type="field.type"
