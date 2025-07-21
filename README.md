@@ -822,13 +822,13 @@ NUXT_S3_PUBLIC_URL=<your-public-url>
 ```ts
 // server/db/schema.ts
 import { sql } from 'drizzle-orm'
-import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey(),
   name: text('name').notNull().unique(),
   description: text('description'),
-  isActive: boolean('is_active').default(true),
+  isActive: integer({ mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 })
 
@@ -838,7 +838,7 @@ export const users = sqliteTable('users', {
   name: text('name').notNull(),
   avatar: text('avatar'),
   role: text('role', { enum: ['admin', 'editor', 'author'] }).default('author'),
-  isActive: boolean('is_active').default(true),
+  isActive: integer({ mode: 'boolean' }).default(true),
   bio: text('bio'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 })
@@ -852,7 +852,7 @@ export const posts = sqliteTable('posts', {
   featuredImage: text('featured_image'),
   status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
   views: integer('views').default(0),
-  isCommentsEnabled: boolean('is_comments_enabled').default(true),
+  isCommentsEnabled: integer({ mode: 'boolean' }).default(true),
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
@@ -870,6 +870,7 @@ export const postsToTags = sqliteTable('posts_to_tags', {
   postId: integer('post_id').notNull().references(() => posts.id),
   tagId: integer('tag_id').notNull().references(() => tags.id),
 })
+
 ```
 
 ### Plugin Registration
