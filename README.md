@@ -339,7 +339,7 @@ Toggles the visibility of the filter controls. Setting to false disables default
 An array of fields to generate filters for. If not specified, filters are automatically generated for enums, date fields (as date ranges), and boolean fields unless `enableFilter` is false. You can also define custom filters. See [List Filters](#list-filters) for more details.
 
 **`bulkActions: object[]`**
-An array of actions that can be performed on selected rows. Each action object needs a label, an optional icon, and an action function that receives an array of selected rowIds. The function should return an object with an optional message string and `refresh` boolean. `message` is shown on toast and `refresh` instructs if the list view is to be refreshed after successful action completion.
+See [List Bulk Actions](#list-bulk-actions) for more details.
 
 **`showCreateButton: boolean`** (Default: `true`)
 Toggles the visibility of the "Create New" button on the list page.
@@ -666,4 +666,25 @@ type FilterFieldDef<T extends Table>
       choicesEndpoint?: string
     }
     | CustomFilter // Advanced custom filter
+```
+
+## List Bulk Actions
+
+You can add bulk actions to the list view which show up in the top right corner of the list view when one or more rows are selected.
+
+`bulkActions` in `list` option is an array of actions that can be performed on selected rows. Each action object needs a label, an optional icon, and an action function that receives an array of selected rowIds on the server side using a REST API request. The function should return an object with an optional message string and `refresh` boolean. `message` is shown on toast and `refresh` instructs if the list view is to be refreshed after successful action completion.
+
+```ts
+registry.register(platforms, {
+  list: {
+    bulkActions: [{
+      label: 'Email',
+      icon: 'i-lucide-mail',
+      action: async (rowIds: string[] | number[]) => {
+        console.log(rowIds)
+        return { message: 'Email sent' }
+      },
+    }],
+  }
+})
 ```
