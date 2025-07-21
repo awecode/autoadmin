@@ -16,13 +16,11 @@ Or you can clone the project inside layers directory in your nuxt project.
 
 ## Usage
 
-AutoAdmin infers field types and relationships directly from your schema.
-
 Here is an example schema for SQLite demonstrating various column types.
 
 ```typescript
-import { sql } from 'drizzle-orm'
 // server/db/schema.ts
+import { sql } from 'drizzle-orm'
 import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 // An enum-like definition for the 'status' column
@@ -55,7 +53,7 @@ export const posts = sqliteTable('posts', {
 })
 ```
 
-Register your models in a Nuxt plugin.
+Register your Drizzle schemas in a Nuxt plugin.
 
 ```typescript
 // plugins/admin.ts
@@ -102,7 +100,7 @@ export default defineNuxtPlugin(() => {
 })
 ```
 
-## Table Registration Options
+## Table/Model Registration Options
 
 This is the main configuration object passed to `registry.register(model, options)`.
 
@@ -710,3 +708,103 @@ registry.register(platforms, {
 ```
 
 If `delete.enabled` is not set to `false` in registration option, a bulk action for delete is automatically added to the list view.
+
+## List Sorting
+
+Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
+
+```ts
+registerAdminModel(usersTable, {
+  list: {
+    enableSort: true, // Enable/disable sorting (default: true)
+    fields: [
+      // Simple column with sorting
+      'name',
+
+      // Custom sort key
+      {
+        field: 'displayName',
+        sortKey: 'name' // Sort by 'name' column when clicking 'displayName'
+      },
+
+      // Relation sorting
+      {
+        field: 'authorId.email',
+        sortKey: 'authorId.name' // Sort by author name when clicking email
+      },
+
+      // Disable sorting for specific field
+      {
+        field: 'calculatedField',
+        sortKey: false // No sorting available
+      }
+    ]
+  }
+})
+```
+
+### Sort Key Options
+
+The `sortKey` property determines how a column can be sorted:
+
+#### Direct Column Sorting
+Sort by the same column that's displayed:
+
+```ts
+{
+  field: 'createdAt',
+  sortKey: 'createdAt' // or just omit sortKey, defaults to field name
+}
+```
+
+#### Custom Sort Key
+Sort by a different column than what's displayed:
+
+```ts
+{
+  field: popularity, // Custom function showing view count
+  sortKey: 'views' // Sort by the actual views column
+}
+```
+
+#### Relation Sorting
+Sort by columns in related tables using dot notation:
+
+```ts
+{
+  field: 'authorId.email',
+  sortKey: 'authorId.name' // Sort by author name, not email
+}
+```
+
+#### Disable Sorting
+Prevent sorting on specific columns:
+
+```ts
+{
+  field: 'actions',
+  sortKey: false // No sorting for action buttons
+}
+```
+
+### Automatic Sort Key Detection
+
+When using simple field definitions, sort keys are automatically assigned:
+
+```ts
+registerAdminModel(postsTable, {
+  list: {
+    fields: [
+      'title', // Automatically gets sortKey: 'title'
+      'authorId.name', // Automatically gets sortKey: 'authorId.name'
+    ]
+  }
+})
+```
+
+## Stack
+
+- [Nuxt](https://nuxt.com/)
+- [Drizzle](https://orm.drizzle.team/)
+- [Nuxt UI](https://ui.nuxt.com/)
+- [Zod](https://zod.dev/)
