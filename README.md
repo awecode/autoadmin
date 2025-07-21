@@ -347,7 +347,7 @@ Toggles the visibility of the "Create New" button on the list page.
 **`title: string`** (Default: Table Name as Title Case)
 Page heading and document title for list page.
 
-### 3.3. Form Configuration (create, update, formFields)
+## Form Configuration (create, update, formFields)
 
 Control the fields and behavior of create and update forms using the `create`, `update`, and `formFields` options.
 
@@ -363,11 +363,22 @@ Both options share these properties:
 
 The top-level `formFields` option is a convenient shortcut to apply the same field configuration to both create and update forms.
 
-### 3.4. Relationship Configuration
+## Relationship Configuration
 
-AutoAdmin can automatically render UI components for model relationships, allowing you to easily link records together. Foreign keys are automatically detected and a dropdown selection is provided. Many-to-many and one-to-many relations are to be manually defined during registration using the `m2m` and `o2m` options.
+### Foreign Keys
 
-#### 3.4.1. Many-to-Many (`m2m`)
+Foreign keys are automatically detected and a dropdown selection is provided.
+
+```ts
+export const locations = sqliteTable('locations', {
+  id: integer().primaryKey(),
+  platformId: integer().notNull().references(() => platforms.id),
+})
+```
+
+When the `locations` model is registered, a dropdown selection of platforms will be provided in form.
+
+### Many-to-Many (`m2m`)
 
 A many-to-many relationship requires a third "join" table that connects two other tables. To configure it, you provide the `m2m` option with an object where the key is the label for the related model and the value is the Drizzle schema for the join table.
 
@@ -414,7 +425,7 @@ export default defineNuxtPlugin(() => {
 
 This will render a multi-select component on the `posts` form, allowing you to associate multiple tags with a post.
 
-#### 3.4.2. One-to-Many (`o2m`)
+### One-to-Many (`o2m`)
 
 While this is not usually required, autoadmin allows rendering one to many relation in a form.
 
@@ -452,7 +463,7 @@ export default defineNuxtPlugin(() => {
 
 This will add a dropdown selection of posts on users form.
 
-### 3.5. Delete Configuration (`delete`)
+## Delete Configuration (`delete`)
 
 The `delete` option controls the deletion functionality for a model's records. By default, deletion is enabled.
 
@@ -672,7 +683,7 @@ type FilterFieldDef<T extends Table>
 
 You can add bulk actions to the list view which show up in the top right corner of the list view when one or more rows are selected.
 
-`bulkActions` in `list` option is an array of actions that can be performed on selected rows. Each action object needs a label, an optional icon, and an action function that receives an array of selected rowIds on the server side using a REST API request. The function should return an object with an optional message string and `refresh` boolean. `message` is shown on toast and `refresh` instructs if the list view is to be refreshed after successful action completion.
+`bulkActions` in `list` option is an array of actions that can be performed on selected rows. Each action object needs a label, an optional icon, and an action function that receives an array of selected rowIds on the server side using a REST API request. The function should return an object with an optional message string and `refresh` boolean. `message` is shown on toast and `refresh` instructs if the list view is to be refreshed after successful action completion. An example:
 
 ```ts
 registry.register(platforms, {
@@ -681,10 +692,21 @@ registry.register(platforms, {
       label: 'Email',
       icon: 'i-lucide-mail',
       action: async (rowIds: string[] | number[]) => {
-        console.log(rowIds)
-        return { message: 'Email sent' }
+        const emails = await db.select({ email: users.email }).from(users).where(inArray(users.id, rowIds))
+        return { message: `Emails sent to ${emails.map(e => e.email).join(', ')}` }
+      },
+    }],
+    bulkActions: [{
+      label: 'Something else',
+      icon: 'i-lucide-check',
+      action: async (rowIds: string[] | number[]) => {
+        // Do something with the selected rows
+        return { message: `Something else done`, refresh: true }
+        // refresh: true instructs the list view to be refreshed after successful action completion
       },
     }],
   }
 })
 ```
+
+If `delete.enabled` is not set to `false` in registration option, a bulk action for delete is automatically added to the list view.
