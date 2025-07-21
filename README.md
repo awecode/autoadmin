@@ -336,7 +336,7 @@ Placeholder text for the search input.
 Toggles the visibility of the filter controls. Setting to false disables default filters as well.
 
 **`filterFields: (string | FilterFieldDef)[]`**
-An array of fields to generate filters for. If not specified, filters are automatically generated for enums, date fields (as date ranges), and boolean fields unless `enableFilter` is false. You can also define custom filters, see below.
+An array of fields to generate filters for. If not specified, filters are automatically generated for enums, date fields (as date ranges), and boolean fields unless `enableFilter` is false. You can also define custom filters. See [List Filters](#list-filters) for more details.
 
 **`bulkActions: object[]`**
 An array of actions that can be performed on selected rows. Each action object needs a label, an optional icon, and an action function that receives an array of selected rowIds. The function should return an object with an optional message string and `refresh` boolean. `message` is shown on toast and `refresh` instructs if the list view is to be refreshed after successful action completion.
@@ -490,3 +490,180 @@ NUXT_S3_PUBLIC_URL=<your-public-url>
 
 ## List Filters
 
+You can filter data in list using a table column, a relation column, or a custom filter.
+
+- `enableFilter`: Enable/disable filtering (default: `true`)
+- `filterFields`: Array of filter definitions (optional - auto-detected if not provided)
+
+```ts
+registerAdminModel(usersTable, {
+  list: {
+    enableFilter: true, // Enable filtering functionality
+    filterFields: [
+      // Simple column filter
+      'status',
+      // Relation column filter
+      'authorId',
+
+      // Detailed filter configuration
+      {
+        field: 'role',
+        label: 'User Role',
+        type: 'text',
+        options: [ // if not provided, the filter will be a dropdown with all unique values for the column in the database
+          { label: 'Administrator', value: 'admin' },
+          { label: 'User', value: 'user' }
+        ]
+      },
+
+      // Custom filter with dynamic options
+      {
+        parameterName: 'department',
+        label: 'Department',
+        type: 'relation',
+        options: async (db, query) => {
+          const departments = await db.select().from(departmentsTable)
+          return departments.map(dept => ({
+            label: dept.name,
+            value: dept.id
+          }))
+        },
+        queryConditions: async (db, value) => [
+          eq(usersTable.departmentId, value)
+        ]
+      }
+    ]
+  }
+})
+```
+
+### Filter Types
+
+#### Boolean Filters
+Automatically created for boolean columns. Provides Yes/No/All options.
+
+```ts
+{
+  field: 'isActive',
+  type: 'boolean'
+}
+```
+
+#### Text Filters
+For string columns. You can provide a list of options for the filter. If not provided, the filter will be a dropdown with all unique values for the column in the database.
+
+```ts
+{
+  field: 'status',
+  type: 'text',
+  options: [
+    { label: 'Active', value: 'active' },
+    { label: 'Inactive', value: 'inactive' }
+  ]
+}
+```
+
+#### Date Filters
+Support single date or date range filtering. By default, if not provided, the filter will be a date range picker.
+
+```ts
+{
+  field: 'createdAt',
+  type: 'date' // Single date picker
+}
+
+{
+  field: 'createdAt',
+  type: 'daterange' // Date range picker
+}
+```
+
+#### Relation Filters
+For foreign key relationships. Automatically provides choices from the related table.
+
+```ts
+{
+  field: 'categoryId',
+  type: 'relation',
+}
+```
+
+### Custom Filters
+
+Create advanced filters with custom logic:
+
+```ts
+export const platformStatusFilter: CustomFilter = {
+  label: 'Platform Status',
+  parameterName: 'platform_status_filter',
+
+  options: async () => [
+    'enabled_active',
+    'disabled_any',
+    'enabled_inactive',
+    'status_mismatch',
+    // { label: 'Enabled & Active', value: 'enabled_active' },
+    // { label: 'Disabled (Any Status)', value: 'disabled_any' },
+    // { label: 'Enabled but Inactive', value: 'enabled_inactive' },
+    // { label: 'Status Mismatch', value: 'status_mismatch' },
+  ],
+
+  queryConditions: async (db: any, value: any): Promise<SQL<unknown>[]> => {
+    switch (value) {
+      case 'enabled_active':
+        return [
+          eq(platforms.isEnabled, true),
+          eq(platforms.status, 'active'),
+        ]
+
+      case 'disabled_any':
+        return [eq(platforms.isEnabled, false)]
+
+      case 'enabled_inactive':
+        return [
+          eq(platforms.isEnabled, true),
+          sql`${platforms.status} != 'active'`,
+        ]
+
+      case 'status_mismatch':
+        // Platforms where original status differs from current status
+        return [sql`${platforms.status} != ${platforms.originalStatus}`]
+
+      default:
+        return []
+    }
+  },
+}
+
+// Registration
+registry.register(platforms, {
+  list: {
+    filterFields: [
+      platformStatusFilter
+    ]
+  }
+})
+```
+
+### Automatic Filter Detection
+
+If no `filterFields` are specified, the system automatically creates filters for:
+
+- **Boolean columns**: Yes/No filters
+- **Enum/Select columns**: Dropdown with available options
+- **Date columns**: Date range filters
+
+### Filter Field Definition Types
+
+```ts
+type FilterFieldDef<T extends Table>
+  = | ColField<T> // Simple column name
+    | {
+      field: ColField<T>
+      label?: string
+      type?: FilterType
+      options?: { label?: string, value: string | number }[]
+      choicesEndpoint?: string
+    }
+    | CustomFilter // Advanced custom filter
+```
