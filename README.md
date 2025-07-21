@@ -483,12 +483,20 @@ export default defineNuxtPlugin(() => {
 })
 ```
 
-## Object Storage Configuration
+## Runtime Config
+
+AutoAdmin can be configured using environment variables:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `NUXT_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
+| `NUXT_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
+
+### Object Storage Configuration
 
 AutoAdmin can use any S3-compatible object storage (supported by `awsfetch`) to store files and images. You can configure the object storage with environment variables.
 
-```
-NUXT_DATABASE_URL=file:server/db/db.sqlite
+```ini
 NUXT_S3_ACCESS_KEY=<your-access-key>
 NUXT_S3_SECRET_KEY=<your-secret-key>
 NUXT_S3_BUCKET_NAME=<your-bucket-name>

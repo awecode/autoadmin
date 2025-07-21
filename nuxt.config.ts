@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 
-const adminUrlPrefix = process.env.ADMIN_URL_PREFIX || '/admin'
+const adminUrlPrefix = process.env.NUXT_AUTOADMIN_URL_PREFIX || '/admin'
 
 export default defineNuxtConfig({
   extends: ['..'],
