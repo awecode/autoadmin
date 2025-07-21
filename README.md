@@ -1,12 +1,8 @@
-# Nuxt Auto Admin Documentation
+# AutoAdmin Documentation
 
-## 1. Overview
+AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project.
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models.
-
-## 2. Usage
-
-### 2.1. Installation
+## Installation
 
 Use autoadmin as a layer in your nuxt project. You can add the following to your nuxt.config.ts
 
@@ -18,7 +14,7 @@ export default defineNuxtConfig({
 
 Or you can clone the project inside layers directory in your nuxt project.
 
-### 2.2. Basic Setup (Plugin)
+## Usage
 
 AutoAdmin infers field types and relationships directly from your schema.
 
@@ -74,7 +70,7 @@ export default defineNuxtPlugin(() => {
 
 Run the project and open `/admin` to access the admin interfaces for users and posts tables.
 
-### 2.3. Specifying Custom Field Types
+## Specifying Custom Field Types
 
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.
 
@@ -106,9 +102,7 @@ export default defineNuxtPlugin(() => {
 })
 ```
 
-## 3. Configuration Reference
-
-### 3.1. AdminModelOptions (Top-Level)
+## Table Registration Options
 
 This is the main configuration object passed to `registry.register(model, options)`.
 
@@ -128,7 +122,7 @@ This is the main configuration object passed to `registry.register(model, option
 | `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. |
 | `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. |
 
-#### Overriding Field Behavior with fields
+## Overriding Field Behavior with fields
 
 The `fields` option allows you to customize the appearance and behavior of a model's columns across the entire admin interface, affecting list, detail, and form views, wherever applicable. It takes an array of `FieldSpec` objects.
 
@@ -137,35 +131,36 @@ If a column from your schema is not included in this array, its settings will be
 Example:
 
 ```typescript
-// In registry.register(posts, { ... })
-fields: [
+registry.register(posts, {
+  fields: [
   // Customize the 'content' field to use a rich-text editor
-  {
-    name: 'content',
-    type: 'rich-text',
-    label: 'Post Body',
-    inputAttrs: {
-      placeholder: 'Start writing your masterpiece...'
-    }
-  },
-  // Customize the 'featuredImage' to be an image uploader
-  {
-    name: 'featuredImage',
-    type: 'image',
-    help: 'Upload an image with a 16:9 aspect ratio.',
-    fileConfig: {
-      accept: ['.jpeg', '.png'],
-      prefix: 'post-images/', // Subdirectory in your storage bucket
-      maxSize: 5 * 1024 * 1024 // 5MB
+    {
+      name: 'content',
+      type: 'rich-text',
+      label: 'Post Body',
+      inputAttrs: {
+        placeholder: 'Start writing your masterpiece...'
+      }
     },
-    fieldAttrs: {
-      class: 'w-1/2' // uses half width in forms
+    // Customize the 'featuredImage' to be an image uploader
+    {
+      name: 'featuredImage',
+      type: 'image',
+      help: 'Upload an image with a 16:9 aspect ratio.',
+      fileConfig: {
+        accept: ['.jpeg', '.png'],
+        prefix: 'post-images/', // Subdirectory in your storage bucket
+        maxSize: 5 * 1024 * 1024 // 5MB
+      },
+      fieldAttrs: {
+        class: 'w-1/2' // uses half width in forms
+      }
     }
-  }
-]
+  ]
+})
 ```
 
-#### FieldSpec Type Definition
+### `fields` object definition (`FieldSpec`)
 
 ```typescript
 type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image'
@@ -177,12 +172,6 @@ interface FieldSpec {
   label?: string
   // The UI component type to use for this field
   type: FieldType
-  // If the field is required, automatically inferred using drizzle-zod, if not specified
-  required?: boolean
-  // Form validation rules, automatically inferred using drizzle-zod
-  rules?: Record<string, unknown>
-  // Options for select dropdowns, automatically inferred for enums and relations
-  options?: (string | number | { label?: string, value: string | number, count?: number })[]
   // HTML attributes to apply to the field's wrapper element (Nuxt UI's UFormField)
   fieldAttrs?: Record<string, any>
   // HTML attributes to apply directly to the form input element (Nuxt UI's UInput, UCheckbox, etc.)
@@ -202,30 +191,43 @@ interface FieldSpec {
     // Maximum file size in bytes
     maxSize?: number
   }
+  // Automatically inferred using drizzle-zod, if not specified - defines if the field is required
+  required?: boolean
+  // Automatically inferred using drizzle-zod - defines the validation rules for the field
+  rules?: Record<string, unknown>
+  // Automatically inferred for enums and relations - defines the options for the field
+  options?: (string | number | { label?: string, value: string | number, count?: number })[]
 }
 ```
 
-#### Field Types & Attributes
+### Field Types
 
 The `type` property in `FieldSpec` determines which form input component is rendered.
 
-**Common Field Types:**
+**Field Types:**
 
 - `text`: Standard text input. Auto-inferred for `text` type database columns.
-- `number`: A number input.
-- `boolean`: A checkbox
+- `number`: A number input. Auto-inferred for `integer`, `real`, `numeric`, `bigint` type database columns.
+- `boolean`: A checkbox. Auto-inferred for `boolean` type database columns.
 - `select`: A dropdown menu. Auto-inferred for enums.
 - `date`: A date picker. Auto-inferred for sqlite integer with mode `timestamp`.
 - `datetime-local`: A date and time picker. Auto-inferred for sqlite `integer` with mode `timestamp_ms`.
 - `json`: A text area for JSON input. Auto-inferred for sqlite `text` with mode `json`.
 - `textarea`: A multi-line text input.
 - `rich-text`: A WYSIWYG editor with tiptap editor.
-- `image`: An image uploader with preview.
-- `file`: A generic file uploader.
+- `image`: An image uploader with preview. Text with path to the image in object storage is saved to the database.
+- `file`: A generic file uploader. Text with path to the file in object storage is saved to the database.
+- `blob`: A binary data uploader saved to the database.
 
-#### 3.3.3. File & Image Uploads (fileConfig)
+#### File & Image Uploads (fileConfig)
 
-When using the `image` or `file` field type, you can optionally provide a `fileConfig` object to specify upload constraints. `image` type fields accept files with extensions - `.jpg`, `.jpeg`, `.png`, `.svg`. `file` type fields accept files with all extensions. Preview is implemented for images and files with extension `.pdf`, `.txt`, and `.md`.
+When using the `image` or `file` field type, you can optionally provide a `fileConfig` object to specify upload constraints.
+
+By default, `image` type fields accept files with extensions - `.jpg`, `.jpeg`, `.png`, `.svg`.
+
+By default,`file` type fields accept files with all extensions.
+
+A preview dialog is implemented for images, and files with extensions - `.pdf`, `.txt`, `.md`.
 
 ```typescript
 // Example for an image field
@@ -244,9 +246,11 @@ When using the `image` or `file` field type, you can optionally provide a `fileC
 }
 ```
 
-### 3.2. List View Configuration (list)
+When using file and image uploads, you need to configure object storage as described in the [Object Storage Configuration](#object-storage-configuration) section.
 
-The `list` option allows you to customize the main data table view for a model. If neither `fields` nor `columns` are defined in `list` option, fields are automatically inferred. Automatic inference includes all fields except primary autoincrement columns, timestamp columns with default values, and foreign keys.
+## List View Configuration (list)
+
+The `list` option allows you to customize the data table view for a model. If neither `fields` nor `columns` are defined in `list` option, fields are automatically inferred. Automatic inference includes all fields except primary autoincrement columns, timestamp columns with default values, and foreign keys.
 
 ```typescript
 const popularity = (obj: typeof posts.$inferSelect) => {
@@ -254,7 +258,7 @@ const popularity = (obj: typeof posts.$inferSelect) => {
 }
 
 const isNotPublished = (obj: typeof posts.$inferSelect) => {
-  return obj.status == 'Draft' || obj.status == 'Archived'
+  return obj.status === 'Draft' || obj.status === 'Archived'
 }
 
 registry.register(posts, {
@@ -268,7 +272,7 @@ registry.register(posts, {
       {
         field: 'isPublished',
         label: 'Published?'
-      }
+      },
       // A custom function
       isNotPublished,
       // A custom function with additional configuration
@@ -307,16 +311,17 @@ registry.register(posts, {
 })
 ```
 
-#### ListOptions Properties
+### `list` options
 
-**`fields: (string | ListFieldDef)[]`**
+**`fields: (string | function | ListFieldDef)[]`**
 An array defining the columns to display. An item can be:
 - A string representing a column name (e.g., 'title').
 - A dot-notation string for a related field (e.g., 'authorId.email').
-- An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above.
+- A function that returns a value for the column in list view. See `isNotPublished` example above.
+- An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above. `field` value in this object can be a string (column name or dot-notation relation string), or a function.
 
 **`columns: ListColumnDef[]`**
-An alternative to `fields` that enables you to directly specify Nuxt UI Table columns. Additional to Nuxt UI column config, each column takes `type` (as `FieldType`), `header` (as string), and `sortKey` attributes.
+An alternative to `fields` that enables you to directly specify Nuxt UI Table columns. Additional to Nuxt UI column config, each column takes `type` (as `FieldType`), `header` (as string), and `sortKey` attributes. This overwrites any `fields` configuration in `list` for top-level configuration.
 
 **`enableSearch: boolean`** (Default: `true`)
 Toggles search functionality.
@@ -468,3 +473,20 @@ export default defineNuxtPlugin(() => {
   })
 })
 ```
+
+## Object Storage Configuration
+
+AutoAdmin can use any S3-compatible object storage (supported by `awsfetch`) to store files and images. You can configure the object storage with environment variables.
+
+```
+NUXT_DATABASE_URL=file:server/db/db.sqlite
+NUXT_S3_ACCESS_KEY=<your-access-key>
+NUXT_S3_SECRET_KEY=<your-secret-key>
+NUXT_S3_BUCKET_NAME=<your-bucket-name>
+NUXT_S3_REGION=<your-region>
+NUXT_S3_ENDPOINT_URL=<your-endpoint-url>
+NUXT_S3_PUBLIC_URL=<your-public-url>
+```
+
+## List Filters
+
