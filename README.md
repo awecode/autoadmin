@@ -815,6 +815,231 @@ NUXT_S3_ENDPOINT_URL=<your-endpoint-url>
 NUXT_S3_PUBLIC_URL=<your-public-url>
 ```
 
+## Comprehensive Example
+
+### Database Schema
+
+```ts
+// server/db/schema.ts
+import { sql } from 'drizzle-orm'
+import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+
+export const categories = sqliteTable('categories', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  isActive: boolean('is_active').default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+})
+
+export const users = sqliteTable('users', {
+  id: integer('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  avatar: text('avatar'),
+  role: text('role', { enum: ['admin', 'editor', 'author'] }).default('author'),
+  isActive: boolean('is_active').default(true),
+  bio: text('bio'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+})
+
+export const posts = sqliteTable('posts', {
+  id: integer('id').primaryKey(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  excerpt: text('excerpt'),
+  content: text('content'),
+  featuredImage: text('featured_image'),
+  status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
+  views: integer('views').default(0),
+  isCommentsEnabled: boolean('is_comments_enabled').default(true),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
+  authorId: integer('author_id').notNull().references(() => users.id),
+  categoryId: integer('category_id').references(() => categories.id),
+})
+
+export const tags = sqliteTable('tags', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  color: text('color').default('#6366f1'),
+})
+
+export const postsToTags = sqliteTable('posts_to_tags', {
+  postId: integer('post_id').notNull().references(() => posts.id),
+  tagId: integer('tag_id').notNull().references(() => tags.id),
+})
+```
+
+### Plugin Registration
+
+```ts
+// plugins/admin.ts
+import { categories, posts, postsToTags, tags, users } from '~~/server/db/schema'
+
+export default defineNuxtPlugin(() => {
+  const registry = useAdminRegistry()
+
+  // Categories - Simple setup
+  registry.register(categories, {
+    list: {
+      searchFields: ['name', 'description'],
+      filterFields: ['isActive'],
+      bulkActions: [{
+        label: 'Archive Categories',
+        icon: 'i-lucide-archive',
+        action: async (rowIds) => {
+          // Bulk archive logic here
+          return { message: `${rowIds.length} categories archived`, refresh: true }
+        }
+      }]
+    }
+  })
+
+  // Users - Custom field types and validation
+  registry.register(users, {
+    labelColumnName: 'email',
+    fields: [
+      {
+        name: 'avatar',
+        type: 'image',
+        fileConfig: {
+          prefix: 'avatars/',
+          maxSize: 2 * 1024 * 1024 // 2MB
+        }
+      },
+      {
+        name: 'bio',
+        type: 'textarea',
+        inputAttrs: {
+          rows: 4,
+          placeholder: 'Tell us about yourself...'
+        }
+      }
+    ],
+    list: {
+      fields: [
+        'name',
+        'email',
+        'role',
+        {
+          field: 'isActive',
+          label: 'Status',
+        },
+        'createdAt'
+      ],
+      searchFields: ['name', 'email'],
+      filterFields: ['role', 'isActive'],
+      bulkActions: [{
+        label: 'Activate Users',
+        icon: 'i-lucide-user-check',
+        action: async (rowIds) => {
+          // Bulk activation logic
+          return { message: `${rowIds.length} users activated`, refresh: true }
+        }
+      }]
+    }
+  })
+
+  // Posts - Complex setup with relationships and custom functions
+  registry.register(posts, {
+    fields: [
+      {
+        name: 'content',
+        type: 'rich-text',
+        label: 'Post Content'
+      },
+      {
+        name: 'excerpt',
+        type: 'textarea',
+        help: 'Brief summary of the post (max 200 characters)',
+        inputAttrs: {
+          maxlength: 200
+        }
+      },
+      {
+        name: 'featuredImage',
+        type: 'image',
+        fileConfig: {
+          accept: ['.jpg', '.jpeg', '.png', '.webp'],
+          prefix: 'posts/',
+          maxSize: 5 * 1024 * 1024 // 5MB
+        }
+      }
+    ],
+    list: {
+      fields: [
+        'title',
+        {
+          field: 'authorId.name',
+          label: 'Author',
+        },
+        {
+          field: 'categoryId.name',
+          label: 'Category',
+        },
+        'status',
+        {
+          field: post => `${post.views || 0} views`,
+          label: 'Popularity',
+          sortKey: 'views'
+        },
+        {
+          field: 'publishedAt',
+          label: 'Published',
+          type: 'date'
+        }
+      ],
+      searchFields: ['title', 'excerpt', 'authorId.name'],
+      filterFields: [
+        'status',
+        'authorId',
+        'categoryId',
+        'isCommentsEnabled',
+        {
+          field: 'publishedAt',
+          type: 'daterange',
+          label: 'Publication Date'
+        }
+      ],
+      bulkActions: [
+        {
+          label: 'Publish Posts',
+          icon: 'i-lucide-send',
+          action: async (rowIds) => {
+            // Bulk publish logic
+            return { message: `${rowIds.length} posts published`, refresh: true }
+          }
+        }
+      ]
+    },
+    m2m: {
+      tags: postsToTags
+    },
+    warnOnUnsavedChanges: true
+  })
+
+  // Tags - Simple color-coded tags
+  registry.register(tags, {
+    icon: 'i-lucide-tag',
+    fields: [
+      {
+        name: 'color',
+        type: 'text',
+        inputAttrs: {
+          type: 'color'
+        },
+        help: 'Choose a color for this tag'
+      }
+    ],
+    list: {
+      enableFilter: false // Disable filters
+    }
+  })
+})
+```
+
 ## Stack
 
 - [Nuxt](https://nuxt.com/)
