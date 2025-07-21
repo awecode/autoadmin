@@ -6,7 +6,7 @@ AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your
 
 Use autoadmin as a layer in your nuxt project. You can add the following to your nuxt.config.ts
 
-```typescript
+```ts
 export default defineNuxtConfig({
   extends: ['../autoadmin/.playground'],
 })
@@ -18,7 +18,7 @@ Or you can clone the project inside layers directory in your nuxt project.
 
 Here is an example schema for SQLite demonstrating various column types.
 
-```typescript
+```ts
 // server/db/schema.ts
 import { sql } from 'drizzle-orm'
 import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
@@ -55,7 +55,7 @@ export const posts = sqliteTable('posts', {
 
 Register your Drizzle schemas in a Nuxt plugin.
 
-```typescript
+```ts
 // plugins/admin.ts
 import { posts, users } from '~~/server/db/schema'
 
@@ -72,7 +72,7 @@ Run the project and open `/admin` to access the admin interfaces for users and p
 
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.
 
-```typescript
+```ts
 // plugins/admin.ts
 import { posts, users } from '~~/server/db/schema'
 
@@ -128,7 +128,7 @@ If a column from your schema is not included in this array, its settings will be
 
 Example:
 
-```typescript
+```ts
 registry.register(posts, {
   fields: [
   // Customize the 'content' field to use a rich-text editor
@@ -146,8 +146,8 @@ registry.register(posts, {
       type: 'image',
       help: 'Upload an image with a 16:9 aspect ratio.',
       fileConfig: {
-        accept: ['.jpeg', '.png'],
         prefix: 'post-images/', // Subdirectory in your storage bucket
+        accept: ['.jpeg', '.png'],
         maxSize: 5 * 1024 * 1024 // 5MB
       },
       fieldAttrs: {
@@ -160,7 +160,7 @@ registry.register(posts, {
 
 ### `fields` object definition (`FieldSpec`)
 
-```typescript
+```ts
 type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image'
 
 interface FieldSpec {
@@ -182,18 +182,18 @@ interface FieldSpec {
   hint?: string
   // Configuration for file or image uploads.
   fileConfig?: {
-    // Allowed file extensions as array of strings starting with a period `.`
-    accept?: `.${string}`[]
     // Storage path prefix for object storage bucket
     prefix?: string
-    // Maximum file size in bytes
+    // Allowed file extensions as array of strings starting with a period `.` - client-side only validation
+    accept?: `.${string}`[]
+    // Maximum file size in bytes - client-side only validation
     maxSize?: number
   }
-  // Automatically inferred using drizzle-zod, if not specified - defines if the field is required
+  // Automatically inferred using drizzle-zod, if not specified; defines if the field is required
   required?: boolean
-  // Automatically inferred using drizzle-zod - defines the validation rules for the field
+  // Automatically inferred using drizzle-zod; defines the validation rules for the field
   rules?: Record<string, unknown>
-  // Automatically inferred for enums and relations - defines the options for the field
+  // Automatically inferred for enums and relations; defines the options for the field
   options?: (string | number | { label?: string, value: string | number, count?: number })[]
 }
 ```
@@ -227,17 +227,17 @@ By default,`file` type fields accept files with all extensions.
 
 A preview dialog is implemented for images, and files with extensions - `.pdf`, `.txt`, `.md`.
 
-```typescript
+```ts
 // Example for an image field
 {
   name: 'featuredImage',
   type: 'image',
   help: 'Upload a JPG or PNG, max 2MB.',
   fileConfig: {
-    // List of allowed file extensions
-    accept: ['.jpg', '.svg'],
     // A prefix for the storage path in your bucket
     prefix: 'post-images/',
+    // List of allowed file extensions
+    accept: ['.jpg', '.svg'],
     // Maximum file size in bytes
     maxSize: 2 * 1024 * 1024 // 2MB
   }
@@ -246,11 +246,11 @@ A preview dialog is implemented for images, and files with extensions - `.pdf`, 
 
 When using file and image uploads, you need to configure object storage as described in the [Object Storage Configuration](#object-storage-configuration) section.
 
-## List View Configuration (list)
+## List View Configuration
 
 The `list` option allows you to customize the data table view for a model. If neither `fields` nor `columns` are defined in `list` option, fields are automatically inferred. Automatic inference includes all fields except primary autoincrement columns, timestamp columns with default values, and foreign keys.
 
-```typescript
+```ts
 const popularity = (obj: typeof posts.$inferSelect) => {
   return `${post.views} views`
 }
@@ -319,10 +319,13 @@ An array defining the columns to display. An item can be:
 - An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above. `field` value in this object can be a string (column name or dot-notation relation string), or a function.
 
 **`columns: ListColumnDef[]`**
-An alternative to `fields` that enables you to directly specify Nuxt UI Table columns. Additional to Nuxt UI column config, each column takes `type` (as `FieldType`), `header` (as string), and `sortKey` attributes. This overwrites any `fields` configuration in `list` for top-level configuration.
+An alternative to `fields` that enables you to directly specify Nuxt UI Table columns. Additional to Nuxt UI column config, each column takes `type` (as `FieldType`), `header` (as string), and `sortKey` attributes. This overwrites top-level `fields` configuration for list view.
 
 **`enableSearch: boolean`** (Default: `true`)
 Toggles search functionality.
+
+**`enableSort: boolean`** (Default: `true`)
+Toggles sorting functionality. See [List Sorting](#list-sorting) for more details.
 
 **`searchFields: string[]`** (Default: `[labelColumnName]`)
 An array of column names (including relational fields in dot-notation) to search against.
@@ -361,6 +364,8 @@ Both options share these properties:
 
 The top-level `formFields` option is a convenient shortcut to apply the same field configuration to both create and update forms.
 
+`formFields` is an array of field spec as defined in [Overriding Field Behavior with fields](#overriding-field-behavior-with-fields).
+
 ## Relationship Configuration
 
 ### Foreign Keys
@@ -380,7 +385,7 @@ When the `locations` model is registered, a dropdown selection of platforms will
 
 A many-to-many relationship requires a third "join" table that connects two other tables. To configure it, you provide the `m2m` option with an object where the key is the label for the related model and the value is the Drizzle schema for the join table.
 
-```typescript
+```ts
 // server/db/schema.ts
 
 // Posts table (already defined)
@@ -405,7 +410,7 @@ export const postsToTags = sqliteTable('posts_to_tags', {
 
 When registering the `posts` model, use the `m2m` option to declare its relationship with `tags`.
 
-```typescript
+```ts
 // plugins/admin.ts
 import { posts, postsToTags, tags } from '~~/server/db/schema'
 
@@ -427,7 +432,7 @@ This will render a multi-select component on the `posts` form, allowing you to a
 
 While this is not usually required, autoadmin allows rendering one to many relation in a form.
 
-```typescript
+```ts
 // server/db/schema.ts
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey(),
@@ -444,7 +449,7 @@ export const posts = sqliteTable('posts', {
 
 When registering the `users` model, use the `o2m` option to declare that a user can have many posts.
 
-```typescript
+```ts
 // plugins/admin.ts
 import { posts, users } from '~~/server/db/schema'
 
@@ -467,7 +472,7 @@ The `delete` option controls the deletion functionality for a model's records. B
 
 To disable the delete action for a model, set the `enabled` property to `false`. This will remove delete functionality, including delete button on list row and bulk delete from list data table.
 
-```typescript
+```ts
 // plugins/admin.ts
 import { users } from '~~/server/db/schema'
 
@@ -483,26 +488,97 @@ export default defineNuxtPlugin(() => {
 })
 ```
 
-## Runtime Config
+## List Sorting
 
-AutoAdmin can be configured using environment variables:
+Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
 
-| Variable | Description | Default |
-| --- | --- | --- |
-| `NUXT_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
-| `NUXT_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
+```ts
+registerAdminModel(usersTable, {
+  list: {
+    enableSort: true, // Enable/disable sorting (default: true)
+    fields: [
+      // Simple column with sorting
+      'name',
 
-### Object Storage Configuration
+      // Custom sort key
+      {
+        field: 'displayName',
+        sortKey: 'name' // Sort by 'name' column when clicking 'displayName'
+      },
 
-AutoAdmin can use any S3-compatible object storage (supported by `awsfetch`) to store files and images. You can configure the object storage with environment variables.
+      // Relation sorting
+      {
+        field: 'authorId.email',
+        sortKey: 'authorId.name' // Sort by author name when clicking email
+      },
 
-```ini
-NUXT_S3_ACCESS_KEY=<your-access-key>
-NUXT_S3_SECRET_KEY=<your-secret-key>
-NUXT_S3_BUCKET_NAME=<your-bucket-name>
-NUXT_S3_REGION=<your-region>
-NUXT_S3_ENDPOINT_URL=<your-endpoint-url>
-NUXT_S3_PUBLIC_URL=<your-public-url>
+      // Disable sorting for specific field
+      {
+        field: 'calculatedField',
+        sortKey: false // No sorting available
+      }
+    ]
+  }
+})
+```
+
+### Sort Key Options
+
+The `sortKey` property determines how a column can be sorted:
+
+#### Direct Column Sorting
+Sort by the same column that's displayed:
+
+```ts
+{
+  field: 'createdAt',
+  sortKey: 'createdAt' // or just omit sortKey, defaults to field name
+}
+```
+
+#### Custom Sort Key
+Sort by a different column than what's displayed:
+
+```ts
+{
+  field: popularity, // Custom function showing view count
+  sortKey: 'views' // Sort by the actual views column
+}
+```
+
+#### Relation Sorting
+Sort by columns in related tables using dot notation:
+
+```ts
+{
+  field: 'authorId.email',
+  sortKey: 'authorId.name' // Sort by author name, not email
+}
+```
+
+#### Disable Sorting
+Prevent sorting on specific columns:
+
+```ts
+{
+  field: 'actions',
+  sortKey: false // No sorting for action buttons
+}
+```
+
+### Automatic Sort Key Detection
+
+When using simple field definitions, sort keys are automatically assigned:
+
+```ts
+registerAdminModel(postsTable, {
+  list: {
+    fields: [
+      'title', // Automatically gets sortKey: 'title'
+      'authorId.name', // Automatically gets sortKey: 'authorId.name'
+    ]
+  }
+})
 ```
 
 ## List Filters
@@ -717,97 +793,26 @@ registry.register(platforms, {
 
 If `delete.enabled` is not set to `false` in registration option, a bulk action for delete is automatically added to the list view.
 
-## List Sorting
+## Runtime Config
 
-Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
+AutoAdmin can be configured using environment variables:
 
-```ts
-registerAdminModel(usersTable, {
-  list: {
-    enableSort: true, // Enable/disable sorting (default: true)
-    fields: [
-      // Simple column with sorting
-      'name',
+| Variable | Description | Default |
+| --- | --- | --- |
+| `NUXT_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
+| `NUXT_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
 
-      // Custom sort key
-      {
-        field: 'displayName',
-        sortKey: 'name' // Sort by 'name' column when clicking 'displayName'
-      },
+### Object Storage Configuration
 
-      // Relation sorting
-      {
-        field: 'authorId.email',
-        sortKey: 'authorId.name' // Sort by author name when clicking email
-      },
+AutoAdmin can use any S3-compatible object storage (supported by `awsfetch`) to store files and images. You can configure the object storage with environment variables.
 
-      // Disable sorting for specific field
-      {
-        field: 'calculatedField',
-        sortKey: false // No sorting available
-      }
-    ]
-  }
-})
-```
-
-### Sort Key Options
-
-The `sortKey` property determines how a column can be sorted:
-
-#### Direct Column Sorting
-Sort by the same column that's displayed:
-
-```ts
-{
-  field: 'createdAt',
-  sortKey: 'createdAt' // or just omit sortKey, defaults to field name
-}
-```
-
-#### Custom Sort Key
-Sort by a different column than what's displayed:
-
-```ts
-{
-  field: popularity, // Custom function showing view count
-  sortKey: 'views' // Sort by the actual views column
-}
-```
-
-#### Relation Sorting
-Sort by columns in related tables using dot notation:
-
-```ts
-{
-  field: 'authorId.email',
-  sortKey: 'authorId.name' // Sort by author name, not email
-}
-```
-
-#### Disable Sorting
-Prevent sorting on specific columns:
-
-```ts
-{
-  field: 'actions',
-  sortKey: false // No sorting for action buttons
-}
-```
-
-### Automatic Sort Key Detection
-
-When using simple field definitions, sort keys are automatically assigned:
-
-```ts
-registerAdminModel(postsTable, {
-  list: {
-    fields: [
-      'title', // Automatically gets sortKey: 'title'
-      'authorId.name', // Automatically gets sortKey: 'authorId.name'
-    ]
-  }
-})
+```ini
+NUXT_S3_ACCESS_KEY=<your-access-key>
+NUXT_S3_SECRET_KEY=<your-secret-key>
+NUXT_S3_BUCKET_NAME=<your-bucket-name>
+NUXT_S3_REGION=<your-region>
+NUXT_S3_ENDPOINT_URL=<your-endpoint-url>
+NUXT_S3_PUBLIC_URL=<your-public-url>
 ```
 
 ## Stack
