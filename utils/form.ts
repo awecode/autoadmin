@@ -29,6 +29,7 @@ export interface FieldSpec {
     /** Max size is the maximum size of the file in bytes, e.g. 1024 * 1024 for 1MB */
     maxSize?: number
   }
+  /** Configuration for relation fields, automatically generated */
   relationConfig?: {
     /** The endpoint to fetch the choices for the relation */
     choicesEndpoint?: string
