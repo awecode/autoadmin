@@ -51,16 +51,15 @@ const clearFile = () => {
 }
 async function handleFileChange(e: Event | undefined, droppedFile: undefined | File = undefined) {
   isFileUploading.value = true
-  let file = null
+  let file: File | undefined
   if (droppedFile) {
     file = droppedFile
   } else if (e) {
     const target = e.target as HTMLInputElement
-    if (!target?.files) {
-      // @ts-expect-error fix this later
-      file = e?.[0]
-    } else {
+    if (target?.files) {
       file = target.files?.[0]
+    } else {
+      file = (e as any)?.[0] as File
     }
   }
   // check file type
