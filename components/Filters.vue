@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { FilterType } from '#layers/autoadmin/utils/filter'
+import type { FilterSpec } from '#layers/autoadmin/utils/filter'
 import { normalizeOptions } from '#layers/autoadmin/utils/form'
 import { useRouteQuery } from '@vueuse/router'
 
-const _props = defineProps<{
-  filters: { field: string, label?: string, type?: FilterType, options?: { label?: string, value: string | number, count?: number }[] }[]
+defineProps<{
+  filters: FilterSpec[]
 }>()
 
 const route = useRoute()

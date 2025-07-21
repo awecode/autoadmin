@@ -7,7 +7,7 @@ type DateRange = {
 } | `${string},${string}` | undefined
 
 const props = defineProps<{
-  modelValue?: DateRange
+  modelValue?: DateRange | string
   mode?: 'date' | 'string'
   placeholder?: string
 }>()

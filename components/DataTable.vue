@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FilterSpec } from '#layers/autoadmin/utils/filter'
 import type { TableColumn } from '#ui/types'
 import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
@@ -22,7 +23,7 @@ interface ListApiResponse {
     page: number
     pages: number
   }
-  filters?: Record<string, any>
+  filters?: FilterSpec[]
   spec: {
     endpoint: string
     updatePage?: { name: string, params: { modelLabel: string } }
