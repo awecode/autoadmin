@@ -19,6 +19,7 @@ export default defineNuxtConfig({
         title: 'AutoAdmin',
       },
     },
+    databaseUrl: '',
     s3: {
       accessKey: undefined,
       secretKey: undefined,
