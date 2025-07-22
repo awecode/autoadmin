@@ -116,8 +116,14 @@ export default defineNuxtPlugin(() => {
       searchFields: ['title', 'excerpt', 'authorId.name'],
       filterFields: [
         'status',
-        'authorId',
-        'categoryId',
+        {
+          field: 'authorId',
+          type: 'relation',
+        },
+        {
+          field: 'categoryId',
+          type: 'relation',
+        },
         'isCommentsEnabled',
         {
           field: 'publishedAt',

@@ -8,7 +8,7 @@ import { getDef, unwrapZodType } from './zod'
 
 type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
-export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image'
+export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image' | 'textarea' | 'relation' | 'relation-many' | 'rich-text'
 
 export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: ListFieldType, options?: string[] }> {
   const shape = getDef(schema)?.shape ?? schema.shape
