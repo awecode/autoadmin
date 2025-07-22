@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1753170799459,
+      "tag": "0000_tidy_wallflower",
+      "breakpoints": true
+    }
+  ]
+}
