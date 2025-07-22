@@ -4,7 +4,13 @@ const adminUrlPrefix = process.env.NUXT_AUTOADMIN_URL_PREFIX || '/admin'
 
 export default defineNuxtConfig({
   extends: ['..'],
-  modules: ['@nuxt/eslint'],
+  css: [fileURLToPath(new URL('./assets/css/main.css', import.meta.url))],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/fonts',
+    '@nuxt/icon',
+    '@nuxt/ui',
+  ],
   eslint: {
     config: {
       // Use the generated ESLint config for lint root project as well
