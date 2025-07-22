@@ -4,3 +4,4 @@
 @plugin "@tailwindcss/typography";
 
 @source "../../pages/";
+@source "../../components/";

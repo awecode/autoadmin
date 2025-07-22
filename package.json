@@ -11,6 +11,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@iconify-json/lucide": "^1.2.57",
     "@libsql/client": "^0.15.9",
     "@peculiar/webcrypto": "^1.5.0",
     "@tailwindcss/typography": "^0.5.16",
