@@ -1,6 +1,8 @@
 import { $fetch, createPage, setup, url } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
+const path = (path: string) => url(`/${path}/`.replace(/\/+/g, '/'))
+
 await setup({
   host: 'http://localhost:3000',
 })
@@ -12,7 +14,7 @@ describe('index', async () => {
   })
   it('should list all models', async () => {
     const page = await createPage()
-    await page.goto(url('/admin/'), { waitUntil: 'hydration' })
+    await page.goto(url('/admin/'), { waitUntil: 'domcontentloaded' })
     // there must be 4 spans with text: Categories, Users, Posts, Tags
     const spans = await page.$$('span')
     const spanTexts = await Promise.all(spans.map((span: { textContent: () => any }) => span.textContent()))
@@ -31,24 +33,22 @@ describe('list', async () => {
     const pageTitle = await page.title()
     expect(pageTitle).toContain('Tags')
   })
-  it('should open create page', async () => {
-    const page = await createPage()
-    await page.goto(url('/admin/tags'))
-    const createButton = await page.$('span:has-text("Add")')
-    expect(createButton).toBeDefined()
-    await createButton?.click()
-    const pageTitle = await page.title()
-    expect(pageTitle).toContain('Tag')
-    expect(pageTitle).toContain('Create')
-    const pagePath = await page.url()
-    expect(pagePath).toContain('/admin/tags/create')
-  })
 })
 
 describe('create', async () => {
   it('should submit form', async () => {
     const page = await createPage()
-    await page.goto(url('/admin/tags/create'), { waitUntil: 'hydration' })
+    await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
+    const createButton = await page.$('span:has-text("Add")')
+    expect(createButton).toBeDefined()
+    await createButton?.click()
+
+    await page.waitForLoadState('networkidle')
+    const pageTitle = await page.title()
+    expect(pageTitle).toContain('Tag')
+    expect(pageTitle).toContain('Create')
+    const pagePath = await page.url()
+    expect(pagePath).toBe(url('/admin/tags/create'))
     const submitButton = await page.$('button:has-text("Create")')
     expect(submitButton).toBeTruthy()
     await submitButton?.click()
@@ -64,5 +64,10 @@ describe('create', async () => {
     await nameInput?.focus()
     await page.keyboard.press('Tab')
     await submitButton?.click()
+
+    await page.waitForTimeout(1000)
+    await page.waitForLoadState('networkidle')
+    const pagePath3 = await page.url()
+    expect(pagePath3).toBe(path('/admin/tags'))
   }, 50000)
 })
