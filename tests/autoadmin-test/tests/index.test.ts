@@ -44,3 +44,25 @@ describe('list', async () => {
     expect(pagePath).toContain('/admin/tags/create')
   })
 })
+
+describe('create', async () => {
+  it('should submit form', async () => {
+    const page = await createPage()
+    await page.goto(url('/admin/tags/create'), { waitUntil: 'hydration' })
+    const submitButton = await page.$('button:has-text("Create")')
+    expect(submitButton).toBeTruthy()
+    await submitButton?.click()
+
+    // should not submit because of validation errors
+    const pagePath2 = await page.url()
+    expect(pagePath2).toBe(url('/admin/tags/create'))
+
+    // set name to "Tag 1"
+    const nameInput = await page.$('input[name="name"]')
+    expect(nameInput).toBeTruthy()
+    await nameInput?.fill('Tag 1')
+    await nameInput?.focus()
+    await page.keyboard.press('Tab')
+    await submitButton?.click()
+  }, 50000)
+})
