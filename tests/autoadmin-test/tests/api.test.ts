@@ -235,8 +235,17 @@ describe('api', async () => {
     })
     expect(createResponse.data.id).toBeTruthy()
 
-    // Test filtering with multiple parameters
-    const filterUrl = `/api/autoadmin/posts?status=published&authorId=${authorId}&categoryId=${categoryId}&isCommentsEnabled=true&publishedAt=2025-07-08,2025-07-09`
+    // Create dynamic date ranges using current datetime since records were just created
+    const now = new Date()
+    const today = now.toISOString().split('T')[0] // YYYY-MM-DD format
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+    // Use today's date for both createdAt and updatedAt filters since records were just created
+    const createdAtDate = today
+    const updatedAtDate = today
+
+    // Test filtering with multiple parameters including dynamic timestamps
+    const filterUrl = `/api/autoadmin/posts?status=published&authorId=${authorId}&categoryId=${categoryId}&isCommentsEnabled=true&publishedAt=2025-07-08,2025-07-09&createdAt=${createdAtDate}&updatedAt=${updatedAtDate},${tomorrow}`
     const filteredResponse = await $fetch<{ results: Record<string, any>[] }>(filterUrl)
 
     // Verify the filtered results contain our test post
@@ -248,10 +257,51 @@ describe('api', async () => {
     expect(testPost!.categoryId__name).toBe('Category 2')
     expect(testPost!.field).toBe('200 views')
 
+    // Test individual timestamp filters
+    const createdAtFilterUrl = `/api/autoadmin/posts?createdAt=${createdAtDate}`
+    const createdAtResponse = await $fetch<{ results: Record<string, any>[] }>(createdAtFilterUrl)
+    const createdAtPost = createdAtResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(createdAtPost).toBeTruthy()
+
+    const updatedAtFilterUrl = `/api/autoadmin/posts?updatedAt=${updatedAtDate},${tomorrow}`
+    const updatedAtResponse = await $fetch<{ results: Record<string, any>[] }>(updatedAtFilterUrl)
+    const updatedAtPost = updatedAtResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(updatedAtPost).toBeTruthy()
+
     // Test that filtering excludes posts that don't match
     const excludeFilterUrl = `/api/autoadmin/posts?status=draft`
     const excludeResponse = await $fetch<{ results: Record<string, any>[] }>(excludeFilterUrl)
     const draftTestPost = excludeResponse.results.find(post => post.title === 'Test Filter Post')
     expect(draftTestPost).toBeFalsy() // Should not find our published post in draft filter
+
+    // Test date filters that should exclude the test post
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    const dayBeforeYesterday = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0]
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+    // Test createdAt filter with yesterday (should not include today's post)
+    const yesterdayCreatedFilterUrl = `/api/autoadmin/posts?createdAt=${yesterday}`
+    const yesterdayCreatedResponse = await $fetch<{ results: Record<string, any>[] }>(yesterdayCreatedFilterUrl)
+    const yesterdayCreatedPost = yesterdayCreatedResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(yesterdayCreatedPost).toBeFalsy() // Should not find today's post when filtering for yesterday
+
+    // Test updatedAt filter with date range that excludes today
+    const pastRangeFilterUrl = `/api/autoadmin/posts?updatedAt=${dayBeforeYesterday},${yesterday}`
+    const pastRangeResponse = await $fetch<{ results: Record<string, any>[] }>(pastRangeFilterUrl)
+    const pastRangePost = pastRangeResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(pastRangePost).toBeFalsy() // Should not find today's post in past date range
+
+    // Test createdAt filter with future date (should not include today's post)
+    const futureCreatedFilterUrl = `/api/autoadmin/posts?createdAt=${nextWeek}`
+    const futureCreatedResponse = await $fetch<{ results: Record<string, any>[] }>(futureCreatedFilterUrl)
+    const futureCreatedPost = futureCreatedResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(futureCreatedPost).toBeFalsy() // Should not find today's post when filtering for future date
+
+    // Test updatedAt filter with future date range (should not include today's post)
+    const futureWeekAfter = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    const futureRangeFilterUrl = `/api/autoadmin/posts?updatedAt=${nextWeek},${futureWeekAfter}`
+    const futureRangeResponse = await $fetch<{ results: Record<string, any>[] }>(futureRangeFilterUrl)
+    const futureRangePost = futureRangeResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(futureRangePost).toBeFalsy() // Should not find today's post in future date range
   })
 })

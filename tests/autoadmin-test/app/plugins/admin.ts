@@ -130,6 +130,16 @@ export default defineNuxtPlugin(() => {
           type: 'daterange',
           label: 'Publication Date',
         },
+        {
+          field: 'createdAt',
+          type: 'date',
+          label: 'Created At',
+        },
+        {
+          field: 'updatedAt',
+          type: 'daterange',
+          label: 'Updated At',
+        },
       ],
       bulkActions: [
         {

@@ -1,144 +1,144 @@
 {
-    "spec": {
-      "fields": [
-        {
-          "name": "title",
-          "label": "Title",
-          "type": "text",
-          "required": true,
-          "rules": {}
-        },
-        {
-          "name": "slug",
-          "label": "Slug",
-          "type": "text",
-          "required": true,
-          "rules": {}
-        },
-        {
-          "name": "excerpt",
-          "label": "Excerpt",
-          "type": "textarea",
-          "required": false,
-          "rules": {},
-          "help": "Brief summary of the post (max 200 characters)",
-          "inputAttrs": {
-            "maxlength": 200
-          }
-        },
-        {
-          "name": "content",
-          "label": "Post Content",
-          "type": "rich-text",
-          "required": false,
-          "rules": {}
-        },
-        {
-          "name": "featuredImage",
-          "label": "Featured Image",
-          "type": "image",
-          "required": false,
-          "rules": {},
-          "fileConfig": {
-            "accept": [
-              ".jpg",
-              ".jpeg",
-              ".png",
-              ".webp"
-            ],
-            "prefix": "posts/",
-            "maxSize": 5242880
-          }
-        },
-        {
-          "name": "status",
-          "label": "Status",
-          "type": "select",
-          "required": false,
-          "rules": {},
-          "options": [
-            "draft",
-            "published",
-            "archived"
-          ],
-          "defaultValue": "draft"
-        },
-        {
-          "name": "views",
-          "label": "Views",
-          "type": "number",
-          "required": false,
-          "rules": {
-            "min": -9007199254740991,
-            "max": 9007199254740991
-          },
-          "defaultValue": 0
-        },
-        {
-          "name": "isCommentsEnabled",
-          "label": "Is Comments Enabled",
-          "type": "boolean",
-          "required": false,
-          "rules": {},
-          "defaultValue": true
-        },
-        {
-          "name": "publishedAt",
-          "label": "Published At",
-          "type": "date",
-          "required": false,
-          "rules": {}
-        },
-        {
-          "name": "authorId",
-          "label": "Author",
-          "type": "relation",
-          "required": true,
-          "rules": {
-            "min": -9007199254740991,
-            "max": 9007199254740991
-          },
-          "relationConfig": {
-            "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/authorId",
-            "relatedConfigKey": "users",
-            "enableCreate": true,
-            "enableUpdate": true,
-            "foreignRelatedColumnName": "id",
-            "foreignLabelColumnName": "email"
-          }
-        },
-        {
-          "name": "categoryId",
-          "label": "Category",
-          "type": "relation",
-          "required": false,
-          "rules": {
-            "min": -9007199254740991,
-            "max": 9007199254740991
-          },
-          "relationConfig": {
-            "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/categoryId",
-            "relatedConfigKey": "categories",
-            "enableCreate": true,
-            "enableUpdate": true,
-            "foreignRelatedColumnName": "id",
-            "foreignLabelColumnName": "name"
-          }
-        },
-        {
-          "name": "___tags___tagId",
-          "type": "relation-many",
-          "label": "Tags",
-          "relationConfig": {
-            "choicesEndpoint": "/api/autoadmin/formspec/posts/choices-many/___tags___tagId",
-            "enableCreate": true,
-            "enableUpdate": true
-          },
-          "required": false,
-          "rules": {},
-          "options": []
+  "spec": {
+    "fields": [
+      {
+        "name": "title",
+        "label": "Title",
+        "type": "text",
+        "required": true,
+        "rules": {}
+      },
+      {
+        "name": "slug",
+        "label": "Slug",
+        "type": "text",
+        "required": true,
+        "rules": {}
+      },
+      {
+        "name": "excerpt",
+        "label": "Excerpt",
+        "type": "textarea",
+        "required": false,
+        "rules": {},
+        "help": "Brief summary of the post (max 200 characters)",
+        "inputAttrs": {
+          "maxlength": 200
         }
-      ],
-      "warnOnUnsavedChanges": true
-    }
+      },
+      {
+        "name": "content",
+        "label": "Post Content",
+        "type": "rich-text",
+        "required": false,
+        "rules": {}
+      },
+      {
+        "name": "featuredImage",
+        "label": "Featured Image",
+        "type": "image",
+        "required": false,
+        "rules": {},
+        "fileConfig": {
+          "accept": [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+          ],
+          "prefix": "posts/",
+          "maxSize": 5242880
+        }
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "required": false,
+        "rules": {},
+        "options": [
+          "draft",
+          "published",
+          "archived"
+        ],
+        "defaultValue": "draft"
+      },
+      {
+        "name": "views",
+        "label": "Views",
+        "type": "number",
+        "required": false,
+        "rules": {
+          "min": -9007199254740991,
+          "max": 9007199254740991
+        },
+        "defaultValue": 0
+      },
+      {
+        "name": "isCommentsEnabled",
+        "label": "Is Comments Enabled",
+        "type": "boolean",
+        "required": false,
+        "rules": {},
+        "defaultValue": true
+      },
+      {
+        "name": "publishedAt",
+        "label": "Published At",
+        "type": "date",
+        "required": false,
+        "rules": {}
+      },
+      {
+        "name": "authorId",
+        "label": "Author",
+        "type": "relation",
+        "required": true,
+        "rules": {
+          "min": -9007199254740991,
+          "max": 9007199254740991
+        },
+        "relationConfig": {
+          "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/authorId",
+          "relatedConfigKey": "users",
+          "enableCreate": true,
+          "enableUpdate": true,
+          "foreignRelatedColumnName": "id",
+          "foreignLabelColumnName": "email"
+        }
+      },
+      {
+        "name": "categoryId",
+        "label": "Category",
+        "type": "relation",
+        "required": false,
+        "rules": {
+          "min": -9007199254740991,
+          "max": 9007199254740991
+        },
+        "relationConfig": {
+          "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/categoryId",
+          "relatedConfigKey": "categories",
+          "enableCreate": true,
+          "enableUpdate": true,
+          "foreignRelatedColumnName": "id",
+          "foreignLabelColumnName": "name"
+        }
+      },
+      {
+        "name": "___tags___tagId",
+        "type": "relation-many",
+        "label": "Tags",
+        "relationConfig": {
+          "choicesEndpoint": "/api/autoadmin/formspec/posts/choices-many/___tags___tagId",
+          "enableCreate": true,
+          "enableUpdate": true
+        },
+        "required": false,
+        "rules": {},
+        "options": []
+      }
+    ],
+    "warnOnUnsavedChanges": true
   }
+}

@@ -30,5 +30,17 @@
     "field": "publishedAt",
     "label": "Publication Date",
     "type": "daterange"
+  },
+  {
+    "field": "createdAt",
+    "label": "Created At",
+    "type": "date",
+    "originalType": "datetime-local"
+  },
+  {
+    "field": "updatedAt",
+    "label": "Updated At",
+    "type": "daterange",
+    "originalType": "datetime-local"
   }
-] 
+]
