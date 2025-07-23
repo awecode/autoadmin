@@ -1,8 +1,6 @@
 import { $fetch, createPage, setup, url } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
-const path = (path: string) => url(`/${path}/`.replace(/\/+/g, '/'))
-
 await setup({
   host: 'http://localhost:3000',
 })
@@ -36,14 +34,26 @@ describe('list', async () => {
 })
 
 describe('create', async () => {
-  it('should submit form', async () => {
+  it('should create tag', async () => {
     const page = await createPage()
     await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
+    // find button with text Delete inside a td of a tr that has "Tag 1" text inside second td of the same tr
+    const deleteButton = await page.$('tr:has(td:has-text("Tag 1")) button:has-text("Delete")')
+    if (deleteButton) {
+      await deleteButton?.click()
+      // wait for 1 second for dialog to open
+      await page.waitForTimeout(1000)
+      // find button with text Delete inside the dialog which has data attribute data-dismissable-layer
+      const deleteButton2 = await page.$('[data-dismissable-layer] button:has-text("Delete")')
+      expect(deleteButton2).toBeTruthy()
+      await deleteButton2?.click()
+    }
+
     const createButton = await page.$('span:has-text("Add")')
     expect(createButton).toBeDefined()
     await createButton?.click()
-
-    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1000)
+    // Page must be ready by now, check title and url
     const pageTitle = await page.title()
     expect(pageTitle).toContain('Tag')
     expect(pageTitle).toContain('Create')
@@ -68,6 +78,6 @@ describe('create', async () => {
     await page.waitForTimeout(1000)
     await page.waitForLoadState('networkidle')
     const pagePath3 = await page.url()
-    expect(pagePath3).toBe(path('/admin/tags'))
+    expect(pagePath3).toBe(url('/admin/tags'))
   }, 50000)
 })

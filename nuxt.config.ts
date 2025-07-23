@@ -45,12 +45,12 @@ export default defineNuxtConfig({
     'pages:extend': function (pages) {
       pages.push({
         name: 'autoadmin-index',
-        path: `${adminUrlPrefix}/`,
+        path: `${adminUrlPrefix}`,
         file: '#layers/automadmin/pages/_autoadmin/index.vue',
       })
       pages.push({
         name: 'autoadmin-list',
-        path: `${adminUrlPrefix}/:modelLabel/`,
+        path: `${adminUrlPrefix}/:modelLabel`,
         file: '#layers/automadmin/pages/_autoadmin/list/index.vue',
       })
       pages.push({
