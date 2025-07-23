@@ -33,7 +33,7 @@ describe('list', async () => {
   })
 })
 
-describe('create', async () => {
+describe('tags', async () => {
   it('should create tag', async () => {
     const page = await createPage()
     await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
@@ -119,4 +119,81 @@ describe('create', async () => {
     const tr2 = await page.$('tr:has(td:has-text("Tag 2"))')
     expect(tr2).toBeTruthy()
   })
+})
+
+describe('users', async () => {
+  it('should create user', async () => {
+    const page = await createPage()
+    await page.goto(url('/admin/users'), { waitUntil: 'hydration' })
+    // Delete User 1 if it exists
+    const deleteButton = await page.$('tr:has(td:has-text("User 1")) button:has-text("Delete")')
+    if (deleteButton) {
+      await deleteButton.click()
+      await page.waitForTimeout(1000)
+      const confirmDelete = await page.$('[data-dismissable-layer] button:has-text("Delete")')
+      expect(confirmDelete).toBeTruthy()
+      if (confirmDelete) {
+        await confirmDelete.click()
+        await page.waitForTimeout(1000)
+      }
+    }
+    const addButton = await page.$('span:has-text("Add")')
+    expect(addButton).toBeTruthy()
+    await addButton?.click()
+    await page.waitForTimeout(1000)
+    const pageTitle = await page.title()
+    expect(pageTitle).toContain('User')
+    expect(pageTitle).toContain('Create')
+    const pagePath = await page.url()
+    expect(pagePath).toBe(url('/admin/users/create'))
+    const submitButton = await page.$('button:has-text("Create")')
+    expect(submitButton).toBeTruthy()
+    const nameInput = await page.$('input[name="name"]')
+    expect(nameInput).toBeTruthy()
+    await nameInput?.fill('User 1')
+    const emailInput = await page.$('input[name="email"]')
+    expect(emailInput).toBeTruthy()
+    await emailInput?.fill('user1@example.com')
+    await page.keyboard.press('Tab')
+    await submitButton?.click()
+
+    await page.waitForTimeout(1000)
+    const pagePath3 = await page.url()
+    expect(pagePath3).toBe(url('/admin/users'))
+
+    // find tr with "User 1" text inside second td
+    const tr = await page.$('tr:has(td:has-text("User 1"))')
+    expect(tr).toBeTruthy()
+  })
+}, 50000)
+
+describe('posts', async () => {
+  it('should create a post', async () => {
+    const page = await createPage()
+    await page.goto(url('/admin/posts'), { waitUntil: 'hydration' })
+    // find button with text Add inside a span of a tr that has "Posts" text inside first td of the same tr
+    const addButton = await page.$('span:has-text("Add")')
+    expect(addButton).toBeTruthy()
+    await addButton?.click()
+    await page.waitForTimeout(1000)
+    const pageTitle = await page.title()
+    expect(pageTitle).toContain('Post')
+    expect(pageTitle).toContain('Create')
+    const pagePath = await page.url()
+    expect(pagePath).toBe(url('/admin/posts/create'))
+    const submitButton = await page.$('button:has-text("Create")')
+    expect(submitButton).toBeTruthy()
+
+    // set title to "Post 1"
+    const titleInput = await page.$('input[name="title"]')
+    expect(titleInput).toBeTruthy()
+    await titleInput?.fill('Post 1')
+
+    const slugInput = await page.$('input[name="slug"]')
+    expect(slugInput).toBeTruthy()
+    await slugInput?.fill('post-1')
+
+    const publishedAtDatePickerButton = await page.$('button:has-text("Pick a date")')
+    expect(publishedAtDatePickerButton).toBeTruthy()
+  }, 50000)
 })
