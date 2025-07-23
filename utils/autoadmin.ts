@@ -1,7 +1,7 @@
 export const getTitle = () => {
   const config = useRuntimeConfig()
-  if (config.public.autoAdmin?.title) {
-    return config.public.autoAdmin.title
+  if (config.public.autoadmin?.title) {
+    return config.public.autoadmin.title
   }
   return 'AutoAdmin'
 }

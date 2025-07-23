@@ -799,8 +799,8 @@ AutoAdmin can be configured using environment variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `NUXT_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
-| `NUXT_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
+| `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
+| `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
 
 ### Object Storage Configuration
 
@@ -870,7 +870,6 @@ export const postsToTags = sqliteTable('posts_to_tags', {
   postId: integer('post_id').notNull().references(() => posts.id),
   tagId: integer('tag_id').notNull().references(() => tags.id),
 })
-
 ```
 
 ### Plugin Registration
