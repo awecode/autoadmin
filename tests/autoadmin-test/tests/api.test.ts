@@ -1,6 +1,7 @@
 import { $fetch, setup } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 import postsCreateFormSpec from './fixtures/posts-create-formspec.json'
+import postsFilters from './fixtures/posts-filters.json'
 import postsUpdateFormSpec from './fixtures/posts-update-formspec.json'
 
 await setup({
@@ -166,7 +167,7 @@ describe('api', async () => {
     const tags = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === '___tags___tagId')?.relationConfig?.choicesEndpoint)
     const tagIds = tags.map((tag: any) => tag.value)
 
-    //  // Update post with new data
+    // Update post with new data
     const updatePayload = {
       title: 'Updated Post 1',
       slug: 'updated-post-1',
@@ -188,7 +189,7 @@ describe('api', async () => {
     })
     expect(updateResponse.data.id).toBe(postId)
 
-    //  // Verify the post was updated by fetching it again
+    // Verify the post was updated by fetching it again
     const updatedPostResponse = await $fetch<{ results: Record<string, any>[] }>('/api/autoadmin/posts')
     const updatedPost = updatedPostResponse.results.find(post => post.id === postId)
     expect(updatedPost!.title).toBe('Updated Post 1')
@@ -196,5 +197,61 @@ describe('api', async () => {
     expect(updatedPost!.authorId__name).toBe('User 2')
     expect(updatedPost!.categoryId__name).toBe('Category 2')
     expect(updatedPost!.field).toBe('150 views')
+  })
+
+  it('should return correct filters structure for posts', async () => {
+    const response = await $fetch<{ filters: any[] }>('/api/autoadmin/posts')
+    expect(response.filters).toEqual(postsFilters)
+  })
+
+  it('should filter posts correctly using query parameters', async () => {
+    // First, let's get available data for filtering
+    const formSpec = await $fetch<any>('/api/autoadmin/formspec/posts')
+    const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
+    const categories = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'categoryId')?.relationConfig?.choicesEndpoint)
+
+    const authorId = authors[1]?.value // Use User 2
+    const categoryId = categories[1]?.value // Use Category 2
+
+    // Create a test post with specific filter values for testing
+    const testPostPayload = {
+      title: 'Test Filter Post',
+      slug: 'test-filter-post',
+      excerpt: 'Test post for filtering',
+      content: 'Content for filter test',
+      featuredImage: 'https://example.com/filter-test.jpg',
+      publishedAt: '2025-07-08',
+      status: 'published',
+      views: 200,
+      isCommentsEnabled: true,
+      authorId,
+      categoryId,
+      ___tags___tagId: [],
+    }
+
+    const createResponse = await $fetch<{ data: { id: number } }>('/api/autoadmin/posts', {
+      method: 'POST',
+      body: testPostPayload,
+    })
+    expect(createResponse.data.id).toBeTruthy()
+
+    // Test filtering with multiple parameters
+    const filterUrl = `/api/autoadmin/posts?status=published&authorId=${authorId}&categoryId=${categoryId}&isCommentsEnabled=true&publishedAt=2025-07-08,2025-07-09`
+    const filteredResponse = await $fetch<{ results: Record<string, any>[] }>(filterUrl)
+
+    // Verify the filtered results contain our test post
+    expect(filteredResponse.results.length).toBeGreaterThan(0)
+    const testPost = filteredResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(testPost).toBeTruthy()
+    expect(testPost!.status).toBe('published')
+    expect(testPost!.authorId__name).toBe('User 2')
+    expect(testPost!.categoryId__name).toBe('Category 2')
+    expect(testPost!.field).toBe('200 views')
+
+    // Test that filtering excludes posts that don't match
+    const excludeFilterUrl = `/api/autoadmin/posts?status=draft`
+    const excludeResponse = await $fetch<{ results: Record<string, any>[] }>(excludeFilterUrl)
+    const draftTestPost = excludeResponse.results.find(post => post.title === 'Test Filter Post')
+    expect(draftTestPost).toBeFalsy() // Should not find our published post in draft filter
   })
 })
