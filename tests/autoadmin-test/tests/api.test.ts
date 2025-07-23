@@ -1,13 +1,39 @@
 import { $fetch, setup } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import postsCreateFormSpec from './fixtures/posts-create-formspec.json'
+import postsUpdateFormSpec from './fixtures/posts-update-formspec.json'
 
 await setup({
   host: 'http://localhost:3000',
 })
 
 describe('api', async () => {
+  it('should clear any m2m relation of post with tags', async () => {
+    // get all posts
+    const postsResponse = await $fetch<{ results: { id: number }[] }>('/api/autoadmin/posts')
+    const postIds = postsResponse.results.map((post: any) => post.id)
+
+    // Get choices for required fields
+    const formSpec = await $fetch<any>('/api/autoadmin/formspec/posts')
+    const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
+    const authorId = authors[0]?.value
+
+    for (const postId of postIds) {
+      // send a post request with empty ___tags___tagId and required dummy values
+      await $fetch(`/api/autoadmin/posts/${postId}`, {
+        method: 'POST',
+        body: {
+          title: 'Dummy Title',
+          slug: `dummy-slug-${postId}`,
+          authorId,
+          ___tags___tagId: [],
+        },
+      })
+    }
+  })
+
   it('should delete all records', async () => {
-    const modelLabels = ['posts', 'tags', 'users', 'categories']
+    const modelLabels = ['tags', 'posts', 'users', 'categories']
     for (const modelLabel of modelLabels) {
       const response = await $fetch<{ results: { id: number }[] }>(`/api/autoadmin/${modelLabel}`)
       expect(response).toBeDefined()
@@ -78,160 +104,16 @@ describe('api', async () => {
   it('should create a post', async () => {
     // Get formspec for posts
     const formSpec = await $fetch('/api/autoadmin/formspec/posts')
-    expect(formSpec).toEqual({
-      "spec": {
-        "fields": [
-          {
-            "name": "title",
-            "label": "Title",
-            "type": "text",
-            "required": true,
-            "rules": {}
-          },
-          {
-            "name": "slug",
-            "label": "Slug",
-            "type": "text",
-            "required": true,
-            "rules": {}
-          },
-          {
-            "name": "excerpt",
-            "label": "Excerpt",
-            "type": "textarea",
-            "required": false,
-            "rules": {},
-            "help": "Brief summary of the post (max 200 characters)",
-            "inputAttrs": {
-              "maxlength": 200
-            }
-          },
-          {
-            "name": "content",
-            "label": "Post Content",
-            "type": "rich-text",
-            "required": false,
-            "rules": {}
-          },
-          {
-            "name": "featuredImage",
-            "label": "Featured Image",
-            "type": "image",
-            "required": false,
-            "rules": {},
-            "fileConfig": {
-              "accept": [
-                ".jpg",
-                ".jpeg",
-                ".png",
-                ".webp"
-              ],
-              "prefix": "posts/",
-              "maxSize": 5242880
-            }
-          },
-          {
-            "name": "status",
-            "label": "Status",
-            "type": "select",
-            "required": false,
-            "rules": {},
-            "options": [
-              "draft",
-              "published",
-              "archived"
-            ],
-            "defaultValue": "draft"
-          },
-          {
-            "name": "views",
-            "label": "Views",
-            "type": "number",
-            "required": false,
-            "rules": {
-              "min": -9007199254740991,
-              "max": 9007199254740991
-            },
-            "defaultValue": 0
-          },
-          {
-            "name": "isCommentsEnabled",
-            "label": "Is Comments Enabled",
-            "type": "boolean",
-            "required": false,
-            "rules": {},
-            "defaultValue": true
-          },
-          {
-            "name": "publishedAt",
-            "label": "Published At",
-            "type": "date",
-            "required": false,
-            "rules": {}
-          },
-          {
-            "name": "authorId",
-            "label": "Author",
-            "type": "relation",
-            "required": true,
-            "rules": {
-              "min": -9007199254740991,
-              "max": 9007199254740991
-            },
-            "relationConfig": {
-              "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/authorId",
-              "relatedConfigKey": "users",
-              "enableCreate": true,
-              "enableUpdate": true,
-              "foreignRelatedColumnName": "id",
-              "foreignLabelColumnName": "email"
-            }
-          },
-          {
-            "name": "categoryId",
-            "label": "Category",
-            "type": "relation",
-            "required": false,
-            "rules": {
-              "min": -9007199254740991,
-              "max": 9007199254740991
-            },
-            "relationConfig": {
-              "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/categoryId",
-              "relatedConfigKey": "categories",
-              "enableCreate": true,
-              "enableUpdate": true,
-              "foreignRelatedColumnName": "id",
-              "foreignLabelColumnName": "name"
-            }
-          },
-          {
-            "name": "___tags___tagId",
-            "type": "relation-many",
-            "label": "Tags",
-            "relationConfig": {
-              "choicesEndpoint": "/api/autoadmin/formspec/posts/choices-many/___tags___tagId",
-              "enableCreate": true,
-              "enableUpdate": true
-            },
-            "required": false,
-            "rules": {},
-            "options": []
-          }
-        ],
-        "warnOnUnsavedChanges": true
-      }
-    })
-
-    const authors = await $fetch<{label: string, value: number}[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint!)
+    expect(formSpec).toEqual(postsCreateFormSpec)
+    const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
     const authorId = authors[0]?.value
     expect(authorId).toBeTruthy()
 
-    const categories = await $fetch<{label: string, value: number}[]>(formSpec.spec.fields.find((field: any) => field.name === 'categoryId')?.relationConfig?.choicesEndpoint!)
+    const categories = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'categoryId')?.relationConfig?.choicesEndpoint)
     const categoryId = categories[0]?.value
     expect(categoryId).toBeTruthy()
 
-    const tags = await $fetch<{label: string, value: number}[]>(formSpec.spec.fields.find((field: any) => field.name === '___tags___tagId')?.relationConfig?.choicesEndpoint!)
+    const tags = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === '___tags___tagId')?.relationConfig?.choicesEndpoint)
     const tagIds = tags.map((tag: any) => tag.value)
     expect(tagIds).toBeTruthy()
 
@@ -248,7 +130,7 @@ describe('api', async () => {
       isCommentsEnabled: false,
       authorId,
       categoryId,
-      tagIds,
+      ___tags___tagId: [tagIds[0]],
     }
     const postResponse = await $fetch<{ data: { id: number } }>('/api/autoadmin/posts', {
       method: 'POST',
@@ -257,4 +139,62 @@ describe('api', async () => {
     expect(postResponse.data.id).toBeTruthy()
   })
 
+  it('should update the created post', async () => {
+    // Get the list of posts to find the created post
+    const postsResponse = await $fetch<{ results: { id: number, title: string, slug: string }[] }>('/api/autoadmin/posts')
+    expect(postsResponse.results.length).toBeGreaterThan(0)
+
+    const createdPost = postsResponse.results.find(post => post.title === 'Post 1')
+    expect(createdPost).toBeTruthy()
+    const postId = createdPost!.id
+
+    const formSpec = await $fetch<any>(`/api/autoadmin/formspec/posts/update/${postId}`)
+
+    // Compare formSpec with postsUpdateFormSpec but ignore createdAt and updatedAt fields
+    const { createdAt: _c1, updatedAt: _u1, ...formSpecValues } = formSpec.spec.values
+    const { createdAt: _c2, updatedAt: _u2, ...expectedValues } = postsUpdateFormSpec.spec.values
+
+    expect({ ...formSpec, spec: { ...formSpec.spec, values: formSpecValues } })
+      .toEqual({ ...postsUpdateFormSpec, spec: { ...postsUpdateFormSpec.spec, values: expectedValues } })
+
+    const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
+    const authorId = authors[1]?.value
+
+    const categories = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'categoryId')?.relationConfig?.choicesEndpoint)
+    const categoryId = categories[1]?.value
+
+    const tags = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === '___tags___tagId')?.relationConfig?.choicesEndpoint)
+    const tagIds = tags.map((tag: any) => tag.value)
+
+    //  // Update post with new data
+    const updatePayload = {
+      title: 'Updated Post 1',
+      slug: 'updated-post-1',
+      excerpt: 'Updated excerpt for post 1',
+      content: 'Updated content for post 1',
+      featuredImage: 'https://example.com/updated-image.jpg',
+      publishedAt: '2023-12-15',
+      status: 'draft',
+      views: 150,
+      isCommentsEnabled: true,
+      authorId,
+      categoryId,
+      tagIds,
+    }
+
+    const updateResponse = await $fetch<{ data: { id: number } }>(`/api/autoadmin/posts/${postId}`, {
+      method: 'POST',
+      body: updatePayload,
+    })
+    expect(updateResponse.data.id).toBe(postId)
+
+    //  // Verify the post was updated by fetching it again
+    const updatedPostResponse = await $fetch<{ results: Record<string, any>[] }>('/api/autoadmin/posts')
+    const updatedPost = updatedPostResponse.results.find(post => post.id === postId)
+    expect(updatedPost!.title).toBe('Updated Post 1')
+    expect(updatedPost!.status).toBe('draft')
+    expect(updatedPost!.authorId__name).toBe('User 2')
+    expect(updatedPost!.categoryId__name).toBe('Category 2')
+    expect(updatedPost!.field).toBe('150 views')
+  })
 })
