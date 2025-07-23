@@ -37,16 +37,22 @@ describe('create', async () => {
   it('should create tag', async () => {
     const page = await createPage()
     await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
-    // find button with text Delete inside a td of a tr that has "Tag 1" text inside second td of the same tr
-    const deleteButton = await page.$('tr:has(td:has-text("Tag 1")) button:has-text("Delete")')
-    if (deleteButton) {
-      await deleteButton?.click()
-      // wait for 1 second for dialog to open
-      await page.waitForTimeout(1000)
-      // find button with text Delete inside the dialog which has data attribute data-dismissable-layer
-      const deleteButton2 = await page.$('[data-dismissable-layer] button:has-text("Delete")')
-      expect(deleteButton2).toBeTruthy()
-      await deleteButton2?.click()
+    // Delete Tag 1 and Tag 2 if they exist
+    for (const tagName of ['Tag 1', 'Tag 2']) {
+      const deleteButton = await page.$(`tr:has(td:has-text("${tagName}")) button:has-text("Delete")`)
+      if (deleteButton) {
+        await deleteButton.click()
+        // wait for dialog to open
+        await page.waitForTimeout(1000)
+        // find button with text Delete inside the dialog
+        const confirmDelete = await page.$('[data-dismissable-layer] button:has-text("Delete")')
+        expect(confirmDelete).toBeTruthy()
+        if (confirmDelete) {
+          await confirmDelete.click()
+          // wait for deletion to complete
+          await page.waitForTimeout(1000)
+        }
+      }
     }
 
     const createButton = await page.$('span:has-text("Add")')
@@ -71,13 +77,46 @@ describe('create', async () => {
     const nameInput = await page.$('input[name="name"]')
     expect(nameInput).toBeTruthy()
     await nameInput?.fill('Tag 1')
-    await nameInput?.focus()
     await page.keyboard.press('Tab')
     await submitButton?.click()
 
     await page.waitForTimeout(1000)
-    await page.waitForLoadState('networkidle')
     const pagePath3 = await page.url()
     expect(pagePath3).toBe(url('/admin/tags'))
+
+    // find tr with "Tag 1" text inside second td
+    const tr = await page.$('tr:has(td:has-text("Tag 1"))')
+    expect(tr).toBeTruthy()
   }, 50000)
+
+  it('should update tag', async () => {
+    const page = await createPage()
+    await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
+    // find tr with "Tag 1" text inside second td
+    const tr = await page.$('tr:has(td:has-text("Tag 1"))')
+    expect(tr).toBeTruthy()
+    // find button with text Edit inside a td of a tr that has "Tag 1" text inside second td of the same tr
+    const editButton = await page.$('tr:has(td:has-text("Tag 1")) button:has-text("Edit")')
+    expect(editButton).toBeTruthy()
+    await editButton?.click()
+    await page.waitForTimeout(1000)
+    const pageTitle = await page.title()
+    expect(pageTitle).toContain('Tag')
+    expect(pageTitle).toContain('Update')
+    const nameInput = await page.$('input[name="name"]')
+    expect(nameInput).toBeTruthy()
+    await nameInput?.fill('Tag 2')
+    await page.keyboard.press('Tab')
+    const submitButton = await page.$('button:has-text("Update")')
+    expect(submitButton).toBeTruthy()
+    await submitButton?.click()
+
+    await page.waitForTimeout(1000)
+    const pagePath3 = await page.url()
+    expect(pagePath3).toBe(url('/admin/tags'))
+
+    // find tr with "Tag 2" text inside second td
+    const tr2 = await page.$('tr:has(td:has-text("Tag 2"))')
+    expect(tr2).toBeTruthy()
+  })
 })
