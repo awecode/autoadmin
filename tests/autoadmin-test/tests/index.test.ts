@@ -23,3 +23,24 @@ describe('index', async () => {
     expect(spanTexts).toContain('Tags')
   })
 })
+
+describe('list', async () => {
+  it('should have correct page title', async () => {
+    const page = await createPage()
+    await page.goto(url('/admin/tags'))
+    const pageTitle = await page.title()
+    expect(pageTitle).toContain('Tags')
+  })
+  it('should open create page', async () => {
+    const page = await createPage()
+    await page.goto(url('/admin/tags'))
+    const createButton = await page.$('span:has-text("Add")')
+    expect(createButton).toBeDefined()
+    await createButton?.click()
+    const pageTitle = await page.title()
+    expect(pageTitle).toContain('Tag')
+    expect(pageTitle).toContain('Create')
+    const pagePath = await page.url()
+    expect(pagePath).toContain('/admin/tags/create')
+  })
+})
