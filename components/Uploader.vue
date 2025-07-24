@@ -101,7 +101,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     const formData = new FormData()
     formData.append('file', file)
     const fileType = encodeURIComponent(file.type)
-    const uploadedFileUrl = await $fetch(`/api/autoadmin/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
+    const uploadedFileUrl = await $fetch<string>(`/api/autoadmin/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
       method: 'POST',
       body: formData,
       onResponseError: (error) => {
