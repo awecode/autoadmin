@@ -1,10 +1,10 @@
+import type { FieldType } from '#layers/autoadmin/composables/registry'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { defu } from 'defu'
 import { getPrimaryKeyColumn } from './relation'
 import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
-type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'relation' | 'relation-many' | 'textarea' | 'rich-text' | 'blob' | 'image'
 export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export interface FieldSpec {
@@ -176,7 +176,7 @@ export const getErrorMessage = (error: Error) => {
 export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
   let definedFieldSpecs: FieldSpec[] = []
   if (cfg.update.formFields) {
-    definedFieldSpecs = cfg!.update!.formFields!.map((field) => {
+    definedFieldSpecs = cfg.update.formFields.map((field) => {
       if (typeof field === 'string') {
         const fieldSpec = spec.fields.find(f => f.name === field)
         if (fieldSpec) {

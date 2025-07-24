@@ -1,7 +1,6 @@
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import type { CustomFilter, FilterType } from '../utils/filter'
 import type { FieldSpec } from '../utils/form'
-import type { ListFieldType } from '../utils/list'
 import type { TableMetadata } from '../utils/metdata'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
@@ -18,6 +17,8 @@ type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) =>
 type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
 // type TableWithColumns<T extends Table = Table> = T & { [K in ColKey<T>]: T['_']['columns'][K] }
 
+export type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image' | 'textarea' | 'rich-text' | 'relation' | 'relation-many'
+
 export type FilterFieldDef<T extends Table> = ColField<T> | {
   field: ColField<T>
   label?: string
@@ -31,7 +32,7 @@ export type ListFieldDef<T extends Table>
     | { // Represents a detailed field configuration object
       field: ListField<T> // Can be a column/relation string OR a callable function
       label?: string // Optional: custom display label for the field
-      type?: ListFieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
+      type?: FieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
       sortKey?: SortKey<T>
     }
 export interface ListColumnDef<T extends Table> {
@@ -39,7 +40,7 @@ export interface ListColumnDef<T extends Table> {
   accessorKey: string
   header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
-  type?: ListFieldType
+  type?: FieldType
   sortKey?: SortKey<T>
 }
 
@@ -116,7 +117,7 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
-  fields?: FieldSpec[] & { name: ColKey<T>, type: ListFieldType }[]
+  fields?: FieldSpec[] & { name: ColKey<T>, type: FieldType }[]
   warnOnUnsavedChanges?: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
 }
@@ -137,7 +138,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   delete: DeleteOptions
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
-  fields?: FieldSpec[] & { name: ColKey<T>, type: ListFieldType }[]
+  fields?: FieldSpec[] & { name: ColKey<T>, type: FieldType }[]
   warnOnUnsavedChanges: boolean
   // store
   columns: ReturnType<typeof getTableColumns<T>>

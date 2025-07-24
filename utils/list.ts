@@ -1,4 +1,4 @@
-import type { AdminModelConfig, ColKey, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig, ColKey, FieldType, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/registry'
 import type { Column, Table } from 'drizzle-orm'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
@@ -8,22 +8,20 @@ import { getDef, unwrapZodType } from './zod'
 
 type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
-export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image' | 'textarea' | 'relation' | 'relation-many' | 'rich-text'
-
-export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: ListFieldType, options?: string[] }> {
+export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: FieldType, options?: string[] }> {
   const shape = getDef(schema)?.shape ?? schema.shape
   if (!shape) {
     // Fallback for safety, though a ZodObject should always have a shape.
     return {}
   }
 
-  const fields: [string, { type: ListFieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
+  const fields: [string, { type: FieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
     const { innerType } = unwrapZodType(zodType as ZodTypeAny)
 
     const definition = getDef(innerType)
     const definitionTypeKey = definition?.typeName ?? definition?.type
 
-    let type: ListFieldType = 'text'
+    let type: FieldType = 'text'
     let options: string[] | undefined
     switch (definitionTypeKey) {
       case 'ZodString':
@@ -83,7 +81,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
   return Object.fromEntries(fields)
 }
 
-export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
+export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: FieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
   if (cfg.list.columns) {
