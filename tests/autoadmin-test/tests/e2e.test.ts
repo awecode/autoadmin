@@ -38,7 +38,7 @@ describe('tags', async () => {
     const page = await createPage()
     await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
     // Delete Tag 1 and Tag 2 if they exist
-    for (const tagName of ['Tag 1', 'Tag 2']) {
+    for (const tagName of ['Tag 1E', 'Tag 2E']) {
       const deleteButton = await page.$(`tr:has(td:has-text("${tagName}")) button:has-text("Delete")`)
       if (deleteButton) {
         await deleteButton.click()
@@ -76,7 +76,7 @@ describe('tags', async () => {
     // set name to "Tag 1"
     const nameInput = await page.$('input[name="name"]')
     expect(nameInput).toBeTruthy()
-    await nameInput?.fill('Tag 1')
+    await nameInput?.fill('Tag 1E')
     await page.keyboard.press('Tab')
     await submitButton?.click()
 
@@ -85,7 +85,7 @@ describe('tags', async () => {
     expect(pagePath3).toBe(url('/admin/tags'))
 
     // find tr with "Tag 1" text inside second td
-    const tr = await page.$('tr:has(td:has-text("Tag 1"))')
+    const tr = await page.$('tr:has(td:has-text("Tag 1E"))')
     expect(tr).toBeTruthy()
   }, 50000)
 
@@ -93,10 +93,10 @@ describe('tags', async () => {
     const page = await createPage()
     await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
     // find tr with "Tag 1" text inside second td
-    const tr = await page.$('tr:has(td:has-text("Tag 1"))')
+    const tr = await page.$('tr:has(td:has-text("Tag 1E"))')
     expect(tr).toBeTruthy()
     // find button with text Edit inside a td of a tr that has "Tag 1" text inside second td of the same tr
-    const editButton = await page.$('tr:has(td:has-text("Tag 1")) button:has-text("Edit")')
+    const editButton = await page.$('tr:has(td:has-text("Tag 1E")) button:has-text("Edit")')
     expect(editButton).toBeTruthy()
     await editButton?.click()
     await page.waitForTimeout(1000)
@@ -105,7 +105,7 @@ describe('tags', async () => {
     expect(pageTitle).toContain('Update')
     const nameInput = await page.$('input[name="name"]')
     expect(nameInput).toBeTruthy()
-    await nameInput?.fill('Tag 2')
+    await nameInput?.fill('Tag 2E')
     await page.keyboard.press('Tab')
     const submitButton = await page.$('button:has-text("Update")')
     expect(submitButton).toBeTruthy()
@@ -116,17 +116,17 @@ describe('tags', async () => {
     expect(pagePath3).toBe(url('/admin/tags'))
 
     // find tr with "Tag 2" text inside second td
-    const tr2 = await page.$('tr:has(td:has-text("Tag 2"))')
+    const tr2 = await page.$('tr:has(td:has-text("Tag 2E"))')
     expect(tr2).toBeTruthy()
   })
-})
+}, 50000)
 
 describe('users', async () => {
   it('should create user', async () => {
     const page = await createPage()
     await page.goto(url('/admin/users'), { waitUntil: 'hydration' })
     // Delete User 1 if it exists
-    const deleteButton = await page.$('tr:has(td:has-text("User 1")) button:has-text("Delete")')
+    const deleteButton = await page.$('tr:has(td:has-text("User 1E")) button:has-text("Delete")')
     if (deleteButton) {
       await deleteButton.click()
       await page.waitForTimeout(1000)
@@ -150,10 +150,10 @@ describe('users', async () => {
     expect(submitButton).toBeTruthy()
     const nameInput = await page.$('input[name="name"]')
     expect(nameInput).toBeTruthy()
-    await nameInput?.fill('User 1')
+    await nameInput?.fill('User 1E')
     const emailInput = await page.$('input[name="email"]')
     expect(emailInput).toBeTruthy()
-    await emailInput?.fill('user1@example.com')
+    await emailInput?.fill('user1e@example.com')
     await page.keyboard.press('Tab')
     await submitButton?.click()
 
@@ -162,7 +162,7 @@ describe('users', async () => {
     expect(pagePath3).toBe(url('/admin/users'))
 
     // find tr with "User 1" text inside second td
-    const tr = await page.$('tr:has(td:has-text("User 1"))')
+    const tr = await page.$('tr:has(td:has-text("User 1E"))')
     expect(tr).toBeTruthy()
   })
 }, 50000)
@@ -187,11 +187,11 @@ describe('posts', async () => {
     // set title to "Post 1"
     const titleInput = await page.$('input[name="title"]')
     expect(titleInput).toBeTruthy()
-    await titleInput?.fill('Post 1')
+    await titleInput?.fill('Post 1E')
 
     const slugInput = await page.$('input[name="slug"]')
     expect(slugInput).toBeTruthy()
-    await slugInput?.fill('post-1')
+    await slugInput?.fill('post-1e')
 
     const publishedAtDatePickerButton = await page.$('button:has-text("Pick a date")')
     expect(publishedAtDatePickerButton).toBeTruthy()

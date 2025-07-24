@@ -30,6 +30,9 @@ describe('api', async () => {
           ___tags___tagId: [],
         },
       })
+      // test if the post has no tags
+      const postResponse = await $fetch<{ spec: { values: { ___tags___tagId: number[] } } }>(`/api/autoadmin/formspec/posts/update/${postId}`)
+      expect(postResponse.spec.values.___tags___tagId).toBeUndefined()
     }
   })
 
