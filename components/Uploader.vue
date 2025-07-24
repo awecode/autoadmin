@@ -111,6 +111,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
           color: 'error',
         })
         clearFile()
+        isFileUploading.value = false
         if (fileRef.value?.inputRef) {
           fileRef.value.inputRef.value = ''
         }
