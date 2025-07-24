@@ -1,26 +1,13 @@
 import { fileURLToPath } from 'node:url'
 
 const adminUrlPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_URL_PREFIX || '/admin'
+const apiPrefix = process.env.NUXT_PUBLIC_API_PREFIX || '/api/autoadmin'
 
 export default defineNuxtConfig({
-  extends: ['..'],
-  css: [fileURLToPath(new URL('./assets/css/main.css', import.meta.url))],
-  modules: [
-    '@nuxt/eslint',
-    '@nuxt/fonts',
-    '@nuxt/icon',
-    '@nuxt/ui',
-  ],
-  eslint: {
-    config: {
-      // Use the generated ESLint config for lint root project as well
-      rootDir: fileURLToPath(new URL('..', import.meta.url)),
-    },
-  },
   runtimeConfig: {
     adminUrlPrefix,
     public: {
-      apiPrefix: '/api/autoadmin',
+      apiPrefix,
       autoadmin: {
         title: 'AutoAdmin',
       },
@@ -33,6 +20,20 @@ export default defineNuxtConfig({
       endpointUrl: undefined,
       region: 'us-east-1',
       publicUrl: undefined,
+    },
+  },
+  extends: ['..'],
+  css: [fileURLToPath(new URL('./assets/css/main.css', import.meta.url))],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/fonts',
+    '@nuxt/icon',
+    '@nuxt/ui',
+  ],
+  eslint: {
+    config: {
+      // Use the generated ESLint config for lint root project as well
+      rootDir: fileURLToPath(new URL('..', import.meta.url)),
     },
   },
   $meta: {

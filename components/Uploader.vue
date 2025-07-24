@@ -18,6 +18,9 @@ const emit = defineEmits<{
   'update:modelValue': [value: string | undefined]
 }>()
 
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
+
 const dialogPreviewExtensions = ['jpg', 'png', 'jpeg', 'svg', 'pdf', 'txt', 'md']
 
 const allowedExtensions = props.config?.accept ?? (props.type === 'image' ? ['.jpg', '.jpeg', '.png', '.svg'] : [])
@@ -101,7 +104,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     const formData = new FormData()
     formData.append('file', file)
     const fileType = encodeURIComponent(file.type)
-    const uploadedFileUrl = await $fetch<string>(`/api/autoadmin/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
+    const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
       method: 'POST',
       body: formData,
       onResponseError: (error) => {

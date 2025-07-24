@@ -10,11 +10,13 @@ if (!cfg) {
   })
 }
 
+const apiPrefix = cfg.apiPrefix
+
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 
-const { data, error } = await useFetch(`/api/autoadmin/formspec/${modelLabel}/update/${lookupValue}`, {
+const { data, error } = await useFetch(`${apiPrefix}/formspec/${modelLabel}/update/${lookupValue}`, {
   key: `formspec-update-${modelLabel}-${lookupValue}`,
 })
 
@@ -28,8 +30,6 @@ const formSpec = data.value?.spec as FormSpec
 const values = data.value?.values as Record<string, any>
 const schema = cfg.update.schema
 
-const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
 const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${lookupValue}`
 
 useHead({

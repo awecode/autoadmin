@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   // DELETE <model-label>/<lookup-field-value>: Delete
 
   const config = useRuntimeConfig()
-  const apiPrefix = (config.public.apiPrefix || '/api/autoadmin') as string
+  const apiPrefix = (config.public.apiPrefix) as string
   const pathSegments = url.pathname.split(apiPrefix)[1] || ''
 
   const parsedRoute = parseAutoadminRoute(pathSegments, method)

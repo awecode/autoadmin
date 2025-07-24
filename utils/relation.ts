@@ -163,7 +163,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       }
       const enabledStatuses = getEnabledStatuses(relation.foreignTable)
       field.relationConfig = {
-        choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relation.column.name}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.column.name}`,
         relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
@@ -178,17 +178,17 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
   return updatedFormSpec
 }
 
-export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig: AdminModelConfig) => {
-  const o2mTables = modelConfig.o2m
+export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminModelConfig) => {
+  const o2mTables = cfg.o2m
   if (!o2mTables) {
     return formSpec
   }
-  const modelLabel = modelConfig.label
+  const modelLabel = cfg.label
   const updatedFields = formSpec.fields
 
   // Process all relations in parallel
   await Promise.all(Object.entries(o2mTables).map(async ([name, table]) => {
-    const relationData = parseO2mRelation(modelConfig, table, name)
+    const relationData = parseO2mRelation(cfg, table, name)
     const enabledStatuses = getEnabledStatuses(table)
 
     const field: FieldSpec = {
@@ -196,7 +196,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
       type: 'relation-many' as const,
       label: toTitleCase(name),
       relationConfig: {
-        choicesEndpoint: `/api/autoadmin/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
       },
@@ -207,7 +207,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, modelConfig:
     // if values are provided, use them to get the initial selection of o2m relations
     if (formSpec.values) {
       // find primary key value, required for initial selection of o2m relations
-      const selfPrimaryColumn = getPrimaryKeyColumn(modelConfig.model)
+      const selfPrimaryColumn = getPrimaryKeyColumn(cfg.model)
       const selfPrimaryValue = formSpec.values[selfPrimaryColumn.name]
       // if selfPrimaryValue is available, get o2m values
       if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
@@ -241,7 +241,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       type: 'relation-many' as const,
       label: toTitleCase(relation.name),
       relationConfig: {
-        choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices-many/${fieldName}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices-many/${fieldName}`,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
       },

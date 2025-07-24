@@ -8,20 +8,22 @@ await setup({
   host: 'http://localhost:3000',
 })
 
+const apiPrefix = '/api/autoadmin'
+
 describe('api', async () => {
   it('should clear any m2m relation of post with tags', async () => {
     // get all posts
-    const postsResponse = await $fetch<{ results: { id: number }[] }>('/api/autoadmin/posts')
+    const postsResponse = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/posts`)
     const postIds = postsResponse.results.map((post: any) => post.id)
 
     // Get choices for required fields
-    const formSpec = await $fetch<any>('/api/autoadmin/formspec/posts')
+    const formSpec = await $fetch<any>(`${apiPrefix}/formspec/posts`)
     const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
     const authorId = authors[0]?.value
 
     for (const postId of postIds) {
       // send a post request with empty ___tags___tagId and required dummy values
-      await $fetch(`/api/autoadmin/posts/${postId}`, {
+      await $fetch(`${apiPrefix}/posts/${postId}`, {
         method: 'POST',
         body: {
           title: 'Dummy Title',
@@ -31,7 +33,7 @@ describe('api', async () => {
         },
       })
       // test if the post has no tags
-      const postResponse = await $fetch<{ spec: { values: { ___tags___tagId: number[] } } }>(`/api/autoadmin/formspec/posts/update/${postId}`)
+      const postResponse = await $fetch<{ spec: { values: { ___tags___tagId: number[] } } }>(`${apiPrefix}/formspec/posts/update/${postId}`)
       expect(postResponse.spec.values.___tags___tagId).toBeUndefined()
     }
   })
@@ -39,13 +41,13 @@ describe('api', async () => {
   it('should delete all records', async () => {
     const modelLabels = ['tags', 'posts', 'users', 'categories']
     for (const modelLabel of modelLabels) {
-      const response = await $fetch<{ results: { id: number }[] }>(`/api/autoadmin/${modelLabel}`)
+      const response = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/${modelLabel}`)
       expect(response).toBeDefined()
       const rowIds = response.results.map((row: any) => row.id)
       expect(rowIds).toBeDefined()
       if (rowIds.length > 0) {
       // bulk delete all posts
-        const deleteResponse = await $fetch('/api/autoadmin/bulk-delete', {
+        const deleteResponse = await $fetch(`${apiPrefix}/bulk-delete`, {
           method: 'POST',
           body: {
             modelLabel,
@@ -84,21 +86,21 @@ describe('api', async () => {
 
     for (const { modelLabel, payloads } of modelConfigs) {
       // Create first record
-      const response1 = await $fetch<{ data: { id: number } }>(`/api/autoadmin/${modelLabel}`, {
+      const response1 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelLabel}`, {
         method: 'POST',
         body: payloads[0]!,
       })
       expect(response1.data.id).toBeDefined()
 
       // Create second record
-      const response2 = await $fetch<{ data: { id: number } }>(`/api/autoadmin/${modelLabel}`, {
+      const response2 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelLabel}`, {
         method: 'POST',
         body: payloads[1]!,
       })
       expect(response2.data.id).toBeDefined()
 
       // Verify list contains both records
-      const listResponse = await $fetch<{ results: { name: string }[] }>(`/api/autoadmin/${modelLabel}`)
+      const listResponse = await $fetch<{ results: { name: string }[] }>(`${apiPrefix}/${modelLabel}`)
       expect(listResponse.results.length).toBe(2)
       expect(listResponse.results[0]!.name).toBe(payloads[0]!.name)
       expect(listResponse.results[1]!.name).toBe(payloads[1]!.name)
@@ -107,7 +109,7 @@ describe('api', async () => {
 
   it('should create a post', async () => {
     // Get formspec for posts
-    const formSpec = await $fetch('/api/autoadmin/formspec/posts')
+    const formSpec = await $fetch(`${apiPrefix}/formspec/posts`)
     expect(formSpec).toEqual(postsCreateFormSpec)
     const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
     const authorId = authors[0]?.value
@@ -136,7 +138,7 @@ describe('api', async () => {
       categoryId,
       ___tags___tagId: [tagIds[0]],
     }
-    const postResponse = await $fetch<{ data: { id: number } }>('/api/autoadmin/posts', {
+    const postResponse = await $fetch<{ data: { id: number } }>(`${apiPrefix}/posts`, {
       method: 'POST',
       body: postPayload,
     })
@@ -145,14 +147,14 @@ describe('api', async () => {
 
   it('should update the created post', async () => {
     // Get the list of posts to find the created post
-    const postsResponse = await $fetch<{ results: { id: number, title: string, slug: string }[] }>('/api/autoadmin/posts')
+    const postsResponse = await $fetch<{ results: { id: number, title: string, slug: string }[] }>(`${apiPrefix}/posts`)
     expect(postsResponse.results.length).toBeGreaterThan(0)
 
     const createdPost = postsResponse.results.find(post => post.title === 'Post 1')
     expect(createdPost).toBeTruthy()
     const postId = createdPost!.id
 
-    const formSpec = await $fetch<any>(`/api/autoadmin/formspec/posts/update/${postId}`)
+    const formSpec = await $fetch<any>(`${apiPrefix}/formspec/posts/update/${postId}`)
 
     // Compare formSpec with postsUpdateFormSpec but ignore createdAt and updatedAt fields
     const { createdAt: _c1, updatedAt: _u1, ...formSpecValues } = formSpec.spec.values
@@ -186,14 +188,14 @@ describe('api', async () => {
       tagIds,
     }
 
-    const updateResponse = await $fetch<{ data: { id: number } }>(`/api/autoadmin/posts/${postId}`, {
+    const updateResponse = await $fetch<{ data: { id: number } }>(`${apiPrefix}/posts/${postId}`, {
       method: 'POST',
       body: updatePayload,
     })
     expect(updateResponse.data.id).toBe(postId)
 
     // Verify the post was updated by fetching it again
-    const updatedPostResponse = await $fetch<{ results: Record<string, any>[] }>('/api/autoadmin/posts')
+    const updatedPostResponse = await $fetch<{ results: Record<string, any>[] }>(`${apiPrefix}/posts`)
     const updatedPost = updatedPostResponse.results.find(post => post.id === postId)
     expect(updatedPost!.title).toBe('Updated Post 1')
     expect(updatedPost!.status).toBe('draft')
@@ -203,13 +205,13 @@ describe('api', async () => {
   })
 
   it('should return correct filters structure for posts', async () => {
-    const response = await $fetch<{ filters: any[] }>('/api/autoadmin/posts')
+    const response = await $fetch<{ filters: any[] }>(`${apiPrefix}/posts`)
     expect(response.filters).toEqual(postsFilters)
   })
 
   it('should filter posts correctly using query parameters', async () => {
     // First, let's get available data for filtering
-    const formSpec = await $fetch<any>('/api/autoadmin/formspec/posts')
+    const formSpec = await $fetch<any>(`${apiPrefix}/formspec/posts`)
     const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
     const categories = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'categoryId')?.relationConfig?.choicesEndpoint)
 
@@ -232,7 +234,7 @@ describe('api', async () => {
       ___tags___tagId: [],
     }
 
-    const createResponse = await $fetch<{ data: { id: number } }>('/api/autoadmin/posts', {
+    const createResponse = await $fetch<{ data: { id: number } }>(`${apiPrefix}/posts`, {
       method: 'POST',
       body: testPostPayload,
     })
@@ -248,7 +250,7 @@ describe('api', async () => {
     const updatedAtDate = today
 
     // Test filtering with multiple parameters including dynamic timestamps
-    const filterUrl = `/api/autoadmin/posts?status=published&authorId=${authorId}&categoryId=${categoryId}&isCommentsEnabled=true&publishedAt=2025-07-08,2025-07-09&createdAt=${createdAtDate}&updatedAt=${updatedAtDate},${tomorrow}`
+    const filterUrl = `${apiPrefix}/posts?status=published&authorId=${authorId}&categoryId=${categoryId}&isCommentsEnabled=true&publishedAt=2025-07-08,2025-07-09&createdAt=${createdAtDate}&updatedAt=${updatedAtDate},${tomorrow}`
     const filteredResponse = await $fetch<{ results: Record<string, any>[] }>(filterUrl)
 
     // Verify the filtered results contain our test post
@@ -261,18 +263,18 @@ describe('api', async () => {
     expect(testPost!.field).toBe('200 views')
 
     // Test individual timestamp filters
-    const createdAtFilterUrl = `/api/autoadmin/posts?createdAt=${createdAtDate}`
+    const createdAtFilterUrl = `${apiPrefix}/posts?createdAt=${createdAtDate}`
     const createdAtResponse = await $fetch<{ results: Record<string, any>[] }>(createdAtFilterUrl)
     const createdAtPost = createdAtResponse.results.find(post => post.title === 'Test Filter Post')
     expect(createdAtPost).toBeTruthy()
 
-    const updatedAtFilterUrl = `/api/autoadmin/posts?updatedAt=${updatedAtDate},${tomorrow}`
+    const updatedAtFilterUrl = `${apiPrefix}/posts?updatedAt=${updatedAtDate},${tomorrow}`
     const updatedAtResponse = await $fetch<{ results: Record<string, any>[] }>(updatedAtFilterUrl)
     const updatedAtPost = updatedAtResponse.results.find(post => post.title === 'Test Filter Post')
     expect(updatedAtPost).toBeTruthy()
 
     // Test that filtering excludes posts that don't match
-    const excludeFilterUrl = `/api/autoadmin/posts?status=draft`
+    const excludeFilterUrl = `${apiPrefix}/posts?status=draft`
     const excludeResponse = await $fetch<{ results: Record<string, any>[] }>(excludeFilterUrl)
     const draftTestPost = excludeResponse.results.find(post => post.title === 'Test Filter Post')
     expect(draftTestPost).toBeFalsy() // Should not find our published post in draft filter
@@ -283,26 +285,26 @@ describe('api', async () => {
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
     // Test createdAt filter with yesterday (should not include today's post)
-    const yesterdayCreatedFilterUrl = `/api/autoadmin/posts?createdAt=${yesterday}`
+    const yesterdayCreatedFilterUrl = `${apiPrefix}/posts?createdAt=${yesterday}`
     const yesterdayCreatedResponse = await $fetch<{ results: Record<string, any>[] }>(yesterdayCreatedFilterUrl)
     const yesterdayCreatedPost = yesterdayCreatedResponse.results.find(post => post.title === 'Test Filter Post')
     expect(yesterdayCreatedPost).toBeFalsy() // Should not find today's post when filtering for yesterday
 
     // Test updatedAt filter with date range that excludes today
-    const pastRangeFilterUrl = `/api/autoadmin/posts?updatedAt=${dayBeforeYesterday},${yesterday}`
+    const pastRangeFilterUrl = `${apiPrefix}/posts?updatedAt=${dayBeforeYesterday},${yesterday}`
     const pastRangeResponse = await $fetch<{ results: Record<string, any>[] }>(pastRangeFilterUrl)
     const pastRangePost = pastRangeResponse.results.find(post => post.title === 'Test Filter Post')
     expect(pastRangePost).toBeFalsy() // Should not find today's post in past date range
 
     // Test createdAt filter with future date (should not include today's post)
-    const futureCreatedFilterUrl = `/api/autoadmin/posts?createdAt=${nextWeek}`
+    const futureCreatedFilterUrl = `${apiPrefix}/posts?createdAt=${nextWeek}`
     const futureCreatedResponse = await $fetch<{ results: Record<string, any>[] }>(futureCreatedFilterUrl)
     const futureCreatedPost = futureCreatedResponse.results.find(post => post.title === 'Test Filter Post')
     expect(futureCreatedPost).toBeFalsy() // Should not find today's post when filtering for future date
 
     // Test updatedAt filter with future date range (should not include today's post)
     const futureWeekAfter = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    const futureRangeFilterUrl = `/api/autoadmin/posts?updatedAt=${nextWeek},${futureWeekAfter}`
+    const futureRangeFilterUrl = `${apiPrefix}/posts?updatedAt=${nextWeek},${futureWeekAfter}`
     const futureRangeResponse = await $fetch<{ results: Record<string, any>[] }>(futureRangeFilterUrl)
     const futureRangePost = futureRangeResponse.results.find(post => post.title === 'Test Filter Post')
     expect(futureRangePost).toBeFalsy() // Should not find today's post in future date range

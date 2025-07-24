@@ -92,7 +92,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       field,
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
-      choicesEndpoint: `/api/autoadmin/formspec/${cfg.label}/choices/${relations[0].columnName}`,
+      choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relations[0].columnName}`,
       options,
     }
   }

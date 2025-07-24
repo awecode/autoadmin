@@ -142,6 +142,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   // store
   columns: ReturnType<typeof getTableColumns<T>>
   metadata: TableMetadata
+  apiPrefix: string
 }
 
 const getStaticDefaultOptions = () => ({
@@ -230,6 +231,7 @@ export function useAdminRegistry() {
     ) as AdminModelConfig<T>
 
     cfg.columns = columns
+    cfg.apiPrefix = apiPrefix
 
     // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
