@@ -234,9 +234,10 @@ export function useAdminRegistry() {
     cfg.columns = columns
     cfg.apiPrefix = apiPrefix
 
-    // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
-    if (!Object.keys(cfg.columns).includes(lookupColumnName)) {
+    // Validate that lookupColumnName exists on the model's columns
+    const lookupColumn = cfg.columns[lookupColumnName]
+    if (!lookupColumn) {
       if (lookupColumnName === defaultLookupColumnName) {
         throw new Error(
           `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
@@ -248,7 +249,6 @@ export function useAdminRegistry() {
       }
     }
     // Check if lookupColumnName is either primary or unique
-    const lookupColumn = cfg.columns[lookupColumnName]
     if (!lookupColumn.primary && !lookupColumn.isUnique) {
       throw new Error(
         `The lookup field "${lookupColumnName}" is not a primary or unique column on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration.`,

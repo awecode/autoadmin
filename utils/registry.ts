@@ -3,15 +3,16 @@ import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { getTableColumns } from 'drizzle-orm'
 
 export function getLabelColumnFromColumns(columns: Record<string, Column>) {
-  if (!columns) {
+  const columnNames = Object.keys(columns)
+  if (!columnNames.length) {
     throw new Error(`No columns found for the model.`)
   }
-  const columnNames = Object.keys(columns).filter(column => ['name', 'title', 'label', 'slug'].includes(column))
-  if (columnNames.length) {
-    return columnNames[0]
+  const labelColumnNames = columnNames.filter(column => ['name', 'title', 'label', 'slug'].includes(column))
+  if (labelColumnNames.length) {
+    return labelColumnNames[0]!
   }
   // else return the first column
-  return Object.keys(columns)[0]
+  return columnNames[0]!
 }
 
 export function getLabelColumnFromModel(model: Table) {

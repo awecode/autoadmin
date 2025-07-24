@@ -26,7 +26,7 @@ export function getPrimaryKeyColumn(table: Table) {
   if (primaryKeyColumns.length > 1) {
     throw new Error(`Table ${getTableName(table)} has multiple primary keys.`)
   }
-  return primaryKeyColumns[0]
+  return primaryKeyColumns[0]!
 }
 
 export function parseO2mRelation(cfg: AdminModelConfig, table: Table, name: string) {
@@ -95,9 +95,11 @@ export function getTableForeignKeys(table: Table) {
     const foreignColumns = reference.foreignColumns
 
     for (let i = 0; i < columns.length; i++) {
-      const column = columns[i]
+      const column = columns[i]!
       const foreignColumn = foreignColumns[i]
-
+      if (!foreignColumn) {
+        continue
+      }
       relations.push({
         name: column.name,
         column,
@@ -126,7 +128,10 @@ export function getTableForeignKeysByColumn(table: Table, columnName: string) {
 
     for (let i = 0; i < columns.length; i++) {
       const foreignColumn = foreignColumns[i]
-      if (columns[i].name === columnName) {
+      if (!foreignColumn) {
+        continue
+      }
+      if (columns[i]!.name === columnName) {
         relations.push({
           name: columnName,
           columnName,
@@ -148,7 +153,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
     const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === relation.column.name)
     // check if field is in form spec, if not found, ignore because it may not be specified through form fields
     if (fieldIndex !== -1) {
-      const field = { ...updatedFormSpec.fields[fieldIndex] }
+      const field = { ...updatedFormSpec.fields[fieldIndex] } as FieldSpec
       field.type = 'relation'
       //   strip id from field label
       field.label = (field.label || field.name).replace(' Id', '')
