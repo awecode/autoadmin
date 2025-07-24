@@ -1,5 +1,5 @@
 import type { Column, Table } from 'drizzle-orm'
-import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
+import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { getTableColumns } from 'drizzle-orm'
 
 export function getLabelColumnFromColumns(columns: Record<string, Column>) {

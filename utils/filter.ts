@@ -1,4 +1,4 @@
-import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
+import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composables/registry'
 import type { useDb } from '#layers/autoadmin/server/utils/db'
 import type { zodToListSpec } from '#layers/autoadmin/utils/list'
 import type { TableMetadata } from '#layers/autoadmin/utils/metdata'

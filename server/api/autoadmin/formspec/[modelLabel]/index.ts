@@ -1,4 +1,4 @@
-import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
+import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'

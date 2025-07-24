@@ -1,5 +1,5 @@
-import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { getLabelColumnFromModel } from '#layers/autoadmin/utils/registry.js'
+import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import { getLabelColumnFromModel } from '#layers/autoadmin/utils/registry'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 
 export default defineEventHandler(async (event) => {

@@ -1,4 +1,4 @@
-import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
+import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { getLabelColumnFromModel } from '#layers/autoadmin/utils/registry'
 import { parseM2mRelations } from '#layers/autoadmin/utils/relation'
 
