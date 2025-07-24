@@ -60,7 +60,7 @@ describe('api', async () => {
   })
 
   it('should create 2 records for each model', async () => {
-    const modelConfigs = [
+    const cfgs = [
       {
         modelLabel: 'tags',
         payloads: [
@@ -84,7 +84,7 @@ describe('api', async () => {
       },
     ]
 
-    for (const { modelLabel, payloads } of modelConfigs) {
+    for (const { modelLabel, payloads } of cfgs) {
       // Create first record
       const response1 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelLabel}`, {
         method: 'POST',

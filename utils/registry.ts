@@ -17,9 +17,9 @@ export function getLabelColumnFromColumns(columns: Record<string, Column>) {
 export function getLabelColumnFromModel(model: Table) {
   // find the model in registry
   const registry = useAdminRegistry()
-  const modelConfig = registry.all().find(cfg => cfg.model === model)
-  if (modelConfig?.labelColumnName) {
-    return modelConfig.labelColumnName
+  const cfg = registry.all().find(cfg => cfg.model === model)
+  if (cfg?.labelColumnName) {
+    return cfg.labelColumnName
   }
   // else find from columns
   const modelColumns = getTableColumns(model)
@@ -28,12 +28,12 @@ export function getLabelColumnFromModel(model: Table) {
 
 export function getEnabledStatuses(model: Table) {
   const registry = useAdminRegistry().map()
-  for (const [key, obj] of registry) {
-    if (obj.model === model) {
+  for (const [key, cfg] of registry) {
+    if (cfg.model === model) {
       return {
         key,
-        create: obj.create.enabled,
-        update: obj.update.enabled,
+        create: cfg.create.enabled,
+        update: cfg.update.enabled,
       }
     }
   }

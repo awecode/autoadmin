@@ -94,8 +94,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
     return
   }
   const relatedConfigKey = relationConfig.relatedConfigKey
-  const modelConfig = registry.get(relatedConfigKey!)!
-  const label = modelConfig.label
+  const cfg = registry.get(relatedConfigKey!)!
+  const label = cfg.label
   const modal = overlay.create(AutoFormModal, {
     props: {
       modelLabel: label,

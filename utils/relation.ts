@@ -29,9 +29,9 @@ export function getPrimaryKeyColumn(table: Table) {
   return primaryKeyColumns[0]
 }
 
-export function parseO2mRelation(modelConfig: AdminModelConfig, table: Table, name: string) {
-  const model = modelConfig.model
-  const modelLabel = modelConfig.label
+export function parseO2mRelation(cfg: AdminModelConfig, table: Table, name: string) {
+  const model = cfg.model
+  const modelLabel = cfg.label
   const foreignPrimaryColumn = getPrimaryKeyColumn(table)
   const selfPrimaryColumn = getPrimaryKeyColumn(model)
   const foreignKeys = getTableForeignKeys(table)

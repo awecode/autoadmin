@@ -11,21 +11,21 @@ const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
 
 export function getModelConfig(modelLabel: string): AdminModelConfig {
   const registry = useAdminRegistry()
-  const modelConfig = registry.get(modelLabel)
-  if (!modelConfig) {
+  const cfg = registry.get(modelLabel)
+  if (!cfg) {
     throw createError({
       statusCode: 404,
       statusMessage: `Model ${modelLabel} not registered.`,
     })
   }
-  return modelConfig
+  return cfg
 }
 
-async function saveO2mRelation(db: DrizzleD1Database, modelConfig: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
-  if (modelConfig.o2m) {
-    const modelLabel = modelConfig.label
-    for (const [name, table] of Object.entries(modelConfig.o2m)) {
-      const relationData = parseO2mRelation(modelConfig, table, name)
+async function saveO2mRelation(db: DrizzleD1Database, cfg: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
+  if (cfg.o2m) {
+    const modelLabel = cfg.label
+    for (const [name, table] of Object.entries(cfg.o2m)) {
+      const relationData = parseO2mRelation(cfg, table, name)
       const fieldName = relationData.fieldName
       const newValues = preprocessed[fieldName]
       if (newValues) {
@@ -110,17 +110,17 @@ async function saveM2mRelation(db: DrizzleD1Database, relation: M2MRelation, sel
   }
 }
 export async function createRecord(modelLabel: string, data: any): Promise<any> {
-  const modelConfig = getModelConfig(modelLabel)
-  if (!modelConfig.create.enabled) {
+  const cfg = getModelConfig(modelLabel)
+  if (!cfg.create.enabled) {
     throw createError({
       statusCode: 404,
       statusMessage: `Model ${modelLabel} does not allow creation.`,
     })
   }
-  const model = modelConfig.model
+  const model = cfg.model
   const db = useDb()
 
-  const schema = modelConfig.create.schema
+  const schema = cfg.create.schema
 
   const shape = schema.shape
 
@@ -145,8 +145,8 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
     throw handleDrizzleError(error)
   }
 
-  if (modelConfig.m2m) {
-    const relations = parseM2mRelations(model, modelConfig.m2m)
+  if (cfg.m2m) {
+    const relations = parseM2mRelations(model, cfg.m2m)
     for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumn.name}`
       if (preprocessed[fieldName]) {
@@ -156,7 +156,7 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
     }
   }
 
-  await saveO2mRelation(db, modelConfig, preprocessed, result)
+  await saveO2mRelation(db, cfg, preprocessed, result)
 
   return {
     success: true,
@@ -175,17 +175,17 @@ export async function getRecordDetail(modelLabel: string, lookupValue: string): 
 }
 
 export async function updateRecord(modelLabel: string, lookupValue: string, data: any): Promise<any> {
-  const modelConfig = getModelConfig(modelLabel)
-  if (!modelConfig.update.enabled) {
+  const cfg = getModelConfig(modelLabel)
+  if (!cfg.update.enabled) {
     throw createError({
       statusCode: 404,
       statusMessage: `Model ${modelLabel} does not allow updates.`,
     })
   }
-  const model = modelConfig.model
+  const model = cfg.model
   const db = useDb()
 
-  const schema = modelConfig.update.schema
+  const schema = cfg.update.schema
 
   const shape = schema.shape
 
@@ -205,13 +205,13 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
 
   let result
   try {
-    result = await db.update(model).set(validatedData).where(eq(modelConfig.lookupColumn, lookupValue)).returning()
+    result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
   } catch (error) {
     throw handleDrizzleError(error)
   }
 
-  if (modelConfig.m2m) {
-    const relations = parseM2mRelations(model, modelConfig.m2m)
+  if (cfg.m2m) {
+    const relations = parseM2mRelations(model, cfg.m2m)
     for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumn.name}`
       if (preprocessed[fieldName]) {
@@ -221,7 +221,7 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
     }
   }
 
-  await saveO2mRelation(db, modelConfig, preprocessed, result)
+  await saveO2mRelation(db, cfg, preprocessed, result)
 
   return {
     success: true,
