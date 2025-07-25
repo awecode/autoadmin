@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const adminUrlPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_URL_PREFIX || '/admin'

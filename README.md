@@ -227,7 +227,7 @@ By default,`file` type fields accept files with all extensions.
 
 A preview dialog is implemented for images, and files with extensions - `.pdf`, `.txt`, `.md`.
 
-```ts
+```
 // Example for an image field
 {
   name: 'featuredImage',
@@ -529,7 +529,7 @@ The `sortKey` property determines how a column can be sorted:
 #### Direct Column Sorting
 Sort by the same column that's displayed:
 
-```ts
+```
 {
   field: 'createdAt',
   sortKey: 'createdAt' // or just omit sortKey, defaults to field name
@@ -539,7 +539,7 @@ Sort by the same column that's displayed:
 #### Custom Sort Key
 Sort by a different column than what's displayed:
 
-```ts
+```
 {
   field: popularity, // Custom function showing view count
   sortKey: 'views' // Sort by the actual views column
@@ -549,7 +549,7 @@ Sort by a different column than what's displayed:
 #### Relation Sorting
 Sort by columns in related tables using dot notation:
 
-```ts
+```
 {
   field: 'authorId.email',
   sortKey: 'authorId.name' // Sort by author name, not email
@@ -559,7 +559,7 @@ Sort by columns in related tables using dot notation:
 #### Disable Sorting
 Prevent sorting on specific columns:
 
-```ts
+```
 {
   field: 'actions',
   sortKey: false // No sorting for action buttons
@@ -635,7 +635,7 @@ registerAdminModel(usersTable, {
 #### Boolean Filters
 Automatically created for boolean columns. Provides Yes/No/All options.
 
-```ts
+```
 {
   field: 'isActive',
   type: 'boolean'
@@ -645,7 +645,7 @@ Automatically created for boolean columns. Provides Yes/No/All options.
 #### Text Filters
 For string columns. You can provide a list of options for the filter. If not provided, the filter will be a dropdown with all unique values for the column in the database.
 
-```ts
+```
 {
   field: 'status',
   type: 'text',
@@ -659,7 +659,7 @@ For string columns. You can provide a list of options for the filter. If not pro
 #### Date Filters
 Support single date or date range filtering. By default, if not provided, the filter will be a date range picker.
 
-```ts
+```
 {
   field: 'createdAt',
   type: 'date' // Single date picker
@@ -674,7 +674,7 @@ Support single date or date range filtering. By default, if not provided, the fi
 #### Relation Filters
 For foreign key relationships. Automatically provides choices from the related table.
 
-```ts
+```
 {
   field: 'categoryId',
   type: 'relation',
