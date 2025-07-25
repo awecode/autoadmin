@@ -19,7 +19,7 @@ if (!cfg) {
 const apiPrefix = cfg.apiPrefix
 
 const fetchEndpoint = props.mode === 'create' ? `${apiPrefix}/formspec/${modelLabel}` : `${apiPrefix}/formspec/${modelLabel}/update/${props.lookupValue}`
-const data = await $fetch(fetchEndpoint) as { spec: FormSpec, values?: Record<string, any> }
+const data = await $fetch<{ spec: FormSpec, values?: Record<string, any> }>(fetchEndpoint)
 const formSpec = data.spec
 const schema = props.mode === 'create' ? cfg.create.schema : cfg.update.schema
 const values = props.mode === 'create' ? {} : data.values
