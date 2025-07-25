@@ -62,7 +62,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       options,
     }
   } else if (type === 'select') {
-    const options = columnTypes[field].options || []
+    const options = columnTypes[field]?.options || []
     return {
       field,
       label: label || toTitleCase(field),
@@ -80,19 +80,20 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
     if (relations.length === 0) {
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }
+    const relation = relations[0]!
     let options
     if (query[field]) {
-      const rows = await db.select().from(relations[0].foreignTable).where(eq(relations[0].foreignColumn, query[field]))
+      const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, query[field]))
       options = rows.map(row => ({
-        label: row[getLabelColumnFromModel(relations[0].foreignTable)],
-        value: row[relations[0].foreignColumn.name],
+        label: row[getLabelColumnFromModel(relation.foreignTable)],
+        value: row[relation.foreignColumn.name],
       }))
     }
     return {
       field,
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
-      choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relations[0].columnName}`,
+      choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.columnName}`,
       options,
     }
   }
@@ -129,9 +130,9 @@ export async function getFilters(cfg: AdminModelConfig, db: DbType, columnTypes:
     return await prepareFilters(cfg, db, filters, columnTypes, metadata, query)
   }
   // get boolean, enum, date
-  const booleanColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'boolean')
-  const enumColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'select')
-  const dateColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column].type === 'date')
+  const booleanColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column]?.type === 'boolean')
+  const enumColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column]?.type === 'select')
+  const dateColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column]?.type === 'date')
   const defaultFilterColumns = [...booleanColumnNames, ...enumColumnNames, ...dateColumnNames]
   return prepareFilters(cfg, db, defaultFilterColumns, columnTypes, metadata, {})
 }

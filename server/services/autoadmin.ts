@@ -29,7 +29,7 @@ async function saveO2mRelation(db: DrizzleD1Database, cfg: AdminModelConfig, pre
       const fieldName = relationData.fieldName
       const newValues = preprocessed[fieldName]
       if (newValues) {
-        const selfValue = result[0][relationData.selfPrimaryColumn.name]
+        const selfValue = result[0]![relationData.selfPrimaryColumn.name]
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
         try {
           await db.update(table).set({ [relationData.foreignRelatedColumn.name]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
@@ -150,7 +150,7 @@ export async function createRecord(modelLabel: string, data: any): Promise<any> 
     for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumn.name}`
       if (preprocessed[fieldName]) {
-        const selfValue = result[0][relation.selfForeignColumn.name]
+        const selfValue = result[0]![relation.selfForeignColumn.name]
         await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }
@@ -215,7 +215,7 @@ export async function updateRecord(modelLabel: string, lookupValue: string, data
     for (const relation of relations) {
       const fieldName = `___${relation.name}___${relation.otherColumn.name}`
       if (preprocessed[fieldName]) {
-        const selfValue = result[0][relation.selfForeignColumn.name]
+        const selfValue = result[0]![relation.selfForeignColumn.name]
         await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }

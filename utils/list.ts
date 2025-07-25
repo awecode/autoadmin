@@ -94,20 +94,20 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             id: def,
             accessorKey: def,
             header: toTitleCase(def),
-            type: columnTypes[def].type,
+            type: columnTypes[def]!.type,
             sortKey: cfg.list.enableSort ? def : undefined,
           }
         } else if (def.includes('.')) {
           const [fk, foreignColumnName] = def.split('.')
           // TODO Check if fk is a foreign key using getTableForeignKeys
-          if (fk in tableColumns) {
+          if (fk && foreignColumnName && fk in tableColumns) {
             const accessorKey = def.replace('.', '__')
             const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
             const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
             if (foreignKeys.length === 0) {
               throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
             }
-            const foreignKey = foreignKeys[0]
+            const foreignKey = foreignKeys[0]!
             const foreignTable = foreignKey.foreignTable
             const insertSchema = createInsertSchema(foreignTable)
             const foreignTableListSpec = zodToListSpec(insertSchema as any)
@@ -144,14 +144,14 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             }
           } else if (def.field.includes('.')) {
             const [fk, foreignColumnName] = def.field.split('.')
-            if (fk in tableColumns) {
+            if (fk && foreignColumnName && fk in tableColumns) {
               const accessorKey = def.field.replace('.', '__')
               const header = def.label ?? toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
               const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
               if (foreignKeys.length === 0) {
                 throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
               }
-              const foreignKey = foreignKeys[0]
+              const foreignKey = foreignKeys[0]!
               const foreignTable = foreignKey.foreignTable
               const insertSchema = createInsertSchema(foreignTable)
               const foreignTableListSpec = zodToListSpec(insertSchema as any)
