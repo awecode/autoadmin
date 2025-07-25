@@ -13,7 +13,7 @@ const props = defineProps<{
   cancelPath?: RouteLocationRaw
   redirectPath?: RouteLocationRaw
   endpoint: string
-  schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }>
+  schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }> | Record<string, any>
 }>()
 
 const emit = defineEmits<{
@@ -46,7 +46,7 @@ const initializeState = () => {
 const state = initializeState()
 
 // Process schema to only include fields defined in spec
-const processedSchema = computed(() => processSchema(props.schema, props.spec))
+const processedSchema = computed(() => processSchema(props.schema as ZodObject<ZodRawShape>, props.spec))
 
 interface ApiErrorResponse {
   statusCode: number
