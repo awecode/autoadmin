@@ -138,7 +138,7 @@ function onClick() {
 const onFileDrop = (event: DragEvent) => {
   event.preventDefault()
   if (event?.dataTransfer?.items) {
-    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file') {
+    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0]?.kind === 'file') {
       const file = event.dataTransfer.items[0].getAsFile() as File
       handleFileChange(undefined, file)
     } else if (event.dataTransfer.items.length > 1) {

@@ -16,7 +16,7 @@ const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 
-const { data, error } = await useFetch(`${apiPrefix}/formspec/${modelLabel}/update/${lookupValue}`, {
+const { data, error } = await useFetch<{ spec: FormSpec, values?: Record<string, any> }>(`${apiPrefix}/formspec/${modelLabel}/update/${lookupValue}`, {
   key: `formspec-update-${modelLabel}-${lookupValue}`,
 })
 

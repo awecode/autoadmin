@@ -34,7 +34,7 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
   if (typeof modelValue === 'string' && modelValue !== '') {
     const dateParts = modelValue.split('-').map(Number)
     if (dateParts.length === 3) {
-      uCalendarValue.value = new CalendarDate(dateParts[0], dateParts[1], dateParts[2])
+      uCalendarValue.value = new CalendarDate(dateParts[0]!, dateParts[1]!, dateParts[2]!)
     } else {
       uCalendarValue.value = undefined
     }

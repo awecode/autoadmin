@@ -15,7 +15,7 @@ const apiPrefix = cfg.apiPrefix
 const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 
-const { data, error } = await useFetch(`${apiPrefix}/formspec/${modelLabel}`, {
+const { data, error } = await useFetch<{ spec: FormSpec }>(`${apiPrefix}/formspec/${modelLabel}`, {
   key: `formspec-${modelLabel}`,
 })
 

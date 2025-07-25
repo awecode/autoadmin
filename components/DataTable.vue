@@ -63,16 +63,19 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] |
       }
 
       const [column, direction] = value.split(':')
-      return [{
-        id: column,
-        desc: direction === 'desc',
-      }]
+      if (column) {
+        return [{
+          id: column,
+          desc: direction === 'desc',
+        }]
+      }
+      return undefined
     },
     set(value) {
       if (!value?.length) {
         return undefined
       }
-      return `${value[0].id}:${value[0].desc ? 'desc' : 'asc'}`
+      return `${value[0]!.id}:${value[0]!.desc ? 'desc' : 'asc'}`
     },
   },
 })
