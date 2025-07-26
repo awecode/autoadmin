@@ -1,11 +1,10 @@
 import type { SQL, Table } from 'drizzle-orm'
-import { useDb } from '#layers/autoadmin/server/utils/db'
-import { createDateFilterCondition, createDateRangeFilterCondition } from '#layers/autoadmin/utils/dateFilter'
-import { getFilters } from '#layers/autoadmin/utils/filter'
-import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
-import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
-import { getModelConfig } from './autoadmin'
+import { getModelConfig } from '../utils/autoadmin'
+import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
+import { getFilters } from '../utils/filter'
+import { getListColumns, zodToListSpec } from '../utils/list'
+import { getTableForeignKeysByColumn } from '../utils/relation'
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)
@@ -43,6 +42,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
   for (const [relation, field] of toJoin) {
     const [fk, foreignColumnName] = field.split('.')
+    if (!fk || !foreignColumnName) {
+      throw new Error(`Invalid field definition: ${JSON.stringify(field)}`)
+    }
     const foreignTable = relation.foreignTable
 
     // Get table columns to access them properly
@@ -52,10 +54,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     const joinKey = `${fk}_${relation.foreignColumn.name}`
 
     // Only add join if we haven't already added it for this foreign key
-    if (!addedJoins.has(joinKey)) {
+    if (!addedJoins.has(joinKey) && fk in tableColumns) {
       joins.push({
         table: foreignTable,
-        on: eq(tableColumns[fk], foreignTableColumns[relation.foreignColumn.name]),
+        on: eq(tableColumns[fk]!, foreignTableColumns[relation.foreignColumn.name]),
       })
       addedJoins.add(joinKey)
     }
@@ -79,11 +81,11 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     const selectedColumns = Object.fromEntries(
       columnNames
         .filter(key => key in tableColumns)
-        .map(key => [key, tableColumns[key]]),
+        .map(key => [key, tableColumns[key]!]),
     )
     // add lookup column to the selected columns if it does not exist
     if (!(cfg.lookupColumnName in selectedColumns)) {
-      selectedColumns[cfg.lookupColumnName] = tableColumns[cfg.lookupColumnName]
+      selectedColumns[cfg.lookupColumnName] = tableColumns[cfg.lookupColumnName]!
     }
     // add foreign column selections
     Object.assign(selectedColumns, foreignColumnSelections)
@@ -101,14 +103,14 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     for (const field of searchFields) {
       if (field in tableColumns) {
         // Direct column search
-        searchConditions.push(like(tableColumns[field], `%${searchQuery}%`))
+        searchConditions.push(like(tableColumns[field]!, `%${searchQuery}%`))
       } else if (field.includes('.')) {
         // Foreign key field search (e.g., preferredLocationId.name)
         const [fk, foreignColumnName] = field.split('.')
-        if (fk in tableColumns) {
+        if (fk && foreignColumnName && fk in tableColumns) {
           const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
           if (foreignKeys.length > 0) {
-            const foreignKey = foreignKeys[0]
+            const foreignKey = foreignKeys[0]!
             const foreignTable = foreignKey.foreignTable
             const foreignTableColumns = getTableColumns(foreignTable)
 
@@ -118,13 +120,13 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
               if (!addedJoins.has(joinKey)) {
                 joins.push({
                   table: foreignTable,
-                  on: eq(tableColumns[fk], foreignTableColumns[foreignKey.foreignColumn.name]),
+                  on: eq(tableColumns[fk]!, foreignTableColumns[foreignKey.foreignColumn.name]),
                 })
                 addedJoins.add(joinKey)
               }
 
               // Add search condition for foreign column
-              searchConditions.push(like(foreignTableColumns[foreignColumnName], `%${searchQuery}%`))
+              searchConditions.push(like(foreignTableColumns[foreignColumnName]!, `%${searchQuery}%`))
             }
           }
         }
@@ -147,30 +149,36 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
         if ('queryConditions' in filter) {
           const conditions = await filter.queryConditions(db, filterValue)
           filterConditions.push(...conditions)
-        } else if (filter.type === 'boolean') {
+        } else {
+          const column = tableColumns[filter.field]
+          if (!column) {
+            throw new Error(`Invalid filter field: ${filter.field}`)
+          }
+          if (filter.type === 'boolean') {
           // Handle boolean filters
-          const boolValue = filterValue === 'true' || filterValue === true
-          filterConditions.push(eq(tableColumns[filter.field], boolValue))
-        } else if (filter.type === 'daterange') {
-          const condition = createDateRangeFilterCondition(
-            tableColumns[filter.field],
-            filterValue,
-            'originalType' in filter && filter.originalType === 'datetime-local',
-          )
-          if (condition) {
-            filterConditions.push(condition)
+            const boolValue = filterValue === 'true' || filterValue === true
+            filterConditions.push(eq(column, boolValue))
+          } else if (filter.type === 'daterange') {
+            const condition = createDateRangeFilterCondition(
+              column,
+              filterValue,
+              'originalType' in filter && filter.originalType === 'datetime-local',
+            )
+            if (condition) {
+              filterConditions.push(condition)
+            }
+          } else if (filter.type === 'date') {
+            const condition = createDateFilterCondition(
+              column,
+              filterValue,
+              'originalType' in filter && filter.originalType === 'datetime-local',
+            )
+            if (condition) {
+              filterConditions.push(condition)
+            }
+          } else if (filter.type === 'text' || filter.type === 'relation') {
+            filterConditions.push(eq(column, filterValue))
           }
-        } else if (filter.type === 'date') {
-          const condition = createDateFilterCondition(
-            tableColumns[filter.field],
-            filterValue,
-            'originalType' in filter && filter.originalType === 'datetime-local',
-          )
-          if (condition) {
-            filterConditions.push(condition)
-          }
-        } else if (filter.type === 'text' || filter.type === 'relation') {
-          filterConditions.push(eq(tableColumns[filter.field], filterValue))
         }
       }
     }
@@ -208,28 +216,32 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
       if (column.sortKey.includes('.')) {
         const [fk, foreignColumnName] = column.sortKey.split('.')
 
+        if (!fk || !foreignColumnName) {
+          throw new Error(`Invalid ordering field: ${JSON.stringify(column.sortKey)}`)
+        }
+
         // Get foreign key relations for this column
         const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
         if (foreignKeys.length > 0) {
-          const foreignKey = foreignKeys[0]
+          const foreignKey = foreignKeys[0]!
           const foreignTable = foreignKey.foreignTable
           const foreignTableColumns = getTableColumns(foreignTable)
 
           // Ensure the foreign table is joined
           const joinKey = `${fk}_${foreignKey.foreignColumn.name}`
-          if (!addedJoins.has(joinKey)) {
-            baseQuery = baseQuery.leftJoin(foreignTable, eq(tableColumns[fk], foreignTableColumns[foreignKey.foreignColumn.name]))
+          if (!addedJoins.has(joinKey) && fk in tableColumns) {
+            baseQuery = baseQuery.leftJoin(foreignTable, eq(tableColumns[fk]!, foreignTableColumns[foreignKey.foreignColumn.name]))
           }
 
           // Apply ordering on foreign column
           if (foreignColumnName in foreignTableColumns) {
-            baseQuery = baseQuery.orderBy(orderFn(foreignTableColumns[foreignColumnName]))
+            baseQuery = baseQuery.orderBy(orderFn(foreignTableColumns[foreignColumnName]!))
           }
         }
       } else {
         // Direct column sorting
         if (column.sortKey in tableColumns) {
-          baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]))
+          baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]!))
         }
       }
     }

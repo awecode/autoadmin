@@ -1,12 +1,13 @@
+import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/filter'
+import type { FieldSpec } from '#layers/autoadmin/server/utils/form'
+import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
-import type { CustomFilter, FilterType } from '../utils/filter'
-import type { FieldSpec } from '../utils/form'
-import type { ListFieldType } from '../utils/list'
-import type { TableMetadata } from '../utils/metdata'
+import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
+import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
-import { getLabelColumnFromColumns } from '../utils/registry'
 
 // Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -17,6 +18,8 @@ type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) =>
 // Represents a sort key for a column or relation string
 type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
 // type TableWithColumns<T extends Table = Table> = T & { [K in ColKey<T>]: T['_']['columns'][K] }
+
+export type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image' | 'textarea' | 'rich-text' | 'relation' | 'relation-many'
 
 export type FilterFieldDef<T extends Table> = ColField<T> | {
   field: ColField<T>
@@ -31,7 +34,7 @@ export type ListFieldDef<T extends Table>
     | { // Represents a detailed field configuration object
       field: ListField<T> // Can be a column/relation string OR a callable function
       label?: string // Optional: custom display label for the field
-      type?: ListFieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
+      type?: FieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
       sortKey?: SortKey<T>
     }
 export interface ListColumnDef<T extends Table> {
@@ -39,7 +42,7 @@ export interface ListColumnDef<T extends Table> {
   accessorKey: string
   header?: string
   accessorFn?: (model: InferSelectModel<T>) => any
-  type?: ListFieldType
+  type?: FieldType
   sortKey?: SortKey<T>
 }
 
@@ -116,7 +119,7 @@ export interface AdminModelOptions<T extends Table = Table> {
   delete?: Partial<DeleteOptions>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
-  fields?: FieldSpec[] & { name: ColKey<T>, type: ListFieldType }[]
+  fields?: FieldSpec[] & { name: ColKey<T>, type: FieldType }[]
   warnOnUnsavedChanges?: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
 }
@@ -137,11 +140,12 @@ export interface AdminModelConfig<T extends Table = Table> {
   delete: DeleteOptions
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
-  fields?: FieldSpec[] & { name: ColKey<T>, type: ListFieldType }[]
+  fields?: FieldSpec[] & { name: ColKey<T>, type: FieldType }[]
   warnOnUnsavedChanges: boolean
   // store
   columns: ReturnType<typeof getTableColumns<T>>
   metadata: TableMetadata
+  apiPrefix: string
 }
 
 const getStaticDefaultOptions = () => ({
@@ -230,10 +234,12 @@ export function useAdminRegistry() {
     ) as AdminModelConfig<T>
 
     cfg.columns = columns
+    cfg.apiPrefix = apiPrefix
 
-    // Validate that lookupColumnName exists on the model's columns
     const lookupColumnName = cfg.lookupColumnName
-    if (!Object.keys(cfg.columns).includes(lookupColumnName)) {
+    // Validate that lookupColumnName exists on the model's columns
+    const lookupColumn = cfg.columns[lookupColumnName]
+    if (!lookupColumn) {
       if (lookupColumnName === defaultLookupColumnName) {
         throw new Error(
           `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
@@ -245,7 +251,6 @@ export function useAdminRegistry() {
       }
     }
     // Check if lookupColumnName is either primary or unique
-    const lookupColumn = cfg.columns[lookupColumnName]
     if (!lookupColumn.primary && !lookupColumn.isUnique) {
       throw new Error(
         `The lookup field "${lookupColumnName}" is not a primary or unique column on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration.`,

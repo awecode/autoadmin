@@ -1,5 +1,5 @@
-import uploadToObjectStorage from '#layers/autoadmin/server/utils/s3'
 import { z } from 'zod'
+import uploadToObjectStorage from '../../utils/s3'
 
 export default defineEventHandler(async (event) => {
   const contentType = getRequestHeader(event, 'content-type')
@@ -22,16 +22,17 @@ export default defineEventHandler(async (event) => {
       message: 'The request must contain exactly one file',
     })
   }
-  if (parts[0].name !== 'file' && !parts[0].filename) {
+  const part = parts[0]!
+  if (part.name !== 'file' && !part.filename) {
     createError({
       statusCode: 400,
       message: 'The file must be named "file"',
     })
   }
 
-  const url = await uploadToObjectStorage(parts[0].data, {
-    extension: parts[0].filename?.split('.').pop() || 'bin',
-    filename: parts[0].filename,
+  const url = await uploadToObjectStorage(part.data, {
+    extension: part.filename?.split('.').pop() || 'bin',
+    filename: part.filename,
     fileType: query.fileType,
     prefix: query.prefix,
   })

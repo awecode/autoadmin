@@ -1,16 +1,15 @@
-import type { ColKey } from '#layers/autoadmin/composables/useAdminRegistry'
 import type { Table } from 'drizzle-orm'
-import { useAdminRegistry } from '#layers/autoadmin/composables/useAdminRegistry'
-import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/utils/form'
-import { useMetadataOnFormSpec } from '#layers/autoadmin/utils/metdata'
-import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/utils/relation'
+import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
+import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metdata'
+import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 import { eq } from 'drizzle-orm'
 
 const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) => {
   const db = useDb()
   const model = cfg.model
   const lookupColumn = cfg.lookupColumn
-  const columns = spec.fields.map(field => field.name as ColKey<typeof model>)
+  const columns = spec.fields.map(field => field.name)
 
   // Add label column to select because we need it for the label string in update page header, even if it is not included in form fields
   const labelColumnName = cfg.labelColumnName
@@ -19,7 +18,9 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
   }
 
   const selectObj = Object.fromEntries(
-    columns.map(colName => [colName, cfg.columns[colName]]),
+    columns
+      .filter(colName => colName in cfg.columns)
+      .map(colName => [colName, cfg.columns[colName]!]),
   )
 
   const result = await db

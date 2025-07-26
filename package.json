@@ -1,0 +1,48 @@
+{
+  "name": "nuxt-autoadmin",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac",
+  "imports": {
+    "#layers/autoadmin/*": "./*"
+  },
+  "main": "./nuxt.config.ts",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.57",
+    "@libsql/client": "^0.15.9",
+    "@peculiar/webcrypto": "^1.5.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tiptap/extension-highlight": "^3.0.7",
+    "@tiptap/extension-horizontal-rule": "^3.0.7",
+    "@tiptap/extension-image": "^3.0.7",
+    "@tiptap/extension-list": "^3.0.7",
+    "@tiptap/extension-subscript": "^3.0.7",
+    "@tiptap/extension-superscript": "^3.0.7",
+    "@tiptap/extension-text-align": "^3.0.7",
+    "@tiptap/extension-text-style": "^3.0.7",
+    "@tiptap/extension-typography": "^3.0.7",
+    "@tiptap/extensions": "^3.0.7",
+    "@tiptap/pm": "^3.0.7",
+    "@tiptap/starter-kit": "^3.0.7",
+    "@tiptap/vue-3": "^3.0.7",
+    "@vueuse/router": "^13.5.0",
+    "aws4fetch": "^1.0.20",
+    "drizzle-orm": "^0.44.2",
+    "drizzle-zod": "^0.8.2"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.16.1",
+    "@nuxt/eslint": "latest",
+    "@nuxt/fonts": "0.11.4",
+    "@nuxt/icon": "1.14.0",
+    "@nuxt/ui": "3.1.3",
+    "drizzle-kit": "^0.31.2",
+    "eslint": "^9.29.0",
+    "nuxt": "^4.0.1",
+    "typescript": "^5.8.3",
+    "vue": "latest"
+  }
+}

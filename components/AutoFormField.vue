@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { FormSpec } from '~/utils/form'
-import AutoFormModal from '#layers/autoadmin/components/AutoFormModal.vue'
-import { normalizeOptions } from '~/utils/form'
-import { transformErrorMessage } from '~/utils/zod'
+import type { FormSpec } from '#layers/autoadmin/server/utils/form'
+import { normalizeOptions, transformErrorMessage } from '#layers/autoadmin/utils/form'
+import AutoFormModal from './AutoFormModal.vue'
 
 const props = defineProps<{
   field: FormSpec['fields'][number]
@@ -94,8 +93,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
     return
   }
   const relatedConfigKey = relationConfig.relatedConfigKey
-  const modelConfig = registry.get(relatedConfigKey!)!
-  const label = modelConfig.label
+  const cfg = registry.get(relatedConfigKey!)!
+  const label = cfg.label
   const modal = overlay.create(AutoFormModal, {
     props: {
       modelLabel: label,

@@ -1,0 +1,46 @@
+[
+  {
+    "field": "status",
+    "label": "Status",
+    "type": "text",
+    "options": [
+      "draft",
+      "published",
+      "archived"
+    ]
+  },
+  {
+    "field": "authorId",
+    "label": "Author",
+    "type": "relation",
+    "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/authorId"
+  },
+  {
+    "field": "categoryId",
+    "label": "Category",
+    "type": "relation",
+    "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/categoryId"
+  },
+  {
+    "field": "isCommentsEnabled",
+    "label": "Is Comments Enabled",
+    "type": "boolean"
+  },
+  {
+    "field": "publishedAt",
+    "label": "Publication Date",
+    "type": "daterange"
+  },
+  {
+    "field": "createdAt",
+    "label": "Created At",
+    "type": "date",
+    "originalType": "datetime-local"
+  },
+  {
+    "field": "updatedAt",
+    "label": "Updated At",
+    "type": "daterange",
+    "originalType": "datetime-local"
+  }
+]

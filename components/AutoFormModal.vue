@@ -16,17 +16,17 @@ if (!cfg) {
   })
 }
 
-const fetchEndpoint = props.mode === 'create' ? `/api/autoadmin/formspec/${modelLabel}` : `/api/autoadmin/formspec/${modelLabel}/update/${props.lookupValue}`
-const data = await $fetch(fetchEndpoint) as { spec: FormSpec, values?: Record<string, any> }
+const apiPrefix = cfg.apiPrefix
+
+const fetchEndpoint = props.mode === 'create' ? `${apiPrefix}/formspec/${modelLabel}` : `${apiPrefix}/formspec/${modelLabel}/update/${props.lookupValue}`
+const data = await $fetch<{ spec: FormSpec, values?: Record<string, any> }>(fetchEndpoint)
 const formSpec = data.spec
 const schema = props.mode === 'create' ? cfg.create.schema : cfg.update.schema
 const values = props.mode === 'create' ? {} : data.values
 
-const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
 const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${props.lookupValue}`)
 
-const title = props.mode === 'create' ? `${cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)} > Create` : `${cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)} > Update ${formSpec.labelString ?? lookupValue}`
+const title = props.mode === 'create' ? `${cfg.list.title ?? toTitleCase(cfg.label ?? modelLabel)} > Create` : `${cfg.list.title ?? toTitleCase(cfg.label ?? modelLabel)} > Update ${formSpec.labelString ?? props.lookupValue}`
 </script>
 
 <template>

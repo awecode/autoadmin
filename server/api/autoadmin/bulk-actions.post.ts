@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { getModelConfig } from '../../services/autoadmin'
+import { getModelConfig } from '../../utils/autoadmin'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({

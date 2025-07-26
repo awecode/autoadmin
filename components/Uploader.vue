@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatBytes } from '../utils/string'
+import { formatBytes } from '#layers/autoadmin/utils/string'
 
 const props = defineProps<{
   label: string
@@ -17,6 +17,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string | undefined]
 }>()
+
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
 
 const dialogPreviewExtensions = ['jpg', 'png', 'jpeg', 'svg', 'pdf', 'txt', 'md']
 
@@ -101,7 +104,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     const formData = new FormData()
     formData.append('file', file)
     const fileType = encodeURIComponent(file.type)
-    const uploadedFileUrl = await $fetch(`/api/autoadmin/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
+    const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
       method: 'POST',
       body: formData,
       onResponseError: (error) => {
@@ -111,6 +114,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
           color: 'error',
         })
         clearFile()
+        isFileUploading.value = false
         if (fileRef.value?.inputRef) {
           fileRef.value.inputRef.value = ''
         }
@@ -134,7 +138,7 @@ function onClick() {
 const onFileDrop = (event: DragEvent) => {
   event.preventDefault()
   if (event?.dataTransfer?.items) {
-    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file') {
+    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0]?.kind === 'file') {
       const file = event.dataTransfer.items[0].getAsFile() as File
       handleFileChange(undefined, file)
     } else if (event.dataTransfer.items.length > 1) {

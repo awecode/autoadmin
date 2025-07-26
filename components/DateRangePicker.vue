@@ -41,10 +41,19 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
     const [start, end] = modelValue.split(',')
     if (start && end) {
       const startSplits = start.split('-').map(Number)
-      const endSplits = end.split('-').map(Number)
-      uCalendarValue.value = {
-        start: new CalendarDate(startSplits[0], startSplits[1], startSplits[2]),
-        end: new CalendarDate(endSplits[0], endSplits[1], endSplits[2]),
+      if (startSplits.length === 3) {
+        const endSplits = end.split('-').map(Number)
+        if (endSplits.length === 3) {
+          uCalendarValue.value = {
+            start: new CalendarDate(startSplits[0]!, startSplits[1]!, startSplits[2]!),
+            end: new CalendarDate(endSplits[0]!, endSplits[1]!, endSplits[2]!),
+          }
+        }
+      } else {
+        uCalendarValue.value = {
+          start: undefined,
+          end: undefined,
+        }
       }
     } else {
       uCalendarValue.value = {

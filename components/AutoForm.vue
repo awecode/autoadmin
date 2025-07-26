@@ -1,11 +1,10 @@
 <script setup lang="ts">
+import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import type { RouteLocationRaw } from 'vue-router'
-import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
-import type { FormSpec } from '~/utils/form'
-import { useWarnOnUnsavedChanges } from '~/composables/warnOnUnsavedChanges'
-import { getErrorMessage } from '~/utils/form'
-import { processSchema } from '~/utils/schema'
+import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
+import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
+import { getErrorMessage, processSchema } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
   spec: FormSpec
@@ -13,7 +12,7 @@ const props = defineProps<{
   cancelPath?: RouteLocationRaw
   redirectPath?: RouteLocationRaw
   endpoint: string
-  schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }>
+  schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }> | Record<string, any>
 }>()
 
 const emit = defineEmits<{
@@ -46,7 +45,7 @@ const initializeState = () => {
 const state = initializeState()
 
 // Process schema to only include fields defined in spec
-const processedSchema = computed(() => processSchema(props.schema, props.spec))
+const processedSchema = computed(() => processSchema(props.schema as ZodObject<ZodRawShape>, props.spec))
 
 interface ApiErrorResponse {
   statusCode: number

@@ -1,5 +1,5 @@
-import { bulkDelete } from '#layers/autoadmin/server/services/delete'
 import { z } from 'zod'
+import { bulkDelete } from '../../services/delete'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({

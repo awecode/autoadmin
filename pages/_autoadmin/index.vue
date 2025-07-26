@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { getTitle } from '~/utils/autoadmin'
-import { getIconForLabel, toTitleCase } from '~/utils/string'
+import { getTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
 
 const modelLinks = useState('model-links', () => {
   const allCfg = useAdminRegistry().all()

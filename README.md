@@ -237,7 +237,7 @@ By default,`file` type fields accept files with all extensions.
 
 A preview dialog is implemented for images, and files with extensions - `.pdf`, `.txt`, `.md`.
 
-```ts
+```
 // Example for an image field
 {
   name: 'featuredImage',
@@ -539,7 +539,7 @@ The `sortKey` property determines how a column can be sorted:
 #### Direct Column Sorting
 Sort by the same column that's displayed:
 
-```ts
+```
 {
   field: 'createdAt',
   sortKey: 'createdAt' // or just omit sortKey, defaults to field name
@@ -549,7 +549,7 @@ Sort by the same column that's displayed:
 #### Custom Sort Key
 Sort by a different column than what's displayed:
 
-```ts
+```
 {
   field: popularity, // Custom function showing view count
   sortKey: 'views' // Sort by the actual views column
@@ -559,7 +559,7 @@ Sort by a different column than what's displayed:
 #### Relation Sorting
 Sort by columns in related tables using dot notation:
 
-```ts
+```
 {
   field: 'authorId.email',
   sortKey: 'authorId.name' // Sort by author name, not email
@@ -569,7 +569,7 @@ Sort by columns in related tables using dot notation:
 #### Disable Sorting
 Prevent sorting on specific columns:
 
-```ts
+```
 {
   field: 'actions',
   sortKey: false // No sorting for action buttons
@@ -645,7 +645,7 @@ registerAdminModel(usersTable, {
 #### Boolean Filters
 Automatically created for boolean columns. Provides Yes/No/All options.
 
-```ts
+```
 {
   field: 'isActive',
   type: 'boolean'
@@ -655,7 +655,7 @@ Automatically created for boolean columns. Provides Yes/No/All options.
 #### Text Filters
 For string columns. You can provide a list of options for the filter. If not provided, the filter will be a dropdown with all unique values for the column in the database.
 
-```ts
+```
 {
   field: 'status',
   type: 'text',
@@ -669,7 +669,7 @@ For string columns. You can provide a list of options for the filter. If not pro
 #### Date Filters
 Support single date or date range filtering. By default, if not provided, the filter will be a date range picker.
 
-```ts
+```
 {
   field: 'createdAt',
   type: 'date' // Single date picker
@@ -684,7 +684,7 @@ Support single date or date range filtering. By default, if not provided, the fi
 #### Relation Filters
 For foreign key relationships. Automatically provides choices from the related table.
 
-```ts
+```
 {
   field: 'categoryId',
   type: 'relation',
@@ -809,8 +809,8 @@ AutoAdmin can be configured using environment variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `NUXT_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
-| `NUXT_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
+| `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
+| `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
 
 ### Object Storage Configuration
 
@@ -832,13 +832,13 @@ NUXT_S3_PUBLIC_URL=<your-public-url>
 ```ts
 // server/db/schema.ts
 import { sql } from 'drizzle-orm'
-import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey(),
   name: text('name').notNull().unique(),
   description: text('description'),
-  isActive: boolean('is_active').default(true),
+  isActive: integer({ mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 })
 
@@ -848,7 +848,7 @@ export const users = sqliteTable('users', {
   name: text('name').notNull(),
   avatar: text('avatar'),
   role: text('role', { enum: ['admin', 'editor', 'author'] }).default('author'),
-  isActive: boolean('is_active').default(true),
+  isActive: integer({ mode: 'boolean' }).default(true),
   bio: text('bio'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 })
@@ -862,7 +862,7 @@ export const posts = sqliteTable('posts', {
   featuredImage: text('featured_image'),
   status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
   views: integer('views').default(0),
-  isCommentsEnabled: boolean('is_comments_enabled').default(true),
+  isCommentsEnabled: integer({ mode: 'boolean' }).default(true),
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),

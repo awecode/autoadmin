@@ -1,29 +1,27 @@
-import type { AdminModelConfig, ColKey, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/useAdminRegistry'
+import type { AdminModelConfig, ColKey, FieldType, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/registry'
 import type { Column, Table } from 'drizzle-orm'
 import type { ZodObject, ZodTypeAny } from 'zod'
-import { getTableForeignKeys, getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { createInsertSchema } from 'drizzle-zod'
+import { getTableForeignKeys, getTableForeignKeysByColumn } from './relation'
 import { getDef, unwrapZodType } from './zod'
 
 type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
-export type ListFieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image'
-
-export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: ListFieldType, options?: string[] }> {
+export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: FieldType, options?: string[] }> {
   const shape = getDef(schema)?.shape ?? schema.shape
   if (!shape) {
     // Fallback for safety, though a ZodObject should always have a shape.
     return {}
   }
 
-  const fields: [string, { type: ListFieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
+  const fields: [string, { type: FieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
     const { innerType } = unwrapZodType(zodType as ZodTypeAny)
 
     const definition = getDef(innerType)
     const definitionTypeKey = definition?.typeName ?? definition?.type
 
-    let type: ListFieldType = 'text'
+    let type: FieldType = 'text'
     let options: string[] | undefined
     switch (definitionTypeKey) {
       case 'ZodString':
@@ -83,7 +81,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Li
   return Object.fromEntries(fields)
 }
 
-export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: ListFieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
+export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: FieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
   if (cfg.list.columns) {
@@ -96,20 +94,20 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             id: def,
             accessorKey: def,
             header: toTitleCase(def),
-            type: columnTypes[def].type,
+            type: columnTypes[def]!.type,
             sortKey: cfg.list.enableSort ? def : undefined,
           }
         } else if (def.includes('.')) {
           const [fk, foreignColumnName] = def.split('.')
           // TODO Check if fk is a foreign key using getTableForeignKeys
-          if (fk in tableColumns) {
+          if (fk && foreignColumnName && fk in tableColumns) {
             const accessorKey = def.replace('.', '__')
             const header = toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
             const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
             if (foreignKeys.length === 0) {
               throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
             }
-            const foreignKey = foreignKeys[0]
+            const foreignKey = foreignKeys[0]!
             const foreignTable = foreignKey.foreignTable
             const insertSchema = createInsertSchema(foreignTable)
             const foreignTableListSpec = zodToListSpec(insertSchema as any)
@@ -146,14 +144,14 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             }
           } else if (def.field.includes('.')) {
             const [fk, foreignColumnName] = def.field.split('.')
-            if (fk in tableColumns) {
+            if (fk && foreignColumnName && fk in tableColumns) {
               const accessorKey = def.field.replace('.', '__')
               const header = def.label ?? toTitleCase(accessorKey.replace('Id__', ' ').replace('__', ' '))
               const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
               if (foreignKeys.length === 0) {
                 throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
               }
-              const foreignKey = foreignKeys[0]
+              const foreignKey = foreignKeys[0]!
               const foreignTable = foreignKey.foreignTable
               const insertSchema = createInsertSchema(foreignTable)
               const foreignTableListSpec = zodToListSpec(insertSchema as any)

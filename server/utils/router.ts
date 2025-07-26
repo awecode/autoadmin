@@ -14,7 +14,7 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
     throw new Error('Invalid route: empty path')
   }
 
-  const modelLabel = segments[0]
+  const modelLabel = segments[0]!
 
   // Pattern matching based on URL structure and HTTP method
   if (segments.length === 1) {

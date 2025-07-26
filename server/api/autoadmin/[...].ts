@@ -1,8 +1,10 @@
-import { createRecord, getRecordDetail, updateRecord } from '#layers/autoadmin/server/services/autoadmin'
-import { deleteRecord } from '#layers/autoadmin/server/services/delete'
-
-import { listRecords } from '#layers/autoadmin/server/services/list'
-import { parseAutoadminRoute } from '#layers/autoadmin/server/utils/router'
+import { createRecord } from '../../services/create'
+import { deleteRecord } from '../../services/delete'
+import { getRecordDetail } from '../../services/detail'
+import { listRecords } from '../../services/list'
+import { updateRecord } from '../../services/update'
+import { getModelConfig } from '../../utils/autoadmin'
+import { parseAutoadminRoute } from '../../utils/router'
 
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
@@ -19,13 +21,15 @@ export default defineEventHandler(async (event) => {
   // DELETE <model-label>/<lookup-field-value>: Delete
 
   const config = useRuntimeConfig()
-  const apiPrefix = (config.public.apiPrefix || '/api/autoadmin') as string
+  const apiPrefix = (config.public.apiPrefix) as string
   const pathSegments = url.pathname.split(apiPrefix)[1] || ''
 
   const parsedRoute = parseAutoadminRoute(pathSegments, method)
 
   const query = getQuery(event)
   const body = method !== 'GET' ? await readBody(event) : undefined
+
+  const cfg = getModelConfig(parsedRoute.modelLabel)
 
   switch (parsedRoute.routeType) {
     case 'list':
@@ -38,7 +42,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Request body is required for create operation',
         })
       }
-      return await createRecord(parsedRoute.modelLabel, body)
+      return await createRecord(cfg, body)
 
     case 'detail':
       if (!parsedRoute.lookupValue) {
@@ -47,7 +51,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for detail operation',
         })
       }
-      return await getRecordDetail(parsedRoute.modelLabel, parsedRoute.lookupValue)
+      return await getRecordDetail(cfg, parsedRoute.lookupValue)
 
     case 'update':
       if (!parsedRoute.lookupValue) {
@@ -62,7 +66,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Request body is required for update operation',
         })
       }
-      return await updateRecord(parsedRoute.modelLabel, parsedRoute.lookupValue, body)
+      return await updateRecord(cfg, parsedRoute.lookupValue, body)
 
     case 'delete':
       if (!parsedRoute.lookupValue) {
@@ -71,7 +75,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for delete operation',
         })
       }
-      return await deleteRecord(parsedRoute.modelLabel, parsedRoute.lookupValue)
+      return await deleteRecord(cfg, parsedRoute.lookupValue)
 
     default:
       throw createError({

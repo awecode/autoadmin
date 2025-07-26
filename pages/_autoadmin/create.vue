@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getTitle } from '~/utils/autoadmin'
+import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)
@@ -10,10 +10,12 @@ if (!cfg) {
   })
 }
 
-const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
+const apiPrefix = cfg.apiPrefix
+
+const listTitle = cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 
-const { data, error } = await useFetch(`/api/autoadmin/formspec/${modelLabel}`, {
+const { data, error } = await useFetch<{ spec: FormSpec }>(`${apiPrefix}/formspec/${modelLabel}`, {
   key: `formspec-${modelLabel}`,
 })
 
@@ -27,8 +29,6 @@ if (error.value) {
 const formSpec = data.value?.spec as FormSpec
 const schema = cfg.create.schema
 
-const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
 const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
 
 useHead({

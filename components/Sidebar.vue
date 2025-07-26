@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
-import { getTitle } from '~/utils/autoadmin'
-import { getIconForLabel, toTitleCase } from '~/utils/string'
+import { getTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
 
 const appConfig = useAppConfig()
 
