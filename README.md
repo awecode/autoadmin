@@ -847,3 +847,7 @@ Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/e
 - [Drizzle](https://orm.drizzle.team/)
 - [Nuxt UI](https://ui.nuxt.com/)
 - [Zod](https://zod.dev/)
+
+## License
+
+MIT
