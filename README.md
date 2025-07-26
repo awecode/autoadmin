@@ -8,11 +8,21 @@ Use autoadmin as a layer in your nuxt project. You can add the following to your
 
 ```ts
 export default defineNuxtConfig({
-  extends: ['../autoadmin/.playground'],
+  extends: [
+    ['github:awecode/autoadmin', { install: true }],
+  ],
 })
 ```
 
-Or you can clone the project inside layers directory in your nuxt project.
+Or you can download the project inside layers directory in your nuxt project.
+
+```bash
+mkdir -p layers
+npx giget gh:awecode/autoadmin layers/autoadmin
+rm -rf layers/autoadmin/examples
+cd layers/autoadmin
+pnpm install
+```
 
 ## Usage
 
