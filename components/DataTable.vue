@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
 import type { TableColumn } from '#ui/types'
 import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
-import type { FilterSpec } from '~/server/utils/filter'
+import DeleteModal from '#layers/autoadmin/components/DeleteModal.vue'
+import { getTitle } from '#layers/autoadmin/utils/autoadmin'
+import { humanifyDateTime } from '#layers/autoadmin/utils/date'
+import { getErrorMessage } from '#layers/autoadmin/utils/form'
+import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
 import { h, resolveComponent } from 'vue'
-import DeleteModal from '~/components/DeleteModal.vue'
-import { getTitle } from '~/utils/autoadmin'
-import { humanifyDateTime } from '~/utils/date'
-import { getErrorMessage } from '~/utils/form'
-import { getFileNameFromUrl } from '~/utils/string'
 
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')

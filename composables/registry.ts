@@ -1,11 +1,13 @@
+import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/filter'
+import type { FieldSpec } from '#layers/autoadmin/server/utils/form'
+import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
-import type { CustomFilter, FilterType } from '~/server/utils/filter'
-import type { FieldSpec } from '~/server/utils/form'
-import type { TableMetadata } from '~/server/utils/metdata'
+import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
+import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
-import { getLabelColumnFromColumns } from '~/utils/autoadmin'
 
 // Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>

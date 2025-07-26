@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getTitle } from '~/utils/autoadmin'
+import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelLabel)

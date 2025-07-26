@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { FilterSpec } from '~/server/utils/filter'
-import { normalizeOptions } from '~/utils/form'
+import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
+import { normalizeOptions } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
   modelValue: any

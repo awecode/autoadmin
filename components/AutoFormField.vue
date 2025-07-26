@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { FormSpec } from '~/server/utils/form'
-import { normalizeOptions, transformErrorMessage } from '~/utils/form'
+import type { FormSpec } from '#layers/autoadmin/server/utils/form'
+import { normalizeOptions, transformErrorMessage } from '#layers/autoadmin/utils/form'
 import AutoFormModal from './AutoFormModal.vue'
 
 const props = defineProps<{

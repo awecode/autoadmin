@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import type { RouteLocationRaw } from 'vue-router'
-import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
-import type { FormSpec } from '~/server/utils/form'
-import { useWarnOnUnsavedChanges } from '~/composables/unsavedWarning'
-import { getErrorMessage, processSchema } from '~/utils/form'
+import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
+import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
+import { getErrorMessage, processSchema } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
   spec: FormSpec

@@ -1,5 +1,5 @@
-import { useAdminRegistry } from '~/composables/registry'
-import { getLabelColumnFromModel } from '~/server/utils/autoadmin'
+import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import { getLabelColumnFromModel } from '#layers/autoadmin/server/utils/autoadmin'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')
