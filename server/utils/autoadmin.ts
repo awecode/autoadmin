@@ -1,18 +1,19 @@
-import type { Column, Table } from 'drizzle-orm'
+import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { Table } from 'drizzle-orm'
 import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { getTableColumns } from 'drizzle-orm'
 
-export function getLabelColumnFromColumns(columns: Record<string, Column>) {
-  const columnNames = Object.keys(columns)
-  if (!columnNames.length) {
-    throw new Error(`No columns found for the model.`)
+export function getModelConfig(modelLabel: string): AdminModelConfig {
+  const registry = useAdminRegistry()
+  const cfg = registry.get(modelLabel)
+  if (!cfg) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Model ${modelLabel} not registered.`,
+    })
   }
-  const labelColumnNames = columnNames.filter(column => ['name', 'title', 'label', 'slug'].includes(column))
-  if (labelColumnNames.length) {
-    return labelColumnNames[0]!
-  }
-  // else return the first column
-  return columnNames[0]!
+  return cfg
 }
 
 export function getLabelColumnFromModel(model: Table) {

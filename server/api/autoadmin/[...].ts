@@ -1,8 +1,9 @@
-import { createRecord, getRecordDetail, updateRecord } from '#layers/autoadmin/server/services/autoadmin'
-import { deleteRecord } from '#layers/autoadmin/server/services/delete'
-
-import { listRecords } from '#layers/autoadmin/server/services/list'
-import { parseAutoadminRoute } from '#layers/autoadmin/server/utils/router'
+import { createRecord } from '../../services/create'
+import { deleteRecord } from '../../services/delete'
+import { getRecordDetail } from '../../services/detail'
+import { listRecords } from '../../services/list'
+import { updateRecord } from '../../services/update'
+import { parseAutoadminRoute } from '../../utils/router'
 
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)

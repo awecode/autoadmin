@@ -1,11 +1,10 @@
 import type { SQL, Table } from 'drizzle-orm'
-import { useDb } from '#layers/autoadmin/server/utils/db'
-import { createDateFilterCondition, createDateRangeFilterCondition } from '#layers/autoadmin/utils/dateFilter'
-import { getFilters } from '#layers/autoadmin/utils/filter'
-import { getListColumns, zodToListSpec } from '#layers/autoadmin/utils/list'
-import { getTableForeignKeysByColumn } from '#layers/autoadmin/utils/relation'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
-import { getModelConfig } from './autoadmin'
+import { getModelConfig } from '../utils/autoadmin'
+import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
+import { getFilters } from '../utils/filter'
+import { getListColumns, zodToListSpec } from '../utils/list'
+import { getTableForeignKeysByColumn } from '../utils/relation'
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)

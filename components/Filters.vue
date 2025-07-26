@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { FilterSpec } from '#layers/autoadmin/utils/filter'
-import { normalizeOptions } from '#layers/autoadmin/utils/form'
+import type { FilterSpec } from '~/server/utils/filter'
 import { useRouteQuery } from '@vueuse/router'
+import { normalizeOptions } from '~/utils/form'
 
 defineProps<{
   filters: FilterSpec[]

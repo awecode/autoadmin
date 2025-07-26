@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatBytes } from '../utils/string'
+import { formatBytes } from '~/utils/string'
 
 const props = defineProps<{
   label: string

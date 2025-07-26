@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { FormSpec } from '~/utils/form'
-import AutoFormModal from '#layers/autoadmin/components/AutoFormModal.vue'
-import { normalizeOptions } from '~/utils/form'
-import { transformErrorMessage } from '~/utils/zod'
+import type { FormSpec } from '~/server/utils/form'
+import { normalizeOptions, transformErrorMessage } from '~/utils/form'
+import AutoFormModal from './AutoFormModal.vue'
 
 const props = defineProps<{
   field: FormSpec['fields'][number]

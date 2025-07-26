@@ -1,5 +1,5 @@
-import uploadToObjectStorage from '#layers/autoadmin/server/utils/s3'
 import { z } from 'zod'
+import uploadToObjectStorage from '../../utils/s3'
 
 export default defineEventHandler(async (event) => {
   const contentType = getRequestHeader(event, 'content-type')

@@ -12,7 +12,7 @@ if (!cfg) {
 
 const apiPrefix = cfg.apiPrefix
 
-const listTitle = cfg.list?.title ?? useTitleCase(cfg.label ?? modelLabel)
+const listTitle = cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel)
 const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
 const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 

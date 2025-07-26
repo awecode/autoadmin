@@ -26,7 +26,7 @@ const values = props.mode === 'create' ? {} : data.values
 
 const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${props.lookupValue}`)
 
-const title = props.mode === 'create' ? `${cfg.list.title ?? useTitleCase(cfg.label ?? modelLabel)} > Create` : `${cfg.list.title ?? useTitleCase(cfg.label ?? modelLabel)} > Update ${formSpec.labelString ?? props.lookupValue}`
+const title = props.mode === 'create' ? `${cfg.list.title ?? toTitleCase(cfg.label ?? modelLabel)} > Create` : `${cfg.list.title ?? toTitleCase(cfg.label ?? modelLabel)} > Update ${formSpec.labelString ?? props.lookupValue}`
 </script>
 
 <template>
