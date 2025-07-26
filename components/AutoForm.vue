@@ -3,7 +3,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 
 import type { FormSpec } from '~/utils/form'
-import { useWarnOnUnsavedChanges } from '~/composables/warnOnUnsavedChanges'
+import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
 import { getErrorMessage } from '~/utils/form'
 import { processSchema } from '~/utils/schema'
 
