@@ -1,9 +1,9 @@
 import type { Table } from 'drizzle-orm'
-import { eq } from 'drizzle-orm'
 import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
+import { eq } from 'drizzle-orm'
 
 const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) => {
   const db = useDb()
