@@ -4,6 +4,8 @@ AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your
 
 ## Installation
 
+Configure `NUXT_DATABASE_URL` environment variable with your database connection url.
+
 Use autoadmin as a layer in your nuxt project. You can add the following to your nuxt.config.ts
 
 ```ts
@@ -18,9 +20,9 @@ Or you can download the project inside layers directory in your nuxt project.
 
 ```bash
 mkdir -p layers
-npx giget gh:awecode/autoadmin layers/autoadmin
+pnpx giget gh:awecode/autoadmin layers/autoadmin
+echo -e "packages:\n  - 'layers/*'" > pnpm-workspace.yaml
 rm -rf layers/autoadmin/examples
-cd layers/autoadmin
 pnpm install
 ```
 
@@ -809,6 +811,7 @@ AutoAdmin can be configured using environment variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
+| `NUXT_DATABASE_URL` | Database Connection Url (e.g. `file:server/db/db.sqlite`) | undefined |
 | `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
 | `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
 
