@@ -3,6 +3,7 @@ import { deleteRecord } from '../../services/delete'
 import { getRecordDetail } from '../../services/detail'
 import { listRecords } from '../../services/list'
 import { updateRecord } from '../../services/update'
+import { getModelConfig } from '../../utils/autoadmin'
 import { parseAutoadminRoute } from '../../utils/router'
 
 export default defineEventHandler(async (event) => {
@@ -28,6 +29,8 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const body = method !== 'GET' ? await readBody(event) : undefined
 
+  const cfg = getModelConfig(parsedRoute.modelLabel)
+
   switch (parsedRoute.routeType) {
     case 'list':
       return await listRecords(parsedRoute.modelLabel, query)
@@ -39,7 +42,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Request body is required for create operation',
         })
       }
-      return await createRecord(parsedRoute.modelLabel, body)
+      return await createRecord(cfg, body)
 
     case 'detail':
       if (!parsedRoute.lookupValue) {
@@ -48,7 +51,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for detail operation',
         })
       }
-      return await getRecordDetail(parsedRoute.modelLabel, parsedRoute.lookupValue)
+      return await getRecordDetail(cfg, parsedRoute.lookupValue)
 
     case 'update':
       if (!parsedRoute.lookupValue) {
@@ -63,7 +66,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Request body is required for update operation',
         })
       }
-      return await updateRecord(parsedRoute.modelLabel, parsedRoute.lookupValue, body)
+      return await updateRecord(cfg, parsedRoute.lookupValue, body)
 
     case 'delete':
       if (!parsedRoute.lookupValue) {
@@ -72,7 +75,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for delete operation',
         })
       }
-      return await deleteRecord(parsedRoute.modelLabel, parsedRoute.lookupValue)
+      return await deleteRecord(cfg, parsedRoute.lookupValue)
 
     default:
       throw createError({

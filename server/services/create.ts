@@ -1,11 +1,11 @@
-import { getModelConfig } from '../utils/autoadmin'
+import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import { useDb } from '../utils/db'
 import { handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { unwrapZodType } from '../utils/zod'
 
-export async function createRecord(modelLabel: string, data: any): Promise<any> {
-  const cfg = getModelConfig(modelLabel)
+export async function createRecord(cfg: AdminModelConfig, data: any): Promise<any> {
+  const modelLabel = cfg.label
   if (!cfg.create.enabled) {
     throw createError({
       statusCode: 404,
