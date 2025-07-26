@@ -1,8 +1,6 @@
-import type { FormSpec } from '#layers/autoadmin/server/utils/form'
+import type { FormSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { ZodObject, ZodRawShape } from 'zod'
 import { z } from 'zod'
-
-export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export const normalizeOptions = (options: Option[]) => {
   return options.map((option) => {
