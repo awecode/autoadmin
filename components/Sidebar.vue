@@ -2,8 +2,9 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
-import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
-import { inject } from 'vue'
+
+// import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
+// import { inject } from 'vue'
 
 // if (import.meta.server) {
 //   const portalTarget = inject(portalTargetInjectionKey, null)

@@ -138,6 +138,9 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <span v-if="error && typeof error === 'string'">
         {{ transformErrorMessage(error, field.type) }}
       </span>
+      <span v-else-if="field.help" class="mt-2 text-muted">
+        {{ field.help }}
+      </span>
     </template>
 
     <template #default>
