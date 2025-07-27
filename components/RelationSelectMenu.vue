@@ -38,7 +38,7 @@ const selectFetched = ref(false)
 // TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
 // Maybe use v-select until fix found for Nuxt UI/Reka UI
 function onSelectMenuOpen() {
-  if (!selectFetched.value) {
+  if (!selectFetched.value && props.filter.choicesEndpoint) {
     execute()
     selectFetched.value = true
   }
