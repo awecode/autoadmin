@@ -9,7 +9,7 @@ import { eq, sql } from 'drizzle-orm'
 import { getLabelColumnFromModel } from './autoadmin'
 import { getTableForeignKeysByColumn } from './relation'
 
-export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
+export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation' | 'select'
 type ColTypes = ReturnType<typeof zodToListSpec>
 export type FilterSpec = Awaited<ReturnType<typeof prepareFilter>>
 
@@ -32,7 +32,7 @@ async function prepareCustomFilter(cfg: AdminModelConfig, db: DbType, columnType
   }
 }
 
-async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, query: Record<string, any> = {}) {
+async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
   const type = definedType || columnTypes[field]?.type
   if (type === 'boolean') {
     return {
@@ -52,28 +52,29 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
     //   const options = await db.all(
     //     sql`SELECT DISTINCT ${column} AS value FROM ${cfg.model}`,
     //   )
-    const options = await db.all(
+    const filterOptions = options ?? await db.all(
       sql`SELECT ${column} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${column}`,
     ) as { value: string, count: number }[]
     return {
       field,
       label: label || toTitleCase(field),
       type: 'text',
-      options,
+      options: filterOptions,
     }
   } else if (type === 'select') {
-    const options = columnTypes[field]?.options || []
+    const filterOptions = options ?? (columnTypes[field]?.options || [])
     return {
       field,
       label: label || toTitleCase(field),
-      type: 'text',
-      options,
+      type: 'select',
+      options: filterOptions,
     }
   } else if (type === 'number') {
     return {
       field,
       label: label || toTitleCase(field),
       type: 'text',
+      options,
     }
   } else if (type === 'relation') {
     const relations = getTableForeignKeysByColumn(cfg.model, field)
@@ -81,10 +82,12 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }
     const relation = relations[0]!
-    let options
-    if (query[field]) {
+    let filterOptions: Option[] = []
+    if (options) {
+      filterOptions = options
+    } else if (query[field]) {
       const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, query[field]))
-      options = rows.map(row => ({
+      filterOptions = rows.map(row => ({
         label: row[getLabelColumnFromModel(relation.foreignTable)],
         value: row[relation.foreignColumn.name],
       }))
@@ -94,7 +97,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
       choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.columnName}`,
-      options,
+      options: filterOptions,
     }
   }
 
@@ -109,7 +112,7 @@ async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: Filter
       if ('parameterName' in filter && 'label' in filter) {
         return await prepareCustomFilter(cfg, db, columnTypes, filter as unknown as CustomFilter, query)
       }
-      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, query)
+      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, filter.options, query)
     }
     throw new Error(`Invalid filter: ${JSON.stringify(filter)}`)
   }))

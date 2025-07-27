@@ -89,7 +89,7 @@ const booleanOptions = [
         />
 
         <USelectMenu
-          v-else-if="(filter.type === 'text' || !filter.type) && filter.options"
+          v-else-if="(filter.type === 'text' || filter.type === 'select' || !filter.type) && filter.options"
           v-model="getFilterModel(filter).value"
           class="min-w-32"
           size="xs"

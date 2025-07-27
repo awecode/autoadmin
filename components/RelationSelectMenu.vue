@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
+import type { Option } from '#layers/autoadmin/server/utils/form'
 import { normalizeOptions } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
@@ -13,10 +14,7 @@ const emit = defineEmits<{
 
 const internalValue = ref(props.modelValue)
 
-const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
-  label?: string
-  value: string | number
-}[] | string[]>(props.filter.choicesEndpoint ?? '', {
+const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<Option[] | string[]>(props.filter.choicesEndpoint ?? '', {
   immediate: false,
 })
 
