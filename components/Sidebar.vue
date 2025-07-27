@@ -5,15 +5,15 @@ import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
 import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
 import { inject } from 'vue'
 
-if (import.meta.server) {
-  const portalTarget = inject(portalTargetInjectionKey, null)
+// if (import.meta.server) {
+//   const portalTarget = inject(portalTargetInjectionKey, null)
 
-  if (!portalTarget) {
-    throw new Error(
-      `UApp is not present. Please wrap your app.vue with Nuxt UI's UApp app component. https://ui.nuxt.com/components/app`,
-    )
-  }
-}
+//   if (!portalTarget) {
+//     throw new Error(
+//       `UApp is not present. Please wrap your app.vue with Nuxt UI's UApp app component. https://ui.nuxt.com/components/app`,
+//     )
+//   }
+// }
 
 const appConfig = useAppConfig()
 
