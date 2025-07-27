@@ -1,6 +1,6 @@
 import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
-import type { useDb } from './db'
+import type { DbType } from './db'
 import type { zodToListSpec } from './list'
 import type { TableMetadata } from './metdata'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
@@ -10,7 +10,6 @@ import { getTableForeignKeysByColumn } from './relation'
 
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation'
 type ColTypes = ReturnType<typeof zodToListSpec>
-type DbType = ReturnType<typeof useDb>
 export type FilterSpec = Awaited<ReturnType<typeof prepareFilter>>
 
 export interface CustomFilter {

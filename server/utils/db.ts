@@ -28,3 +28,5 @@ export function useDb() {
   }
   return _db
 }
+
+export type DbType = ReturnType<typeof useDb>

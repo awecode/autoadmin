@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
+import { useDb } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({
@@ -15,6 +16,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Action not found',
     })
   }
-  const result = await action.action(body.rowLookups)
+  const db = useDb()
+  const result = await action.action(db, body.rowLookups)
   return result
 })

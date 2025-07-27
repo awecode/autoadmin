@@ -2,6 +2,7 @@ import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/fi
 import type { FieldSpec } from '#layers/autoadmin/server/utils/form'
 import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
+import type { DbType } from '../server/utils/db'
 import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
@@ -60,7 +61,7 @@ type ListOptions<T extends Table = Table> = {
   bulkActions: {
     label: string
     icon?: string
-    action: (rowIds: string[] | number[]) => Promise<{ message?: string, refresh?: boolean }>
+    action: (db: DbType, rowIds: string[] | number[]) => Promise<{ message?: string, refresh?: boolean }>
   }[]
   title?: string
   endpoint?: string

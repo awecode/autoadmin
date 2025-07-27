@@ -1,5 +1,6 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { AnyColumn, Table } from 'drizzle-orm'
+import type { DbType } from './db'
 import type { FieldSpec, FormSpec } from './form'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { and, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
@@ -8,8 +9,6 @@ import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { getEnabledStatuses, getLabelColumnFromModel } from './autoadmin'
 import { useDb } from './db'
 import { handleDrizzleError } from './drizzle'
-
-type DbType = ReturnType<typeof useDb>
 
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
 
