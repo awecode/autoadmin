@@ -33,7 +33,8 @@
     "@vueuse/router": "^13.5.0",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.2",
-    "drizzle-zod": "^0.8.2"
+    "drizzle-zod": "^0.8.2",
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.16.1",

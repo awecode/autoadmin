@@ -16,7 +16,7 @@ export default defineNuxtConfig({
 })
 ```
 
-Or you can download the project inside layers directory in your nuxt project.
+Or you can download the project inside layers directory in your nuxt project (requires using pnpm).
 
 ```bash
 mkdir -p layers
@@ -39,29 +39,29 @@ import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 export const postStatusEnum = ['Draft', 'Published', 'Archived'] as const
 
 export const users = sqliteTable('users', {
-  id: integer('id').primaryKey(),
-  email: text('email').notNull().unique(),
+  id: integer().primaryKey(),
+  email: text().notNull().unique(),
 })
 
 export const posts = sqliteTable('posts', {
-  id: integer('id').primaryKey(),
+  id: integer().primaryKey(),
   // Text field
-  title: text('title').notNull(),
-  content: text('content'),
-  featuredImage: text('featured_image'),
-  attachment: text('attachment'),
+  title: text().notNull(),
+  content: text(),
+  featuredImage: text(),
+  attachment: text(),
   // Number field
-  views: integer('views').default(0),
+  views: integer().default(0),
   // Boolean field
-  isPublished: boolean('is_published').default(false),
+  isPublished: integer({ mode: 'boolean' }).default(false),
   // Date field (as timestamp for sqlite)
-  publishedOn: integer('published_on', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  publishedOn: integer({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   // Datetime field (as timestamp_ms for sqlite)
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
+  createdAt: integer({ mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch()*1000)`),
   // Enum field
-  status: text('status', { enum: postStatusEnum }).default('Draft'),
+  status: text({ enum: postStatusEnum }).default('Draft'),
   // Foreign key relationship
-  authorId: integer('author_id').references(() => users.id),
+  authorId: integer().references(() => users.id),
 })
 ```
 
@@ -447,15 +447,15 @@ While this is not usually required, autoadmin allows rendering one to many relat
 ```ts
 // server/db/schema.ts
 export const users = sqliteTable('users', {
-  id: integer('id').primaryKey(),
-  email: text('email').notNull().unique(),
+  id: integer().primaryKey(),
+  email: text().notNull().unique(),
 })
 
 export const posts = sqliteTable('posts', {
-  id: integer('id').primaryKey(),
-  title: text('title').notNull(),
+  id: integer().primaryKey(),
+  title: text().notNull(),
   // Foreign key linking each post to a user
-  authorId: integer('author_id').references(() => users.id),
+  authorId: integer().references(() => users.id),
 })
 ```
 
