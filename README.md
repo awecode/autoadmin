@@ -267,11 +267,11 @@ The `list` option allows you to customize the data table view for a model. If ne
 
 ```ts
 const popularity = (obj: typeof posts.$inferSelect) => {
-  return `${post.views} views`
+  return `${obj.views} views`
 }
 
-const isNotPublished = (obj: typeof posts.$inferSelect) => {
-  return obj.status === 'Draft' || obj.status === 'Archived'
+const isArchived = (obj: typeof posts.$inferSelect) => {
+  return obj.status === 'Archived'
 }
 
 registry.register(posts, {
@@ -287,7 +287,10 @@ registry.register(posts, {
         label: 'Published?'
       },
       // A custom function
-      isNotPublished,
+      {
+        field: isArchived,
+        type: 'boolean'
+      },
       // A custom function with additional configuration
       {
         field: popularity,
@@ -305,15 +308,14 @@ registry.register(posts, {
     searchFields: ['title', 'authorId.email'],
 
     // Filter by publication status and author
-    filterFields: ['isPublished', 'authorId'],
+    filterFields: ['isPublished', { field: 'authorId', type: 'relation' }],
 
     // Add a custom action to perform on selected rows
     bulkActions: [{
       label: 'Publish Selected',
       icon: 'i-lucide-check-circle',
-      action: async (rowIds) => {
-        // Database call to update the selected posts
-        console.log('Publishing posts with IDs:', rowIds)
+      action: async (db, rowIds) => {
+        await db.update(posts).set({ isPublished: true }).where(inArray(posts.id, rowIds))
         return { message: `${rowIds.length} posts published.`, refresh: true }
       },
     }],
@@ -388,13 +390,15 @@ The top-level `formFields` option is a convenient shortcut to apply the same fie
 Foreign keys are automatically detected and a dropdown selection is provided.
 
 ```ts
-export const locations = sqliteTable('locations', {
-  id: integer().primaryKey(),
-  platformId: integer().notNull().references(() => platforms.id),
+export const posts = sqliteTable('posts', {
+  id: integer().primaryKey({ autoIncrement: true }),
+  title: text().notNull(),
+  // Foreign key relationship
+  authorId: integer().references(() => users.id),
 })
 ```
 
-When the `locations` model is registered, a dropdown selection of platforms will be provided in form.
+When the `posts` model is registered, a dropdown selection of users will be provided in form for selecting an author.
 
 ### Many-to-Many (`m2m`)
 
@@ -434,7 +438,7 @@ export default defineNuxtPlugin(() => {
   registry.register(tags)
   registry.register(posts, {
     m2m: {
-      // 'tags' is the label, postsToTags is the join/junction table schema
+      // 'tags' is the form label, postsToTags is the join/junction table schema
       tags: postsToTags
     }
   })
@@ -445,7 +449,7 @@ This will render a multi-select component on the `posts` form, allowing you to a
 
 ### One-to-Many (`o2m`)
 
-While this is not usually required, autoadmin allows rendering one to many relation in a form.
+While this is not usually required, autoadmin allows rendering one to many relation in a form, a reverse relation of foreign keys.
 
 ```ts
 // server/db/schema.ts
@@ -472,8 +476,9 @@ export default defineNuxtPlugin(() => {
   const registry = useAdminRegistry()
   registry.register(users, {
     o2m: {
-      // 'posts' is the label, and its value is the posts table schema
       posts
+      // Or to pass custom label - 'Authored Posts' will be the label allowing to select posts from dropdown. Or simpl
+      // authoredPosts: posts
     }
   })
 })
@@ -508,18 +513,22 @@ export default defineNuxtPlugin(() => {
 Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
 
 ```ts
-registerAdminModel(usersTable, {
+const displayTitle = (obj: typeof posts.$inferSelect) => {
+  return `-> ${obj.title}`
+}
+
+registry.register(posts, {
   list: {
     enableSort: true, // Enable/disable sorting (default: true)
     fields: [
-      // Simple column with sorting
-      'name',
-
       // Custom sort key
       {
-        field: 'displayName',
-        sortKey: 'name' // Sort by 'name' column when clicking 'displayName'
+        field: displayTitle,
+        sortKey: 'title' // Sort by 'name' column when clicking 'displayName'
       },
+
+      // Simple column with automatically inferred sorting
+      'views',
 
       // Relation sorting
       {
@@ -527,9 +536,9 @@ registerAdminModel(usersTable, {
         sortKey: 'authorId.name' // Sort by author name when clicking email
       },
 
-      // Disable sorting for specific field
+      // // Disable sorting for specific field
       {
-        field: 'calculatedField',
+        field: 'status',
         sortKey: false // No sorting available
       }
     ]
@@ -576,8 +585,8 @@ Prevent sorting on specific columns:
 
 ```
 {
-  field: 'actions',
-  sortKey: false // No sorting for action buttons
+  field: 'status',
+  sortKey: false // No sorting for status
 }
 ```
 
@@ -586,7 +595,7 @@ Prevent sorting on specific columns:
 When using simple field definitions, sort keys are automatically assigned:
 
 ```ts
-registerAdminModel(postsTable, {
+registry.register(posts, {
   list: {
     fields: [
       'title', // Automatically gets sortKey: 'title'
@@ -604,42 +613,70 @@ You can filter data in list using a table column, a relation column, or a custom
 - `filterFields`: Array of filter definitions (optional - auto-detected if not provided)
 
 ```ts
-registerAdminModel(usersTable, {
+registry.register(posts, {
   list: {
-    enableFilter: true, // Enable filtering functionality
+    enableFilter: true, // Enable filtering functionality, is true by default
+    // if filterFields is not passed, filters are automatically generated for enums, date fields (with date range), and boolean fields
     filterFields: [
       // Simple column filter
-      'status',
+      'isPublished',
       // Relation column filter
-      'authorId',
-
+      {
+        field: 'authorId',
+        type: 'relation'
+      },
       // Detailed filter configuration
       {
-        field: 'role',
-        label: 'User Role',
-        type: 'text',
-        options: [ // if not provided, the filter will be a dropdown with all unique values for the column in the database
-          { label: 'Administrator', value: 'admin' },
-          { label: 'User', value: 'user' }
+        field: 'status',
+        type: 'select',
+        options: [ // if not provided, a dropdown is rendered from enum or relation
+          { label: 'Draft', value: 'Draft' },
+          { label: 'Published', value: 'Published' }
         ]
       },
 
-      // Custom filter with dynamic options
+      // Custom filter with filter for m2m relation
       {
-        parameterName: 'department',
-        label: 'Department',
-        type: 'relation',
+        parameterName: 'tags',
+        label: 'Tags',
+        type: 'select',
         options: async (db, query) => {
-          const departments = await db.select().from(departmentsTable)
-          return departments.map(dept => ({
-            label: dept.name,
-            value: dept.id
+          const allTags = await db.select().from(tags)
+          return allTags.map(tag => ({
+            label: tag.name,
+            value: tag.id
           }))
         },
-        queryConditions: async (db, value) => [
-          eq(usersTable.departmentId, value)
-        ]
+        queryConditions: async (db, value) => {
+          const postIds = await db
+            .select({ postId: postsToTags.postId })
+            .from(postsToTags)
+            .where(eq(postsToTags.tagId, value))
+
+          return [
+            // Filter posts by matching post IDs
+            inArray(posts.id, postIds.map(p => p.postId))
+          ]
+        }
+      },
+      // Another custom filter with boolean type
+      {
+        parameterName: 'hasViews',
+        label: 'Has Views',
+        type: 'boolean',
+        queryConditions: async (db, value) => {
+          if (value) {
+            return [
+              gt(posts.views, 0)
+            ]
+          } else {
+            return [
+              lte(posts.views, 0)
+            ]
+          }
+        }
       }
+
     ]
   }
 })
@@ -652,7 +689,7 @@ Automatically created for boolean columns. Provides Yes/No/All options.
 
 ```
 {
-  field: 'isActive',
+  field: 'isPublished',
   type: 'boolean'
 }
 ```
@@ -788,7 +825,7 @@ registry.register(platforms, {
     bulkActions: [{
       label: 'Email',
       icon: 'i-lucide-mail',
-      action: async (rowIds: string[] | number[]) => {
+      action: async (db: DbType, rowIds: string[] | number[]) => {
         const emails = await db.select({ email: users.email }).from(users).where(inArray(users.id, rowIds))
         return { message: `Emails sent to ${emails.map(e => e.email).join(', ')}` }
       },
@@ -796,7 +833,7 @@ registry.register(platforms, {
     bulkActions: [{
       label: 'Something else',
       icon: 'i-lucide-check',
-      action: async (rowIds: string[] | number[]) => {
+      action: async (db: DbType, rowIds: string[] | number[]) => {
         // Do something with the selected rows
         return { message: `Something else done`, refresh: true }
         // refresh: true instructs the list view to be refreshed after successful action completion
