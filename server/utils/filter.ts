@@ -1,6 +1,7 @@
 import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
 import type { DbType } from './db'
+import type { Option } from './form'
 import type { zodToListSpec } from './list'
 import type { TableMetadata } from './metdata'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
@@ -17,7 +18,7 @@ export interface CustomFilter {
   label: string
   type?: FilterType
   // options is optional because it is not required for all types like boolean, date, daterange
-  options?: (db: DbType, query: Record<string, any>) => Promise<{ label?: string, value: string }[] | string[]>
+  options?: (db: DbType, query: Record<string, any>) => Promise<Option[]>
   queryConditions: (db: DbType, value: any) => Promise<SQL[]>
 }
 

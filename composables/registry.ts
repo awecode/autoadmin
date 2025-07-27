@@ -1,5 +1,5 @@
 import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/filter'
-import type { FieldSpec } from '#layers/autoadmin/server/utils/form'
+import type { FieldSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import type { DbType } from '../server/utils/db'
@@ -26,7 +26,7 @@ export type FilterFieldDef<T extends Table> = ColField<T> | {
   field: ColField<T>
   label?: string
   type?: FilterType
-  options?: { label?: string, value: string | number }[]
+  options?: Option[]
   choicesEndpoint?: string
 } | CustomFilter
 
@@ -76,7 +76,7 @@ type ListOptions<T extends Table = Table> = {
     fields?: never
     columns: ListColumnDef<T>[]
   }
-)
+  )
 
 interface CreateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
