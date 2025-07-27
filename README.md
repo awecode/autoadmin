@@ -28,6 +28,8 @@ pnpm install
 
 ## Usage
 
+AutoAdmin uses Nuxt UI. Make sure you wrap your pages with Nuxt UI's [`<UApp>`](https://ui.nuxt.com/components/app) component in `app.vue` or your layout file.
+
 Here is an example schema for SQLite demonstrating various column types.
 
 ```ts
@@ -39,12 +41,13 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 export const postStatusEnum = ['Draft', 'Published', 'Archived'] as const
 
 export const users = sqliteTable('users', {
-  id: integer().primaryKey(),
+  id: integer().primaryKey({ autoIncrement: true }),
+  name: text().notNull(),
   email: text().notNull().unique(),
 })
 
 export const posts = sqliteTable('posts', {
-  id: integer().primaryKey(),
+  id: integer().primaryKey({ autoIncrement: true }),
   // Text field
   title: text().notNull(),
   content: text(),
