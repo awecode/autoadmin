@@ -23,7 +23,6 @@ export default defineNuxtConfig({
       publicUrl: undefined,
     },
   },
-  extends: ['..'],
   css: [fileURLToPath(new URL('./assets/css/main.css', import.meta.url))],
   modules: [
     '@nuxt/eslint',

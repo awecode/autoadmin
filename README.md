@@ -33,7 +33,7 @@ Here is an example schema for SQLite demonstrating various column types.
 ```ts
 // server/db/schema.ts
 import { sql } from 'drizzle-orm'
-import { boolean, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 // An enum-like definition for the 'status' column
 export const postStatusEnum = ['Draft', 'Published', 'Archived'] as const
