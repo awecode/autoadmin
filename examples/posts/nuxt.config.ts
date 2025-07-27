@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   modules: ['@nuxt/test-utils/module'],
+  extends: ['../../'],
   // extends: [
   //   ['github:awecode/autoadmin', { install: true }],
   // ],
