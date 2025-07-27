@@ -126,16 +126,16 @@ This is the main configuration object passed to `registry.register(model, option
 | `labelColumnName` | `string` | `name`, `title`, etc. | Column used for display labels in relationships and select options. |
 | `lookupColumnName` | `string` | `id` | The primary or unique key used to fetch single records. |
 | `warnOnUnsavedChanges` | `boolean` | `false` | Prompt user before leaving a form with unsaved changes. |
-| `list` | `Partial<ListOptions>` | `{}` | Configuration for the list/table view. |
-| `create` | `Partial<CreateOptions>` | `{}` | Create form configuration. |
-| `update` | `Partial<UpdateOptions>` | `{}` | Edit form configuration. |
-| `delete` | `Partial<DeleteOptions>` | `{}` | Configuration for the delete action. |
-| `fields` | `FieldSpec[]` | `undefined` | Overwrite how columns are handled in the UI. |
-| `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. |
-| `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. |
-| `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. |
+| `list` | `Partial<ListOptions>` | `{}` | Configuration for the list/table view. [Reference ↗](#list-view-configuration) |
+| `create` | `Partial<CreateOptions>` | `{}` | Create form configuration. [Reference ↗](#form-configuration-create-update-formfields) |
+| `update` | `Partial<UpdateOptions>` | `{}` | Edit form configuration. [Reference ↗](#form-configuration-create-update-formfields) |
+| `delete` | `Partial<DeleteOptions>` | `{}` | Configuration for the delete action. [Reference ↗](#delete-configuration-delete) |
+| `fields` | `FieldSpec[]` | `undefined` | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields) |
+| `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
+| `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
+| `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
 
-## Overriding Field Behavior with fields
+## Overriding Field Behavior with `fields`
 
 The `fields` option allows you to customize the appearance and behavior of a model's columns across the entire admin interface, affecting list, detail, and form views, wherever applicable. It takes an array of `FieldSpec` objects.
 
@@ -332,7 +332,7 @@ registry.register(posts, {
 An array defining the columns to display. An item can be:
 - A string representing a column name (e.g., 'title').
 - A dot-notation string for a related field (e.g., 'authorId.email').
-- A function that returns a value for the column in list view. See `isNotPublished` example above.
+- A function that returns a value for the column in list view. See `isArchived` example above.
 - An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above. `field` value in this object can be a string (column name or dot-notation relation string), or a function.
 
 **`columns: ListColumnDef[]`**
@@ -789,6 +789,8 @@ registry.register(platforms, {
   }
 })
 ```
+
+See [List Filters](#list-filters) for more examples.
 
 ### Automatic Filter Detection
 
