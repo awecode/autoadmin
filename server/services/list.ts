@@ -147,8 +147,14 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
       const filterValue = query[filter.field]
       if (filterValue !== undefined && filterValue !== null && filterValue !== '') {
         if ('queryConditions' in filter) {
-          const conditions = await filter.queryConditions(db, filterValue)
-          filterConditions.push(...conditions)
+          if (filter.type === 'boolean') {
+            const boolValue = filterValue === 'true' || filterValue === true
+            const conditions = await filter.queryConditions(db, boolValue)
+            filterConditions.push(...conditions)
+          } else {
+            const conditions = await filter.queryConditions(db, filterValue)
+            filterConditions.push(...conditions)
+          }
         } else {
           const column = tableColumns[filter.field]
           if (!column) {
