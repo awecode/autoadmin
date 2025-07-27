@@ -82,7 +82,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }
     const relation = relations[0]!
-    let filterOptions: Option[] = []
+    let filterOptions: Option[] | undefined
     if (options) {
       filterOptions = options
     } else if (query[field]) {
@@ -96,7 +96,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       field,
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
-      choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.columnName}`,
+      choicesEndpoint: options ? undefined : `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.columnName}`,
       options: filterOptions,
     }
   }

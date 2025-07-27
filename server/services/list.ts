@@ -182,7 +182,7 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
             if (condition) {
               filterConditions.push(condition)
             }
-          } else if (filter.type === 'text' || filter.type === 'relation') {
+          } else if (filter.type === 'text' || filter.type === 'relation' || filter.type === 'select') {
             filterConditions.push(eq(column, filterValue))
           }
         }

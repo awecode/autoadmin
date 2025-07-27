@@ -2,7 +2,7 @@
   {
     "field": "status",
     "label": "Status",
-    "type": "text",
+    "type": "select",
     "options": [
       "draft",
       "published",
