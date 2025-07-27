@@ -262,8 +262,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <Uploader
         v-else-if="field.type === 'image'"
         v-model="fieldValue"
-        v-bind="field.inputAttrs"
         type="image"
+        :attrs="field.inputAttrs"
         :config="field.fileConfig"
         :label="field.label ?? ''"
         :name="field.name"
@@ -272,8 +272,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       <Uploader
         v-else-if="field.type === 'file'"
         v-model="fieldValue"
-        v-bind="field.inputAttrs"
         type="file"
+        :attrs="field.inputAttrs"
         :config="field.fileConfig"
         :label="field.label ?? ''"
         :name="field.name"

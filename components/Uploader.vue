@@ -27,6 +27,8 @@ const allowedExtensions = props.config?.accept ?? (props.type === 'image' ? ['.j
 const allowedExtensionsString = allowedExtensions.join(', ')
 const type = props.type ?? 'file'
 
+const placeholder = props.attrs?.placeholder || `Drop ${type} here or click to upload`
+
 const fileRef = useTemplateRef('fileRef')
 
 const uploadedFile = ref(props.modelValue)
@@ -374,7 +376,7 @@ const replaceFile = () => {
       </div>
     </div>
     <div v-else class="flex items-center gap-4 text-xl md:text-3xl">
-      <span class="text-sm text-gray-500">{{ `Drop ${type} here or click to upload` }}</span>
+      <span class="text-sm text-gray-500">{{ placeholder }}</span>
     </div>
 
     <!-- Preview Dialog -->
