@@ -13,14 +13,15 @@ import { handleDrizzleError } from './drizzle'
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
 
 export function colKey(col: AnyColumn) {
+  const colName = col.name
   if (col.keyAsName) {
-    return col.name
+    return colName
   }
   const key = (Object.keys(col.table) as (keyof typeof col.table)[]).find(
-    k => col.table[k]?.name === col.name,
+    k => col.table[k]?.name === colName,
   )
   if (!key) {
-    throw new Error(`Column key not found for column with name "${col.name}"`)
+    throw new Error(`Column key not found for column with name "${colName}"`)
   }
   return key
 }
@@ -65,7 +66,7 @@ export function parseO2mRelation(cfg: AdminModelConfig, table: Table, name: stri
     selfPrimaryColumn,
     foreignPrimaryColumn,
     foreignRelatedColumn: foreignRelatedColumnKey.column,
-    fieldName: `___o2m___${name}___${foreignPrimaryColumn.name}`,
+    fieldName: `___o2m___${name}___${colKey(foreignPrimaryColumn)}`,
   }
 }
 
@@ -121,7 +122,7 @@ export function getTableForeignKeys(table: Table) {
         continue
       }
       relations.push({
-        name: column.name,
+        name: colKey(column),
         column,
         table,
         foreignColumn,
@@ -170,29 +171,29 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   await Promise.all(relations.map(async (relation) => {
-    const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === relation.column.name)
+    const fieldIndex = updatedFormSpec.fields.findIndex(field => field.name === colKey(relation.column))
     // check if field is in form spec, if not found, ignore because it may not be specified through form fields
     if (fieldIndex !== -1) {
       const field = { ...updatedFormSpec.fields[fieldIndex] } as FieldSpec
       field.type = 'relation'
       //   strip id from field label
       field.label = (field.label || field.name).replace(' Id', '')
-      if (formSpec.values?.[relation.column.name]) {
+      if (formSpec.values?.[colKey(relation.column)]) {
         const db = useDb()
         // TODO only select the columns that are needed for the form spec
-        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[relation.column.name]))
+        const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[colKey(relation.column)]))
         field.options = rows.map(row => ({
           label: row[getLabelColumnFromModel(relation.foreignTable)],
-          value: row[relation.foreignColumn.name],
+          value: row[colKey(relation.foreignColumn)],
         }))
       }
       const enabledStatuses = getEnabledStatuses(relation.foreignTable)
       field.relationConfig = {
-        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.column.name}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${colKey(relation.column)}`,
         relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
-        foreignRelatedColumnName: relation.foreignColumn.name,
+        foreignRelatedColumnName: colKey(relation.foreignColumn),
         foreignLabelColumnName: getLabelColumnFromModel(relation.foreignTable),
       }
 
@@ -221,7 +222,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       type: 'relation-many' as const,
       label: toTitleCase(name),
       relationConfig: {
-        choicesEndpoint: `${cfg.apiPrefix}/formspec/${modelLabel}/choices-o2m/___${name}___${relationData.foreignPrimaryColumn.name}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${modelLabel}/choices-o2m/___${name}___${colKey(relationData.foreignPrimaryColumn)}`,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
       },
@@ -233,18 +234,18 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
     if (formSpec.values) {
       // find primary key value, required for initial selection of o2m relations
       const selfPrimaryColumn = getPrimaryKeyColumn(cfg.model)
-      const selfPrimaryValue = formSpec.values[selfPrimaryColumn.name]
+      const selfPrimaryValue = formSpec.values[colKey(selfPrimaryColumn)]
       // if selfPrimaryValue is available, get o2m values
       if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
         throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelLabel}.`)
       }
       const db = useDb()
-      // const rows = await db.select().from(table).where(eq(table[relationData.foreignRelatedColumn.name], selfPrimaryValue))
+      // const rows = await db.select().from(table).where(eq(table[colKey(relationData.foreignRelatedColumn)], selfPrimaryValue))
       // TODO only select the columns that are needed for the form spec
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
       field.options = rows.map(row => ({
         label: row[getLabelColumnFromModel(table)],
-        value: row[relationData.foreignPrimaryColumn.name],
+        value: row[colKey(relationData.foreignPrimaryColumn)],
       }))
       formSpec.values[relationData.fieldName] = (field.options as { label: string, value: string }[]).map(item => item.value)
     }
@@ -259,7 +260,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
 
   // Process all relations in parallel
   await Promise.all(relations.map(async (relation) => {
-    const fieldName = `___${relation.name}___${relation.otherColumn.name}`
+    const fieldName = `___${relation.name}___${colKey(relation.otherColumn)}`
     const enabledStatuses = getEnabledStatuses(relation.otherTable)
     const field: FieldSpec = {
       name: fieldName,
@@ -276,7 +277,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
     }
     if (formSpec.values) {
       const db = useDb()
-      const selfValue = formSpec.values[relation.selfForeignColumn.name]
+      const selfValue = formSpec.values[colKey(relation.selfForeignColumn)]
       // TODO only select the columns that are needed for the form spec
       const result = await db
         .select({ other: relation.otherTable })
@@ -295,7 +296,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
         const rows = result.map(row => row.other)
         field.options = rows.map(row => ({
           label: row[getLabelColumnFromModel(relation.otherTable)],
-          value: row[relation.otherForeignColumn.name],
+          value: row[colKey(relation.otherForeignColumn)],
         }))
         formSpec.values[fieldName] = (field.options as { label: string, value: string }[]).map(item => item.value)
       }
@@ -314,17 +315,17 @@ export async function saveO2mRelation(db: DbType, cfg: AdminModelConfig, preproc
       const fieldName = relationData.fieldName
       const newValues = preprocessed[fieldName]
       if (newValues) {
-        const selfValue = result[0]![relationData.selfPrimaryColumn.name]
+        const selfValue = result[0]![colKey(relationData.selfPrimaryColumn)]
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
         try {
-          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
+          await db.update(table).set({ [colKey(relationData.foreignRelatedColumn)]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
         } catch (error) {
           if (error instanceof DrizzleQueryError) {
             if (error.cause && 'code' in error.cause && typeof error.cause.code === 'string' && NOTNULL_CONSTRAINT_CODES.includes(error.cause.code)) {
               const userFriendlyMessage = `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`
               throw createError({
                 statusCode: 400,
-                // statusMessage: `Cannot unset this ${foreignRelatedColumn.name} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
+                // statusMessage: `Cannot unset this ${colKey(foreignRelatedColumn)} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
                 statusMessage: `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`,
                 data: {
                   message: userFriendlyMessage,
@@ -340,7 +341,7 @@ export async function saveO2mRelation(db: DbType, cfg: AdminModelConfig, preproc
         }
         // Step 2 : Set `relatedColumnName` in `table` for the new values for selfValue
         if (newValues.length > 0) {
-          await db.update(table).set({ [relationData.foreignRelatedColumn.name]: selfValue }).where(inArray(relationData.foreignPrimaryColumn, newValues))
+          await db.update(table).set({ [colKey(relationData.foreignRelatedColumn)]: selfValue }).where(inArray(relationData.foreignPrimaryColumn, newValues))
         }
       }
     }
@@ -368,7 +369,7 @@ export async function saveM2mRelation(db: DbType, relation: M2MRelation, selfVal
     .from(relation.m2mTable)
     .where(eq(relation.selfColumn, selfValue))
 
-  const existingOtherIds = existing.map(row => row[relation.otherColumn.name])
+  const existingOtherIds = existing.map(row => row[colKey(relation.otherColumn)])
 
   // Find records to delete (exist but not in new set)
   const toDelete = existingOtherIds.filter(id => !newValues.includes(id))
@@ -389,8 +390,8 @@ export async function saveM2mRelation(db: DbType, relation: M2MRelation, selfVal
   if (toInsert.length > 0) {
     await db.insert(relation.m2mTable).values(
       toInsert.map((otherForeignColumnValue: any) => ({
-        [relation.otherColumn.name]: otherForeignColumnValue,
-        [relation.selfColumn.name]: selfValue,
+        [colKey(relation.otherColumn)]: otherForeignColumnValue,
+        [colKey(relation.selfColumn)]: selfValue,
       })),
     )
   }
