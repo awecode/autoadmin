@@ -10,6 +10,7 @@ const props = defineProps<{
   modelValue?: DateRange | string
   mode?: 'date' | 'string'
   placeholder?: string
+  buttonVariant?: 'soft' | 'solid' | 'outline' | 'ghost' | 'link' | 'subtle'
 }>()
 
 const emit = defineEmits<{
@@ -132,7 +133,14 @@ watch(() => props.modelValue, (newValue) => {
 
 <template>
   <UPopover>
-    <UButton color="neutral" icon="i-lucide-calendar-days" variant="subtle">
+    <UButton
+      color="neutral"
+      trailing-icon="i-lucide-calendar-days"
+      :ui="{
+        trailingIcon: 'text-dimmed ml-1',
+      }"
+      :variant="buttonVariant || 'outline'"
+    >
       <template v-if="uCalendarValue.start">
         <template v-if="uCalendarValue.end">
           {{ df.format(uCalendarValue.start.toDate(getLocalTimeZone())) }} - {{ df.format(uCalendarValue.end.toDate(getLocalTimeZone())) }}
@@ -143,7 +151,7 @@ watch(() => props.modelValue, (newValue) => {
         </template>
       </template>
       <template v-else>
-        {{ placeholder || 'Pick a date range' }}
+        <span class="text-sm text-dimmed">{{ placeholder || 'Pick a date range' }}</span>
       </template>
     </UButton>
 

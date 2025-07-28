@@ -7,6 +7,7 @@ const props = defineProps<{
   modelValue?: DateDef
   mode?: 'date' | 'string'
   placeholder?: string
+  buttonVariant?: 'soft' | 'solid' | 'outline' | 'ghost' | 'link' | 'subtle'
 }>()
 
 const emit = defineEmits<{
@@ -88,12 +89,19 @@ watch(() => props.modelValue, (newValue) => {
 
 <template>
   <UPopover>
-    <UButton color="neutral" icon="i-lucide-calendar" variant="subtle">
+    <UButton
+      color="neutral"
+      trailing-icon="i-lucide-calendar"
+      :ui="{
+        trailingIcon: 'text-dimmed ml-1',
+      }"
+      :variant="buttonVariant || 'outline'"
+    >
       <template v-if="uCalendarValue">
         {{ df.format(uCalendarValue.toDate(getLocalTimeZone())) }}
       </template>
       <template v-else>
-        {{ placeholder || 'Pick a date' }}
+        <span class="text-sm text-dimmed">{{ placeholder || 'Pick a date' }}</span>
       </template>
     </UButton>
 

@@ -14,7 +14,7 @@ const emit = defineEmits<{
 
 const internalValue = ref(props.modelValue)
 
-const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<Option[] | string[]>(props.filter.choicesEndpoint ?? '', {
+const { data: selectMenuItemsRaw, execute } = await useLazyFetch<Option[] | string[]>(props.filter.choicesEndpoint ?? '', {
   immediate: false,
 })
 
@@ -70,9 +70,10 @@ watch(() => props.modelValue, (newValue) => {
     v-model="internalValue"
     class="min-w-32"
     value-key="value"
+    :content="{ align: 'start' }"
     :items="selectMenuItems ?? []"
-    :loading="status === 'pending'"
     :placeholder="filter.label"
+    :ui="{ content: 'min-w-fit' }"
     @update:open="onSelectMenuOpen"
   />
 </template>
