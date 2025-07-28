@@ -5,7 +5,7 @@ import { createDateFilterCondition, createDateRangeFilterCondition } from '../ut
 import { colKey } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
-import { getTableForeignKeysByColumn } from '../utils/relation'
+import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
 export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
   const cfg = getModelConfig(modelLabel)
@@ -252,6 +252,10 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
         }
       }
     }
+  } else {
+    // default ordering by primary key descending
+    const primaryKeyColumn = getPrimaryKeyColumn(model)
+    baseQuery = baseQuery.orderBy(desc(primaryKeyColumn))
   }
 
   // Build count query with combined conditions
