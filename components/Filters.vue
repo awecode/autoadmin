@@ -131,10 +131,11 @@ const booleanOptions = [
     <!-- Clear all filters button -->
     <UButton
       v-if="hasActiveFilters"
+      class="self-end"
       color="neutral"
       icon="i-lucide-x"
       size="xs"
-      variant="ghost"
+      variant="soft"
       @click="clearAllFilters"
     >
       Clear

@@ -252,6 +252,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'json'"
         v-model="fieldValue"
         class="w-full font-mono"
+        color="neutral"
         placeholder="{}"
         spellcheck="false"
         v-bind="field.inputAttrs"
@@ -279,6 +280,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-model.nullify="fieldValue"
         v-bind="field.inputAttrs"
         class="w-full"
+        color="neutral"
         type="text"
       />
 
@@ -288,6 +290,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-model.nullify="fieldValue"
         v-bind="field.inputAttrs"
         class="w-full"
+        color="neutral"
       />
 
       <!-- Rich text editor -->
@@ -332,6 +335,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else
         v-model="fieldValue"
         class="w-full"
+        color="neutral"
         :max="field.rules?.max"
         :min="field.rules?.min"
         :type="field.type"

@@ -393,6 +393,7 @@ const performBulkAction = async () => {
             v-if="spec.enableSearch"
             v-model="search"
             class="max-w-xl"
+            color="neutral"
             :placeholder="spec.searchPlaceholder"
           />
         </div>
@@ -435,7 +436,7 @@ const performBulkAction = async () => {
           :title="error.statusMessage || 'An error occurred'"
         />
         <div v-else-if="status === 'pending'">
-          <UProgress animation="elastic" />
+          <UProgress animation="swing" color="neutral" />
         </div>
         <UTable
           v-else-if="data && status === 'success'"
