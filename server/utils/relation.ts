@@ -12,6 +12,19 @@ import { handleDrizzleError } from './drizzle'
 
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
 
+export function colKey(col: AnyColumn) {
+  if (col.keyAsName) {
+    return col.name
+  }
+  const key = (Object.keys(col.table) as (keyof typeof col.table)[]).find(
+    k => col.table[k]?.name === col.name,
+  )
+  if (!key) {
+    throw new Error(`Column key not found for column with name "${col.name}"`)
+  }
+  return key
+}
+
 interface M2MRelationSelf {
   selfTable: Table
   selfColumn: AnyColumn
@@ -138,7 +151,7 @@ export function getTableForeignKeysByColumn(table: Table, columnName: string) {
       if (!foreignColumn) {
         continue
       }
-      if (columns[i]!.name === columnName) {
+      if (colKey(columns[i]!) === columnName) {
         relations.push({
           name: columnName,
           columnName,
@@ -339,10 +352,11 @@ export async function saveM2mRelation(db: DbType, relation: M2MRelation, selfVal
   if (Object.keys(getTableColumns(relation.m2mTable)).length === 2) {
     await db.delete(relation.m2mTable).where(eq(relation.selfColumn, selfValue))
     if (newValues.length > 0) {
-      await db.insert(relation.m2mTable).values(newValues.map(value => ({
-        [relation.selfColumn.name]: selfValue,
-        [relation.otherColumn.name]: value,
-      })))
+      const values = newValues.map(value => ({
+        [colKey(relation.selfColumn)]: selfValue,
+        [colKey(relation.otherColumn)]: value,
+      }))
+      await db.insert(relation.m2mTable).values(values)
     }
     return
   }
