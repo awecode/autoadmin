@@ -111,7 +111,11 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         } else if (selectMenuItemsRaw.value) {
           selectMenuItemsRaw.value = normalizeOptions(selectMenuItemsRaw.value.map(item => item.value === lookupValue ? option : item))
         }
-        fieldValue.value = value
+        if (props.field.type === 'relation-many') {
+          fieldValue.value = [...(fieldValue.value ?? []), value]
+        } else {
+          fieldValue.value = value
+        }
         // Clear any validation errors for this field after programmatic value change
         props.form.setErrors([], props.field.name)
         modal.close()
@@ -159,13 +163,13 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         >
           <template #trailing>
             <ClientOnly>
-              <button
+              <UIcon
                 v-if="fieldValue"
-                class="ml-2 px-2 py-1 rounded  hover:text-red-600 cursor-pointer"
+                class="text-dimmed px-2 hover:text-red-300"
+                name="i-lucide-x"
                 @click.stop="() => { fieldValue = null }"
-              >
-                ✕
-              </button>
+              />
+              <UIcon class="text-dimmed" name="i-lucide-chevron-down" />
             </ClientOnly>
           </template>
         </USelectMenu>
@@ -186,19 +190,46 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
       </div>
 
       <!-- Relation (multi-select) -->
-      <USelectMenu
-        v-else-if="field.type === 'relation-many'"
-        v-model="fieldValue"
-        multiple
-        trailing
-        class="w-full"
-        label-key="label"
-        value-key="value"
-        v-bind="field.inputAttrs"
-        :items="selectMenuItems ?? []"
-        :loading="status === 'pending'"
-        @update:open="onSelectMenuOpen"
-      />
+      <div v-else-if="field.type === 'relation-many'" class="flex items-center">
+        <USelectMenu
+          v-model="fieldValue"
+          multiple
+          trailing
+          class="w-full"
+          label-key="label"
+          value-key="value"
+          v-bind="field.inputAttrs"
+          :items="selectMenuItems ?? []"
+          :loading="status === 'pending'"
+          @update:open="onSelectMenuOpen"
+        >
+          <template #trailing>
+            <ClientOnly>
+              <UIcon
+                v-if="fieldValue"
+                class="text-dimmed px-2 hover:text-red-300"
+                name="i-lucide-x"
+                @click.stop="() => { fieldValue = [] }"
+              />
+              <UIcon class="text-dimmed size-5" name="i-lucide-chevron-down" />
+            </ClientOnly>
+          </template>
+        </USelectMenu>
+        <UButton
+          v-if="field.relationConfig?.enableCreate"
+          color="primary"
+          icon="i-lucide-square-plus"
+          variant="ghost"
+          @click.prevent="openRelationModal('create')"
+        />
+        <UButton
+          v-if="field.relationConfig?.enableUpdate && fieldValue"
+          color="primary"
+          icon="i-lucide-edit"
+          variant="ghost"
+          @click.prevent="openRelationModal('update', fieldValue)"
+        />
+      </div>
 
       <!-- Select dropdown -->
       <USelect

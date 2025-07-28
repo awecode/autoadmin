@@ -209,8 +209,11 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       label: toTitleCase(name),
       relationConfig: {
         choicesEndpoint: `${cfg.apiPrefix}/formspec/${modelLabel}/choices-o2m/___${name}___${colKey(relationData.foreignPrimaryColumn)}`,
+        relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
+        foreignRelatedColumnName: colKey(relationData.foreignPrimaryColumn),
+        foreignLabelColumnName: getLabelColumnFromModel(table),
       },
       required: false,
       rules: {},
@@ -254,8 +257,11 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       label: toTitleCase(relation.name),
       relationConfig: {
         choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices-many/${fieldName}`,
+        relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
+        foreignRelatedColumnName: colKey(relation.otherForeignColumn),
+        foreignLabelColumnName: getLabelColumnFromModel(relation.otherTable),
       },
       required: false,
       rules: {},
