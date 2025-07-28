@@ -126,11 +126,14 @@ const spec = computed(() => data.value?.spec || {} as ListApiResponse['spec'])
 const title = computed(() => spec.value.title || toTitleCase(modelLabel))
 
 const pageActions = computed(() => {
-  const actions: { label: string, to?: { name: string, params: { modelLabel: string } } }[] = []
+  const actions: { label: string, icon?: string, color?: string, variant?: string, to?: { name: string, params: { modelLabel: string } } }[] = []
 
   if (spec.value.showCreateButton) {
     actions.push({
-      label: 'Add',
+      label: 'Add New',
+      icon: 'i-lucide-plus',
+      color: 'neutral',
+      variant: 'solid',
       to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
     })
   }
@@ -261,11 +264,13 @@ function computeColumns() {
     parsedColumns!.unshift({
       id: 'select',
       header: ({ table }) => h(UCheckbox, {
+        'color': 'neutral',
         'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
         'aria-label': 'Select all',
       }),
       cell: ({ row }: { row: Row<T> }) => h(UCheckbox, {
+        'color': 'neutral',
         'modelValue': row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
         'aria-label': 'Select row',
@@ -372,7 +377,6 @@ const performBulkAction = async () => {
               v-for="action in pageActions"
               :key="action.label"
               v-bind="action"
-              size="xs"
             />
             <slot name="actions-append"></slot>
           </div>
@@ -382,8 +386,8 @@ const performBulkAction = async () => {
     <div class="flex-grow overflow-hidden">
       <div class="flex flex-wrap items-center gap-8">
         <div>
-          <div class="text-sm text-dimmed mb-1">
-            Search {{ title }}
+          <div class="text-sm text-dimmed mb-1 min-h-5">
+            <!-- Search {{ title }} -->
           </div>
           <UInput
             v-if="spec.enableSearch"
@@ -437,14 +441,12 @@ const performBulkAction = async () => {
           v-else-if="data && status === 'success'"
           ref="table"
           v-model:sorting="sort"
-          class="h-full overflow-auto"
+          sticky
+          class="mt-8"
           :columns="computedColumns"
           :data="data?.results"
           :sorting-options="{
             manualSorting: true,
-          }"
-          :ui="{
-            thead: 'sticky top-0 z-10',
           }"
           @update:sorting="sort = $event"
         >
@@ -496,8 +498,8 @@ const performBulkAction = async () => {
                   v-if="defaultActions?.includes('edit') && spec.updatePage"
                   :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
                 >
-                  <UButton color="primary" icon="i-lucide-square-pen" variant="ghost">
-                    Edit
+                  <UButton color="neutral" icon="i-lucide-square-pen" variant="ghost">
+                    <!-- Edit -->
                   </UButton>
                 </NuxtLink>
                 <UButton
@@ -507,7 +509,7 @@ const performBulkAction = async () => {
                   variant="ghost"
                   @click="handleDelete(scope.row.original[spec.lookupColumnName])"
                 >
-                  Delete
+                  <!-- Delete -->
                 </UButton>
               </slot>
               <slot name="actions-cell-append" v-bind="scope ?? {}"></slot>

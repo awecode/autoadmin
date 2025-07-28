@@ -178,18 +178,20 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         </USelectMenu>
         <UButton
           v-if="field.relationConfig?.enableCreate"
-          color="primary"
+          class="ml-1"
+          color="neutral"
           icon="i-lucide-square-plus"
-          variant="ghost"
+          variant="soft"
           @click.prevent="openRelationModal('create')"
         />
         <UButton
           v-if="field.relationConfig?.enableUpdate && fieldValue"
-          color="primary"
+          color="neutral"
           icon="i-lucide-edit"
-          variant="ghost"
+          variant="soft"
           @click.prevent="openRelationModal('update', fieldValue)"
         />
+        <span v-else class="ml-6"></span>
       </div>
 
       <!-- Relation (multi-select) -->
@@ -220,18 +222,20 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         </USelectMenu>
         <UButton
           v-if="field.relationConfig?.enableCreate"
-          color="primary"
+          class="ml-1"
+          color="neutral"
           icon="i-lucide-square-plus"
-          variant="ghost"
+          variant="soft"
           @click.prevent="openRelationModal('create')"
         />
         <UButton
           v-if="field.relationConfig?.enableUpdate && fieldValue && Array.isArray(fieldValue) && fieldValue.length === 1"
-          color="primary"
+          color="neutral"
           icon="i-lucide-edit"
-          variant="ghost"
+          variant="soft"
           @click.prevent="openRelationModal('update', fieldValue[0])"
         />
+        <span v-else class="ml-6"></span>
       </div>
 
       <!-- Select dropdown -->
@@ -266,6 +270,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         v-else-if="field.type === 'boolean'"
         v-bind="field.inputAttrs"
         v-model="fieldValue"
+        color="neutral"
       />
 
       <!-- Text input with nullify modifier -->

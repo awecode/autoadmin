@@ -145,21 +145,23 @@ onUnmounted(() => {
         />
       </div>
       <div class="flex items-center justify-between mt-8">
-        <button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+        <UButton
+          color="neutral"
           type="submit"
+          variant="solid"
           :class="{ 'cursor-not-allowed': loading || form?.errors?.length }"
           :disabled="loading || !!form?.errors?.length"
         >
           {{ loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
-        </button>
-        <NuxtLink
+        </UButton>
+        <UButton
           v-if="cancelPath || redirectPath"
-          class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+          color="neutral"
+          variant="soft"
           :to="cancelPath || redirectPath"
         >
           Cancel
-        </NuxtLink>
+        </UButton>
       </div>
     </UForm>
   </div>

@@ -43,10 +43,10 @@ useHead({
               <UCard class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 cursor-pointer h-full">
                 <div class="flex flex-col items-center text-center space-y-3 p-2">
                   <UIcon
-                    class="w-8 h-8 text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200"
+                    class="w-8 h-8 text-gray-600 dark:text-gray-400 transition-colors duration-200"
                     :name="link.icon || 'i-lucide-database'"
                   />
-                  <span class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
+                  <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {{ link.label }}
                   </span>
                 </div>
@@ -61,7 +61,7 @@ useHead({
               >
                 <UButton
                   square
-                  color="primary"
+                  color="neutral"
                   icon="i-lucide-plus"
                   size="xs"
                   variant="ghost"
