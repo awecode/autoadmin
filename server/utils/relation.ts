@@ -8,23 +8,9 @@ import { DrizzleQueryError } from 'drizzle-orm/errors'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { getEnabledStatuses, getLabelColumnFromModel } from './autoadmin'
 import { useDb } from './db'
-import { handleDrizzleError } from './drizzle'
+import { colKey, handleDrizzleError } from './drizzle'
 
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
-
-export function colKey(col: AnyColumn) {
-  const colName = col.name
-  if (col.keyAsName) {
-    return colName
-  }
-  const key = (Object.keys(col.table) as (keyof typeof col.table)[]).find(
-    k => col.table[k]?.name === colName,
-  )
-  if (!key) {
-    throw new Error(`Column key not found for column with name "${colName}"`)
-  }
-  return key
-}
 
 interface M2MRelationSelf {
   selfTable: Table

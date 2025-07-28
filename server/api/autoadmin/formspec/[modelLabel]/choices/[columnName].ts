@@ -1,5 +1,6 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { getLabelColumnFromModel } from '#layers/autoadmin/server/utils/autoadmin'
+import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/server/utils/relation'
 
 export default defineEventHandler(async (event) => {
@@ -34,11 +35,11 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
   const choices = []
   for (const relation of relations) {
-    // TODO only select foreignColumn.name and labelField
+    // TODO only select colKey(foreignColumn) and labelField
     const rows = await db.select().from(relation.foreignTable)
     choices.push(...rows.map(row => ({
       label: row[getLabelColumnFromModel(relation.foreignTable)],
-      value: row[relation.foreignColumn.name],
+      value: row[colKey(relation.foreignColumn)],
     })))
   }
   return choices

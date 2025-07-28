@@ -1,4 +1,19 @@
+import type { Column } from 'drizzle-orm'
 import { z } from 'zod'
+
+export function colKey(col: Column) {
+  const colName = col.name
+  if (col.keyAsName) {
+    return colName
+  }
+  const key = (Object.keys(col.table) as (keyof typeof col.table)[]).find(
+    k => col.table[k]?.name === colName,
+  )
+  if (!key) {
+    throw new Error(`Column key not found for column with name "${colName}"`)
+  }
+  return key
+}
 
 export const genericPaginationQuerySchema = z.object({
   page: z.coerce.number().default(1),

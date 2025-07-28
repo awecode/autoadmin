@@ -1,7 +1,7 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import { eq } from 'drizzle-orm'
 import { useDb } from '../utils/db'
-import { handleDrizzleError } from '../utils/drizzle'
+import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { unwrapZodType } from '../utils/zod'
 
@@ -44,9 +44,9 @@ export async function updateRecord(cfg: AdminModelConfig, lookupValue: string, d
   if (cfg.m2m) {
     const relations = parseM2mRelations(model, cfg.m2m)
     for (const relation of relations) {
-      const fieldName = `___${relation.name}___${relation.otherColumn.name}`
+      const fieldName = `___${relation.name}___${colKey(relation.otherColumn)}`
       if (preprocessed[fieldName]) {
-        const selfValue = result[0]![relation.selfForeignColumn.name]
+        const selfValue = result[0]![colKey(relation.selfForeignColumn)]
         await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
       }
     }

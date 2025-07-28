@@ -7,6 +7,7 @@ import type { TableMetadata } from './metdata'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { eq, sql } from 'drizzle-orm'
 import { getLabelColumnFromModel } from './autoadmin'
+import { colKey } from './drizzle'
 import { getTableForeignKeysByColumn } from './relation'
 
 export type FilterType = 'boolean' | 'text' | 'date' | 'daterange' | 'relation' | 'select'
@@ -89,7 +90,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
       const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, query[field]))
       filterOptions = rows.map(row => ({
         label: row[getLabelColumnFromModel(relation.foreignTable)],
-        value: row[relation.foreignColumn.name],
+        value: row[colKey(relation.foreignColumn)],
       }))
     }
     return {

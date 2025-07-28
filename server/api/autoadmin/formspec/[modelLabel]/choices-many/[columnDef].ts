@@ -1,5 +1,6 @@
 import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { getLabelColumnFromModel } from '#layers/autoadmin/server/utils/autoadmin'
+import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 
 export default defineEventHandler(async (event) => {
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Invalid column definition ${columnDef}.`,
     })
   }
-  const relation = relations.find(r => r.name === relationName && r.otherColumn.name === columnName)
+  const relation = relations.find(r => r.name === relationName && colKey(r.otherColumn) === columnName)
   if (!relation) {
     throw createError({
       statusCode: 404,
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
   const rows = await db.select().from(relation.otherTable)
   choices.push(...rows.map(row => ({
     label: row[getLabelColumnFromModel(relation.otherTable)],
-    value: row[relation.otherForeignColumn.name],
+    value: row[colKey(relation.otherForeignColumn)],
   })))
   return choices
 })

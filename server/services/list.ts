@@ -2,6 +2,7 @@ import type { SQL, Table } from 'drizzle-orm'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { getModelConfig } from '../utils/autoadmin'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
+import { colKey } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getTableForeignKeysByColumn } from '../utils/relation'
@@ -51,13 +52,13 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
     const foreignTableColumns = getTableColumns(foreignTable)
 
     // Create a unique key for this join based on the foreign key column
-    const joinKey = `${fk}_${relation.foreignColumn.name}`
+    const joinKey = `${fk}_${colKey(relation.foreignColumn)}`
 
     // Only add join if we haven't already added it for this foreign key
     if (!addedJoins.has(joinKey) && fk in tableColumns) {
       joins.push({
         table: foreignTable,
-        on: eq(tableColumns[fk]!, foreignTableColumns[relation.foreignColumn.name]),
+        on: eq(tableColumns[fk]!, foreignTableColumns[colKey(relation.foreignColumn)]),
       })
       addedJoins.add(joinKey)
     }
@@ -116,11 +117,11 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
 
             if (foreignColumnName in foreignTableColumns) {
               // Ensure this foreign table is joined
-              const joinKey = `${fk}_${foreignKey.foreignColumn.name}`
+              const joinKey = `${fk}_${colKey(foreignKey.foreignColumn)}`
               if (!addedJoins.has(joinKey)) {
                 joins.push({
                   table: foreignTable,
-                  on: eq(tableColumns[fk]!, foreignTableColumns[foreignKey.foreignColumn.name]),
+                  on: eq(tableColumns[fk]!, foreignTableColumns[colKey(foreignKey.foreignColumn)]),
                 })
                 addedJoins.add(joinKey)
               }
@@ -234,9 +235,9 @@ export async function listRecords(modelLabel: string, query: Record<string, any>
           const foreignTableColumns = getTableColumns(foreignTable)
 
           // Ensure the foreign table is joined
-          const joinKey = `${fk}_${foreignKey.foreignColumn.name}`
+          const joinKey = `${fk}_${colKey(foreignKey.foreignColumn)}`
           if (!addedJoins.has(joinKey) && fk in tableColumns) {
-            baseQuery = baseQuery.leftJoin(foreignTable, eq(tableColumns[fk]!, foreignTableColumns[foreignKey.foreignColumn.name]))
+            baseQuery = baseQuery.leftJoin(foreignTable, eq(tableColumns[fk]!, foreignTableColumns[colKey(foreignKey.foreignColumn)]))
           }
 
           // Apply ordering on foreign column

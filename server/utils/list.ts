@@ -3,6 +3,7 @@ import type { Column, Table } from 'drizzle-orm'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { createInsertSchema } from 'drizzle-zod'
+import { colKey } from './drizzle'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from './relation'
 import { getDef, unwrapZodType } from './zod'
 
@@ -197,7 +198,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
     // Also remove foreign keys
     const foreignKeys = getTableForeignKeys(cfg.model)
     columns = columns.filter((column) => {
-      return !foreignKeys.some(foreignKey => foreignKey.column.name === column.accessorKey)
+      return !foreignKeys.some(foreignKey => colKey(foreignKey.column) === column.accessorKey)
     })
   }
   if (!cfg.list.columns && (typeof cfg.fields !== 'undefined') && cfg.fields.length > 0) {
