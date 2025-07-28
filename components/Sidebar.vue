@@ -90,18 +90,20 @@ const isDark = computed({
       />
     </div>
   </div>
-  <div class="fixed bottom-4">
+  <div class="fixed bottom-4 left-4">
     <ClientOnly v-if="!colorMode?.forced">
-      <UButton
-        color="neutral"
-        variant="ghost"
-        :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
-        @click="isDark = !isDark"
-      />
+      <UTooltip placement="left" :delay="0" :text="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
+          @click="isDark = !isDark"
+        />
 
-      <template #fallback>
-        <div class="size-8"></div>
-      </template>
+        <template #fallback>
+          <div class="size-8"></div>
+        </template>
+      </UTooltip>
     </ClientOnly>
   </div>
 </template>
