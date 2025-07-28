@@ -1,6 +1,7 @@
 import type { FieldType } from '#layers/autoadmin/composables/registry'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { defu } from 'defu'
+import { colKey } from './drizzle'
 import { getPrimaryKeyColumn } from './relation'
 import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
 
@@ -189,7 +190,7 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
   }
   if (cfg.o2m || cfg.m2m) {
     // If the primary key is not in the form fields, add it to the end of the form fields for o2m/m2m relations
-    const pkColumnName = getPrimaryKeyColumn(cfg.model).name
+    const pkColumnName = colKey(getPrimaryKeyColumn(cfg.model))
     if (!definedFieldSpecs.some(f => f.name === pkColumnName)) {
       const pkFieldSpec = spec.fields.find(f => f.name === pkColumnName)
       spec.fields = definedFieldSpecs
