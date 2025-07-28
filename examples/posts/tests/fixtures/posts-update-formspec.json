@@ -144,7 +144,10 @@
         "relationConfig": {
           "choicesEndpoint": "/api/autoadmin/formspec/posts/choices-many/___tags___tagId",
           "enableCreate": true,
-          "enableUpdate": true
+          "enableUpdate": true,
+          "foreignRelatedColumnName": "id",
+          "foreignLabelColumnName": "name",
+          "relatedConfigKey": "tags"
         },
         "required": false,
         "rules": {},

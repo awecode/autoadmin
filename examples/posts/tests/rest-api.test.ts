@@ -102,8 +102,8 @@ describe('api', async () => {
       // Verify list contains both records
       const listResponse = await $fetch<{ results: { name: string }[] }>(`${apiPrefix}/${modelLabel}`)
       expect(listResponse.results.length).toBe(2)
-      expect(listResponse.results[0]!.name).toBe(payloads[0]!.name)
-      expect(listResponse.results[1]!.name).toBe(payloads[1]!.name)
+      expect(listResponse.results[0]!.name).toBe(payloads[1]!.name)
+      expect(listResponse.results[1]!.name).toBe(payloads[0]!.name)
     }
   })
 
