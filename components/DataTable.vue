@@ -380,32 +380,35 @@ const performBulkAction = async () => {
       </div>
     </slot>
     <div class="flex-grow overflow-hidden">
-      <div class="flex justify-between py-3">
-        <div class="flex flex-wrap items-center gap-8">
-          <div>
-            <div class="text-sm text-dimmed mb-1">
-              Search {{ title }}
-            </div>
-            <UInput
-              v-if="spec.enableSearch"
-              v-model="search"
-              class="max-w-xl"
-              :placeholder="spec.searchPlaceholder"
-            />
+      <div class="flex flex-wrap items-center gap-8">
+        <div>
+          <div class="text-sm text-dimmed mb-1">
+            Search {{ title }}
           </div>
-          <Filters v-if="data?.filters" :filters="data.filters" />
-          <!-- Multi-row Actions -->
-          <div v-if="selectedRows.length > 0">
-            <div class="text-sm mb-1">
-              {{ selectedRows.length }} {{ selectedRows.length === 1 ? 'row' : 'rows' }} selected
-            </div>
+          <UInput
+            v-if="spec.enableSearch"
+            v-model="search"
+            class="max-w-xl"
+            :placeholder="spec.searchPlaceholder"
+          />
+        </div>
+        <Filters v-if="data?.filters" :filters="data.filters" />
+        <!-- Multi-row Actions -->
+        <div v-if="selectedRows.length > 0">
+          <div class="text-sm mb-1">
+            {{ selectedRows.length }} {{ selectedRows.length === 1 ? 'row' : 'rows' }} selected
+          </div>
+          <div class="flex items-center gap-2">
             <USelect
               v-model="bulkAction"
+              highlight
               class="min-w-24"
-              color="primary"
+              color="neutral"
               placeholder="Select an action"
               value-key="label"
+              variant="soft"
               :items="bulkActions"
+              :ui="{ content: 'min-w-fit' }"
             />
             <UButton
               v-if="bulkAction"
@@ -417,6 +420,7 @@ const performBulkAction = async () => {
           </div>
         </div>
       </div>
+
       <slot name="table" :rows="data?.results">
         <UAlert
           v-if="error"
