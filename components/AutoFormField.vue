@@ -112,7 +112,10 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           selectMenuItemsRaw.value = normalizeOptions(selectMenuItemsRaw.value.map(item => item.value === lookupValue ? option : item))
         }
         if (props.field.type === 'relation-many') {
-          fieldValue.value = [...(fieldValue.value ?? []), value]
+          // Only add the value if it's not already in the array
+          if (!fieldValue.value || !fieldValue.value.includes(value)) {
+            fieldValue.value = [...(fieldValue.value ?? []), value]
+          }
         } else {
           fieldValue.value = value
         }
@@ -223,11 +226,11 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           @click.prevent="openRelationModal('create')"
         />
         <UButton
-          v-if="field.relationConfig?.enableUpdate && fieldValue"
+          v-if="field.relationConfig?.enableUpdate && fieldValue && Array.isArray(fieldValue) && fieldValue.length === 1"
           color="primary"
           icon="i-lucide-edit"
           variant="ghost"
-          @click.prevent="openRelationModal('update', fieldValue)"
+          @click.prevent="openRelationModal('update', fieldValue[0])"
         />
       </div>
 
