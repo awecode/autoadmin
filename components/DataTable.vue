@@ -368,8 +368,6 @@ const performBulkAction = async () => {
         <slot name="actions">
           <div class="flex items-center gap-2">
             <slot name="actions-prepend"></slot>
-            <!-- <slot name="filters" :query="filterQuery" :schema="data?.filter_schema"></slot> -->
-            <Filters v-if="data?.filters" :filters="data.filters" />
             <UButton
               v-for="action in pageActions"
               :key="action.label"
@@ -383,31 +381,40 @@ const performBulkAction = async () => {
     </slot>
     <div class="flex-grow overflow-hidden">
       <div class="flex justify-between py-3">
-        <UInput
-          v-if="spec.enableSearch"
-          v-model="search"
-          class="max-w-xl"
-          :placeholder="spec.searchPlaceholder"
-        />
-        <!-- Multi-row Actions -->
-        <div v-if="selectedRows.length > 0" class="flex items-center gap-2 ml-auto">
-          <span class="text-sm text-muted">
-            {{ selectedRows.length }} {{ selectedRows.length === 1 ? 'row' : 'rows' }} selected
-          </span>
-          <USelect
-            v-model="bulkAction"
-            class="min-w-24"
-            placeholder="Select an action"
-            value-key="label"
-            :items="bulkActions"
-          />
-          <UButton
-            v-if="bulkAction"
-            color="neutral"
-            @click="performBulkAction"
-          >
-            Confirm
-          </UButton>
+        <div class="flex flex-wrap items-center gap-8">
+          <div>
+            <div class="text-sm text-dimmed mb-1">
+              Search {{ title }}
+            </div>
+            <UInput
+              v-if="spec.enableSearch"
+              v-model="search"
+              class="max-w-xl"
+              :placeholder="spec.searchPlaceholder"
+            />
+          </div>
+          <Filters v-if="data?.filters" :filters="data.filters" />
+          <!-- Multi-row Actions -->
+          <div v-if="selectedRows.length > 0">
+            <div class="text-sm mb-1">
+              {{ selectedRows.length }} {{ selectedRows.length === 1 ? 'row' : 'rows' }} selected
+            </div>
+            <USelect
+              v-model="bulkAction"
+              class="min-w-24"
+              color="primary"
+              placeholder="Select an action"
+              value-key="label"
+              :items="bulkActions"
+            />
+            <UButton
+              v-if="bulkAction"
+              color="neutral"
+              @click="performBulkAction"
+            >
+              Confirm
+            </UButton>
+          </div>
         </div>
       </div>
       <slot name="table" :rows="data?.results">

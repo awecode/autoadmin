@@ -63,76 +63,69 @@ const hasActiveFilters = computed(() => {
 
 // Boolean filter options
 const booleanOptions = [
-  { value: 'all', label: 'All' },
+  { value: null, label: 'All' },
   { value: 'true', label: 'Yes' },
   { value: 'false', label: 'No' },
 ]
 </script>
 
 <template>
-  <div v-if="filters && filters.length > 0" class="flex items-center gap-2">
-    <div class="flex items-center gap-2">
-      <UIcon class="h-4 w-4 text-gray-500" name="i-lucide-funnel" />
-      <span class="text-sm font-medium text-gray-700">Filters:</span>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <div v-for="filter in filters" :key="filter.field" class="flex items-center gap-1">
-        <span class="text-sm text-gray-600">{{ filter.label }}</span>
-        <!-- Boolean Filter -->
-        <USelect
-          v-if="filter.type === 'boolean'"
-          v-model="getFilterModel(filter).value"
-          class="min-w-20"
-          size="xs"
-          :items="booleanOptions"
-        />
-
-        <USelectMenu
-          v-else-if="(filter.type === 'text' || filter.type === 'select' || !filter.type) && filter.options"
-          v-model="getFilterModel(filter).value"
-          class="min-w-32"
-          size="xs"
-          value-key="value"
-          :items="normalizeOptions(filter.options)"
-          :placeholder="`${filter.label}`"
-        >
-          <template #item-label="{ item }">
-            {{ item.label || item.value }}
-          </template>
-          <template #item-trailing="{ item }">
-            <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
-          </template>
-        </USelectMenu>
-
-        <RelationSelectMenu
-          v-else-if="filter.type === 'relation'"
-          v-model="getFilterModel(filter).value"
-          :filter="filter"
-        />
-
-        <!-- Date Range Filter -->
-        <DateRangePicker
-          v-else-if="filter.type === 'daterange'"
-          v-model="getFilterModel(filter).value"
-          :placeholder="`Select ${filter.label || 'Date Range'}`"
-        />
-
-        <DatePicker
-          v-else-if="filter.type === 'date'"
-          v-model="getFilterModel(filter).value"
-          :placeholder="`Select ${filter.label || 'Date Range'}`"
-        />
-
-        <!-- Default fallback -->
-        <UInput
-          v-else
-          v-model="getFilterModel(filter).value"
-          class="min-w-32"
-          size="xs"
-          :placeholder="`Filter ${filter.label}`"
-        />
+  <template v-if="filters && filters.length > 0">
+    <div v-for="filter in filters" :key="filter.field">
+      <div class="text-sm text-dimmed mb-1">
+        {{ filter.label }}
       </div>
+      <!-- Boolean Filter -->
+      <USelect
+        v-if="filter.type === 'boolean'"
+        v-model="getFilterModel(filter).value"
+        class="min-w-24"
+        placeholder="All"
+        :items="booleanOptions"
+      />
+
+      <USelectMenu
+        v-else-if="(filter.type === 'text' || filter.type === 'select' || !filter.type) && filter.options"
+        v-model="getFilterModel(filter).value"
+        class="min-w-32"
+        placeholder="All"
+        value-key="value"
+        :items="normalizeOptions(filter.options)"
+      >
+        <template #item-label="{ item }">
+          {{ item.label || item.value }}
+        </template>
+        <template #item-trailing="{ item }">
+          <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
+        </template>
+      </USelectMenu>
+
+      <RelationSelectMenu
+        v-else-if="filter.type === 'relation'"
+        v-model="getFilterModel(filter).value"
+        :filter="filter"
+      />
+
+      <!-- Date Range Filter -->
+      <DateRangePicker
+        v-else-if="filter.type === 'daterange'"
+        v-model="getFilterModel(filter).value"
+        placeholder="Select Dates"
+      />
+
+      <DatePicker
+        v-else-if="filter.type === 'date'"
+        v-model="getFilterModel(filter).value"
+        placeholder="Select a Date"
+      />
+
+      <!-- Default fallback -->
+      <UInput
+        v-else
+        v-model="getFilterModel(filter).value"
+        class="min-w-32"
+        placeholder="All"
+      />
     </div>
 
     <!-- Clear all filters button -->
@@ -146,5 +139,5 @@ const booleanOptions = [
     >
       Clear
     </UButton>
-  </div>
+  </template>
 </template>

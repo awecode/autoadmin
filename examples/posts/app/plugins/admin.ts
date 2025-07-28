@@ -11,7 +11,7 @@ export default defineNuxtPlugin(() => {
       bulkActions: [{
         label: 'Archive Categories',
         icon: 'i-lucide-archive',
-        action: async (rowIds) => {
+        action: async (db, rowIds) => {
           // Bulk archive logic here
           return { message: `${rowIds.length} categories archived`, refresh: true }
         },
@@ -56,7 +56,7 @@ export default defineNuxtPlugin(() => {
       bulkActions: [{
         label: 'Activate Users',
         icon: 'i-lucide-user-check',
-        action: async (rowIds) => {
+        action: async (db, rowIds) => {
           // Bulk activation logic
           return { message: `${rowIds.length} users activated`, refresh: true }
         },
@@ -145,7 +145,7 @@ export default defineNuxtPlugin(() => {
         {
           label: 'Publish Posts',
           icon: 'i-lucide-send',
-          action: async (rowIds) => {
+          action: async (db, rowIds) => {
             // Bulk publish logic
             return { message: `${rowIds.length} posts published`, refresh: true }
           },

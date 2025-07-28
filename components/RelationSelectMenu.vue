@@ -69,7 +69,6 @@ watch(() => props.modelValue, (newValue) => {
   <USelectMenu
     v-model="internalValue"
     class="min-w-32"
-    size="xs"
     value-key="value"
     :items="selectMenuItems ?? []"
     :loading="status === 'pending'"
