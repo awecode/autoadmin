@@ -22,7 +22,7 @@ export default defineAppConfig({
       {
         label: 'Help',
         icon: 'i-lucide-circle-help',
-        to: 'https://awecode.com/contact',
+        to: 'https://github.com/awecode/autoadmin/discussions/categories/q-a',
         target: '_blank',
       },
     ],
