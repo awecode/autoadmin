@@ -42,6 +42,17 @@ const items = useState<NavigationMenuItem[][]>('sidebar-items', () => {
     appConfig.sidebar.additionalItems,
   ]
 })
+
+const colorMode = useColorMode()
+
+const isDark = computed({
+  get() {
+    return colorMode.value === 'dark'
+  },
+  set(_isDark) {
+    colorMode.preference = _isDark ? 'dark' : 'light'
+  },
+})
 </script>
 
 <template>
@@ -78,5 +89,19 @@ const items = useState<NavigationMenuItem[][]>('sidebar-items', () => {
         :items="items"
       />
     </div>
+  </div>
+  <div class="fixed bottom-4">
+    <ClientOnly v-if="!colorMode?.forced">
+      <UButton
+        color="neutral"
+        variant="ghost"
+        :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
+        @click="isDark = !isDark"
+      />
+
+      <template #fallback>
+        <div class="size-8"></div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
