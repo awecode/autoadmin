@@ -75,8 +75,8 @@ const booleanOptions = [
 
 <template>
   <template v-if="filters && filters.length > 0">
-    <!-- Mobile filters button -->
-    <div class="md:hidden">
+    <!-- Mobile filters button (only for multiple filters) -->
+    <div v-if="filters.length > 1" class="md:hidden">
       <div class="text-sm text-dimmed mb-1">
         Filters
       </div>
@@ -87,16 +87,15 @@ const booleanOptions = [
         @click="mobileFiltersOpen = true"
       >
         Filters
-        <span v-if="hasActiveFilters" class="ml-1 text-xs bg-blue-500 text-white rounded-full px-1.5 py-0.5">
+        <span v-if="hasActiveFilters" class="ml-1 text-xs bg-primary text-white rounded-full px-1.5 py-0.5">
           {{ Object.keys(filterQuery).length }}
         </span>
       </UButton>
     </div>
 
-    <!-- Single set of filters - shown on desktop, hidden on mobile unless drawer open -->
-    <div :class="mobileFiltersOpen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 z-50 p-4 border-t border-gray-200 dark:border-gray-800 max-h-[80vh] overflow-y-auto md:static md:bg-transparent md:z-auto md:p-0 md:border-0 md:max-h-none md:overflow-visible' : 'hidden md:contents'">
-      <!-- Mobile drawer header -->
-      <div v-if="mobileFiltersOpen" class="md:hidden flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+    <!-- Single set of filters - responsive visibility based on filter count -->
+    <div :class="filters.length === 1 ? 'contents' : (mobileFiltersOpen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 z-50 p-4 border-t border-gray-200 dark:border-gray-800 max-h-[80vh] overflow-y-auto md:static md:bg-transparent md:z-auto md:p-0 md:border-0 md:max-h-none md:overflow-visible' : 'hidden md:contents')">
+      <div v-if="mobileFiltersOpen && filters.length > 1" class="md:hidden flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-800 pb-4">
         <div class="flex gap-2">
           <h3 class="text-lg font-semibold">
             Filters
@@ -197,9 +196,9 @@ const booleanOptions = [
       </div>
     </div>
 
-    <!-- Mobile overlay -->
+    <!-- Mobile overlay (only for multiple filters) -->
     <div
-      v-if="mobileFiltersOpen"
+      v-if="mobileFiltersOpen && filters.length > 1"
       class="md:hidden fixed inset-0 bg-black opacity-50 z-40"
       @click="mobileFiltersOpen = false"
     ></div>
