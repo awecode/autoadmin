@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
 import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
+
+const searchModal = useOverlay().create(SearchModal)
 
 const modelLinks = useState('model-links', () => {
   const allCfg = useAdminRegistry().all()
@@ -9,11 +12,23 @@ const modelLinks = useState('model-links', () => {
     icon: cfg.icon || getIconForLabel(cfg.label),
     to: { name: 'autoadmin-list', params: { modelLabel: `${cfg.label}` } },
     type: 'link' as const,
-    createPath: cfg.create?.enabled ? { name: 'autoadmin-create', params: { modelLabel: `${cfg.label}` } } : undefined,
+    createPath: cfg.create.enabled ? { name: 'autoadmin-create', params: { modelLabel: `${cfg.label}` } } : undefined,
+    searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
   }))
 
   return links
 })
+
+function openSearchModal(link: typeof modelLinks.value[number]) {
+  if (link.searchPlaceholder) {
+    searchModal.open({
+      label: link.label,
+      searchPlaceholder: link.searchPlaceholder,
+      to: link.to,
+      close: searchModal.close,
+    })
+  }
+}
 
 const title = getTitle()
 
@@ -47,22 +62,36 @@ useHead({
             </div>
           </UCard>
         </NuxtLink>
-        <!-- Plus button for adding new instance -->
-        <UTooltip v-if="link.createPath" text="Add new" :delay="0">
-          <NuxtLink
-            v-if="link.createPath"
-            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
-            :to="link.createPath"
-          >
+        <!-- Action buttons -->
+        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex gap-1">
+          <!-- Search button -->
+          <UTooltip v-if="link.searchPlaceholder" text="Search" :delay="0">
             <UButton
               square
               color="neutral"
-              icon="i-lucide-plus"
+              icon="i-lucide-search"
               size="xs"
               variant="ghost"
+              @click.prevent="openSearchModal(link)"
             />
-          </NuxtLink>
-        </UTooltip>
+          </UTooltip>
+
+          <!-- Plus button for adding new instance -->
+          <UTooltip v-if="link.createPath" text="Add new" :delay="0">
+            <NuxtLink
+              v-if="link.createPath"
+              :to="link.createPath"
+            >
+              <UButton
+                square
+                color="neutral"
+                icon="i-lucide-plus"
+                size="xs"
+                variant="ghost"
+              />
+            </NuxtLink>
+          </UTooltip>
+        </div>
       </div>
     </div>
   </AutoAdmin>
