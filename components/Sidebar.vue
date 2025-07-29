@@ -119,20 +119,12 @@ const mobileMenuOpen = ref(false)
     </div>
 
     <!-- Mobile Menu Overlay -->
-    <Transition
-      enter-active-class="transition-opacity duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="mobileMenuOpen"
-        class="fixed inset-0 bg-black bg-opacity-50 z-40"
-        @click="mobileMenuOpen = false"
-      ></div>
-    </Transition>
+
+    <div
+      v-if="mobileMenuOpen"
+      class="fixed inset-0 bg-black opacity-80 z-40"
+      @click="mobileMenuOpen = false"
+    ></div>
 
     <!-- Mobile Menu Sidebar -->
     <Transition
