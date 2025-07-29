@@ -1,6 +1,6 @@
 # AutoAdmin Documentation
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project.
+AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Using AutoAdmin requires a Nuxt project with Drizzle configured with schemas.
 
 ## Installation
 
