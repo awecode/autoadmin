@@ -136,7 +136,7 @@
         ],
         "relationConfig": {
           "choicesEndpoint": "/api/autoadmin/formspec/posts/choices/categoryId",
-          "relatedConfigKey": "categories",
+          "relatedConfigKey": "cat",
           "enableCreate": true,
           "enableUpdate": true,
           "foreignRelatedColumnName": "id",

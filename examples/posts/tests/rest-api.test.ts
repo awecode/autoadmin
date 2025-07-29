@@ -39,7 +39,7 @@ describe('api', async () => {
   })
 
   it('should delete all records', async () => {
-    const modelKeys = ['tags', 'posts', 'users', 'categories']
+    const modelKeys = ['tags', 'posts', 'users', 'cat']
     for (const modelKey of modelKeys) {
       const response = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/${modelKey}`)
       expect(response).toBeDefined()
@@ -76,7 +76,7 @@ describe('api', async () => {
         ],
       },
       {
-        modelKey: 'categories',
+        modelKey: 'cat',
         payloads: [
           { name: 'Category 1' },
           { name: 'Category 2' },
