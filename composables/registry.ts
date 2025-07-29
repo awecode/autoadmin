@@ -105,7 +105,7 @@ interface DeleteOptions {
   endpoint?: string
 }
 
-// AdminModelOptions is the options passed to the registerAdminModel function
+// AdminModelOptions is the options passed to the register function
 export interface AdminModelOptions<T extends Table = Table> {
   label?: string
   icon?: string
@@ -215,10 +215,10 @@ export function useAdminRegistry() {
   const config = useRuntimeConfig()
   const apiPrefix = config.public.apiPrefix
 
-  function registerAdminModel<T extends Table>(
+  function configure<T extends Table>(
     model: T,
     opts: AdminModelOptions<T> = {},
-  ): void {
+  ): AdminModelConfig<T> {
     const label = (opts.label ?? getTableName(model)) as string
 
     const columns = getTableColumns(model)
@@ -258,11 +258,18 @@ export function useAdminRegistry() {
 
     cfg.lookupColumn = cfg.columns[lookupColumnName] as T['_']['columns'][ColKey<T>]
     cfg.metadata = getTableMetadata(cfg.columns)
-
-    registry.set(label, cfg as unknown as AdminModelConfig<Table>)
+    return cfg
   }
 
-  function getAdminConfig<T extends Table = Table>(
+  function register<T extends Table>(
+    model: T,
+    opts: AdminModelOptions<T> = {},
+  ): void {
+    const cfg = configure(model, opts)
+    registry.set(cfg.label, cfg)
+  }
+
+  function getModelConfig<T extends Table>(
     label: string,
   ): AdminModelConfig<T> | undefined {
     return registry.get(label) as AdminModelConfig<T> | undefined
@@ -271,7 +278,8 @@ export function useAdminRegistry() {
   return {
     all: () => Array.from(registry.values()) as AdminModelConfig<Table>[],
     map: () => registry,
-    get: getAdminConfig,
-    register: registerAdminModel,
+    get: getModelConfig,
+    configure,
+    register,
   }
 }

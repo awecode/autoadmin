@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
 
   switch (parsedRoute.routeType) {
     case 'list':
-      return await listRecords(parsedRoute.modelLabel, query)
+      return await listRecords(cfg, query)
 
     case 'create':
       if (!body) {

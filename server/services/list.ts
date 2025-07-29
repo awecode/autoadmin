@@ -1,14 +1,13 @@
+import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
-import { getModelConfig } from '../utils/autoadmin'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
 import { colKey } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
-export async function listRecords(modelLabel: string, query: Record<string, any> = {}): Promise<any> {
-  const cfg = getModelConfig(modelLabel)
+export async function listRecords(cfg: AdminModelConfig, query: Record<string, any> = {}): Promise<any> {
   const model = cfg.model
   const tableColumns = cfg.columns
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr

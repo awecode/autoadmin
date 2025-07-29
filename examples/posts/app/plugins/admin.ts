@@ -1,4 +1,4 @@
-import { categories, posts, postsToTags, tags, users } from '../../server/db/sqlite'
+import { categories, posts, postsToTags, users } from '../../server/db/sqlite'
 
 export default defineNuxtPlugin(() => {
   const registry = useAdminRegistry()
