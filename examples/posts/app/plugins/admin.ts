@@ -6,6 +6,7 @@ export default defineNuxtPlugin(() => {
   //   Categories - Simple setup
   registry.register(categories, {
     label: 'Categories',
+    key: 'cat',
     list: {
       searchFields: ['name', 'description'],
       filterFields: ['isActive'],
