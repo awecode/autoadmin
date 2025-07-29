@@ -126,43 +126,41 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <!-- Do not validate on input change when input is focused because it clears any server side validation error messages received from api -->
-    <UForm
-      ref="form"
-      :schema="processedSchema"
-      :state="state"
-      :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
-      @submit="performSave()"
-    >
-      <div class="flex flex-wrap">
-        <AutoFormField
-          v-for="field in spec.fields"
-          :key="field.name"
-          v-model="state[field.name]"
-          :field="field"
-          :form="form"
-        />
-      </div>
-      <div class="flex items-center justify-between mt-8">
-        <UButton
-          color="neutral"
-          type="submit"
-          variant="solid"
-          :class="{ 'cursor-not-allowed': loading || form?.errors?.length }"
-          :disabled="loading || !!form?.errors?.length"
-        >
-          {{ loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
-        </UButton>
-        <UButton
-          v-if="cancelPath || redirectPath"
-          color="neutral"
-          variant="soft"
-          :to="cancelPath || redirectPath"
-        >
-          Cancel
-        </UButton>
-      </div>
-    </UForm>
-  </div>
+  <!-- Do not validate on input change when input is focused because it clears any server side validation error messages received from api -->
+  <UForm
+    ref="form"
+    :schema="processedSchema"
+    :state="state"
+    :validate-on="isInputFocused ? ['blur', 'change', 'input'] : ['change', 'blur']"
+    @submit="performSave()"
+  >
+    <div class="flex flex-wrap">
+      <AutoFormField
+        v-for="field in spec.fields"
+        :key="field.name"
+        v-model="state[field.name]"
+        :field="field"
+        :form="form"
+      />
+    </div>
+    <div class="flex items-center justify-between mt-8">
+      <UButton
+        color="neutral"
+        type="submit"
+        variant="solid"
+        :class="{ 'cursor-not-allowed': loading || form?.errors?.length }"
+        :disabled="loading || !!form?.errors?.length"
+      >
+        {{ loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
+      </UButton>
+      <UButton
+        v-if="cancelPath || redirectPath"
+        color="neutral"
+        variant="soft"
+        :to="cancelPath || redirectPath"
+      >
+        Cancel
+      </UButton>
+    </div>
+  </UForm>
 </template>

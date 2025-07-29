@@ -39,29 +39,32 @@ useHead({
 
 <template>
   <AutoAdmin>
-    <div class="max-w-2xl mx-auto">
-      <div class="flex items-center mb-6">
-        <NuxtLink
-          class="mr-4 text-gray-500 hover:text-gray-700"
+    <div class="flex items-center mb-6">
+      <UTooltip :text="`Back to ${listTitle}`">
+        <UButton
+          class="mr-1"
+          color="neutral"
+          variant="ghost"
           :to="listPath"
         >
-          ← Back to {{ listTitle }}
-        </NuxtLink>
-        <h1 class="text-3xl font-bold">
-          Update {{ formSpec.labelString ?? lookupValue }}
-        </h1>
-      </div>
+          <UIcon name="i-lucide-chevron-left" />
+        </UButton>
+      </UTooltip>
 
-      <AutoForm
-        v-if="formSpec"
-        class="space-y-4 p-10 rounded-lg bg-gray-50 dark:bg-gray-800"
-        mode="update"
-        :endpoint="endpoint"
-        :redirect-path="listPath"
-        :schema="schema"
-        :spec="formSpec"
-        :values="values"
-      />
+      <h1 class="text-3xl font-bold">
+        Update {{ formSpec.labelString ?? lookupValue }}
+      </h1>
     </div>
+
+    <AutoForm
+      v-if="formSpec"
+      class="space-y-4 p-6 rounded-lg bg-gray-100 dark:bg-gray-800"
+      mode="update"
+      :endpoint="endpoint"
+      :redirect-path="listPath"
+      :schema="schema"
+      :spec="formSpec"
+      :values="values"
+    />
   </AutoAdmin>
 </template>
