@@ -97,7 +97,7 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbTy
       field,
       label: label || toTitleCase(field).replace(/ Id/g, ''),
       type: 'relation',
-      choicesEndpoint: options ? undefined : `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${relation.columnName}`,
+      choicesEndpoint: options ? undefined : `${cfg.apiPrefix}/formspec/${cfg.key}/choices/${relation.columnName}`,
       options: filterOptions,
     }
   }

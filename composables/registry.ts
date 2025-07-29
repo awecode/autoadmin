@@ -92,7 +92,7 @@ interface UpdateOptions<T extends Table = Table> {
   route?: {
     name: string
     params: {
-      modelLabel: string
+      modelKey: string
     }
   }
   schema: InferInsertModel<T> // added by generateDefaultOptions
@@ -107,6 +107,7 @@ interface DeleteOptions {
 
 // AdminModelOptions is the options passed to the register function
 export interface AdminModelOptions<T extends Table = Table> {
+  key?: string
   label?: string
   icon?: string
   enableIndex?: boolean
@@ -128,6 +129,7 @@ export interface AdminModelOptions<T extends Table = Table> {
 export interface AdminModelConfig<T extends Table = Table> {
   // model: TableWithColumns<T>
   model: T
+  key: string
   label: string
   icon?: string
   enableIndex: boolean
@@ -169,14 +171,14 @@ const getStaticDefaultOptions = () => ({
   warnOnUnsavedChanges: false,
 })
 
-const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
+const generateDefaultOptions = <T extends Table>(model: T, label: string, key: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
   const dct = defu(getStaticDefaultOptions(), {
     list: {
       title: toTitleCase(label),
-      endpoint: `${apiPrefix}/${label}`,
+      endpoint: `${apiPrefix}/${key}`,
     },
-    update: { route: { name: 'autoadmin-update', params: { modelLabel: label } } },
-    delete: { endpoint: `${apiPrefix}/${label}` },
+    update: { route: { name: 'autoadmin-update', params: { key: key } } },
+    delete: { endpoint: `${apiPrefix}/${key}` },
   }) as unknown as AdminModelConfig<T>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumnName || dct.labelColumnName]
@@ -219,7 +221,8 @@ export function useAdminRegistry() {
     model: T,
     opts: AdminModelOptions<T> = {},
   ) {
-    const label = (opts.label ?? getTableName(model)) as string
+    const key = opts.key ?? getTableName(model)
+    const label = opts.label ?? toTitleCase(key)
 
     const columns = getTableColumns(model)
     if (!opts.labelColumnName) {
@@ -228,8 +231,8 @@ export function useAdminRegistry() {
 
     const cfg = defu(
       opts,
-      generateDefaultOptions(model, label, apiPrefix, opts),
-      { model, label },
+      generateDefaultOptions(model, label, key, apiPrefix, opts),
+      { model, key, label },
     ) as AdminModelConfig<T>
 
     cfg.columns = columns
@@ -266,13 +269,13 @@ export function useAdminRegistry() {
     opts: AdminModelOptions<T> = {},
   ): void {
     const cfg = configure(model, opts)
-    registry.set(cfg.label, cfg as unknown as AdminModelConfig<Table>)
+    registry.set(cfg.key, cfg as unknown as AdminModelConfig<Table>)
   }
 
   function getModelConfig<T extends Table>(
-    label: string,
+    key: string,
   ): AdminModelConfig<T> | undefined {
-    return registry.get(label) as AdminModelConfig<T> | undefined
+    return registry.get(key) as AdminModelConfig<T> | undefined
   }
 
   return {

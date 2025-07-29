@@ -7,11 +7,11 @@ import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/re
 import { unwrapZodType } from '../utils/zod'
 
 export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string, data: any): Promise<any> {
-  const modelLabel = cfg.label
+  const modelKey = cfg.key
   if (!cfg.update.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow updates.`,
+      statusMessage: `Model "${modelKey}" does not allow updates.`,
     })
   }
   const model = cfg.model
@@ -57,7 +57,7 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
 
   return {
     success: true,
-    message: `${modelLabel} updated successfully`,
+    message: `${modelKey} updated successfully`,
     data: result[0],
   }
 }

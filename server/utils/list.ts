@@ -121,7 +121,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               sortKey: cfg.list.enableSort ? def : undefined,
             }
           } else {
-            throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.label}.`)
+            throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.key}.`)
           }
         }
         throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)

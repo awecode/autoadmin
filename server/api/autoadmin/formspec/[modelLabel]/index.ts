@@ -5,18 +5,18 @@ import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToF
 import { createInsertSchema } from 'drizzle-zod'
 
 export default defineEventHandler(async (event) => {
-  const modelLabel = getRouterParam(event, 'modelLabel')
-  if (!modelLabel) {
+  const modelKey = getRouterParam(event, 'modelKey')
+  if (!modelKey) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Model label is required.',
+      statusMessage: 'Model key is required.',
     })
   }
-  const cfg = getModelConfig(modelLabel)
+  const cfg = getModelConfig(modelKey)
   if (!cfg.create.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow creation.`,
+      statusMessage: `Model ${modelKey} does not allow creation.`,
     })
   }
   const model = cfg.model

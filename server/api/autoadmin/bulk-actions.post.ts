@@ -5,10 +5,10 @@ import { useDb } from '../../utils/db'
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({
     action: z.string(),
-    modelLabel: z.string(),
+    modelKey: z.string(),
     rowLookups: z.union([z.array(z.string()), z.array(z.number())]),
   }).parse)
-  const cfg = getModelConfig(body.modelLabel)
+  const cfg = getModelConfig(body.modelKey)
   const action = cfg.list.bulkActions.find(action => action.label === body.action)
   if (!action) {
     throw createError({

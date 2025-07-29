@@ -1,11 +1,11 @@
 import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 
 export default defineEventHandler(async (event) => {
-  const modelLabel = getRouterParam(event, 'modelLabel')
-  if (!modelLabel) {
+  const modelKey = getRouterParam(event, 'modelKey')
+  if (!modelKey) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Model label is required.',
+      statusMessage: 'Model key is required.',
     })
   }
   const columnDef = getRouterParam(event, 'columnDef')
@@ -15,11 +15,11 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Column definition is required.',
     })
   }
-  const cfg = getModelConfig(modelLabel)
+  const cfg = getModelConfig(modelKey)
   if (!cfg.o2m) {
     throw createError({
       statusCode: 404,
-      statusMessage: `No one-to-many relations provided for model ${modelLabel} during registration.`,
+      statusMessage: `No one-to-many relations provided for model ${modelKey} during registration.`,
     })
   }
   // columnDef is in the format of ___relationName___columnName

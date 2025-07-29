@@ -38,13 +38,13 @@ export function getPrimaryKeyColumn(table: Table) {
 
 export function parseO2mRelation<T extends Table>(cfg: AdminModelConfig<T>, table: Table, name: string) {
   const model = cfg.model
-  const modelLabel = cfg.label
+  const modelKey = cfg.key
   const foreignPrimaryColumn = getPrimaryKeyColumn(table)
   const selfPrimaryColumn = getPrimaryKeyColumn(model)
   const foreignKeys = getTableForeignKeys(table)
   const foreignRelatedColumnKey = foreignKeys.find(fk => fk.foreignTable === model)
   if (!foreignRelatedColumnKey) {
-    throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelLabel} in ${getTableName(table)} for the relation ${modelLabel} -> ${name}.`)
+    throw new Error(`One-to-many relation requires a foreign key in related table. None found for ${modelKey} in ${getTableName(table)} for the relation ${modelKey} -> ${name}.`)
   }
   return {
     selfTable: model,
@@ -175,7 +175,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       }
       const enabledStatuses = getEnabledStatuses(relation.foreignTable)
       field.relationConfig = {
-        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices/${colKey(relation.column)}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.key}/choices/${colKey(relation.column)}`,
         relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
@@ -195,7 +195,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
   if (!o2mTables) {
     return formSpec
   }
-  const modelLabel = cfg.label
+  const modelKey = cfg.key
   const updatedFields = formSpec.fields
 
   // Process all relations in parallel
@@ -208,7 +208,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       type: 'relation-many' as const,
       label: toTitleCase(name),
       relationConfig: {
-        choicesEndpoint: `${cfg.apiPrefix}/formspec/${modelLabel}/choices-o2m/___${name}___${colKey(relationData.foreignPrimaryColumn)}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${modelKey}/choices-o2m/___${name}___${colKey(relationData.foreignPrimaryColumn)}`,
         relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
@@ -226,7 +226,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       const selfPrimaryValue = formSpec.values[colKey(selfPrimaryColumn)]
       // if selfPrimaryValue is available, get o2m values
       if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
-        throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelLabel}.`)
+        throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelKey}.`)
       }
       const db = useDb()
       // const rows = await db.select().from(table).where(eq(table[colKey(relationData.foreignRelatedColumn)], selfPrimaryValue))
@@ -256,7 +256,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       type: 'relation-many' as const,
       label: toTitleCase(relation.name),
       relationConfig: {
-        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.label}/choices-many/${fieldName}`,
+        choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.key}/choices-many/${fieldName}`,
         relatedConfigKey: enabledStatuses?.key,
         enableCreate: enabledStatuses?.create,
         enableUpdate: enabledStatuses?.update,
@@ -301,7 +301,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
 
 export async function saveO2mRelation<T extends Table>(db: DbType, cfg: AdminModelConfig<T>, preprocessed: any, result: { [x: string]: any }[]) {
   if (cfg.o2m) {
-    const modelLabel = cfg.label
+    const modelKey = cfg.key
     for (const [name, table] of Object.entries(cfg.o2m)) {
       const relationData = parseO2mRelation(cfg, table, name)
       const fieldName = relationData.fieldName
@@ -314,11 +314,11 @@ export async function saveO2mRelation<T extends Table>(db: DbType, cfg: AdminMod
         } catch (error) {
           if (error instanceof DrizzleQueryError) {
             if (error.cause && 'code' in error.cause && typeof error.cause.code === 'string' && NOTNULL_CONSTRAINT_CODES.includes(error.cause.code)) {
-              const userFriendlyMessage = `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`
+              const userFriendlyMessage = `Cannot remove the relation to ${modelKey} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`
               throw createError({
                 statusCode: 400,
                 // statusMessage: `Cannot unset this ${colKey(foreignRelatedColumn)} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
-                statusMessage: `Cannot remove the relation to ${modelLabel} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`,
+                statusMessage: `Cannot remove the relation to ${modelKey} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`,
                 data: {
                   message: userFriendlyMessage,
                   errors: [{

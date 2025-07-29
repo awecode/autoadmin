@@ -5,11 +5,11 @@ import { useDb } from '../utils/db'
 import { handleDrizzleError } from '../utils/drizzle'
 
 export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string): Promise<any> {
-  const modelLabel = cfg.label
+  const modelKey = cfg.key
   if (!cfg.delete.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow deletion.`,
+      statusMessage: `Model "${modelKey}" does not allow deletion.`,
     })
   }
   const model = cfg.model
@@ -23,16 +23,16 @@ export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
 
   return {
     success: true,
-    message: `${modelLabel} ${lookupValue} deleted successfully`,
+    message: `${modelKey} ${lookupValue} deleted successfully`,
   }
 }
 
-export async function bulkDelete(modelLabel: string, rowLookups: (string | number)[]) {
-  const cfg = getModelConfig(modelLabel)
+export async function bulkDelete(modelKey: string, rowLookups: (string | number)[]) {
+  const cfg = getModelConfig(modelKey)
   if (!cfg.delete.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow deletion.`,
+      statusMessage: `Model "${modelKey}" does not allow deletion.`,
     })
   }
   const model = cfg.model
@@ -46,6 +46,6 @@ export async function bulkDelete(modelLabel: string, rowLookups: (string | numbe
 
   return {
     success: true,
-    message: `${modelLabel} ${rowLookups.length} rows deleted successfully`,
+    message: `${modelKey} ${rowLookups.length} rows deleted successfully`,
   }
 }

@@ -39,9 +39,9 @@ describe('api', async () => {
   })
 
   it('should delete all records', async () => {
-    const modelLabels = ['tags', 'posts', 'users', 'categories']
-    for (const modelLabel of modelLabels) {
-      const response = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/${modelLabel}`)
+    const modelKeys = ['tags', 'posts', 'users', 'categories']
+    for (const modelKey of modelKeys) {
+      const response = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/${modelKey}`)
       expect(response).toBeDefined()
       const rowIds = response.results.map((row: any) => row.id)
       expect(rowIds).toBeDefined()
@@ -50,7 +50,7 @@ describe('api', async () => {
         const deleteResponse = await $fetch(`${apiPrefix}/bulk-delete`, {
           method: 'POST',
           body: {
-            modelLabel,
+            modelKey,
             rowLookups: rowIds,
           },
         })
@@ -62,21 +62,21 @@ describe('api', async () => {
   it('should create 2 records for each model', async () => {
     const cfgs = [
       {
-        modelLabel: 'tags',
+        modelKey: 'tags',
         payloads: [
           { name: 'Tag 1', color: 'red' },
           { name: 'Tag 2', color: 'blue' },
         ],
       },
       {
-        modelLabel: 'users',
+        modelKey: 'users',
         payloads: [
           { name: 'User 1', email: 'user1@example.com' },
           { name: 'User 2', email: 'user2@example.com' },
         ],
       },
       {
-        modelLabel: 'categories',
+        modelKey: 'categories',
         payloads: [
           { name: 'Category 1' },
           { name: 'Category 2' },
@@ -84,23 +84,23 @@ describe('api', async () => {
       },
     ]
 
-    for (const { modelLabel, payloads } of cfgs) {
+    for (const { modelKey, payloads } of cfgs) {
       // Create first record
-      const response1 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelLabel}`, {
+      const response1 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelKey}`, {
         method: 'POST',
         body: payloads[0]!,
       })
       expect(response1.data.id).toBeDefined()
 
       // Create second record
-      const response2 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelLabel}`, {
+      const response2 = await $fetch<{ data: { id: number } }>(`${apiPrefix}/${modelKey}`, {
         method: 'POST',
         body: payloads[1]!,
       })
       expect(response2.data.id).toBeDefined()
 
       // Verify list contains both records
-      const listResponse = await $fetch<{ results: { name: string }[] }>(`${apiPrefix}/${modelLabel}`)
+      const listResponse = await $fetch<{ results: { name: string }[] }>(`${apiPrefix}/${modelKey}`)
       expect(listResponse.results.length).toBe(2)
       expect(listResponse.results[0]!.name).toBe(payloads[1]!.name)
       expect(listResponse.results[1]!.name).toBe(payloads[0]!.name)

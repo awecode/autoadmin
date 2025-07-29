@@ -6,11 +6,11 @@ import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/re
 import { unwrapZodType } from '../utils/zod'
 
 export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, data: any): Promise<any> {
-  const modelLabel = cfg.label
+  const modelKey = cfg.key
   if (!cfg.create.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow creation.`,
+      statusMessage: `Model "${modelKey}" does not allow creation.`,
     })
   }
   const model = cfg.model
@@ -56,7 +56,7 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
 
   return {
     success: true,
-    message: `${modelLabel} created successfully`,
+    message: `${modelKey} created successfully`,
     data: result[0],
   }
 }

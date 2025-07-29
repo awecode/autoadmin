@@ -26,7 +26,7 @@ interface ListApiResponse {
   filters?: FilterSpec[]
   spec: {
     endpoint: string
-    updatePage?: { name: string, params: { modelLabel: string } }
+    updatePage?: { name: string, params: { modelKey: string } }
     deleteEndpoint?: string
     title: string
     // API return header as string, and an optional sortKey
@@ -48,7 +48,7 @@ const defaultActions = ['edit', 'delete']
 
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
-const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
+const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 
 const route = useRoute()
 const router = useRouter()
@@ -109,9 +109,9 @@ const query = computed(() => ({
   ...((filters ? filterQuery.value : {}) as Record<string, string>),
 }))
 
-const endpoint = `${apiPrefix}/${modelLabel}`
+const endpoint = `${apiPrefix}/${modelKey}`
 
-const { data, status, error, refresh } = useAsyncData<ListApiResponse>(`${modelLabel}-list`, async () => {
+const { data, status, error, refresh } = useAsyncData<ListApiResponse>(`${modelKey}-list`, async () => {
   const response = await $fetch<ListApiResponse>(endpoint, { query: query.value })
   return {
     ...response,
@@ -123,10 +123,10 @@ const { data, status, error, refresh } = useAsyncData<ListApiResponse>(`${modelL
 
 const spec = computed(() => data.value?.spec || {} as ListApiResponse['spec'])
 
-const title = computed(() => spec.value.title || toTitleCase(modelLabel))
+const title = computed(() => spec.value.title || toTitleCase(modelKey))
 
 const pageActions = computed(() => {
-  const actions: { label: string, icon?: string, color?: string, variant?: string, to?: { name: string, params: { modelLabel: string } } }[] = []
+  const actions: { label: string, icon?: string, color?: string, variant?: string, to?: { name: string, params: { modelKey: string } } }[] = []
 
   if (spec.value.showCreateButton) {
     actions.push({
@@ -134,7 +134,7 @@ const pageActions = computed(() => {
       icon: 'i-lucide-plus',
       color: 'neutral',
       variant: 'solid',
-      to: { name: 'autoadmin-create', params: { modelLabel: `${modelLabel}` } },
+      to: { name: 'autoadmin-create', params: { modelKey } },
     })
   }
   return actions
@@ -147,7 +147,7 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
     await $fetch(`${apiPrefix}/bulk-delete`, {
       method: 'POST',
       body: {
-        modelLabel,
+        modelKey,
         rowLookups,
       },
     })
@@ -171,7 +171,7 @@ const genericBulkAction = async ({ action, rowLookups }: { action: string, rowLo
     const response = await $fetch<{ message: string, refresh?: boolean }>(`${apiPrefix}/bulk-actions`, {
       method: 'POST',
       body: {
-        modelLabel,
+        modelKey,
         rowLookups,
         action,
       },

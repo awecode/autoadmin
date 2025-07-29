@@ -3,11 +3,11 @@ import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 
 export default defineEventHandler(async (event) => {
-  const modelLabel = getRouterParam(event, 'modelLabel')
-  if (!modelLabel) {
+  const modelKey = getRouterParam(event, 'modelKey')
+  if (!modelKey) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Model label is required.',
+      statusMessage: 'Model key is required.',
     })
   }
   const columnDef = getRouterParam(event, 'columnDef')
@@ -17,11 +17,11 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Column definition is required.',
     })
   }
-  const cfg = getModelConfig(modelLabel)
+  const cfg = getModelConfig(modelKey)
   if (!cfg.m2m) {
     throw createError({
       statusCode: 404,
-      statusMessage: `No many-to-many relations provided for model ${modelLabel} during registration.`,
+      statusMessage: `No many-to-many relations provided for model ${modelKey} during registration.`,
     })
   }
   const relations = parseM2mRelations(cfg.model, cfg.m2m)

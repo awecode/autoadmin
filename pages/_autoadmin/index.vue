@@ -8,11 +8,11 @@ const searchModal = useOverlay().create(SearchModal)
 const modelLinks = useState('model-links', () => {
   const allCfg = useAdminRegistry().all()
   const links = allCfg.filter(cfg => cfg.enableIndex).map(cfg => ({
-    label: toTitleCase(cfg.label),
+    label: cfg.label,
     icon: cfg.icon || getIconForLabel(cfg.label),
-    to: { name: 'autoadmin-list', params: { modelLabel: `${cfg.label}` } },
+    to: { name: 'autoadmin-list', params: { modelKey: cfg.key } },
     type: 'link' as const,
-    createPath: cfg.create.enabled ? { name: 'autoadmin-create', params: { modelLabel: `${cfg.label}` } } : undefined,
+    createPath: cfg.create.enabled ? { name: 'autoadmin-create', params: { modelKey: cfg.key } } : undefined,
     searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
   }))
 

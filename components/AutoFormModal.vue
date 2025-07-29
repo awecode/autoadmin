@@ -1,32 +1,32 @@
 <script setup lang="ts">
 const props = defineProps<{
-  modelLabel: string
+  modelKey: string
   mode: 'create' | 'update'
   lookupValue?: string | number
   onSave: (data: Record<string, any>) => void
 }>()
 
-const modelLabel = props.modelLabel
-const cfg = useAdminRegistry().get(modelLabel)
+const modelKey = props.modelKey
+const cfg = useAdminRegistry().get(modelKey)
 
 if (!cfg) {
   throw createError({
     statusCode: 404,
-    statusMessage: `Model "${modelLabel}" is not registered.`,
+    statusMessage: `Model "${modelKey}" is not registered.`,
   })
 }
 
 const apiPrefix = cfg.apiPrefix
 
-const fetchEndpoint = props.mode === 'create' ? `${apiPrefix}/formspec/${modelLabel}` : `${apiPrefix}/formspec/${modelLabel}/update/${props.lookupValue}`
+const fetchEndpoint = props.mode === 'create' ? `${apiPrefix}/formspec/${modelKey}` : `${apiPrefix}/formspec/${modelKey}/update/${props.lookupValue}`
 const data = await $fetch<{ spec: FormSpec, values?: Record<string, any> }>(fetchEndpoint)
 const formSpec = data.spec
 const schema = props.mode === 'create' ? cfg.create.schema : cfg.update.schema
 const values = props.mode === 'create' ? {} : data.values
 
-const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${props.lookupValue}`)
+const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${props.lookupValue}`)
 
-const title = props.mode === 'create' ? `${cfg.list.title ?? toTitleCase(cfg.label ?? modelLabel)} > Create` : `${cfg.list.title ?? toTitleCase(cfg.label ?? modelLabel)} > Update ${formSpec.labelString ?? props.lookupValue}`
+const title = props.mode === 'create' ? `${cfg.list.title ?? cfg.label} > Create` : `${cfg.list.title ?? cfg.label} > Update ${formSpec.labelString ?? props.lookupValue}`
 </script>
 
 <template>

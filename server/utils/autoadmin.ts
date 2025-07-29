@@ -4,13 +4,13 @@ import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { getTableColumns } from 'drizzle-orm'
 
-export function getModelConfig(modelLabel: string): AdminModelConfig {
+export function getModelConfig(modelKey: string): AdminModelConfig {
   const registry = useAdminRegistry()
-  const cfg = registry.get(modelLabel)
+  const cfg = registry.get(modelKey)
   if (!cfg) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model "${modelLabel}" is not registered.`,
+      statusMessage: `Model "${modelKey}" is not registered.`,
     })
   }
   return cfg

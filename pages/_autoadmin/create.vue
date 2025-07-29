@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 
-const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
-const cfg = useAdminRegistry().get(modelLabel)
+const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
+const cfg = useAdminRegistry().get(modelKey)
 if (!cfg) {
   throw createError({
     statusCode: 404,
-    statusMessage: `Model "${modelLabel}" is not registered.`,
+    statusMessage: `Model "${modelKey}" is not registered.`,
   })
 }
 
 const apiPrefix = cfg.apiPrefix
 
-const listTitle = cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel)
-const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
+const listTitle = cfg.list?.title ?? cfg.label
+const listPath = { name: 'autoadmin-list', params: { modelKey } }
 
-const { data, error } = await useFetch<{ spec: FormSpec }>(`${apiPrefix}/formspec/${modelLabel}`, {
-  key: `formspec-${modelLabel}`,
+const { data, error } = await useFetch<{ spec: FormSpec }>(`${apiPrefix}/formspec/${modelKey}`, {
+  key: `formspec-${modelKey}`,
 })
 
 if (error.value) {
@@ -29,7 +29,7 @@ if (error.value) {
 const formSpec = data.value?.spec as FormSpec
 const schema = cfg.create.schema
 
-const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelLabel}`
+const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
 
 useHead({
   title: `${listTitle} > Create | ${getTitle()}`,

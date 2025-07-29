@@ -32,11 +32,11 @@ const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, look
 }
 
 export default defineEventHandler(async (event) => {
-  const modelLabel = getRouterParam(event, 'modelLabel')
-  if (!modelLabel) {
+  const modelKey = getRouterParam(event, 'modelKey')
+  if (!modelKey) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Model label is required.',
+      statusMessage: 'Model key is required.',
     })
   }
   const lookupValue = getRouterParam(event, 'lookupValue')
@@ -46,11 +46,11 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Lookup value is required.',
     })
   }
-  const cfg = getModelConfig(modelLabel)
+  const cfg = getModelConfig(modelKey)
   if (!cfg.update.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: `Model ${modelLabel} does not allow updates.`,
+      statusMessage: `Model "${modelKey}" does not allow updates.`,
     })
   }
   const model = cfg.model

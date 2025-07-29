@@ -3,11 +3,11 @@ import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/server/utils/relation'
 
 export default defineEventHandler(async (event) => {
-  const modelLabel = getRouterParam(event, 'modelLabel')
-  if (!modelLabel) {
+  const modelKey = getRouterParam(event, 'modelKey')
+  if (!modelKey) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Model label is required.',
+      statusMessage: 'Model key is required.',
     })
   }
   const columnName = getRouterParam(event, 'columnName')
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Column name is required.',
     })
   }
-  const cfg = getModelConfig(modelLabel)
+  const cfg = getModelConfig(modelKey)
   const relations = getTableForeignKeysByColumn(cfg.model, columnName)
   if (relations.length === 0) {
     throw createError({

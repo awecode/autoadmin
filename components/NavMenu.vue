@@ -27,9 +27,9 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
 const items = useState<NavigationMenuItem[][]>('sidebar-items', () => {
   const allModels = useAdminRegistry().all()
   const links = allModels.filter(model => model.enableIndex).map(model => ({
-    label: toTitleCase(model.label),
+    label: model.label,
     icon: model.icon || getIconForLabel(model.label),
-    to: { name: 'autoadmin-list', params: { modelLabel: `${model.label}` } },
+    to: { name: 'autoadmin-list', params: { modelKey: model.key } },
     type: 'link' as const,
   }))
 

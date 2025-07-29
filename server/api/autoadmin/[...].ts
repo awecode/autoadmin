@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const body = method !== 'GET' ? await readBody(event) : undefined
 
-  const cfg = getModelConfig(parsedRoute.modelLabel)
+  const cfg = getModelConfig(parsedRoute.modelKey)
 
   switch (parsedRoute.routeType) {
     case 'list':

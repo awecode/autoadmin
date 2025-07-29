@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 
-const modelLabel = (useRoute().params.modelLabel as string).replace(/\/$/, '')
-const cfg = useAdminRegistry().get(modelLabel)
+const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
+const cfg = useAdminRegistry().get(modelKey)
 if (!cfg) {
   throw createError({
     statusCode: 404,
-    statusMessage: `Model "${modelLabel}" is not registered.`,
+    statusMessage: `Model "${modelKey}" is not registered.`,
   })
 }
 
 const apiPrefix = cfg.apiPrefix
 
-const listTitle = cfg.list?.title ?? toTitleCase(cfg.label ?? modelLabel)
-const listPath = { name: 'autoadmin-list', params: { modelLabel: `${modelLabel}` } }
+const listTitle = cfg.list?.title ?? cfg.label
+const listPath = { name: 'autoadmin-list', params: { modelKey } }
 const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 
-const { data, error } = await useFetch<{ spec: FormSpec, values?: Record<string, any> }>(`${apiPrefix}/formspec/${modelLabel}/update/${lookupValue}`, {
-  key: `formspec-update-${modelLabel}-${lookupValue}`,
+const { data, error } = await useFetch<{ spec: FormSpec, values?: Record<string, any> }>(`${apiPrefix}/formspec/${modelKey}/update/${lookupValue}`, {
+  key: `formspec-update-${modelKey}-${lookupValue}`,
 })
 
 if (error.value) {
@@ -30,7 +30,7 @@ const formSpec = data.value?.spec as FormSpec
 const values = data.value?.values as Record<string, any>
 const schema = cfg.update.schema
 
-const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelLabel}/${lookupValue}`
+const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${lookupValue}`
 
 useHead({
   title: `${listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getTitle()}`,

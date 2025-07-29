@@ -1,7 +1,7 @@
 export type RouteType = 'list' | 'create' | 'detail' | 'update' | 'delete'
 
 export interface ParsedRoute {
-  modelLabel: string
+  modelKey: string
   lookupValue?: string
   routeType: RouteType
 }
@@ -14,20 +14,20 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
     throw new Error('Invalid route: empty path')
   }
 
-  const modelLabel = segments[0]!
+  const modelKey = segments[0]!
 
   // Pattern matching based on URL structure and HTTP method
   if (segments.length === 1) {
     // GET <model-label>: List
     if (method === 'GET') {
       return {
-        modelLabel,
+        modelKey,
         routeType: 'list',
       }
     } else if (method === 'POST') {
       // POST <model-label> <body>: Create
       return {
-        modelLabel,
+        modelKey,
         routeType: 'create',
       }
     }
@@ -39,21 +39,21 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
     if (method === 'GET') {
       // GET <model-label>/<lookup-field-value>: Detail
       return {
-        modelLabel,
+        modelKey,
         lookupValue,
         routeType: 'detail',
       }
     } else if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
       // POST/PATCH/PUT <model-label>/<lookup-field-value> <body>: Update
       return {
-        modelLabel,
+        modelKey,
         lookupValue,
         routeType: 'update',
       }
     } else if (method === 'DELETE') {
       // DELETE <model-label>/<lookup-field-value>: Delete
       return {
-        modelLabel,
+        modelKey,
         lookupValue,
         routeType: 'delete',
       }
