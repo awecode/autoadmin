@@ -109,9 +109,9 @@ describe('api', async () => {
 
   it('should return an error when creating a tag with a duplicate name', async () => {
     try {
-    await $fetch(`${apiPrefix}/tags`, {
-      method: 'POST',
-      body: { name: 'Tag 1', color: 'red' },
+      await $fetch(`${apiPrefix}/tags`, {
+        method: 'POST',
+        body: { name: 'Tag 1', color: 'red' },
       })
     } catch (error) {
       expect((error as any).data.statusCode).toBe(400)
@@ -215,6 +215,27 @@ describe('api', async () => {
     expect(updatedPost!.authorId__name).toBe('User 2')
     expect(updatedPost!.categoryId__name).toBe('Category 2')
     expect(updatedPost!.field).toBe('150 views')
+  })
+
+  it('should return an error when deleting a user that has posts', async () => {
+    // get all posts
+    const postsResponse = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/posts`)
+    const postIds = postsResponse.results.map((post: any) => post.id)
+    expect(postIds).toBeDefined()
+    expect(postIds.length).toBeGreaterThan(0)
+    const postId = postIds[0]
+    // get post detail using update formspec
+    const formSpec = await $fetch<any>(`${apiPrefix}/formspec/posts/update/${postId}`)
+    const userId = formSpec.spec.values.authorId
+    // send delete request
+    try {
+      await $fetch(`${apiPrefix}/users/${userId}`, {
+        method: 'DELETE',
+      })
+    } catch (error) {
+      expect((error as any).data.statusCode).toBe(400)
+      expect((error as any).data.statusMessage).toBe('Cannot delete record because it is referenced by another record')
+    }
   })
 
   it('should return correct filters structure for posts', async () => {

@@ -499,16 +499,21 @@ const performBulkAction = async () => {
                 v-if="defaultActions?.includes('edit') && spec.updatePage"
                 :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
               >
-                <UButton color="neutral" icon="i-lucide-square-pen" variant="ghost" aria-label="Edit">
+                <UButton
+                  aria-label="Edit"
+                  color="neutral"
+                  icon="i-lucide-square-pen"
+                  variant="ghost"
+                >
                   <!-- Edit -->
                 </UButton>
               </NuxtLink>
               <UButton
                 v-if="defaultActions?.includes('delete') && spec.deleteEndpoint && spec.enableDelete"
+                aria-label="Delete"
                 color="error"
                 icon="i-lucide-trash"
                 variant="ghost"
-                aria-label="Delete"
                 @click="handleDelete(scope.row.original[spec.lookupColumnName])"
               >
                 <!-- Delete -->
