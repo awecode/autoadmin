@@ -39,13 +39,13 @@ describe('tags', async () => {
     await page.goto(url('/admin/tags'), { waitUntil: 'hydration' })
     // Delete Tag 1 and Tag 2 if they exist
     for (const tagName of ['Tag 1E', 'Tag 2E']) {
-      const deleteButton = await page.$(`tr:has(td:has-text("${tagName}")) button:has-text("Delete")`)
+      const deleteButton = await page.$(`tr:has(td:has-text("${tagName}")) button[aria-label="Delete"]`)
       if (deleteButton) {
         await deleteButton.click()
         // wait for dialog to open
         await page.waitForTimeout(1000)
         // find button with text Delete inside the dialog
-        const confirmDelete = await page.$('[data-dismissable-layer] button:has-text("Delete")')
+        const confirmDelete = await page.$('[data-dismissable-layer] button[aria-label="Delete"]')
         expect(confirmDelete).toBeTruthy()
         if (confirmDelete) {
           await confirmDelete.click()
@@ -96,7 +96,7 @@ describe('tags', async () => {
     const tr = await page.$('tr:has(td:has-text("Tag 1E"))')
     expect(tr).toBeTruthy()
     // find button with text Edit inside a td of a tr that has "Tag 1" text inside second td of the same tr
-    const editButton = await page.$('tr:has(td:has-text("Tag 1E")) button:has-text("Edit")')
+    const editButton = await page.$('tr:has(td:has-text("Tag 1E")) button[aria-label="Edit"]')
     expect(editButton).toBeTruthy()
     await editButton?.click()
     await page.waitForTimeout(1000)
@@ -126,11 +126,11 @@ describe('users', async () => {
     const page = await createPage()
     await page.goto(url('/admin/users'), { waitUntil: 'hydration' })
     // Delete User 1 if it exists
-    const deleteButton = await page.$('tr:has(td:has-text("User 1E")) button:has-text("Delete")')
+    const deleteButton = await page.$('tr:has(td:has-text("User 1E")) button[aria-label="Delete"]')
     if (deleteButton) {
       await deleteButton.click()
       await page.waitForTimeout(1000)
-      const confirmDelete = await page.$('[data-dismissable-layer] button:has-text("Delete")')
+      const confirmDelete = await page.$('[data-dismissable-layer] button[aria-label="Delete"]')
       expect(confirmDelete).toBeTruthy()
       if (confirmDelete) {
         await confirmDelete.click()

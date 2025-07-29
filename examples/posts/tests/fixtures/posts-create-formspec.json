@@ -31,7 +31,10 @@
         "label": "Post Content",
         "type": "rich-text",
         "required": false,
-        "rules": {}
+        "rules": {},
+        "fieldAttrs": {
+          "class": "w-full"
+        }
       },
       {
         "name": "featuredImage",
@@ -39,6 +42,9 @@
         "type": "image",
         "required": false,
         "rules": {},
+        "fieldAttrs": {
+          "class": "w-1/3"
+        },
         "fileConfig": {
           "accept": [
             ".jpg",

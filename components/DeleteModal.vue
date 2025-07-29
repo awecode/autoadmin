@@ -20,12 +20,14 @@ const description = 'Are you sure you want to delete this item? This action cann
         </p>
         <div class="flex justify-end gap-3">
           <UButton
+            aria-label="Cancel"
             color="neutral"
             label="Cancel"
             variant="soft"
             @click="$emit('close')"
           />
           <UButton
+            aria-label="Delete"
             color="error"
             label="Delete"
             variant="solid"
