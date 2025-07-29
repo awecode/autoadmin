@@ -1,5 +1,5 @@
 import type { Table } from 'drizzle-orm'
-import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
@@ -46,13 +46,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Lookup value is required.',
     })
   }
-  const cfg = useAdminRegistry().get(modelLabel)
-  if (!cfg) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: `Model ${modelLabel} not registered.`,
-    })
-  }
+  const cfg = getModelConfig(modelLabel)
   if (!cfg.update.enabled) {
     throw createError({
       statusCode: 404,

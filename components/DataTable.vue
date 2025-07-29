@@ -434,8 +434,7 @@ const performBulkAction = async () => {
         color="error"
         icon="i-lucide-triangle-alert"
         variant="subtle"
-        :description="error.message || 'Failed to fetch data'"
-        :title="error.statusMessage || 'An error occurred'"
+        :title="error.statusMessage || error.message || 'An error occurred while fetching data'"
       />
       <div v-else-if="status === 'pending'">
         <UProgress animation="swing" color="neutral" />

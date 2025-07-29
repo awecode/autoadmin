@@ -1,5 +1,4 @@
-import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
-import { getLabelColumnFromModel } from '#layers/autoadmin/server/utils/autoadmin'
+import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 
 export default defineEventHandler(async (event) => {
   const modelLabel = getRouterParam(event, 'modelLabel')
@@ -16,13 +15,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Column definition is required.',
     })
   }
-  const cfg = useAdminRegistry().get(modelLabel)
-  if (!cfg) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: `Model ${modelLabel} not registered.`,
-    })
-  }
+  const cfg = getModelConfig(modelLabel)
   if (!cfg.o2m) {
     throw createError({
       statusCode: 404,

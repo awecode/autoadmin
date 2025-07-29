@@ -12,7 +12,7 @@ const cfg = useAdminRegistry().get(modelLabel)
 if (!cfg) {
   throw createError({
     statusCode: 404,
-    statusMessage: `Model ${modelLabel} not registered.`,
+    statusMessage: `Model "${modelLabel}" is not registered.`,
   })
 }
 

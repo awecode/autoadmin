@@ -165,20 +165,20 @@ export default defineNuxtPlugin(() => {
   })
 
   // Tags - Simple color-coded tags
-  registry.register(tags, {
-    icon: 'i-lucide-tag',
-    fields: [
-      {
-        name: 'color',
-        type: 'text',
-        inputAttrs: {
-          type: 'color',
-        },
-        help: 'Choose a color for this tag',
-      },
-    ],
-    list: {
-      enableFilter: false, // Disable filters
-    },
-  })
+  // registry.register(tags, {
+  //   icon: 'i-lucide-tag',
+  //   fields: [
+  //     {
+  //       name: 'color',
+  //       type: 'text',
+  //       inputAttrs: {
+  //         type: 'color',
+  //       },
+  //       help: 'Choose a color for this tag',
+  //     },
+  //   ],
+  //   list: {
+  //     enableFilter: false, // Disable filters
+  //   },
+  // })
 })
