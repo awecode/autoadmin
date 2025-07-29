@@ -53,11 +53,14 @@ const isDark = computed({
     colorMode.preference = _isDark ? 'dark' : 'light'
   },
 })
+
+const mobileMenuOpen = ref(false)
 </script>
 
 <template>
+  <!-- Desktop Sidebar -->
   <div
-    class="rounded-lg border border-gray-200 dark:border-gray-800 py-4 transition-all duration-300 ease-in-out"
+    class="hidden md:block rounded-lg border border-gray-200 dark:border-gray-800 py-4 transition-all duration-300 ease-in-out"
     :class="{ 'px-4': !collapsed }"
   >
     <div class="flex justify-between items-center mb-4 transition-all duration-300 ease-in-out">
@@ -90,7 +93,66 @@ const isDark = computed({
       />
     </div>
   </div>
-  <div class="fixed bottom-4 left-4">
+
+  <!-- Mobile Top Bar -->
+  <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <UButton
+          color="neutral"
+          icon="i-lucide-menu"
+          variant="ghost"
+          @click="mobileMenuOpen = !mobileMenuOpen"
+        />
+        <div class="text-lg font-bold">
+          {{ getTitle() }}
+        </div>
+      </div>
+      <ClientOnly v-if="!colorMode?.forced">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
+          @click="isDark = !isDark"
+        />
+      </ClientOnly>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div
+      v-if="mobileMenuOpen"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40"
+      @click="mobileMenuOpen = false"
+    ></div>
+
+    <!-- Mobile Menu Sidebar -->
+    <div
+      v-if="mobileMenuOpen"
+      class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 transform transition-transform duration-300 ease-in-out"
+    >
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+        <div class="text-lg font-bold">
+          {{ getTitle() }}
+        </div>
+        <UButton
+          color="neutral"
+          icon="i-lucide-x"
+          variant="ghost"
+          @click="mobileMenuOpen = false"
+        />
+      </div>
+      <div class="p-4">
+        <UNavigationMenu
+          orientation="vertical"
+          :items="items"
+          @click="mobileMenuOpen = false"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Theme Toggle -->
+  <div class="hidden md:block fixed bottom-4 left-4">
     <ClientOnly v-if="!colorMode?.forced">
       <UTooltip placement="left" :delay="0" :text="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
         <UButton
