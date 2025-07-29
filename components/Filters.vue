@@ -51,18 +51,19 @@ function getFilterModel(filter: { field: string, type?: string }) {
   })
 }
 
+// Mobile drawer state
+const mobileFiltersOpen = ref(false)
+
 // Clear all filters
 function clearAllFilters() {
   filterQuery.value = {}
+  mobileFiltersOpen.value = false
 }
 
 // Check if any filters are active
 const hasActiveFilters = computed(() => {
   return Object.keys(filterQuery.value).length > 0
 })
-
-// Mobile drawer state
-const mobileFiltersOpen = ref(false)
 
 // Boolean filter options
 const booleanOptions = [
@@ -93,16 +94,28 @@ const booleanOptions = [
     </div>
 
     <!-- Single set of filters - shown on desktop, hidden on mobile unless drawer open -->
-    <div :class="mobileFiltersOpen ? 'fixed inset-0 bg-white dark:bg-gray-900 z-50 p-4 md:static md:bg-transparent md:z-auto md:p-0' : 'hidden md:contents'">
+    <div :class="mobileFiltersOpen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 z-50 p-4 border-t border-gray-200 dark:border-gray-800 max-h-[80vh] overflow-y-auto md:static md:bg-transparent md:z-auto md:p-0 md:border-0 md:max-h-none md:overflow-visible' : 'hidden md:contents'">
       <!-- Mobile drawer header -->
       <div v-if="mobileFiltersOpen" class="md:hidden flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-800 pb-4">
-        <h3 class="text-lg font-semibold">
-          Filters
-        </h3>
+        <div class="flex gap-2">
+          <h3 class="text-lg font-semibold">
+            Filters
+          </h3>
+          <UButton
+            v-if="hasActiveFilters"
+            color="neutral"
+            icon="i-lucide-rotate-ccw"
+            size="xs"
+            variant="soft"
+            @click="clearAllFilters"
+          >
+            Clear Filters
+          </UButton>
+        </div>
         <UButton
           color="neutral"
           icon="i-lucide-x"
-          variant="ghost"
+          variant="soft"
           @click="mobileFiltersOpen = false"
         />
       </div>
@@ -171,15 +184,15 @@ const booleanOptions = [
 
         <!-- Clear button -->
         <UButton
-          v-if="hasActiveFilters"
+          v-if="hasActiveFilters && !mobileFiltersOpen"
+          class="self-end"
           color="neutral"
           icon="i-lucide-x"
           size="xs"
           variant="soft"
-          :class="mobileFiltersOpen ? 'w-full mt-4' : 'self-end'"
           @click="clearAllFilters"
         >
-          Clear{{ mobileFiltersOpen ? ' All Filters' : '' }}
+          Clear
         </UButton>
       </div>
     </div>
