@@ -71,6 +71,9 @@ export default defineNuxtPlugin(() => {
         name: 'content',
         type: 'rich-text',
         label: 'Post Content',
+        fieldAttrs: {
+          class: 'w-full',
+        },
       },
       {
         name: 'excerpt',
@@ -87,6 +90,9 @@ export default defineNuxtPlugin(() => {
           accept: ['.jpg', '.jpeg', '.png', '.webp'],
           prefix: 'posts/',
           maxSize: 5 * 1024 * 1024, // 5MB
+        },
+        fieldAttrs: {
+          class: 'w-1/3',
         },
       },
     ],
