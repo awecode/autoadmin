@@ -145,7 +145,6 @@ const mobileMenuOpen = ref(false)
         <UNavigationMenu
           orientation="vertical"
           :items="items"
-          @click="mobileMenuOpen = false"
         />
       </div>
     </div>
