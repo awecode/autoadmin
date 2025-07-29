@@ -107,6 +107,19 @@ describe('api', async () => {
     }
   })
 
+  it('should return an error when creating a tag with a duplicate name', async () => {
+    try {
+    await $fetch(`${apiPrefix}/tags`, {
+      method: 'POST',
+      body: { name: 'Tag 1', color: 'red' },
+      })
+    } catch (error) {
+      expect((error as any).data.statusCode).toBe(400)
+      expect((error as any).data.statusMessage).toBe('Validation Error')
+      expect((error as any).data.data.message).toBe('One of the tags with this name already exists.')
+    }
+  })
+
   it('should create a post', async () => {
     // Get formspec for posts
     const formSpec = await $fetch(`${apiPrefix}/formspec/posts`)
