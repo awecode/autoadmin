@@ -17,7 +17,7 @@ export function colKey(col: Column) {
 
 export const genericPaginationQuerySchema = z.object({
   page: z.coerce.number().default(1),
-  pageSize: z.coerce.number().positive().max(
+  size: z.coerce.number().positive().max(
     100,
     `Page size must be less than or equal to 100`,
   ).default(10),
@@ -38,13 +38,13 @@ export async function getPaginatedResponse<T>(
   countQuery: any,
   query: any,
 ): Promise<PaginatedResponse<T>> {
-  const { page, pageSize } = genericPaginationQuerySchema.parse(query)
-  const offset = (page - 1) * pageSize
+  const { page, size } = genericPaginationQuerySchema.parse(query)
+  const offset = (page - 1) * size
 
   const [{ resultCount }] = await countQuery
 
   const results = await baseQuery
-    .limit(pageSize)
+    .limit(size)
     .offset(offset)
 
   return {
@@ -52,8 +52,8 @@ export async function getPaginatedResponse<T>(
     pagination: {
       count: Number(resultCount),
       page,
-      size: pageSize,
-      pages: Math.ceil(Number(resultCount) / pageSize),
+      size,
+      pages: Math.ceil(Number(resultCount) / size),
     },
   }
 }

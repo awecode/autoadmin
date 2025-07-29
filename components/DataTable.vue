@@ -82,7 +82,7 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] |
 
 const search = useRouteQuery('q', '', { route, router })
 const page = useRouteQuery('page', 1, { route, router, transform: Number })
-const pageSize = useRouteQuery('size', 10, { route, router, transform: Number })
+const size = useRouteQuery('size', 10, { route, router, transform: Number })
 
 const filterQuery = useRouteQuery('filters', '', {
   route,
@@ -104,7 +104,7 @@ const filterQuery = useRouteQuery('filters', '', {
 const query = computed(() => ({
   ordering: route.query.sort,
   page: page.value,
-  pageSize: pageSize.value,
+  size: size.value,
   search: search.value === '' ? undefined : search.value,
   ...((filters ? filterQuery.value : {}) as Record<string, string>),
 }))
