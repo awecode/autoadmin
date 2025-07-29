@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     list: {
       title: 'All Tags',
       searchPlaceholder: 'Search all tags',
-      // searchFields: ['name'],
+      searchFields: ['name'],
     },
   }
   const cfg = useAdminRegistry().configure(tags, options)

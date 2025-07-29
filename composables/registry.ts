@@ -199,11 +199,11 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, apiPre
 
 // Global registry - maintains state across the application
 // TODO May be use memory storage instead of globalThis
-function getRegistry(): Map<string, AdminModelConfig> {
+function getRegistry(): Map<string, AdminModelConfig<Table>> {
   // @ts-expect-error: attach to global for persistence
   if (!globalThis.__admin_registry__) {
     // @ts-expect-error: attach to global for persistence
-    globalThis.__admin_registry__ = new Map<string, AdminModelConfig>()
+    globalThis.__admin_registry__ = new Map<string, AdminModelConfig<Table>>()
   }
 
   // @ts-expect-error: attach to global for persistence
@@ -218,7 +218,7 @@ export function useAdminRegistry() {
   function configure<T extends Table>(
     model: T,
     opts: AdminModelOptions<T> = {},
-  ): AdminModelConfig<T> {
+  ) {
     const label = (opts.label ?? getTableName(model)) as string
 
     const columns = getTableColumns(model)
@@ -266,7 +266,7 @@ export function useAdminRegistry() {
     opts: AdminModelOptions<T> = {},
   ): void {
     const cfg = configure(model, opts)
-    registry.set(cfg.label, cfg)
+    registry.set(cfg.label, cfg as unknown as AdminModelConfig<Table>)
   }
 
   function getModelConfig<T extends Table>(
