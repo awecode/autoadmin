@@ -37,7 +37,7 @@ useHead({
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <AutoAdmin>
     <div class="max-w-2xl mx-auto">
       <div class="flex items-center mb-6">
         <NuxtLink
@@ -61,5 +61,5 @@ useHead({
         :spec="formSpec"
       />
     </div>
-  </div>
+  </AutoAdmin>
 </template>
