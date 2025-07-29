@@ -1,9 +1,10 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { Table } from 'drizzle-orm'
 import { eq, inArray } from 'drizzle-orm'
 import { useDb } from '../utils/db'
 import { handleDrizzleError } from '../utils/drizzle'
 
-export async function deleteRecord(cfg: AdminModelConfig, lookupValue: string): Promise<any> {
+export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string): Promise<any> {
   const modelLabel = cfg.label
   if (!cfg.delete.enabled) {
     throw createError({

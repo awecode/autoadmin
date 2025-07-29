@@ -1,10 +1,11 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { Table } from 'drizzle-orm'
 import { useDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { unwrapZodType } from '../utils/zod'
 
-export async function createRecord(cfg: AdminModelConfig, data: any): Promise<any> {
+export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, data: any): Promise<any> {
   const modelLabel = cfg.label
   if (!cfg.create.enabled) {
     throw createError({

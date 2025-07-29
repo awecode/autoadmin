@@ -1,11 +1,12 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { Table } from 'drizzle-orm'
 import { eq } from 'drizzle-orm'
 import { useDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { unwrapZodType } from '../utils/zod'
 
-export async function updateRecord(cfg: AdminModelConfig, lookupValue: string, data: any): Promise<any> {
+export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string, data: any): Promise<any> {
   const modelLabel = cfg.label
   if (!cfg.update.enabled) {
     throw createError({

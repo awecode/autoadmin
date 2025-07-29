@@ -36,7 +36,7 @@ export function getPrimaryKeyColumn(table: Table) {
   return primaryKeyColumns[0]!
 }
 
-export function parseO2mRelation(cfg: AdminModelConfig, table: Table, name: string) {
+export function parseO2mRelation<T extends Table>(cfg: AdminModelConfig<T>, table: Table, name: string) {
   const model = cfg.model
   const modelLabel = cfg.label
   const foreignPrimaryColumn = getPrimaryKeyColumn(table)
@@ -299,7 +299,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
   return { ...formSpec, fields: updatedFields }
 }
 
-export async function saveO2mRelation(db: DbType, cfg: AdminModelConfig, preprocessed: any, result: { [x: string]: any }[]) {
+export async function saveO2mRelation<T extends Table>(db: DbType, cfg: AdminModelConfig<T>, preprocessed: any, result: { [x: string]: any }[]) {
   if (cfg.o2m) {
     const modelLabel = cfg.label
     for (const [name, table] of Object.entries(cfg.o2m)) {
