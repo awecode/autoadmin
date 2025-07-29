@@ -294,13 +294,13 @@ useHead({
   title: `${title.value} | ${getTitle()}`,
 })
 
-defineExpose({ data, status, refresh, sort, page, pageSize, filterQuery, search, reset })
+defineExpose({ data, status, refresh, sort, page, size, filterQuery, search, reset })
 
 async function reset() {
   // Reset the filters and pagination
   filterQuery.value = {}
   page.value = 1
-  pageSize.value = 10
+  // size.value = 10
   search.value = ''
   sort.value = undefined
 
