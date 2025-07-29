@@ -82,7 +82,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Fi
   return Object.fromEntries(fields)
 }
 
-export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<string, Column>, columnTypes: Record<string, { type: FieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
+export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<ColKey<T>, Column>, columnTypes: Record<string, { type: FieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
   if (cfg.list.columns) {
@@ -93,7 +93,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
         if (def in tableColumns) {
           return {
             id: def,
-            accessorKey: def,
+            accessorKey: def as string,
             header: toTitleCase(def),
             type: columnTypes[def]!.type,
             sortKey: cfg.list.enableSort ? def : undefined,

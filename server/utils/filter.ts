@@ -23,7 +23,7 @@ export interface CustomFilter {
   queryConditions: (db: DbType, value: any) => Promise<SQL[]>
 }
 
-async function prepareCustomFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
+async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
   return {
     field: filter.parameterName,
     label: filter.label,
@@ -33,7 +33,7 @@ async function prepareCustomFilter(cfg: AdminModelConfig, db: DbType, columnType
   }
 }
 
-async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
+async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
   const type = definedType || columnTypes[field]?.type
   if (type === 'boolean') {
     return {
@@ -105,7 +105,7 @@ async function prepareFilter(cfg: AdminModelConfig, db: DbType, columnTypes: Col
   throw new Error(`Invalid filter: ${JSON.stringify(field)}`)
 }
 
-async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
+async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
       return await prepareFilter(cfg, db, columnTypes, filter)
@@ -128,7 +128,7 @@ async function prepareFilters(cfg: AdminModelConfig, db: DbType, filters: Filter
   return parsedFiltersWithOriginalType
 }
 
-export async function getFilters(cfg: AdminModelConfig, db: DbType, columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
+export async function getFilters<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const filters = cfg.list?.filterFields
   if (filters) {
     return await prepareFilters(cfg, db, filters, columnTypes, metadata, query)

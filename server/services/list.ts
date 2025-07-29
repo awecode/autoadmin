@@ -7,7 +7,7 @@ import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
-export async function listRecords(cfg: AdminModelConfig, query: Record<string, any> = {}): Promise<any> {
+export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, query: Record<string, any> = {}): Promise<any> {
   const model = cfg.model
   const tableColumns = cfg.columns
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
@@ -76,7 +76,7 @@ export async function listRecords(cfg: AdminModelConfig, query: Record<string, a
     const allColumns = { ...tableColumns, ...foreignColumnSelections }
     baseQuery = db.select(allColumns).from(model)
   } else {
-    const columnNames = spec.columns.map(column => column.accessorKey as keyof typeof model)
+    const columnNames = spec.columns.map(column => column.accessorKey)
     // only select the required column names from the table, not all columns
     const selectedColumns = Object.fromEntries(
       columnNames
