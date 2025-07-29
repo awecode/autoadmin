@@ -1,8 +1,8 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-none">
-    <div class="flex gap-4">
+  <div class="container max-w-none">
+    <div class="flex-col flex md:flex-row gap-4">
       <Sidebar />
-      <div class="flex-1 min-w-0">
+      <div class="flex-1 min-w-0 p-4">
         <DataTable />
       </div>
     </div>

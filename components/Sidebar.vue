@@ -95,7 +95,7 @@ const mobileMenuOpen = ref(false)
   </div>
 
   <!-- Mobile Top Bar -->
-  <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+  <div class="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <UButton
