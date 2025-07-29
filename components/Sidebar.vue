@@ -119,35 +119,53 @@ const mobileMenuOpen = ref(false)
     </div>
 
     <!-- Mobile Menu Overlay -->
-    <div
-      v-if="mobileMenuOpen"
-      class="fixed inset-0 bg-black bg-opacity-50 z-40"
-      @click="mobileMenuOpen = false"
-    ></div>
+    <Transition
+      enter-active-class="transition-opacity duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="mobileMenuOpen"
+        class="fixed inset-0 bg-black bg-opacity-50 z-40"
+        @click="mobileMenuOpen = false"
+      ></div>
+    </Transition>
 
     <!-- Mobile Menu Sidebar -->
-    <div
-      v-if="mobileMenuOpen"
-      class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 transform transition-transform duration-300 ease-in-out"
+    <Transition
+      enter-active-class="transition-transform duration-300 ease-out"
+      enter-from-class="-translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-250 ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="-translate-x-full"
     >
-      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-        <div class="text-lg font-bold">
-          {{ getTitle() }}
+      <div
+        v-if="mobileMenuOpen"
+        class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50"
+      >
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+          <div class="text-lg font-bold">
+            {{ getTitle() }}
+          </div>
+          <UButton
+            color="neutral"
+            icon="i-lucide-x"
+            variant="ghost"
+            @click="mobileMenuOpen = false"
+          />
         </div>
-        <UButton
-          color="neutral"
-          icon="i-lucide-x"
-          variant="ghost"
-          @click="mobileMenuOpen = false"
-        />
+        <div class="p-4">
+          <UNavigationMenu
+            orientation="vertical"
+            :items="items"
+          />
+        </div>
       </div>
-      <div class="p-4">
-        <UNavigationMenu
-          orientation="vertical"
-          :items="items"
-        />
-      </div>
-    </div>
+    </Transition>
   </div>
 
   <!-- Desktop Theme Toggle -->
