@@ -117,11 +117,12 @@ export default defineNuxtPlugin(() => {
 
 ## Table/Model Registration Options
 
-This is the main configuration object passed to `registry.register(model, options)`.
+This is the main configuration object passed to `registry.register(model, options)`. All options are optional.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `label` | `string` | Table name | Display name for the model (e.g., in the sidebar). |
+| `key` | `string` | tableName | Unique identifier for the model. Used in URLs and API endpoints. Pass if you have two models with the same table name. |
 | `icon` | `string` | `undefined` | Iconify icon name. Auto-detected for common names. |
 | `labelColumnName` | `string` | `name`, `title`, etc. | Column used for display labels in relationships and select options. |
 | `lookupColumnName` | `string` | `id` | The primary or unique key used to fetch single records. |

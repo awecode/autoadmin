@@ -177,7 +177,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, key: s
       title: toTitleCase(label),
       endpoint: `${apiPrefix}/${key}`,
     },
-    update: { route: { name: 'autoadmin-update', params: { key: key } } },
+    update: { route: { name: 'autoadmin-update', params: { modelKey: key } } },
     delete: { endpoint: `${apiPrefix}/${key}` },
   }) as unknown as AdminModelConfig<T>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
