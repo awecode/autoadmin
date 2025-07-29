@@ -60,7 +60,7 @@ const mobileMenuOpen = ref(false)
 <template>
   <!-- Desktop Sidebar -->
   <div
-    class="hidden md:block rounded-lg border border-gray-200 dark:border-gray-800 py-4 transition-all duration-300 ease-in-out"
+    class="hidden md:block rounded-lg border border-gray-200 dark:border-gray-800 py-4 transition-all duration-300 ease-in-out mt-2 ml-1"
     :class="{ 'px-4': !collapsed }"
   >
     <div class="flex justify-between items-center mb-4 transition-all duration-300 ease-in-out">

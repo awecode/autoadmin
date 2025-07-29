@@ -51,7 +51,6 @@ export interface ListColumnDef<T extends Table> {
 const defaultLookupColumnName = 'id'
 
 type ListOptions<T extends Table = Table> = {
-  enabled: boolean
   showCreateButton: boolean
   enableSearch: boolean
   enableSort: boolean
@@ -153,7 +152,6 @@ const getStaticDefaultOptions = () => ({
   enableIndex: true,
   lookupColumnName: defaultLookupColumnName,
   list: {
-    enabled: true,
     enableSort: true,
     enableFilter: true,
     showCreateButton: true,
