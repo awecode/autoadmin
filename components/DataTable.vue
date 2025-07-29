@@ -383,11 +383,12 @@ const performBulkAction = async () => {
         </slot>
       </div>
     </slot>
-    <div class="flex-grow overflow-hidden">
+
+    <slot name="filters">
       <div class="flex flex-wrap items-center gap-8">
         <div>
           <div class="text-sm text-dimmed mb-1 min-h-5">
-            <!-- Search {{ title }} -->
+          <!-- Search {{ title }} -->
           </div>
           <UInput
             v-if="spec.enableSearch"
@@ -425,108 +426,108 @@ const performBulkAction = async () => {
           </div>
         </div>
       </div>
+    </slot>
 
-      <slot name="table" :rows="data?.results">
-        <UAlert
-          v-if="error"
-          color="error"
-          icon="i-lucide-triangle-alert"
-          variant="subtle"
-          :description="error.message || 'Failed to fetch data'"
-          :title="error.statusMessage || 'An error occurred'"
-        />
-        <div v-else-if="status === 'pending'">
-          <UProgress animation="swing" color="neutral" />
-        </div>
-        <UTable
-          v-else-if="data && status === 'success'"
-          ref="table"
-          v-model:sorting="sort"
-          sticky
-          class="mt-8"
-          :columns="computedColumns"
-          :data="data?.results"
-          :sorting-options="{
-            manualSorting: true,
-          }"
-          @update:sorting="sort = $event"
+    <slot name="table" :rows="data?.results">
+      <UAlert
+        v-if="error"
+        color="error"
+        icon="i-lucide-triangle-alert"
+        variant="subtle"
+        :description="error.message || 'Failed to fetch data'"
+        :title="error.statusMessage || 'An error occurred'"
+      />
+      <div v-else-if="status === 'pending'">
+        <UProgress animation="swing" color="neutral" />
+      </div>
+      <UTable
+        v-else-if="data && status === 'success'"
+        ref="table"
+        v-model:sorting="sort"
+        class="mt-8"
+        :columns="computedColumns"
+        :data="data?.results"
+        :sorting-options="{
+          manualSorting: true,
+        }"
+        @update:sorting="sort = $event"
+      >
+        <!-- Dynamic cell templates for all columns except actions -->
+        <template
+          v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select'].includes(col.id ?? ''))"
+          :key="column.id"
+          #[`${column.id}-cell`]="{ cell }"
         >
-          <!-- Dynamic cell templates for all columns except actions -->
-          <template
-            v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select'].includes(col.id ?? ''))"
-            :key="column.id"
-            #[`${column.id}-cell`]="{ cell }"
-          >
-            <template v-if="'type' in cell.column.columnDef">
-              <template v-if="cell.column.columnDef.type === 'boolean'">
-                <span v-if="cell.getValue()">Yes</span>
-                <span v-else>No</span>
-              </template>
-              <template v-else-if="cell.column.columnDef.type === 'file' && cell.getValue()">
-                <!-- Open file in new tab -->
-                <NuxtLink class="flex items-center underline" target="_blank" :to="cell.getValue() as string">
-                  <UIcon class="inline-block mr-1" name="i-lucide-file" />
-                  <!-- Show file name -->
-                  <span class="text-sm">{{ getFileNameFromUrl(cell.getValue() as string) }}</span>
-                </NuxtLink>
-              </template>
-              <template v-else-if="cell.column.columnDef.type === 'image' && cell.getValue()">
-                <NuxtLink target="_blank" :to="cell.getValue() as string">
-                  <img class="w-10 h-10 rounded-md" :src="cell.getValue() as string" />
-                </NuxtLink>
-              </template>
+          <template v-if="'type' in cell.column.columnDef">
+            <template v-if="cell.column.columnDef.type === 'boolean'">
+              <span v-if="cell.getValue()">Yes</span>
+              <span v-else>No</span>
+            </template>
+            <template v-else-if="cell.column.columnDef.type === 'file' && cell.getValue()">
+              <!-- Open file in new tab -->
+              <NuxtLink class="flex items-center underline" target="_blank" :to="cell.getValue() as string">
+                <UIcon class="inline-block mr-1" name="i-lucide-file" />
+                <!-- Show file name -->
+                <span class="text-sm">{{ getFileNameFromUrl(cell.getValue() as string) }}</span>
+              </NuxtLink>
+            </template>
+            <template v-else-if="cell.column.columnDef.type === 'image' && cell.getValue()">
+              <NuxtLink target="_blank" :to="cell.getValue() as string">
+                <img class="w-10 h-10 rounded-md" :src="cell.getValue() as string" />
+              </NuxtLink>
+            </template>
 
-              <template v-else-if="cell.column.columnDef.type === 'date'">
-                {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
-              </template>
-              <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
-                {{ humanifyDateTime(cell.getValue() as string | Date) }}
-              </template>
-              <template v-else>
-                {{ cell.getValue() }}
-              </template>
+            <template v-else-if="cell.column.columnDef.type === 'date'">
+              {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
+            </template>
+            <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
+              {{ humanifyDateTime(cell.getValue() as string | Date) }}
             </template>
             <template v-else>
               {{ cell.getValue() }}
             </template>
           </template>
-
-          <template #actions-cell="scope">
-            <div class="flex items-center gap-2">
-              <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
-              <slot name="actions-cell" v-bind="scope ?? {}">
-                <NuxtLink
-                  v-if="defaultActions?.includes('edit') && spec.updatePage"
-                  :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
-                >
-                  <UButton color="neutral" icon="i-lucide-square-pen" variant="ghost">
-                    <!-- Edit -->
-                  </UButton>
-                </NuxtLink>
-                <UButton
-                  v-if="defaultActions?.includes('delete') && spec.deleteEndpoint && spec.enableDelete"
-                  color="error"
-                  icon="i-lucide-trash"
-                  variant="ghost"
-                  @click="handleDelete(scope.row.original[spec.lookupColumnName])"
-                >
-                  <!-- Delete -->
-                </UButton>
-              </slot>
-              <slot name="actions-cell-append" v-bind="scope ?? {}"></slot>
-            </div>
+          <template v-else>
+            {{ cell.getValue() }}
           </template>
-          <!-- <template v-for="(_, name) in $slots" #[name]="scope">
+        </template>
+
+        <template #actions-cell="scope">
+          <div class="flex items-center gap-2">
+            <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
+            <slot name="actions-cell" v-bind="scope ?? {}">
+              <NuxtLink
+                v-if="defaultActions?.includes('edit') && spec.updatePage"
+                :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
+              >
+                <UButton color="neutral" icon="i-lucide-square-pen" variant="ghost">
+                  <!-- Edit -->
+                </UButton>
+              </NuxtLink>
+              <UButton
+                v-if="defaultActions?.includes('delete') && spec.deleteEndpoint && spec.enableDelete"
+                color="error"
+                icon="i-lucide-trash"
+                variant="ghost"
+                @click="handleDelete(scope.row.original[spec.lookupColumnName])"
+              >
+                <!-- Delete -->
+              </UButton>
+            </slot>
+            <slot name="actions-cell-append" v-bind="scope ?? {}"></slot>
+          </div>
+        </template>
+        <!-- <template v-for="(_, name) in $slots" #[name]="scope">
             <slot :name="name" v-bind="scope ?? {}"></slot>
           </template> -->
-        </UTable>
-      </slot>
-    </div>
+      </UTable>
+    </slot>
+
     <slot name="footer">
       <div v-if="data?.pagination.count! > 0" class="mt-auto flex items-center justify-between">
         <div>
-          <span class="text-sm text-gray-500">
-            {{ `Showing ${data?.pagination?.size! * (data?.pagination.page! - 1) + 1} to
+          <span class="text-sm text-dimmed italic">
+            {{ `${data?.pagination?.size! * (data?.pagination.page! - 1) + 1} to
             ${Math.min(data?.pagination.size!
             * data?.pagination.page!, data?.pagination.count!)} of ${data?.pagination.count} entries` }}
           </span>
