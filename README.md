@@ -876,6 +876,8 @@ Example Nuxt Project - https://github.com/awecode/autoadmin/tree/main/examples/p
 SQlite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/sqlite.ts
 Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts
 
+You can also use list, create, update, delete service in your own API routes by passing the model config to the service. See [Example API Routes](https://github.com/awecode/autoadmin/tree/main/examples/posts/server/api) for more details.
+
 ## Roadmap
 
 [] Integrate Auth Layer

@@ -1,4 +1,4 @@
-import { categories, posts, postsToTags, users } from '../../server/db/sqlite'
+import { categories, posts, postsToTags, tags, users } from '../../server/db/sqlite'
 
 export default defineNuxtPlugin(() => {
   const registry = useAdminRegistry()
@@ -164,21 +164,21 @@ export default defineNuxtPlugin(() => {
     warnOnUnsavedChanges: true,
   })
 
-  // Tags - Simple color-coded tags
-  // registry.register(tags, {
-  //   icon: 'i-lucide-tag',
-  //   fields: [
-  //     {
-  //       name: 'color',
-  //       type: 'text',
-  //       inputAttrs: {
-  //         type: 'color',
-  //       },
-  //       help: 'Choose a color for this tag',
-  //     },
-  //   ],
-  //   list: {
-  //     enableFilter: false, // Disable filters
-  //   },
-  // })
+  // Tags
+  registry.register(tags, {
+    icon: 'i-lucide-tag',
+    fields: [
+      {
+        name: 'color',
+        type: 'text',
+        inputAttrs: {
+          type: 'color',
+        },
+        help: 'Choose a color for this tag',
+      },
+    ],
+    list: {
+      enableFilter: false, // Disable filters
+    },
+  })
 })
