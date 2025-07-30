@@ -1,6 +1,6 @@
 # AutoAdmin Documentation
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Using AutoAdmin requires a Nuxt project with Drizzle configured with schemas.
+AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Using AutoAdmin requires a Nuxt project with Drizzle configured with schemas. Currently, SQLite (and variants like Cloudflare D1) is supported.
 
 ## Installation
 
@@ -28,7 +28,7 @@ pnpm install
 
 ## Usage
 
-AutoAdmin uses Nuxt UI. Make sure you wrap your pages with Nuxt UI's [`<UApp>`](https://ui.nuxt.com/components/app) component in `app.vue` or your layout file.
+<!-- AutoAdmin uses Nuxt UI. Make sure you wrap your pages with Nuxt UI's [`<UApp>`](https://ui.nuxt.com/components/app) component in `app.vue` or your layout file. -->
 
 Here is an example schema for SQLite demonstrating various column types.
 
@@ -866,7 +866,6 @@ registry.register(posts, {
       totalViews: {
         sql: sql<number>`sum(${posts.views}) OVER ()`,
         isAggregate: true,
-        label: 'Total Views',
       },
 
       // Another aggregate example
@@ -902,27 +901,25 @@ registry.register(posts, {
       totalViews: {
         function: 'sum',
         column: 'views',
-        label: 'Total Views',
       },
-      averageViews: {
+      averageView: {
         function: 'avg',
         column: 'views',
-        label: 'Average Views',
       },
       postsWithViews: {
         function: 'count',
         column: 'views', // counts non-null values
-        label: 'Posts With Views',
+        label: 'Posts with Views',
       },
-      minViews: {
+      minView: {
         function: 'min',
         column: 'views',
-        label: 'Minimum Views',
+        label: 'Minimum View in a Post',
       },
-      maxViews: {
+      maxView: {
         function: 'max',
         column: 'views',
-        label: 'Maximum Views',
+        label: 'Maximum View in a Post',
       },
     }
   }
@@ -966,20 +963,22 @@ NUXT_S3_PUBLIC_URL=<your-public-url>
 ## Example
 
 Example Nuxt Project - https://github.com/awecode/autoadmin/tree/main/examples/posts
+
 SQlite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/sqlite.ts
+
 Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts
 
 You can also use list, create, update, delete service in your own API routes by passing the model config to the service. See [Example API Routes](https://github.com/awecode/autoadmin/tree/main/examples/posts/server/api) for more details.
 
 ## Roadmap
 
-[] Integrate Auth Layer
-[] Detail View
-[] Aggregate Support in List View
-[] PostgreSQL Dialect Support
-[] MySQL Dialect Support
-[] Hooks/Signals
-[] Audit Logs
+- [ ] Integrate Auth Layer
+- [ ] Detail View
+- [x] Aggregate Support in List View
+- [ ] PostgreSQL Dialect Support
+- [ ] MySQL Dialect Support
+- [ ] Hooks/Signals
+- [ ] Audit Logs
 
 ## Stack
 
