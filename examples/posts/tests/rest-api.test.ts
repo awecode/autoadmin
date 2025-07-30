@@ -208,13 +208,17 @@ describe('api', async () => {
     expect(updateResponse.data.id).toBe(postId)
 
     // Verify the post was updated by fetching it again
-    const updatedPostResponse = await $fetch<{ results: Record<string, any>[] }>(`${apiPrefix}/posts`)
+    const updatedPostResponse = await $fetch<{ results: Record<string, any>[], spec: { columns: { header: string, accessorKey: string }[] } }>(`${apiPrefix}/posts`)
     const updatedPost = updatedPostResponse.results.find(post => post.id === postId)
     expect(updatedPost!.title).toBe('Updated Post 1')
     expect(updatedPost!.status).toBe('draft')
     expect(updatedPost!.authorId__name).toBe('User 2')
     expect(updatedPost!.categoryId__name).toBe('Category 2')
-    expect(updatedPost!.field).toBe('150 views')
+
+    // because popularity is an anonymous function, its name is randomly generated and not predictable
+    // find the field with the name of the popularity function using columns header 'Popularity'
+    const popularityField = updatedPostResponse.spec.columns.find(column => column.header === 'Popularity')
+    expect(updatedPost![popularityField!.accessorKey]).toBe('150 views')
   })
 
   it('should return an error when deleting a user that has posts', async () => {
@@ -285,7 +289,7 @@ describe('api', async () => {
 
     // Test filtering with multiple parameters including dynamic timestamps
     const filterUrl = `${apiPrefix}/posts?status=published&authorId=${authorId}&categoryId=${categoryId}&isCommentsEnabled=true&publishedAt=2025-07-08,2025-07-09&createdAt=${createdAtDate}&updatedAt=${updatedAtDate},${tomorrow}`
-    const filteredResponse = await $fetch<{ results: Record<string, any>[] }>(filterUrl)
+    const filteredResponse = await $fetch<{ results: Record<string, any>[], spec: { columns: { header: string, accessorKey: string }[] } }>(filterUrl)
 
     // Verify the filtered results contain our test post
     expect(filteredResponse.results.length).toBeGreaterThan(0)
@@ -294,7 +298,10 @@ describe('api', async () => {
     expect(testPost!.status).toBe('published')
     expect(testPost!.authorId__name).toBe('User 2')
     expect(testPost!.categoryId__name).toBe('Category 2')
-    expect(testPost!.field).toBe('200 views')
+    // because popularity is an anonymous function, its name is randomly generated and not predictable
+    // find the field with the name of the popularity function using columns header 'Popularity'
+    const popularityField = filteredResponse.spec.columns.find(column => column.header === 'Popularity')
+    expect(testPost![popularityField!.accessorKey]).toBe('200 views')
 
     // Test individual timestamp filters
     const createdAtFilterUrl = `${apiPrefix}/posts?createdAt=${createdAtDate}`
