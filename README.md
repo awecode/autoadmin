@@ -848,6 +848,98 @@ registry.register(platforms, {
 
 If `delete.enabled` is not set to `false` in registration option, a bulk action for delete is automatically added to the list view.
 
+## Custom Selections
+
+Custom selections allow you to define custom SQL expressions that are computed and displayed in the list view. These can be used for calculated fields, concatenated values, or aggregate statistics.
+
+```ts
+registry.register(posts, {
+  list: {
+    customSelections: {
+      // Simple computed field
+      slugWithId: {
+        sql: sql<string>`(${posts.slug} || '-' || ${posts.id})`,
+        label: 'Slug w/ ID',
+      },
+
+      // Aggregate that shows in statistics cards
+      totalViews: {
+        sql: sql<number>`sum(${posts.views}) OVER ()`,
+        isAggregate: true,
+        label: 'Total Views',
+      },
+
+      // Another aggregate example
+      avgRating: {
+        sql: sql<number>`avg(${posts.rating}) OVER ()`,
+        isAggregate: true,
+        label: 'Average Rating',
+      },
+    }
+  }
+})
+```
+
+### Custom Selection Properties
+
+**`sql: SQL`** (Required)
+The SQL expression using Drizzle's `sql` template literal.
+
+**`isAggregate?: boolean`** (Default: `false`)
+When `true`, the selection is treated as an aggregate statistic and displayed in the statistics cards below the table. Non-aggregate selections can be included in table columns using the `fields` or `columns` configuration.
+
+**`label?: string`** (Default: Capitalized key name)
+Display label for the custom selection.
+
+## Aggregates
+
+Aggregates provide built-in statistical functions that are automatically computed and displayed in cards below the data table. This is a simpler alternative to custom selections for common aggregate operations.
+
+```ts
+registry.register(posts, {
+  list: {
+    aggregates: {
+      totalViews: {
+        function: 'sum',
+        column: 'views',
+        label: 'Total Views',
+      },
+      averageViews: {
+        function: 'avg',
+        column: 'views',
+        label: 'Average Views',
+      },
+      postsWithViews: {
+        function: 'count',
+        column: 'views', // counts non-null values
+        label: 'Posts With Views',
+      },
+      minViews: {
+        function: 'min',
+        column: 'views',
+        label: 'Minimum Views',
+      },
+      maxViews: {
+        function: 'max',
+        column: 'views',
+        label: 'Maximum Views',
+      },
+    }
+  }
+})
+```
+
+### Aggregate Properties
+
+**`function: 'sum' | 'avg' | 'count' | 'min' | 'max'`** (Required)
+The aggregate function to apply. `count` counts truthy values for a column using `CASE WHEN` expression.
+
+**`column: string`** (Required)
+The column name to aggregate over.
+
+**`label?: string`** (Default: Capitalized key name)
+Display label for the aggregate statistic.
+
 ## Runtime Config
 
 AutoAdmin can be configured using environment variables:
