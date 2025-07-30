@@ -23,6 +23,12 @@ interface ListApiResponse {
     page: number
     pages: number
   }
+  aggregates?: {
+    [key: string]: {
+      label: string
+      value: number
+    }
+  }
   filters?: FilterSpec[]
   spec: {
     endpoint: string
@@ -526,6 +532,28 @@ const performBulkAction = async () => {
             <slot :name="name" v-bind="scope ?? {}"></slot>
           </template> -->
       </UTable>
+    </slot>
+
+    <!-- Aggregates Section -->
+    <slot name="aggregates">
+      <div v-if="data?.aggregates && Object.keys(data.aggregates).length > 0" class="mt-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div
+            v-for="(aggregate, key) in data.aggregates"
+            :key="key"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="flex flex-col">
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                {{ aggregate.label }}
+              </dt>
+              <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {{ typeof aggregate.value === 'number' ? aggregate.value.toLocaleString() : aggregate.value }}
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
     </slot>
 
     <slot name="footer">
