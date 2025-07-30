@@ -1,5 +1,6 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
+import { aggregateFunctions } from '#layers/autoadmin/composables/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
@@ -96,8 +97,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
         if (!value.function) {
           throw new Error(`Aggregate function is required for ${key}`)
         }
-        const allowedFns = ['avg', 'sum', 'min', 'max', 'count']
-        if (!allowedFns.includes(value.function)) {
+        if (!aggregateFunctions.includes(value.function)) {
           throw new Error('Invalid function')
         }
         let sqlExpression: SQL<number>

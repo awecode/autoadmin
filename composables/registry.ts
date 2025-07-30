@@ -52,6 +52,8 @@ export interface ListColumnDef<T extends Table> {
 // TODO: Make this configurable - maybe global config?
 const defaultLookupColumnName = 'id'
 
+export const aggregateFunctions = ['avg', 'sum', 'min', 'max', 'count'] as const
+
 type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> = {
   showCreateButton: boolean
   enableSearch: boolean
@@ -60,7 +62,7 @@ type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSel
   searchPlaceholder?: string
   searchFields: ColField<T>[]
   customSelections?: C
-  aggregates?: Record<string, { function: 'avg' | 'min' | 'max' | 'sum' | 'count', column: ColKey<T>, label?: string }>
+  aggregates?: Record<string, { function: (typeof aggregateFunctions)[number], column: ColKey<T>, label?: string }>
   bulkActions: {
     label: string
     icon?: string
