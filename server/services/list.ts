@@ -348,11 +348,11 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     }
 
     // only return the columns that have accessor keys or the lookup column
-    response.results = response.results.map((result: any) => {
+    response.results = response.results.map((result) => {
       return Object.fromEntries(
         Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
       )
-    }) as any
+    })
   }
   return {
     ...response,
