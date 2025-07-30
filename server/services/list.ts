@@ -100,9 +100,20 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
         if (!allowedFns.includes(value.function)) {
           throw new Error('Invalid function')
         }
-        const sqlExpression = sql<number>`${
-          sql.raw(`${value.function}(${column.name}) OVER () AS ${key}`)
-        }`
+        let sqlExpression: SQL<number>
+        const colName = column.name
+        // This breaks for snake case in db, camelCase in drizzle without name specified
+        // column.name returns camelCase but we need snake case for raw sql
+        // https://github.com/drizzle-team/drizzle-orm/issues/3094
+        if (value.function === 'count') {
+          sqlExpression = sql<number>`${
+            sql.raw(`sum(CASE WHEN ${colName} THEN 1 ELSE 0 END) OVER () AS ${key}`)
+          }`
+        } else {
+          sqlExpression = sql<number>`${
+            sql.raw(`${value.function}(${colName}) OVER () AS ${key}`)
+          }`
+        }
         return [key, sqlExpression]
       }),
     )

@@ -173,20 +173,16 @@ export default defineNuxtPlugin(() => {
           sql: sql<number>`sum(${posts.views}) OVER ()`,
           isAggregate: true,
         },
-        averageViews: {
-          sql: sql<number>`avg(${posts.views}) OVER ()`,
-          isAggregate: true,
-        },
       },
       aggregates: {
         averageView: {
           function: 'avg',
           column: 'views',
         },
-        // commentsEnabled: {
-        //   function: 'count',
-        //   column: 'isCommentsEnabled',
-        // },
+        pagesWithViews: {
+          function: 'count',
+          column: 'views', // counts truthy values
+        },
         minViews: {
           function: 'min',
           column: 'views',
