@@ -1,6 +1,6 @@
 # AutoAdmin Documentation
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Using AutoAdmin requires a Nuxt project with Drizzle configured with schemas. Currently, SQLite (and variants like Cloudflare D1) is supported.
+AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Using AutoAdmin requires a Nuxt project with Drizzle configured with schemas. Currently, SQLite (and variants like Cloudflare D1) is supported. PostgreSQL and MySQL/MariaDB support is coming soon.
 
 ## Installation
 
@@ -329,41 +329,41 @@ registry.register(posts, {
 
 ### `list` options
 
-**`fields: (string | function | ListFieldDef)[]`**
+**`fields: (string | function | ListFieldDef)[]`** -
 An array defining the columns to display. An item can be:
 - A string representing a column name (e.g., 'title').
 - A dot-notation string for a related field (e.g., 'authorId.email').
 - A function that returns a value for the column in list view. See `isArchived` example above.
 - An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above. `field` value in this object can be a string (column name or dot-notation relation string), or a function.
 
-**`columns: ListColumnDef[]`**
+**`columns: ListColumnDef[]`** -
 An alternative to `fields` that enables you to directly specify Nuxt UI Table columns. Additional to Nuxt UI column config, each column takes `type` (as `FieldType`), `header` (as string), and `sortKey` attributes. This overwrites top-level `fields` configuration for list view.
 
-**`enableSearch: boolean`** (Default: `true`)
+**`enableSearch: boolean`** (Default: `true`) -
 Toggles search functionality.
 
-**`enableSort: boolean`** (Default: `true`)
+**`enableSort: boolean`** (Default: `true`) -
 Toggles sorting functionality. See [List Sorting](#list-sorting) for more details.
 
-**`searchFields: string[]`** (Default: `[labelColumnName]`)
+**`searchFields: string[]`** (Default: `[labelColumnName]`) -
 An array of column names (including relational fields in dot-notation) to search against.
 
-**`searchPlaceholder: string`** (Default: 'Search ...')
+**`searchPlaceholder: string`** (Default: 'Search ...') -
 Placeholder text for the search input.
 
-**`enableFilter: boolean`** (Default: `true`)
+**`enableFilter: boolean`** (Default: `true`) -
 Toggles the visibility of the filter controls. Setting to false disables default filters as well.
 
-**`filterFields: (string | FilterFieldDef)[]`**
+**`filterFields: (string | FilterFieldDef)[]`** -
 An array of fields to generate filters for. If not specified, filters are automatically generated for enums, date fields (as date ranges), and boolean fields unless `enableFilter` is false. You can also define custom filters. See [List Filters](#list-filters) for more details.
 
-**`bulkActions: object[]`**
+**`bulkActions: object[]`** -
 See [List Bulk Actions](#list-bulk-actions) for more details.
 
-**`showCreateButton: boolean`** (Default: `true`)
+**`showCreateButton: boolean`** (Default: `true`) -
 Toggles the visibility of the "Create New" button on the list page.
 
-**`title: string`** (Default: Table Name as Title Case)
+**`title: string`** (Default: Table Name as Title Case) -
 Page heading and document title for list page.
 
 ## Form Configuration (create, update, formFields)
@@ -883,13 +883,13 @@ registry.register(posts, {
 
 ### Custom Selection Properties
 
-**`sql: SQL`** (Required)
+**`sql: SQL`** (Required) -
 The SQL expression using Drizzle's `sql` template literal.
 
-**`isAggregate?: boolean`** (Default: `false`)
+**`isAggregate?: boolean`** (Default: `false`) -
 When `true`, the selection is treated as an aggregate statistic and displayed in the statistics cards below the table. Non-aggregate selections can be included in table columns using the `fields` or `columns` configuration.
 
-**`label?: string`** (Default: Capitalized key name)
+**`label?: string`** (Default: Capitalized key name) -
 Display label for the custom selection.
 
 ## Aggregates
@@ -930,13 +930,13 @@ registry.register(posts, {
 
 ### Aggregate Properties
 
-**`function: 'sum' | 'avg' | 'count' | 'min' | 'max'`** (Required)
+**`function: 'sum' | 'avg' | 'count' | 'min' | 'max'`** (Required) -
 The aggregate function to apply. `count` counts truthy values for a column using `CASE WHEN` expression.
 
-**`column: string`** (Required)
+**`column: string`** (Required) -
 The column name to aggregate over.
 
-**`label?: string`** (Default: Capitalized key name)
+**`label?: string`** (Default: Capitalized key name) -
 Display label for the aggregate statistic.
 
 ## Runtime Config
