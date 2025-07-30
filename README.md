@@ -739,41 +739,43 @@ For foreign key relationships. Automatically provides choices from the related t
 Create advanced filters with custom logic:
 
 ```ts
-export const platformStatusFilter: CustomFilter = {
-  label: 'Platform Status',
-  parameterName: 'platform_status_filter',
+export const postEngagementFilter: CustomFilter = {
+  label: 'Post Engagement',
+  parameterName: 'post_engagement_filter',
 
   options: async () => [
-    'enabled_active',
-    'disabled_any',
-    'enabled_inactive',
-    'status_mismatch',
-    // { label: 'Enabled & Active', value: 'enabled_active' },
-    // { label: 'Disabled (Any Status)', value: 'disabled_any' },
-    // { label: 'Enabled but Inactive', value: 'enabled_inactive' },
-    // { label: 'Status Mismatch', value: 'status_mismatch' },
+    'High Engagement',
+    'Published but No Views',
+    'Draft with Views',
+    'Archived Posts',
+    // { label: 'High Engagement', value: 'high_engagement' },
+    // { label: 'Published but No Views', value: 'published_no_views' },
+    // { label: 'Draft with Views', value: 'draft_with_views' },
+    // { label: 'Archived Posts', value: 'archived_posts' },
   ],
 
   queryConditions: async (db: any, value: any): Promise<SQL<unknown>[]> => {
     switch (value) {
-      case 'enabled_active':
+      case 'High Engagement':
         return [
-          eq(platforms.isEnabled, true),
-          eq(platforms.status, 'active'),
+          eq(posts.status, 'published'),
+          gte(posts.views, 100),
         ]
 
-      case 'disabled_any':
-        return [eq(platforms.isEnabled, false)]
-
-      case 'enabled_inactive':
+      case 'Published but No Views':
         return [
-          eq(platforms.isEnabled, true),
-          sql`${platforms.status} != 'active'`,
+          eq(posts.status, 'published'),
+          eq(posts.views, 0),
         ]
 
-      case 'status_mismatch':
-        // Platforms where original status differs from current status
-        return [sql`${platforms.status} != ${platforms.originalStatus}`]
+      case 'Draft with Views':
+        return [
+          eq(posts.status, 'draft'),
+          gt(posts.views, 0),
+        ]
+
+      case 'Archived Posts':
+        return [eq(posts.status, 'archived')]
 
       default:
         return []
@@ -782,10 +784,10 @@ export const platformStatusFilter: CustomFilter = {
 }
 
 // Registration
-registry.register(platforms, {
+registry.register(posts, {
   list: {
     filterFields: [
-      platformStatusFilter
+      postEngagementFilter
     ]
   }
 })
