@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import { categories, posts, postsToTags, tags, users } from '../../server/db/sqlite'
 
 export default defineNuxtPlugin(() => {
@@ -120,6 +121,10 @@ export default defineNuxtPlugin(() => {
           label: 'Published',
           type: 'date',
         },
+        {
+          field: obj => obj.slugWithId,
+          label: 'Slug with ID',
+        },
       ],
       searchFields: ['title', 'excerpt', 'authorId.name'],
       filterFields: [
@@ -159,6 +164,12 @@ export default defineNuxtPlugin(() => {
           },
         },
       ],
+      customSelections: {
+        slugWithId: {
+          sql: sql<string>`(${posts.slug} || '-' || ${posts.id})`,
+          isAggregate: false,
+        },
+      },
     },
     m2m: {
       tags: postsToTags,

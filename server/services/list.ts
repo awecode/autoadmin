@@ -1,6 +1,6 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
-import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
+import { asc, count, desc, eq, getTableColumns, like, or, sql, sum } from 'drizzle-orm'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
 import { colKey } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
@@ -69,27 +69,37 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     }
   }
 
+  let selections = foreignColumnSelections
+  if (cfg.list.customSelections) {
+    const customSelections = Object.fromEntries(
+      Object.entries(cfg.list.customSelections).map(([key, value]) => [
+        key,
+        value.sql,
+      ]),
+    )
+    selections = { ...selections, ...customSelections }
+  }
+
   let baseQuery
   // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
   const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn)
   if (shouldSelectAllColumns) {
-    const allColumns = { ...tableColumns, ...foreignColumnSelections }
-    baseQuery = db.select(allColumns).from(model)
+    selections = { ...tableColumns, ...selections }
+    baseQuery = db.select(selections).from(model)
   } else {
     const columnNames = spec.columns.map(column => column.accessorKey)
     // only select the required column names from the table, not all columns
-    const selectedColumns = Object.fromEntries(
+    const columnselections = Object.fromEntries(
       columnNames
         .filter(key => key in tableColumns)
         .map(key => [key, tableColumns[key]!]),
     )
     // add lookup column to the selected columns if it does not exist
-    if (!(cfg.lookupColumnName in selectedColumns)) {
-      selectedColumns[cfg.lookupColumnName] = tableColumns[cfg.lookupColumnName]!
+    if (!(cfg.lookupColumnName in selections)) {
+      selections[cfg.lookupColumnName] = tableColumns[cfg.lookupColumnName]!
     }
-    // add foreign column selections
-    Object.assign(selectedColumns, foreignColumnSelections)
-    baseQuery = db.select(selectedColumns).from(model)
+    selections = { ...selections, ...columnselections }
+    baseQuery = db.select(selections).from(model)
   }
 
   // Handle search query
@@ -279,11 +289,11 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       return result
     })
     // only return the columns that have accessor keys or the lookup column
-    response.results = response.results.map((result: any) => {
-      return Object.fromEntries(
-        Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
-      )
-    }) as any
+    // response.results = response.results.map((result: any) => {
+    //   return Object.fromEntries(
+    //     Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
+    //   )
+    // }) as any
   }
   return {
     ...response,

@@ -1,7 +1,7 @@
 import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/filter'
 import type { FieldSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
-import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
+import type { InferInsertModel, InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { DbType } from '../server/utils/db'
 import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
@@ -14,8 +14,10 @@ import { createInsertSchema } from 'drizzle-zod'
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 // Represents a column name or relation string
 type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
+
+export type CustomSelections = Record<string, { sql: SQL, isAggregate?: boolean }>
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
-type ListField<T extends Table> = ColField<T> | ((model: InferSelectModel<T>) => any)
+type ListField<T extends Table, C extends CustomSelections> = ColField<T> | ((model: InferSelectModel<T> & { [K in keyof C]?: unknown }) => any)
 // Represents a sort key for a column or relation string
 type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
 // type TableWithColumns<T extends Table = Table> = T & { [K in ColKey<T>]: T['_']['columns'][K] }
@@ -30,10 +32,10 @@ export type FilterFieldDef<T extends Table> = ColField<T> | {
   choicesEndpoint?: string
 } | CustomFilter
 
-export type ListFieldDef<T extends Table>
-  = ListField<T>
+export type ListFieldDef<T extends Table, C extends CustomSelections = CustomSelections>
+  = ListField<T, C>
     | { // Represents a detailed field configuration object
-      field: ListField<T> // Can be a column/relation string OR a callable function
+      field: ListField<T, C> // Can be a column/relation string OR a callable function
       label?: string // Optional: custom display label for the field
       type?: FieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
       sortKey?: SortKey<T>
@@ -50,13 +52,14 @@ export interface ListColumnDef<T extends Table> {
 // TODO: Make this configurable - maybe global config?
 const defaultLookupColumnName = 'id'
 
-type ListOptions<T extends Table = Table> = {
+type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> = {
   showCreateButton: boolean
   enableSearch: boolean
   enableSort: boolean
   enableFilter: boolean
   searchPlaceholder?: string
   searchFields: ColField<T>[]
+  customSelections?: C
   bulkActions: {
     label: string
     icon?: string
@@ -68,7 +71,7 @@ type ListOptions<T extends Table = Table> = {
   // Do not allow both fields and columns to be set at the same time
 } & (
   | {
-    fields: Array<ListFieldDef<T>>
+    fields: Array<ListFieldDef<T, C>>
     columns?: never
   }
   | {
@@ -106,7 +109,7 @@ interface DeleteOptions {
 }
 
 // AdminModelOptions is the options passed to the register function
-export interface AdminModelOptions<T extends Table = Table> {
+export interface AdminModelOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> {
   key?: string
   label?: string
   icon?: string
@@ -114,7 +117,7 @@ export interface AdminModelOptions<T extends Table = Table> {
   labelColumnName?: ColKey<T>
   lookupColumnName?: ColKey<T>
   // searchFields?: ColKey<T>[]
-  list?: Partial<ListOptions<T>>
+  list?: Partial<ListOptions<T, C>>
   create?: Partial<CreateOptions>
   update?: Partial<UpdateOptions>
   delete?: Partial<DeleteOptions>
@@ -126,7 +129,7 @@ export interface AdminModelOptions<T extends Table = Table> {
 }
 
 // AdminModelConfig is the config available in the registry after processing AdminModelOptions
-export interface AdminModelConfig<T extends Table = Table> {
+export interface AdminModelConfig<T extends Table = Table, C extends CustomSelections = CustomSelections> {
   // model: TableWithColumns<T>
   model: T
   key: string
@@ -136,7 +139,7 @@ export interface AdminModelConfig<T extends Table = Table> {
   labelColumnName: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
-  list: ListOptions<T>
+  list: ListOptions<T, C>
   create: CreateOptions
   update: UpdateOptions
   delete: DeleteOptions
@@ -171,7 +174,7 @@ const getStaticDefaultOptions = () => ({
   warnOnUnsavedChanges: false,
 })
 
-const generateDefaultOptions = <T extends Table>(model: T, label: string, key: string, apiPrefix: string, opts: AdminModelOptions<T>) => {
+const generateDefaultOptions = <T extends Table, C extends CustomSelections = CustomSelections>(model: T, label: string, key: string, apiPrefix: string, opts: AdminModelOptions<T, C>) => {
   const dct = defu(getStaticDefaultOptions(), {
     list: {
       title: toTitleCase(label),
@@ -179,7 +182,7 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, key: s
     },
     update: { route: { name: 'autoadmin-update', params: { modelKey: key } } },
     delete: { endpoint: `${apiPrefix}/${key}` },
-  }) as unknown as AdminModelConfig<T>
+  }) as unknown as AdminModelConfig<T, C>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumnName || dct.labelColumnName]
   } else if (!opts.list?.searchFields) {
@@ -201,11 +204,11 @@ const generateDefaultOptions = <T extends Table>(model: T, label: string, key: s
 
 // Global registry - maintains state across the application
 // TODO May be use memory storage instead of globalThis
-function getRegistry(): Map<string, AdminModelConfig<Table>> {
+function getRegistry(): Map<string, AdminModelConfig<Table, CustomSelections>> {
   // @ts-expect-error: attach to global for persistence
   if (!globalThis.__admin_registry__) {
     // @ts-expect-error: attach to global for persistence
-    globalThis.__admin_registry__ = new Map<string, AdminModelConfig<Table>>()
+    globalThis.__admin_registry__ = new Map<string, AdminModelConfig<Table, CustomSelections>>()
   }
 
   // @ts-expect-error: attach to global for persistence
@@ -217,9 +220,9 @@ export function useAdminRegistry() {
   const config = useRuntimeConfig()
   const apiPrefix = config.public.apiPrefix
 
-  function configure<T extends Table>(
+  function configure<T extends Table, C extends CustomSelections = CustomSelections>(
     model: T,
-    opts: AdminModelOptions<T> = {},
+    opts: AdminModelOptions<T, C> = {},
   ) {
     const key = opts.key ?? getTableName(model)
     const label = opts.label ?? toTitleCase(key)
@@ -233,7 +236,7 @@ export function useAdminRegistry() {
       opts,
       generateDefaultOptions(model, label, key, apiPrefix, opts),
       { model, key, label },
-    ) as AdminModelConfig<T>
+    ) as AdminModelConfig<T, C>
 
     cfg.columns = columns
     cfg.apiPrefix = apiPrefix
@@ -264,12 +267,12 @@ export function useAdminRegistry() {
     return cfg
   }
 
-  function register<T extends Table>(
+  function register<T extends Table, C extends CustomSelections = CustomSelections>(
     model: T,
-    opts: AdminModelOptions<T> = {},
+    opts: AdminModelOptions<T, C> = {},
   ): void {
     const cfg = configure(model, opts)
-    registry.set(cfg.key, cfg as unknown as AdminModelConfig<Table>)
+    registry.set(cfg.key, cfg as unknown as AdminModelConfig<Table, C>)
   }
 
   function getModelConfig<T extends Table>(
