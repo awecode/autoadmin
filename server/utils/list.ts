@@ -85,7 +85,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Fi
 const uniqifyFieldName = (fieldName: string) => {
   if (fieldName === 'field') {
     // anonymous functions get the name `field`, and multiple anonymous functions can have the same name
-    return `anonymous_${Math.random().toString(36).substring(2, 15)}`
+    return `f_${Math.random().toString(36).substring(2, 15)}`
   }
   return fieldName
 }

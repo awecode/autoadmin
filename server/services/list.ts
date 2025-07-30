@@ -1,5 +1,6 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
 import { colKey, getPaginatedResults } from '../utils/drizzle'
@@ -83,6 +84,35 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       label: value.label ?? toTitleCase(key),
     }))
     selections = { ...selections, ...customSelections }
+  }
+
+  if (cfg.list.aggregates) {
+    const customAggregates = Object.fromEntries(
+      Object.entries(cfg.list.aggregates).map(([key, value]) => {
+        const column = tableColumns[value.column]
+        if (!column) {
+          throw new Error(`Invalid aggregate column: ${value.column}`)
+        }
+        if (!value.function) {
+          throw new Error(`Aggregate function is required for ${key}`)
+        }
+        const allowedFns = ['avg', 'sum', 'min', 'max', 'count']
+        if (!allowedFns.includes(value.function)) {
+          throw new Error('Invalid function')
+        }
+        const sqlExpression = sql<number>`${
+          sql.raw(`${value.function}(${column.name}) OVER () AS ${key}`)
+        }`
+        return [key, sqlExpression]
+      }),
+    )
+    selections = { ...selections, ...customAggregates }
+    aggregates.push(...Object.entries(cfg.list.aggregates).map(([key, value]) => {
+      return {
+        key,
+        label: value.label ?? toTitleCase(key),
+      }
+    }))
   }
 
   let baseQuery

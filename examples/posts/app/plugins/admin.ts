@@ -167,11 +167,35 @@ export default defineNuxtPlugin(() => {
       customSelections: {
         slugWithId: {
           sql: sql<string>`(${posts.slug} || '-' || ${posts.id})`,
+          label: 'Slug w/ ID',
         },
         totalViews: {
           sql: sql<number>`sum(${posts.views}) OVER ()`,
           isAggregate: true,
-          label: 'Total Views',
+        },
+        averageViews: {
+          sql: sql<number>`avg(${posts.views}) OVER ()`,
+          isAggregate: true,
+        },
+      },
+      aggregates: {
+        averageView: {
+          function: 'avg',
+          column: 'views',
+        },
+        // commentsEnabled: {
+        //   function: 'count',
+        //   column: 'isCommentsEnabled',
+        // },
+        minViews: {
+          function: 'min',
+          column: 'views',
+          label: 'Minimum View in a Post',
+        },
+        maxViews: {
+          function: 'max',
+          column: 'views',
+          label: 'Maximum View in a Post',
         },
       },
     },

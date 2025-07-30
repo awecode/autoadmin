@@ -60,6 +60,7 @@ type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSel
   searchPlaceholder?: string
   searchFields: ColField<T>[]
   customSelections?: C
+  aggregates?: Record<string, { function: 'avg' | 'min' | 'max' | 'sum' | 'count', column: ColKey<T>, label?: string }>
   bulkActions: {
     label: string
     icon?: string
