@@ -316,7 +316,7 @@ registry.register(posts, {
       label: 'Publish Selected',
       icon: 'i-lucide-check-circle',
       action: async (db, rowIds) => {
-        await db.update(posts).set({ isPublished: true }).where(inArray(posts.id, rowIds))
+        await db.update(posts).set({ isPublished: true }).where(inArray(posts.id, rowIds as number[]))
         return { message: `${rowIds.length} posts published.`, refresh: true }
       },
     }],
@@ -832,6 +832,7 @@ registry.register(platforms, {
       icon: 'i-lucide-mail',
       action: async (db: DbType, rowIds: string[] | number[]) => {
         const emails = await db.select({ email: users.email }).from(users).where(inArray(users.id, rowIds))
+        // send email logic here
         return { message: `Emails sent to ${emails.map(e => e.email).join(', ')}` }
       },
     }],

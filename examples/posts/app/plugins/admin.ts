@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm'
+import { inArray, sql } from 'drizzle-orm'
 import { categories, posts, postsToTags, tags, users } from '../../server/db/sqlite'
 
 export default defineNuxtPlugin(() => {
@@ -15,7 +15,7 @@ export default defineNuxtPlugin(() => {
         label: 'Archive Categories',
         icon: 'i-lucide-archive',
         action: async (db, rowIds) => {
-          // Bulk archive logic here
+          await db.update(categories).set({ isActive: false }).where(inArray(categories.id, rowIds as number[]))
           return { message: `${rowIds.length} categories archived`, refresh: true }
         },
       }],
@@ -60,7 +60,7 @@ export default defineNuxtPlugin(() => {
         label: 'Activate Users',
         icon: 'i-lucide-user-check',
         action: async (db, rowIds) => {
-          // Bulk activation logic
+          await db.update(users).set({ isActive: true }).where(inArray(users.id, rowIds as number[]))
           return { message: `${rowIds.length} users activated`, refresh: true }
         },
       }],
@@ -159,7 +159,7 @@ export default defineNuxtPlugin(() => {
           label: 'Publish Posts',
           icon: 'i-lucide-send',
           action: async (db, rowIds) => {
-            // Bulk publish logic
+            await db.update(posts).set({ status: 'published' }).where(inArray(posts.id, rowIds as number[]))
             return { message: `${rowIds.length} posts published`, refresh: true }
           },
         },
