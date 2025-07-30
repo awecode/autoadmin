@@ -77,10 +77,8 @@ const booleanOptions = [
   <template v-if="filters && filters.length > 0">
     <!-- Mobile filters button (only for multiple filters) -->
     <div v-if="filters.length > 1" class="md:hidden">
-      <div class="text-sm text-dimmed mb-1">
-        Filters
-      </div>
       <UButton
+        class="text-dimmed"
         color="neutral"
         icon="i-lucide-filter"
         variant="outline"

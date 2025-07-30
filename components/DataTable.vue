@@ -391,11 +391,11 @@ const performBulkAction = async () => {
     </slot>
 
     <slot name="filters">
-      <div class="flex flex-wrap items-center gap-8">
-        <div>
-          <div class="text-sm text-dimmed mb-1 min-h-5">
-          <!-- Search {{ title }} -->
-          </div>
+      <div class="flex flex-wrap items-center gap-x-8 gap-y-4">
+        <div class="place-self-end">
+          <!-- <div class="text-sm text-dimmed mb-1">
+            Search {{ title }}
+          </div> -->
           <UInput
             v-if="spec.enableSearch"
             v-model="search"
@@ -449,7 +449,6 @@ const performBulkAction = async () => {
         v-else-if="data && status === 'success'"
         ref="table"
         v-model:sorting="sort"
-        class="mt-8"
         :columns="computedColumns"
         :data="data?.results"
         :sorting-options="{
@@ -536,18 +535,18 @@ const performBulkAction = async () => {
 
     <!-- Aggregates Section -->
     <slot name="aggregates">
-      <div v-if="data?.aggregates && Object.keys(data.aggregates).length > 0" class="mt-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div v-if="data?.aggregates && Object.keys(data.aggregates).length > 0" class="mt-6 sm:mt-8">
+        <div class="flex flex-wrap gap-3 sm:gap-4">
           <div
             v-for="(aggregate, key) in data.aggregates"
             :key="key"
-            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-shadow"
+            class="flex-1 min-w-40 sm:min-w-48 max-w-64 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
           >
             <div class="flex flex-col">
-              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+              <dt class="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 {{ aggregate.label }}
               </dt>
-              <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+              <dd class="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">
                 {{ typeof aggregate.value === 'number' ? aggregate.value.toLocaleString() : aggregate.value }}
               </dd>
             </div>
