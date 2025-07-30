@@ -82,6 +82,14 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Fi
   return Object.fromEntries(fields)
 }
 
+const uniqifyFieldName = (fieldName: string) => {
+  if (fieldName === 'field') {
+    // anonymous functions get the name `field`, and multiple anonymous functions can have the same name
+    return `anonymous_${Math.random().toString(36).substring(2, 15)}`
+  }
+  return fieldName
+}
+
 export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<ColKey<T>, Column>, columnTypes: Record<string, { type: FieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
@@ -126,11 +134,12 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
         }
         throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
       } else if (typeof def === 'function') {
+        const fieldName = uniqifyFieldName(def.name)
         return {
-          id: def.name,
-          accessorKey: def.name,
-          header: toTitleCase(def.name),
-          type: columnTypes[def.name]?.type,
+          id: fieldName,
+          accessorKey: fieldName,
+          header: toTitleCase(fieldName),
+          type: columnTypes[fieldName]?.type,
           accessorFn: def,
         }
       } else if (typeof def === 'object') {
@@ -169,11 +178,12 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
           }
         } else if (typeof def.field === 'function') {
+          const fieldName = uniqifyFieldName(def.field.name)
           return {
-            id: def.field.name,
-            accessorKey: def.field.name,
-            header: def.label ?? toTitleCase(def.field.name),
-            type: def.type ?? columnTypes[def.field.name]?.type,
+            id: fieldName,
+            accessorKey: fieldName,
+            header: def.label ?? toTitleCase(fieldName),
+            type: def.type ?? columnTypes[fieldName]?.type,
             accessorFn: def.field,
             sortKey: cfg.list.enableSort && def.sortKey ? def.sortKey : undefined,
           }
