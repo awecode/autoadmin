@@ -15,7 +15,7 @@ export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 // Represents a column name or relation string
 type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
 
-export type CustomSelections = Record<string, { sql: SQL, isAggregate?: boolean }>
+export type CustomSelections = Record<string, { sql: SQL, isAggregate?: boolean, label?: string }>
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
 type ListField<T extends Table, C extends CustomSelections> = ColField<T> | ((model: InferSelectModel<T> & { [K in keyof C]?: unknown }) => any)
 // Represents a sort key for a column or relation string

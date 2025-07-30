@@ -171,6 +171,7 @@ export default defineNuxtPlugin(() => {
         totalViews: {
           sql: sql<number>`sum(${posts.views}) OVER ()`,
           isAggregate: true,
+          label: 'Total Views',
         },
       },
     },

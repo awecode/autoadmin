@@ -70,7 +70,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   }
 
   let selections = foreignColumnSelections
-  let aggregates: string[] = []
+  let aggregates: { key: string, label: string }[] = []
   if (cfg.list.customSelections) {
     const customSelections = Object.fromEntries(
       Object.entries(cfg.list.customSelections).map(([key, value]) => [
@@ -78,7 +78,10 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
         value.sql,
       ]),
     )
-    aggregates = Object.entries(cfg.list.customSelections).filter(([_key, value]) => value.isAggregate).map(([key, _value]) => key)
+    aggregates = Object.entries(cfg.list.customSelections).filter(([_key, value]) => value.isAggregate).map(([key, value]) => ({
+      key,
+      label: value.label ?? toTitleCase(key),
+    }))
     selections = { ...selections, ...customSelections }
   }
 
@@ -291,10 +294,13 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       return result
     })
 
-    if (aggregates.length > 0) {
+    if (aggregates.length > 0 && response.results.length > 0) {
       response.aggregates = response.results.reduce((acc: Record<string, any>, result: any) => {
         aggregates.forEach((aggregate) => {
-          acc[aggregate] = result[aggregate]
+          acc[aggregate.key] = {
+            label: aggregate.label,
+            value: result[aggregate.key],
+          }
         })
         return acc
       }, {})
