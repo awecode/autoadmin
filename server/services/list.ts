@@ -1,8 +1,8 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
-import { asc, count, desc, eq, getTableColumns, like, or, sql, sum } from 'drizzle-orm'
+import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
-import { colKey } from '../utils/drizzle'
+import { colKey, getPaginatedResults } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
@@ -70,6 +70,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   }
 
   let selections = foreignColumnSelections
+  let aggregates: string[] = []
   if (cfg.list.customSelections) {
     const customSelections = Object.fromEntries(
       Object.entries(cfg.list.customSelections).map(([key, value]) => [
@@ -77,6 +78,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
         value.sql,
       ]),
     )
+    aggregates = Object.entries(cfg.list.customSelections).filter(([_key, value]) => value.isAggregate).map(([key, _value]) => key)
     selections = { ...selections, ...customSelections }
   }
 
@@ -276,7 +278,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     countQuery = countQuery.where(combinedConditions)
   }
 
-  const response = await getPaginatedResponse<typeof model>(baseQuery, countQuery, query)
+  const response = await getPaginatedResults<typeof model>(baseQuery, countQuery, query)
   if (shouldSelectAllColumns) {
     // run the columns through the accessor functions
     response.results = response.results.map((result: any) => {
@@ -288,12 +290,22 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       })
       return result
     })
+
+    if (aggregates.length > 0) {
+      response.aggregates = response.results.reduce((acc: Record<string, any>, result: any) => {
+        aggregates.forEach((aggregate) => {
+          acc[aggregate] = result[aggregate]
+        })
+        return acc
+      }, {})
+    }
+
     // only return the columns that have accessor keys or the lookup column
-    // response.results = response.results.map((result: any) => {
-    //   return Object.fromEntries(
-    //     Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
-    //   )
-    // }) as any
+    response.results = response.results.map((result: any) => {
+      return Object.fromEntries(
+        Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
+      )
+    }) as any
   }
   return {
     ...response,

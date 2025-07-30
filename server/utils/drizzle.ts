@@ -25,6 +25,7 @@ export const genericPaginationQuerySchema = z.object({
 
 interface PaginatedResponse<T> {
   results: T[]
+  aggregates?: Record<string, any>
   pagination: {
     count: number
     page: number
@@ -33,7 +34,7 @@ interface PaginatedResponse<T> {
   }
 }
 
-export async function getPaginatedResponse<T>(
+export async function getPaginatedResults<T>(
   baseQuery: any,
   countQuery: any,
   query: any,

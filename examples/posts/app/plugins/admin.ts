@@ -167,7 +167,10 @@ export default defineNuxtPlugin(() => {
       customSelections: {
         slugWithId: {
           sql: sql<string>`(${posts.slug} || '-' || ${posts.id})`,
-          isAggregate: false,
+        },
+        totalViews: {
+          sql: sql<number>`sum(${posts.views}) OVER ()`,
+          isAggregate: true,
         },
       },
     },
