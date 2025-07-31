@@ -25,17 +25,8 @@ export default defineNuxtConfig({
   },
   css: [fileURLToPath(new URL('./assets/css/main.css', import.meta.url))],
   modules: [
-    '@nuxt/eslint',
-    '@nuxt/fonts',
-    '@nuxt/icon',
     '@nuxt/ui',
   ],
-  eslint: {
-    config: {
-      // Use the generated ESLint config for lint root project as well
-      rootDir: fileURLToPath(new URL('..', import.meta.url)),
-    },
-  },
   $meta: {
     name: 'autoadmin',
   },
