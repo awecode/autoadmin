@@ -1,6 +1,8 @@
 # AutoAdmin Documentation
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Using AutoAdmin requires a Nuxt project with Drizzle configured with schemas. Currently, SQLite (and variants like Cloudflare D1) is supported. PostgreSQL and MySQL/MariaDB support is coming soon.
+AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Currently, SQLite (and variants like Cloudflare D1) is supported. PostgreSQL and MySQL/MariaDB support is coming soon.
+
+*Requirements: A Nuxt Project with Drizzle configured with a SQLite Schema*
 
 ## Installation
 
