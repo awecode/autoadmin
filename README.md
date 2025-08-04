@@ -310,8 +310,8 @@ registry.register(posts, {
     // Search by title and author's email, else automatically searches on `title` as inferred `lookupColumnName`
     searchFields: ['title', 'authorId.email'],
 
-    // Filter by publication status and author
-    filterFields: ['isPublished', { field: 'authorId', type: 'relation' }],
+    // Filter by publication status and author, foreign key relations are automatically detected
+    filterFields: ['isPublished', 'authorId'],
 
     // Add a custom action to perform on selected rows
     bulkActions: [{
@@ -623,11 +623,8 @@ registry.register(posts, {
     filterFields: [
       // Simple column filter
       'isPublished',
-      // Relation column filter
-      {
-        field: 'authorId',
-        type: 'relation'
-      },
+      // Relation column filter, automatically detected as foreign key relation
+      'authorId',
       // Detailed filter configuration
       {
         field: 'status',
