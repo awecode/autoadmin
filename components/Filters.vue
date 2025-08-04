@@ -140,7 +140,9 @@ const booleanOptions = [
               placeholder="All"
               value-key="value"
               :class="mobileFiltersOpen ? 'w-full' : 'min-w-32'"
+              :content="{ align: 'start' }"
               :items="normalizeOptions(filter.options)"
+              :ui="{ content: 'min-w-fit' }"
             >
               <template #item-label="{ item }">
                 {{ item.label || item.value }}
