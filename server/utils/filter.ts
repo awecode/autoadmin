@@ -34,7 +34,12 @@ async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db
 }
 
 async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
-  const type = definedType || columnTypes[field]?.type
+  let type = definedType || columnTypes[field]?.type
+  // check if relation
+  const relations = getTableForeignKeysByColumn(cfg.model, field)
+  if (relations.length) {
+    type = 'relation'
+  }
   if (type === 'boolean') {
     return {
       field,
@@ -71,7 +76,6 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbTy
       options: filterOptions,
     }
   } else if (type === 'relation') {
-    const relations = getTableForeignKeysByColumn(cfg.model, field)
     if (relations.length === 0) {
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }

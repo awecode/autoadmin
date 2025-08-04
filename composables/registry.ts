@@ -26,8 +26,8 @@ type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
 
 export type FieldType = 'text' | 'email' | 'number' | 'boolean' | 'date' | 'datetime-local' | 'select' | 'json' | 'file' | 'blob' | 'image' | 'textarea' | 'rich-text' | 'relation' | 'relation-many'
 
-export type FilterFieldDef<T extends Table> = ColField<T> | {
-  field: ColField<T>
+export type FilterFieldDef<T extends Table> = ColKey<T> | {
+  field: ColKey<T>
   label?: string
   type?: FilterType
   options?: Option[]
