@@ -106,13 +106,11 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
         // column.name returns camelCase but we need snake case for raw sql
         // https://github.com/drizzle-team/drizzle-orm/issues/3094
         if (value.function === 'count') {
-          sqlExpression = sql<number>`${
-            sql.raw(`sum(CASE WHEN ${colName} THEN 1 ELSE 0 END) OVER () AS ${key}`)
-          }`
+          sqlExpression = sql<number>`${sql.raw(`sum(CASE WHEN ${colName} THEN 1 ELSE 0 END) OVER () AS ${key}`)
+            }`
         } else {
-          sqlExpression = sql<number>`${
-            sql.raw(`${value.function}(${colName}) OVER () AS ${key}`)
-          }`
+          sqlExpression = sql<number>`${sql.raw(`${value.function}(${colName}) OVER () AS ${key}`)
+            }`
         }
         return [key, sqlExpression]
       }),
@@ -217,7 +215,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
             throw new Error(`Invalid filter field: ${filter.field}`)
           }
           if (filter.type === 'boolean') {
-          // Handle boolean filters
+            // Handle boolean filters
             const boolValue = filterValue === 'true' || filterValue === true
             filterConditions.push(eq(column, boolValue))
           } else if (filter.type === 'daterange') {
@@ -323,6 +321,29 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   }
 
   const response = await getPaginatedResults<typeof model>(baseQuery, countQuery, query)
+
+  if (aggregates.length > 0 && response.results.length > 0) {
+    response.aggregates = response.results.reduce((acc: Record<string, any>, result: any) => {
+      aggregates.forEach((aggregate) => {
+        acc[aggregate.key] = {
+          label: aggregate.label,
+          value: result[aggregate.key],
+        }
+      })
+      return acc
+    }, {})
+
+    // Remove aggregate columns from response results, if shouldSelectAllColumns is true, it will be handled in the next step
+    if (!shouldSelectAllColumns) {
+      response.results = response.results.map((result: any) => {
+        return Object.fromEntries(
+          Object.entries(result).filter(([key]) => !aggregates.some(aggregate => aggregate.key === key)),
+        )
+      })
+    }
+  }
+
+
   if (shouldSelectAllColumns) {
     // run the columns through the accessor functions
     response.results = response.results.map((result: any) => {
@@ -334,18 +355,6 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       })
       return result
     })
-
-    if (aggregates.length > 0 && response.results.length > 0) {
-      response.aggregates = response.results.reduce((acc: Record<string, any>, result: any) => {
-        aggregates.forEach((aggregate) => {
-          acc[aggregate.key] = {
-            label: aggregate.label,
-            value: result[aggregate.key],
-          }
-        })
-        return acc
-      }, {})
-    }
 
     // only return the columns that have accessor keys or the lookup column
     response.results = response.results.map((result) => {
