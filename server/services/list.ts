@@ -90,9 +90,15 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   if (cfg.list.aggregates) {
     const customAggregates = Object.fromEntries(
       Object.entries(cfg.list.aggregates).map(([key, value]) => {
-        const column = tableColumns[value.column]
-        if (!column) {
-          throw new Error(`Invalid aggregate column: ${value.column}`)
+        let colName: string
+        if (typeof value.column === 'string') {
+          colName = value.column
+          // column = tableColumns[value.column]
+          // if (!column) {
+          //   throw new Error(`Invalid aggregate column: ${value.column}`)
+          // }
+        } else {
+          colName = value.column.name
         }
         if (!value.function) {
           throw new Error(`Aggregate function is required for ${key}`)
@@ -101,16 +107,15 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
           throw new Error('Invalid function')
         }
         let sqlExpression: SQL<number>
-        const colName = column.name
         // This breaks for snake case in db, camelCase in drizzle without name specified
         // column.name returns camelCase but we need snake case for raw sql
         // https://github.com/drizzle-team/drizzle-orm/issues/3094
         if (value.function === 'count') {
           sqlExpression = sql<number>`${sql.raw(`sum(CASE WHEN ${colName} THEN 1 ELSE 0 END) OVER () AS ${key}`)
-            }`
+          }`
         } else {
           sqlExpression = sql<number>`${sql.raw(`${value.function}(${colName}) OVER () AS ${key}`)
-            }`
+          }`
         }
         return [key, sqlExpression]
       }),
@@ -342,7 +347,6 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       })
     }
   }
-
 
   if (shouldSelectAllColumns) {
     // run the columns through the accessor functions

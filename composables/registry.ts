@@ -14,6 +14,8 @@ import { createInsertSchema } from 'drizzle-zod'
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
 // Represents a column name or relation string
 type ColField<T extends Table> = ColKey<T> | `${ColKey<T>}.${string}`
+// Represent a table column
+export type ColOfTable<T extends Table> = T['_']['columns'][ColKey<T>]
 
 export type CustomSelections = Record<string, { sql: SQL, isAggregate?: boolean, label?: string }>
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
@@ -62,7 +64,7 @@ type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSel
   searchPlaceholder?: string
   searchFields: ColField<T>[]
   customSelections?: C
-  aggregates?: Record<string, { function: (typeof aggregateFunctions)[number], column: ColKey<T>, label?: string }>
+  aggregates?: Record<string, { function: (typeof aggregateFunctions)[number], column: ColKey<T> | ColOfTable<T>, label?: string }>
   bulkActions: {
     label: string
     icon?: string

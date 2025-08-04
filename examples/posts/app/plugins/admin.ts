@@ -177,7 +177,7 @@ export default defineNuxtPlugin(() => {
       aggregates: {
         averageView: {
           function: 'avg',
-          column: 'views',
+          column: posts.views,
         },
         pagesWithViews: {
           function: 'count',
