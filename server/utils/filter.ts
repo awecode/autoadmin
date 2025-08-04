@@ -47,7 +47,7 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbTy
       label: label || toTitleCase(field),
       type: definedType || 'daterange', // uses `daterange` for computed `date` type unless type specifically defined as `date`
     }
-  } else if (type === 'text') {
+  } else if (type === 'text' || type === 'number') {
     const column = cfg.columns[field]
     // TODO Fix for other dialects
     //   const options = await db.all(
@@ -69,13 +69,6 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbTy
       label: label || toTitleCase(field),
       type: 'select',
       options: filterOptions,
-    }
-  } else if (type === 'number') {
-    return {
-      field,
-      label: label || toTitleCase(field),
-      type: 'text',
-      options,
     }
   } else if (type === 'relation') {
     const relations = getTableForeignKeysByColumn(cfg.model, field)
