@@ -14,16 +14,22 @@ const emit = defineEmits<{
 
 const internalValue = ref(props.modelValue)
 
-const { data: selectMenuItemsRaw, execute } = await useLazyFetch<Option[] | string[]>(props.filter.choicesEndpoint ?? '', {
-  immediate: false,
+// Only set up fetch if options don't exist but choicesEndpoint does
+const shouldFetch = !props.filter.options && props.filter.choicesEndpoint
+const { data: selectMenuItemsRaw, execute } = shouldFetch && props.filter.choicesEndpoint
+  ? await useLazyFetch<Option[] | string[]>(props.filter.choicesEndpoint, {
+      immediate: false,
+    })
+  : { data: ref(null), execute: () => {} }
+
+const selectMenuItems = computed(() => {
+  if (props.filter.options) {
+    return normalizeOptions(props.filter.options)
+  }
+  return selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : []
 })
 
-const selectMenuItems = computed(() =>
-  selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
-)
-
 if (props.filter.options) {
-  selectMenuItemsRaw.value = props.filter.options
   // Handle the case where the modelValue is a string and the options are numbers
   // modelValue can be a string because it is extracted from the url query params
   // convert relation select menu value to number if options suggest it is a number
@@ -36,7 +42,7 @@ const selectFetched = ref(false)
 // TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
 // Maybe use v-select until fix found for Nuxt UI/Reka UI
 function onSelectMenuOpen() {
-  if (!selectFetched.value && props.filter.choicesEndpoint) {
+  if (!selectFetched.value && shouldFetch) {
     execute()
     selectFetched.value = true
   }
