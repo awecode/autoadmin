@@ -5,7 +5,7 @@ import type { InferInsertModel, InferSelectModel, SQL, Table } from 'drizzle-orm
 import type { DbType } from '../server/utils/db'
 import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
-import { toTitleCase } from '#layers/autoadmin/utils/string'
+import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
@@ -113,8 +113,9 @@ interface DeleteOptions {
   endpoint?: string
 }
 
-// AdminModelOptions is the options passed to the register function
+/** AdminModelOptions is the options passed to the register function */
 export interface AdminModelOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> {
+  /** A unique identifier for the model. If not provided, the table name will be used. Must not contain any space characters. */
   key?: string
   label?: string
   icon?: string
@@ -229,7 +230,7 @@ export function useAdminRegistry() {
     model: T,
     opts: AdminModelOptions<T, C> = {},
   ) {
-    const key = opts.key ?? getTableName(model)
+    const key = opts.key ? createNoSpaceString(opts.key) : getTableName(model)
     const label = opts.label ?? toTitleCase(key)
 
     const columns = getTableColumns(model)

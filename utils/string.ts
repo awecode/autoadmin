@@ -1,5 +1,6 @@
 import { defu } from 'defu'
 
+// Converts camelCase, snake_case and multiple words to Title Case
 export function toTitleCase(str: string): string {
   return str
     .replace(/_/g, ' ') // replace underscores with spaces
@@ -7,6 +8,13 @@ export function toTitleCase(str: string): string {
     .split(/\s+/) // split by space
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
+}
+
+export function createNoSpaceString(value: string): string {
+  if (value.includes(' ')) {
+    throw new Error(`Invalid input: "${value}" must not contain spaces.`)
+  }
+  return value
 }
 
 const defaultIconMap: Record<string, string> = {
