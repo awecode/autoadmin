@@ -129,7 +129,7 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   delete?: Partial<DeleteOptions>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
-  fields?: FieldSpec[] & { name: ColKey<T>, type: FieldType }[]
+  fields?: FieldSpec[] & { name: ColKey<T>, type?: FieldType }[]
   warnOnUnsavedChanges?: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
 }
