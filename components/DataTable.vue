@@ -299,8 +299,10 @@ if (error.value) {
   console.error(error.value)
 }
 
+const baseTitle = getTitle()
+
 useHead({
-  title: `${title.value} | ${getTitle()}`,
+  title: computed(() => `${title.value} | ${baseTitle}`),
 })
 
 defineExpose({ data, status, refresh, sort, page, size, filterQuery, search, reset })
