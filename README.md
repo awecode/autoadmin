@@ -948,6 +948,8 @@ AutoAdmin can be configured using environment variables:
 | `NUXT_DATABASE_URL` | Database Connection Url (e.g. `file:server/db/db.sqlite`) | undefined |
 | `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
 | `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
+| `NUXT_PUBLIC_PAGINATION_DEFAULT_SIZE` | The default page size for the list view | `20` |
+| `NUXT_PUBLIC_PAGINATION_MAX_SIZE` | The maximum page size for the list view | `200` |
 
 ### Object Storage Configuration
 
