@@ -201,7 +201,6 @@ export default defineNuxtPlugin(() => {
     fields: [
       {
         name: 'color',
-        type: 'text',
         inputAttrs: {
           type: 'color',
         },
