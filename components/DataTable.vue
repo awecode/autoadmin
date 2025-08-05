@@ -565,7 +565,8 @@ const performBulkAction = async () => {
           v-if="data?.pagination.pages! > 1"
           v-model:page="page"
           size="xs"
-          :page-count="data?.pagination.size!"
+          :items-per-page="data?.pagination.size!"
+          :show-edges="true"
           :total="data?.pagination.count!"
         />
       </div>
