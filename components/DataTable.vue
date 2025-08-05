@@ -112,7 +112,7 @@ const filterQuery = useRouteQuery('filters', '', {
 
 const query = computed(() => ({
   ordering: route.query.sort,
-  page: page.value,
+  page: route.query.page ?? 1,
   size: size.value,
   search: search.value === '' ? undefined : search.value,
   ...((filters ? filterQuery.value : {}) as Record<string, string>),
