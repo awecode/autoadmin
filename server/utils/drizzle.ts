@@ -15,12 +15,12 @@ export function colKey(col: Column) {
   return key
 }
 
+const DEFAULT_PAGE_SIZE = 20
+const MAX_PAGE_SIZE = 200
+
 export const genericPaginationQuerySchema = z.object({
   page: z.coerce.number().default(1),
-  size: z.coerce.number().positive().max(
-    100,
-    `Page size must be less than or equal to 100`,
-  ).default(10),
+  size: z.coerce.number().positive(),
 }).strip()
 
 interface PaginatedResponse<T> {
@@ -39,6 +39,12 @@ export async function getPaginatedResults<T>(
   countQuery: any,
   query: any,
 ): Promise<PaginatedResponse<T>> {
+  const paginationConfig = useRuntimeConfig().public.pagination
+  query.size = query.size ?? (paginationConfig && typeof paginationConfig === 'object' && 'defaultSize' in paginationConfig && typeof paginationConfig.defaultSize === 'number' ? paginationConfig.defaultSize : DEFAULT_PAGE_SIZE)
+  const maxSize = paginationConfig && typeof paginationConfig === 'object' && 'maxSize' in paginationConfig && typeof paginationConfig.maxSize === 'number' ? paginationConfig.maxSize : MAX_PAGE_SIZE
+  if (query.size > maxSize) {
+    query.size = maxSize
+  }
   const { page, size } = genericPaginationQuerySchema.parse(query)
   const offset = (page - 1) * size
 

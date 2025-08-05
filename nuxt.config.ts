@@ -12,6 +12,10 @@ export default defineNuxtConfig({
       autoadmin: {
         title: 'AutoAdmin',
       },
+      pagination: {
+        defaultSize: 20,
+        maxSize: 200,
+      },
     },
     databaseUrl: '',
     s3: {

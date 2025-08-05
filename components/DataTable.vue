@@ -88,7 +88,10 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] |
 
 const search = useRouteQuery('q', '', { route, router })
 const page = useRouteQuery('page', 1, { route, router, transform: Number })
-const size = useRouteQuery('size', 10, { route, router, transform: Number })
+
+const paginationConfig = config.public?.pagination
+const defaultSize = (paginationConfig && typeof paginationConfig === 'object' && 'defaultSize' in paginationConfig && typeof paginationConfig.defaultSize === 'number' ? paginationConfig.defaultSize : 20)
+const size = useRouteQuery('size', defaultSize, { route, router, transform: Number })
 
 const filterQuery = useRouteQuery('filters', '', {
   route,
@@ -236,7 +239,7 @@ function getHeader(column: Column<T>, label?: string, sortKey?: string) {
       'class': '-mx-2.5',
       'aria-label': `Sort by ${label}`,
       'onClick': () => {
-      // Cycle through: no sort → asc → desc → no sort
+        // Cycle through: no sort → asc → desc → no sort
         if (!isSorted) {
           column.toggleSorting(false) // asc
         } else if (isSorted === 'asc') {
@@ -379,11 +382,7 @@ const performBulkAction = async () => {
         <slot name="actions">
           <div class="flex items-center gap-2">
             <slot name="actions-prepend"></slot>
-            <UButton
-              v-for="action in pageActions"
-              :key="action.label"
-              v-bind="action"
-            />
+            <UButton v-for="action in pageActions" :key="action.label" v-bind="action" />
             <slot name="actions-append"></slot>
           </div>
         </slot>
@@ -422,11 +421,7 @@ const performBulkAction = async () => {
               :items="bulkActions"
               :ui="{ content: 'min-w-fit' }"
             />
-            <UButton
-              v-if="bulkAction"
-              color="neutral"
-              @click="performBulkAction"
-            >
+            <UButton v-if="bulkAction" color="neutral" @click="performBulkAction">
               Confirm
             </UButton>
           </div>
