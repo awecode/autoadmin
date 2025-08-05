@@ -1,9 +1,12 @@
 import { defu } from 'defu'
 
 export function toTitleCase(str: string): string {
-  // return str.replace(/\w\S*/g, txt =>
-  // txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase())
-  return str.split(/(?=[A-Z])/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  return str
+    .replace(/_/g, ' ') // replace underscores with spaces
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // split camelCase
+    .split(/\s+/) // split by space
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 const defaultIconMap: Record<string, string> = {
