@@ -97,7 +97,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
   const modelKey = cfg.key
   const modal = overlay.create(AutoFormModal, {
     props: {
-      modelKey: modelKey,
+      modelKey,
       mode,
       lookupValue,
       onSave: (data) => {
@@ -331,14 +331,23 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           :accept="field.inputAttrs?.accept"
         />
 
-        <!-- Default input (datetime-local, number, etc.) -->
+        <UInput
+          v-else-if="field.type === 'number'"
+          v-model="fieldValue"
+          v-bind="field.inputAttrs"
+          class="w-full"
+          step="any"
+          type="number"
+          :max="field.rules?.max"
+          :min="field.rules?.min"
+        />
+
+        <!-- Default input (datetime-local, etc.) -->
         <UInput
           v-else
           v-model="fieldValue"
           class="w-full"
           color="neutral"
-          :max="field.rules?.max"
-          :min="field.rules?.min"
           :type="field.type"
         />
       </div>
