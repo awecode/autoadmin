@@ -178,6 +178,9 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
           }
         } else if (typeof def.field === 'function') {
+          if (def.field.name === 'field' && def.cell) {
+            throw new Error('Anonymous functions are not supported for list fields with a cell function.')
+          }
           const fieldName = uniqifyFieldName(def.field.name)
           return {
             id: fieldName,

@@ -19,7 +19,7 @@ export type ColOfTable<T extends Table> = T['_']['columns'][ColKey<T>]
 
 export type CustomSelections = Record<string, { sql: SQL, isAggregate?: boolean, label?: string }>
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
-type ListField<T extends Table, C extends CustomSelections> = ColField<T> | ((model: InferSelectModel<T> & { [K in keyof C]?: unknown }) => any)
+type ListField<T extends Table, C extends CustomSelections> = ColField<T> | ((db: DbType, model: InferSelectModel<T> & { [K in keyof C]?: unknown }) => Promise<any>)
 // Represents a sort key for a column or relation string
 type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
 // type TableWithColumns<T extends Table = Table> = T & { [K in ColKey<T>]: T['_']['columns'][K] }
@@ -41,6 +41,7 @@ export type ListFieldDef<T extends Table, C extends CustomSelections = CustomSel
       label?: string // Optional: custom display label for the field
       type?: FieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
       sortKey?: SortKey<T>
+      cell?: ({ row }: { row: InferSelectModel<T> }) => string
     }
 export interface ListColumnDef<T extends Table> {
   id?: string

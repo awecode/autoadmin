@@ -370,6 +370,26 @@ const performBulkAction = async () => {
     bulkAction.value = undefined
   }
 }
+
+const modelCfg = useAdminRegistry().get(modelKey)
+// find fields with cell in modelCfg?.list.fields and get the accessorKey and prepare a dict with accessorKey as key and cell as value
+const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'object' && 'cell' in field).reduce((acc, def) => {
+  if (typeof def === 'object' && 'cell' in def) {
+    let accessorKey: string | undefined
+    if (typeof def.field === 'string') {
+      if (def.field.includes('.')) {
+        accessorKey = def.field.replace('.', '__')
+      }
+      accessorKey = def.field
+    } else if (typeof def.field === 'function') {
+      accessorKey = def.field.name
+    }
+    if (accessorKey && def.cell) {
+      acc[accessorKey] = def.cell
+    }
+  }
+  return acc
+}, {} as Record<string, (row: { row: Record<string, any> }) => string>)
 </script>
 
 <template>
@@ -459,7 +479,10 @@ const performBulkAction = async () => {
           :key="column.id"
           #[`${column.id}-cell`]="{ cell }"
         >
-          <template v-if="'type' in cell.column.columnDef">
+          <template v-if="cellFunctions && 'accessorKey' in cell.column.columnDef && cellFunctions[cell.column.columnDef.accessorKey]">
+            {{ cellFunctions[cell.column.columnDef.accessorKey]!(cell) }}
+          </template>
+          <template v-else-if="'type' in cell.column.columnDef">
             <template v-if="cell.column.columnDef.type === 'boolean'">
               <span v-if="cell.getValue()">Yes</span>
               <span v-else>No</span>
