@@ -2,13 +2,14 @@
 import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
 import type { TableColumn } from '#ui/types'
 import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
+import type { PropType } from 'vue'
 import DeleteModal from '#layers/autoadmin/components/DeleteModal.vue'
 import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { getErrorMessage } from '#layers/autoadmin/utils/form'
 import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
-import { h, resolveComponent } from 'vue'
+import { computed, defineComponent, h, resolveComponent } from 'vue'
 
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
@@ -390,6 +391,35 @@ const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'o
   }
   return acc
 }, {} as Record<string, (row: { row: Record<string, any> }) => string>)
+
+// Helper component to render cell functions
+const CellRenderer = defineComponent({
+  props: {
+    cellFunction: {
+      type: Function as PropType<(cell: any) => any>,
+      required: true,
+    },
+    cell: {
+      type: Object,
+      required: true,
+    },
+  },
+  setup(props) {
+    const result = computed(() => props.cellFunction(props.cell))
+
+    return () => {
+      const value = result.value
+
+      if (typeof value === 'string') {
+        return h('div', { innerHTML: value })
+      } else if (typeof value === 'object' && value?.__v_isVNode) {
+        return value
+      } else {
+        return String(value)
+      }
+    }
+  },
+})
 </script>
 
 <template>
@@ -477,42 +507,45 @@ const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'o
         <template
           v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select'].includes(col.id ?? ''))"
           :key="column.id"
-          #[`${column.id}-cell`]="{ cell }"
+          #[`${column.id}-cell`]="{ cell: c }"
         >
-          <template v-if="cellFunctions && 'accessorKey' in cell.column.columnDef && cellFunctions[cell.column.columnDef.accessorKey]">
-            <div v-html="cellFunctions[cell.column.columnDef.accessorKey]!(cell)"></div>
+          <template v-if="cellFunctions && 'accessorKey' in c.column.columnDef && cellFunctions[c.column.columnDef.accessorKey]">
+            <CellRenderer
+              :cell="c"
+              :cell-function="cellFunctions[c.column.columnDef.accessorKey]!"
+            />
           </template>
-          <template v-else-if="'type' in cell.column.columnDef">
-            <template v-if="cell.column.columnDef.type === 'boolean'">
-              <span v-if="cell.getValue()">Yes</span>
+          <template v-else-if="'type' in c.column.columnDef">
+            <template v-if="c.column.columnDef.type === 'boolean'">
+              <span v-if="c.getValue()">Yes</span>
               <span v-else>No</span>
             </template>
-            <template v-else-if="cell.column.columnDef.type === 'file' && cell.getValue()">
+            <template v-else-if="c.column.columnDef.type === 'file' && c.getValue()">
               <!-- Open file in new tab -->
-              <NuxtLink class="flex items-center underline" target="_blank" :to="cell.getValue() as string">
+              <NuxtLink class="flex items-center underline" target="_blank" :to="c.getValue() as string">
                 <UIcon class="inline-block mr-1" name="i-lucide-file" />
                 <!-- Show file name -->
-                <span class="text-sm">{{ getFileNameFromUrl(cell.getValue() as string) }}</span>
+                <span class="text-sm">{{ getFileNameFromUrl(c.getValue() as string) }}</span>
               </NuxtLink>
             </template>
-            <template v-else-if="cell.column.columnDef.type === 'image' && cell.getValue()">
-              <NuxtLink target="_blank" :to="cell.getValue() as string">
-                <img class="w-10 h-10 rounded-md" :src="cell.getValue() as string" />
+            <template v-else-if="c.column.columnDef.type === 'image' && c.getValue()">
+              <NuxtLink target="_blank" :to="c.getValue() as string">
+                <img class="w-10 h-10 rounded-md" :src="c.getValue() as string" />
               </NuxtLink>
             </template>
 
-            <template v-else-if="cell.column.columnDef.type === 'date'">
-              {{ humanifyDateTime(cell.getValue() as string | Date, { includeTime: false }) }}
+            <template v-else-if="c.column.columnDef.type === 'date'">
+              {{ humanifyDateTime(c.getValue() as string | Date, { includeTime: false }) }}
             </template>
-            <template v-else-if="cell.column.columnDef.type === 'datetime-local'">
-              {{ humanifyDateTime(cell.getValue() as string | Date) }}
+            <template v-else-if="c.column.columnDef.type === 'datetime-local'">
+              {{ humanifyDateTime(c.getValue() as string | Date) }}
             </template>
             <template v-else>
-              {{ cell.getValue() }}
+              {{ c.getValue() }}
             </template>
           </template>
           <template v-else>
-            {{ cell.getValue() }}
+            {{ c.getValue() }}
           </template>
         </template>
 
