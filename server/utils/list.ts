@@ -93,9 +93,7 @@ const uniqifyFieldName = (fieldName: string) => {
 export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableColumns: Record<ColKey<T>, Column>, columnTypes: Record<string, { type: FieldType, options?: string[] }>, metadata: TableMetadata): { columns: ListColumnDef<T>[], toJoin: JoinDef[] } {
   let columns: ListColumnDef<T>[] = []
   const toJoin: JoinDef[] = []
-  if (cfg.list.columns) {
-    columns = cfg.list.columns
-  } else if (cfg.list.fields) {
+  if (cfg.list.fields) {
     columns = cfg.list.fields.map((def: ListFieldDef<T>) => {
       if (typeof def === 'string') {
         if (def in tableColumns) {
@@ -214,7 +212,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
       return !foreignKeys.some(foreignKey => colKey(foreignKey.column) === column.accessorKey)
     })
   }
-  if (!cfg.list.columns && (typeof cfg.fields !== 'undefined') && cfg.fields.length > 0) {
+  if ((typeof cfg.fields !== 'undefined') && cfg.fields.length > 0) {
     columns = columns.map((column) => {
       if (cfg.fields!.some(field => field.name === column.accessorKey)) {
         return {

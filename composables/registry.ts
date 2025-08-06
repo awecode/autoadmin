@@ -57,7 +57,7 @@ const defaultLookupColumnName = 'id'
 
 export const aggregateFunctions = ['avg', 'sum', 'min', 'max', 'count'] as const
 
-type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> = {
+interface ListOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> {
   showCreateButton: boolean
   enableSearch: boolean
   enableSort: boolean
@@ -74,17 +74,9 @@ type ListOptions<T extends Table = Table, C extends CustomSelections = CustomSel
   title?: string
   endpoint?: string
   filterFields?: FilterFieldDef<T>[]
+  fields?: Array<ListFieldDef<T, C>>
   // Do not allow both fields and columns to be set at the same time
-} & (
-  | {
-    fields: Array<ListFieldDef<T, C>>
-    columns?: never
-  }
-  | {
-    fields?: never
-    columns: ListColumnDef<T>[]
-  }
-  )
+}
 
 interface CreateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
