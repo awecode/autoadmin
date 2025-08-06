@@ -480,7 +480,7 @@ const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'o
           #[`${column.id}-cell`]="{ cell }"
         >
           <template v-if="cellFunctions && 'accessorKey' in cell.column.columnDef && cellFunctions[cell.column.columnDef.accessorKey]">
-            {{ cellFunctions[cell.column.columnDef.accessorKey]!(cell) }}
+            <div v-html="cellFunctions[cell.column.columnDef.accessorKey]!(cell)"></div>
           </template>
           <template v-else-if="'type' in cell.column.columnDef">
             <template v-if="cell.column.columnDef.type === 'boolean'">
