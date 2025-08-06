@@ -350,15 +350,15 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
 
   if (shouldSelectAllColumns) {
     // run the columns through the accessor functions
-    response.results = response.results.map((result: any) => {
+    response.results = await Promise.all(response.results.map(async (result: any) => {
       // loop through the columns and run the accessor functions
-      spec.columns.forEach((column) => {
+      for (const column of spec.columns) {
         if (column.accessorFn) {
-          result[column.accessorKey] = column.accessorFn(result)
+          result[column.accessorKey] = await column.accessorFn(db, result)
         }
-      })
+      }
       return result
-    })
+    }))
 
     // only return the columns that have accessor keys or the lookup column
     response.results = response.results.map((result) => {

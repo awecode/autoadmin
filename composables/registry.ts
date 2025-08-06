@@ -46,7 +46,7 @@ export interface ListColumnDef<T extends Table> {
   id?: string
   accessorKey: string
   header?: string
-  accessorFn?: (model: InferSelectModel<T>) => any
+  accessorFn?: (db: DbType, model: InferSelectModel<T>) => Promise<any>
   type?: FieldType
   sortKey?: SortKey<T>
 }
