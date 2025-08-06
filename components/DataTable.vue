@@ -2,7 +2,7 @@
 import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
 import type { TableColumn } from '#ui/types'
 import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
-import type { PropType } from 'vue'
+import type { PropType, VNode } from 'vue'
 import DeleteModal from '#layers/autoadmin/components/DeleteModal.vue'
 import { getTitle } from '#layers/autoadmin/utils/autoadmin'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
@@ -390,7 +390,7 @@ const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'o
     }
   }
   return acc
-}, {} as Record<string, (row: { row: Record<string, any> }) => string>)
+}, {} as Record<string, (row: { row: Record<string, any> }) => string | VNode>)
 
 // Helper component to render cell functions
 const CellRenderer = defineComponent({

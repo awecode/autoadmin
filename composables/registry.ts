@@ -2,6 +2,7 @@ import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/fi
 import type { FieldSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, SQL, Table } from 'drizzle-orm'
+import type { VNode } from 'vue'
 import type { DbType } from '../server/utils/db'
 import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
@@ -41,7 +42,7 @@ export type ListFieldDef<T extends Table, C extends CustomSelections = CustomSel
       label?: string // Optional: custom display label for the field
       type?: FieldType // Optional: type hint (e.g., 'string', 'number', 'boolean', 'date')
       sortKey?: SortKey<T>
-      cell?: ({ row }: { row: InferSelectModel<T> }) => string
+      cell?: ({ row }: { row: InferSelectModel<T> }) => string | VNode
     }
 export interface ListColumnDef<T extends Table> {
   id?: string

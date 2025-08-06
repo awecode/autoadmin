@@ -292,18 +292,22 @@ registry.register(posts, {
       // A custom function
       {
         field: isArchived,
-        type: 'boolean'
+        type: 'boolean',
+        cell: ({ row }) => {
+          return row.status === 'Archived' ? '✔' : '✘'
+        }
       },
-      // A custom function with additional configuration
+      // A custom function with sort key
       {
         field: popularity,
-        sortKey: 'views'
+        sortKey: 'views',
       },
       // Related column with sorting on foreign table
       {
         field: 'authorId.name',
         // label is auto inferred as `Author Name`
-        sortKey: 'authorId.email'
+        sortKey: 'authorId.email',
+        cell: ({ row }) => h(NuxtLink, { to: { name: 'autoadmin-list', params: { modelKey: 'authors' }, query: { q: `${row.original.authorId_name}` } } }, row.getValue('authorId.name')),
       }
     ],
 
@@ -337,9 +341,6 @@ An array defining the columns to display. An item can be:
 - A dot-notation string for a related field (e.g., 'authorId.email').
 - A function that returns a value for the column in list view. See `isArchived` example above.
 - An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above. `field` value in this object can be a string (column name or dot-notation relation string), or a function.
-
-**`columns: ListColumnDef[]`** -
-An alternative to `fields` that enables you to directly specify Nuxt UI Table columns. Additional to Nuxt UI column config, each column takes `type` (as `FieldType`), `header` (as string), and `sortKey` attributes. This overwrites top-level `fields` configuration for list view.
 
 **`enableSearch: boolean`** (Default: `true`) -
 Toggles search functionality.
