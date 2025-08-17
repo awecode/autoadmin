@@ -1,6 +1,6 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { Table } from 'drizzle-orm'
-import { useDb } from '../utils/db'
+import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { unwrapZodType } from '../utils/zod'
@@ -14,7 +14,7 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
     })
   }
   const model = cfg.model
-  const db = useDb()
+  const db = useAdminDb()
 
   const schema = cfg.create.schema
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
-import { getTitle } from '#layers/autoadmin/utils/autoadmin'
-import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
+import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getIconForLabel } from '#layers/autoadmin/utils/string'
 
 // import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
 // import { inject } from 'vue'
@@ -68,7 +68,7 @@ const mobileMenuOpen = ref(false)
         v-if="!collapsed"
         class="text-lg font-bold transition-opacity duration-300 ease-in-out"
       >
-        {{ getTitle() }}
+        {{ getAdminTitle() }}
       </div>
       <UTooltip :delay="0" :text="collapsed ? 'Expand' : 'Collapse'">
         <UButton
@@ -105,7 +105,7 @@ const mobileMenuOpen = ref(false)
           @click="mobileMenuOpen = !mobileMenuOpen"
         />
         <div class="text-lg font-bold">
-          {{ getTitle() }}
+          {{ getAdminTitle() }}
         </div>
       </div>
       <ClientOnly v-if="!colorMode?.forced">
@@ -141,7 +141,7 @@ const mobileMenuOpen = ref(false)
       >
         <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
           <div class="text-lg font-bold">
-            {{ getTitle() }}
+            {{ getAdminTitle() }}
           </div>
           <UButton
             color="neutral"

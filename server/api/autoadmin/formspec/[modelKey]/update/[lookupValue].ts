@@ -6,7 +6,7 @@ import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToF
 import { eq } from 'drizzle-orm'
 
 const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) => {
-  const db = useDb()
+  const db = useAdminDb()
   const model = cfg.model
   const lookupColumn = cfg.lookupColumn
   const columns = spec.fields.map(field => field.name)

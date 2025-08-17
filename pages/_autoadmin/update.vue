@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelKey)
@@ -33,7 +33,7 @@ const schema = cfg.update.schema
 const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${lookupValue}`
 
 useHead({
-  title: `${listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getTitle()}`,
+  title: `${listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getAdminTitle()}`,
 })
 </script>
 

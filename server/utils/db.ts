@@ -5,7 +5,7 @@ import { drizzle } from 'drizzle-orm/libsql'
 
 let _db: DrizzleD1Database
 
-export function useDb() {
+export function useAdminDb() {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
     const dbBinding = process.env.DB
@@ -29,4 +29,4 @@ export function useDb() {
   return _db
 }
 
-export type DbType = ReturnType<typeof useDb>
+export type AdminDbType = ReturnType<typeof useAdminDb>

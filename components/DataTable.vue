@@ -4,9 +4,9 @@ import type { TableColumn } from '#ui/types'
 import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
 import type { PropType, VNode } from 'vue'
 import DeleteModal from '#layers/autoadmin/components/DeleteModal.vue'
-import { getTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
-import { getErrorMessage } from '#layers/autoadmin/utils/form'
+import { getErrorMessageFromError } from '#layers/autoadmin/utils/form'
 import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
 import { computed, defineComponent, h, resolveComponent } from 'vue'
@@ -170,7 +170,7 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
   } catch (err: any) {
     toast.add({
       title: 'Error',
-      description: getErrorMessage(err) || 'Failed to delete',
+      description: getErrorMessageFromError(err) || 'Failed to delete',
       color: 'error',
     })
   }
@@ -197,7 +197,7 @@ const genericBulkAction = async ({ action, rowLookups }: { action: string, rowLo
   } catch (err: any) {
     toast.add({
       title: 'Error',
-      description: getErrorMessage(err) || 'Failed to perform action',
+      description: getErrorMessageFromError(err) || 'Failed to perform action',
       color: 'error',
     })
   }
@@ -300,7 +300,7 @@ if (error.value) {
   console.error(error.value)
 }
 
-const baseTitle = getTitle()
+const baseTitle = getAdminTitle()
 
 useHead({
   title: computed(() => `${title.value} | ${baseTitle}`),
@@ -345,7 +345,7 @@ async function handleDelete(id: string) {
     } catch (err: any) {
       useToast().add({
         title: 'Error',
-        description: getErrorMessage(err) || 'Failed to delete',
+        description: getErrorMessageFromError(err) || 'Failed to delete',
         color: 'error',
       })
     } finally {

@@ -15,7 +15,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
   const columnTypes = zodToListSpec(cfg.create.schema as any)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
-  const db = useDb()
+  const db = useAdminDb()
   const filters = cfg.list.enableFilter ? await getFilters(cfg, db, columnTypes, cfg.metadata, query) : undefined
 
   const spec = {

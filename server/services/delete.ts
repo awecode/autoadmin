@@ -1,7 +1,7 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { Table } from 'drizzle-orm'
 import { eq, inArray } from 'drizzle-orm'
-import { useDb } from '../utils/db'
+import { useAdminDb } from '../utils/db'
 import { handleDrizzleError } from '../utils/drizzle'
 
 export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string): Promise<any> {
@@ -13,7 +13,7 @@ export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
     })
   }
   const model = cfg.model
-  const db = useDb()
+  const db = useAdminDb()
   const lookupColumn = cfg.lookupColumn
   try {
     await db.delete(model).where(eq(lookupColumn, lookupValue))
@@ -36,7 +36,7 @@ export async function bulkDelete(modelKey: string, rowLookups: (string | number)
     })
   }
   const model = cfg.model
-  const db = useDb()
+  const db = useAdminDb()
   const lookupColumn = cfg.lookupColumn
   try {
     await db.delete(model).where(inArray(lookupColumn, rowLookups))

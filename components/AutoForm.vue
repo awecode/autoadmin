@@ -4,7 +4,7 @@ import type { RouteLocationRaw } from 'vue-router'
 
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
 import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
-import { getErrorMessage, processSchema } from '#layers/autoadmin/utils/form'
+import { getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
   spec: FormSpec
@@ -45,7 +45,7 @@ const initializeState = () => {
 const state = initializeState()
 
 // Process schema to only include fields defined in spec
-const processedSchema = computed(() => processSchema(props.schema as ZodObject<ZodRawShape>, props.spec))
+const processedSchema = computed(() => processSchemaForForm(props.schema as ZodObject<ZodRawShape>, props.spec))
 
 interface ApiErrorResponse {
   statusCode: number
@@ -80,7 +80,7 @@ const handleError = (error: Error) => {
         }
       }
     }
-    toast.add({ title: 'Error', description: `Failed to save: ${getErrorMessage(error)}`, color: 'error' })
+    toast.add({ title: 'Error', description: `Failed to save: ${getErrorMessageFromError(error)}`, color: 'error' })
   }
 }
 

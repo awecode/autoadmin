@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
-import { getTitle } from '#layers/autoadmin/utils/autoadmin'
-import { getIconForLabel, toTitleCase } from '#layers/autoadmin/utils/string'
+import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getIconForLabel } from '#layers/autoadmin/utils/string'
 
 const searchModal = useOverlay().create(SearchModal)
 
@@ -30,7 +30,7 @@ function openSearchModal(link: typeof modelLinks.value[number]) {
   }
 }
 
-const title = getTitle()
+const title = getAdminTitle()
 
 useHead({
   title: `Dashboard | ${title}`,

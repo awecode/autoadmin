@@ -1,6 +1,6 @@
 import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composables/registry'
 import type { SQL, Table } from 'drizzle-orm'
-import type { DbType } from './db'
+import type { AdminDbType } from './db'
 import type { Option } from './form'
 import type { zodToListSpec } from './list'
 import type { TableMetadata } from './metdata'
@@ -19,11 +19,11 @@ export interface CustomFilter {
   label: string
   type?: FilterType
   // options is optional because it is not required for all types like boolean, date, daterange
-  options?: (db: DbType, query: Record<string, any>) => Promise<Option[]>
-  queryConditions: (db: DbType, value: any) => Promise<SQL[]>
+  options?: (db: AdminDbType, query: Record<string, any>) => Promise<Option[]>
+  queryConditions: (db: AdminDbType, value: any) => Promise<SQL[]>
 }
 
-async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
+async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
   return {
     field: filter.parameterName,
     label: filter.label,
@@ -33,7 +33,7 @@ async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db
   }
 }
 
-async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
+async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
   let type = definedType || columnTypes[field]?.type
   // check if relation
   const relations = getTableForeignKeysByColumn(cfg.model, field)
@@ -102,7 +102,7 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: DbTy
   throw new Error(`Invalid filter: ${JSON.stringify(field)}`)
 }
 
-async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
+async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
       return await prepareFilter(cfg, db, columnTypes, filter)
@@ -125,7 +125,7 @@ async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: DbT
   return parsedFiltersWithOriginalType
 }
 
-export async function getFilters<T extends Table>(cfg: AdminModelConfig<T>, db: DbType, columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
+export async function getFilters<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const filters = cfg.list?.filterFields
   if (filters) {
     return await prepareFilters(cfg, db, filters, columnTypes, metadata, query)

@@ -14,7 +14,7 @@ export const normalizeOptions = (options: Option[]) => {
   })
 }
 
-export const getErrorMessage = (error: Error) => {
+export const getErrorMessageFromError = (error: Error) => {
   return typeof error === 'object' && error !== null
     ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
     : String(error)
@@ -52,7 +52,7 @@ export const transformErrorMessage = (message: string, fieldType?: string): stri
   return message
 }
 
-export function processSchema<S extends ZodRawShape>(
+export function processSchemaForForm<S extends ZodRawShape>(
   schema: ZodObject<S>,
   spec: FormSpec,
 ) {

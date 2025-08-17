@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getTitle } from '#layers/autoadmin/utils/autoadmin'
+import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 const cfg = useAdminRegistry().get(modelKey)
@@ -32,7 +32,7 @@ const schema = cfg.create.schema
 const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
 
 useHead({
-  title: `${listTitle} > Create | ${getTitle()}`,
+  title: `${listTitle} > Create | ${getAdminTitle()}`,
 })
 </script>
 

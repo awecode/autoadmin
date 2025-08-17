@@ -3,7 +3,7 @@ import type { FieldSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { VNode } from 'vue'
-import type { DbType } from '../server/utils/db'
+import type { AdminDbType } from '../server/utils/db'
 import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
@@ -20,7 +20,7 @@ export type ColOfTable<T extends Table> = T['_']['columns'][ColKey<T>]
 
 export type CustomSelections = Record<string, { sql: SQL, isAggregate?: boolean, label?: string }>
 // Represents a simple column name or relation string or a callable function (e.g., 'id', 'preferredLocationId.name', (model: InferSelectModel<T>) => any)
-type ListField<T extends Table, C extends CustomSelections> = ColField<T> | ((db: DbType, model: InferSelectModel<T> & { [K in keyof C]?: unknown }) => Promise<any>)
+type ListField<T extends Table, C extends CustomSelections> = ColField<T> | ((db: AdminDbType, model: InferSelectModel<T> & { [K in keyof C]?: unknown }) => Promise<any>)
 // Represents a sort key for a column or relation string
 type SortKey<T extends Table> = ColField<T> | `${ColField<T>}.${string}` | false
 // type TableWithColumns<T extends Table = Table> = T & { [K in ColKey<T>]: T['_']['columns'][K] }
@@ -48,7 +48,7 @@ export interface ListColumnDef<T extends Table> {
   id?: string
   accessorKey: string
   header?: string
-  accessorFn?: (db: DbType, model: InferSelectModel<T>) => Promise<any>
+  accessorFn?: (db: AdminDbType, model: InferSelectModel<T>) => Promise<any>
   type?: FieldType
   sortKey?: SortKey<T>
 }
@@ -70,7 +70,7 @@ interface ListOptions<T extends Table = Table, C extends CustomSelections = Cust
   bulkActions: {
     label: string
     icon?: string
-    action: (db: DbType, rowIds: string[] | number[]) => Promise<{ message?: string, refresh?: boolean }>
+    action: (db: AdminDbType, rowIds: string[] | number[]) => Promise<{ message?: string, refresh?: boolean }>
   }[]
   title?: string
   endpoint?: string

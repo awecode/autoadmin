@@ -1,13 +1,13 @@
 import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
 import type { AnyColumn, Table } from 'drizzle-orm'
-import type { DbType } from './db'
+import type { AdminDbType } from './db'
 import type { FieldSpec, FormSpec } from './form'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { and, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { getEnabledStatuses, getLabelColumnFromModel } from './autoadmin'
-import { useDb } from './db'
+import { useAdminDb } from './db'
 import { colKey, handleDrizzleError } from './drizzle'
 
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
@@ -165,7 +165,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
       //   strip id from field label
       field.label = (field.label || field.name).replace(' Id', '')
       if (formSpec.values?.[colKey(relation.column)]) {
-        const db = useDb()
+        const db = useAdminDb()
         // TODO only select the columns that are needed for the form spec
         const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[colKey(relation.column)]))
         field.options = rows.map(row => ({
@@ -228,7 +228,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
         throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelKey}.`)
       }
-      const db = useDb()
+      const db = useAdminDb()
       // const rows = await db.select().from(table).where(eq(table[colKey(relationData.foreignRelatedColumn)], selfPrimaryValue))
       // TODO only select the columns that are needed for the form spec
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
@@ -268,7 +268,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
       options: [],
     }
     if (formSpec.values) {
-      const db = useDb()
+      const db = useAdminDb()
       const selfValue = formSpec.values[colKey(relation.selfForeignColumn)]
       // TODO only select the columns that are needed for the form spec
       const result = await db
@@ -299,7 +299,7 @@ export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
   return { ...formSpec, fields: updatedFields }
 }
 
-export async function saveO2mRelation<T extends Table>(db: DbType, cfg: AdminModelConfig<T>, preprocessed: any, result: { [x: string]: any }[]) {
+export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: AdminModelConfig<T>, preprocessed: any, result: { [x: string]: any }[]) {
   if (cfg.o2m) {
     const modelKey = cfg.key
     for (const [name, table] of Object.entries(cfg.o2m)) {
@@ -340,7 +340,7 @@ export async function saveO2mRelation<T extends Table>(db: DbType, cfg: AdminMod
   }
 }
 
-export async function saveM2mRelation(db: DbType, relation: M2MRelation, selfValue: any, newValues: any[]) {
+export async function saveM2mRelation(db: AdminDbType, relation: M2MRelation, selfValue: any, newValues: any[]) {
   // if the m2m table has only two columns, we can delete and insert all at once
   if (Object.keys(getTableColumns(relation.m2mTable)).length === 2) {
     await db.delete(relation.m2mTable).where(eq(relation.selfColumn, selfValue))
