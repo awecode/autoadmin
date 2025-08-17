@@ -103,7 +103,7 @@ export default async function uploadToObjectStorage(file: Buffer | File, config?
 
   const request = await client.sign(`${url}${fullFileName}`, {
     method: 'PUT',
-    body: file,
+    body: file as unknown as BodyInit,
     headers,
   })
 
