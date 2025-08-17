@@ -269,11 +269,11 @@ When using file and image uploads, you need to configure object storage as descr
 The `list` option allows you to customize the data table view for a model. If neither `fields` nor `columns` are defined in `list` option, fields are automatically inferred. Automatic inference includes all fields except primary autoincrement columns, timestamp columns with default values, and foreign keys.
 
 ```ts
-const popularity = (obj: typeof posts.$inferSelect) => {
+const popularity = async (db: DbType, obj: typeof posts.$inferSelect) => {
   return `${obj.views} views`
 }
 
-const isArchived = (obj: typeof posts.$inferSelect) => {
+const isArchived = async (db: DbType, obj: typeof posts.$inferSelect) => {
   return obj.status === 'Archived'
 }
 
@@ -517,7 +517,7 @@ export default defineNuxtPlugin(() => {
 Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
 
 ```ts
-const displayTitle = (obj: typeof posts.$inferSelect) => {
+const displayTitle = async (db: DbType, obj: typeof posts.$inferSelect) => {
   return `-> ${obj.title}`
 }
 

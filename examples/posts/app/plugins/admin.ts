@@ -112,7 +112,7 @@ export default defineNuxtPlugin(() => {
         },
         'status',
         {
-          field: post => `${post.views || 0} views`,
+          field: async (db, post) => `${post.views || 0} views`,
           label: 'Popularity',
           sortKey: 'views',
         },
@@ -122,7 +122,7 @@ export default defineNuxtPlugin(() => {
           type: 'date',
         },
         {
-          field: obj => obj.slugWithId,
+          field: async (db, obj) => obj.slugWithId,
           label: 'Slug with ID',
         },
       ],
