@@ -76,7 +76,7 @@ export const useMetadataOnFormSpec = async (
 
   // Drop primary autoincrement columns
   fields = fields.filter(
-    field => !metadata.primaryAutoincrementColumns.includes(field.name),
+    field => !metadata.primaryAutoincrementColumns.includes(field.name) || field._defined,
   )
 
   // Convert datetime columns to datetime-local
@@ -88,7 +88,7 @@ export const useMetadataOnFormSpec = async (
 
   // Drop auto-timestamp columns
   fields = fields.filter(
-    field => !metadata.autoTimestampColumns.includes(field.name),
+    field => !metadata.autoTimestampColumns.includes(field.name) || field._defined,
   )
 
   // Resolve async defaults
@@ -102,6 +102,12 @@ export const useMetadataOnFormSpec = async (
       return field
     }),
   )
+
+  // remove _defined from fields
+  fields = fields.map((field) => {
+    delete field._defined
+    return field
+  })
 
   return { ...formSpec, fields }
 }

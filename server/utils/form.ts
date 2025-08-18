@@ -50,6 +50,7 @@ export interface FieldSpec {
     // enableView?: boolean
     // /** Whether to enable the search button for the relation */
   }
+  _defined?: boolean
 }
 export interface FormSpec {
   fields: FieldSpec[]
@@ -163,12 +164,12 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
       if (typeof field === 'string') {
         const fieldSpec = spec.fields.find(f => f.name === field)
         if (fieldSpec) {
-          return fieldSpec
+          return { ...fieldSpec, _defined: true }
         }
       } else if (typeof field === 'object' && field !== null && 'name' in field) {
         const fieldSpec = spec.fields.find(f => f.name === field.name)
         if (fieldSpec) {
-          return defu(field, fieldSpec)
+          return { ...defu(field, fieldSpec), _defined: true }
         }
       }
       throw createError({
@@ -183,7 +184,7 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
     definedFieldSpecs = definedFieldSpecs.map((field) => {
       const fieldSpec = cfg.fields!.find(f => f.name === field.name)
       if (fieldSpec) {
-        return defu(fieldSpec, field)
+        return { ...defu(fieldSpec, field), _defined: true }
       }
       return field
     })
