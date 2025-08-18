@@ -105,7 +105,7 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
 async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
-      return await prepareFilter(cfg, db, columnTypes, filter)
+      return await prepareFilter(cfg, db, columnTypes, filter, undefined, undefined, undefined, query)
     } else if (typeof filter === 'object') {
       if ('parameterName' in filter && 'label' in filter) {
         return await prepareCustomFilter(cfg, db, columnTypes, filter as unknown as CustomFilter, query)
