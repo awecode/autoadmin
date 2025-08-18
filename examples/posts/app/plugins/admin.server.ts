@@ -1,3 +1,4 @@
+import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { inArray, sql } from 'drizzle-orm'
 import { categories, posts, postsToTags, tags, users } from '../../server/db/sqlite'
 

@@ -202,12 +202,16 @@ const generateDefaultOptions = <T extends Table, C extends CustomSelections = Cu
   return dct
 }
 
-const registry = new Map<string, AdminModelConfig>()
-
 // Registry maintains state across the application
 // TODO May be use memory storage instead of globalThis
 function getRegistry(): Map<string, AdminModelConfig<Table, CustomSelections>> {
-  return registry
+  // @ts-expect-error - globalThis is not typed
+  if (!globalThis.autoadminRegistry) {
+    // @ts-expect-error - globalThis is not typed
+    globalThis.autoadminRegistry = new Map()
+  }
+  // @ts-expect-error - globalThis is not typed
+  return globalThis.autoadminRegistry as Map<string, AdminModelConfig>
 }
 
 export function useAdminRegistry() {

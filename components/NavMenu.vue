@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
-import { getIconForLabel } from '#layers/autoadmin/utils/string'
 
 // import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
 // import { inject } from 'vue'
@@ -24,15 +22,8 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const items = useState<NavigationMenuItem[][]>('sidebar-items', () => {
-  const allModels = useAdminRegistry().all()
-  const links = allModels.filter(model => model.enableIndex).map(model => ({
-    label: model.label,
-    icon: model.icon || getIconForLabel(model.label),
-    to: { name: 'autoadmin-list', params: { modelKey: model.key } },
-    type: 'link' as const,
-  }))
-
+const { data: items } = await useAsyncData('sidebar-items', async () => {
+  const links = await $fetch('/api/autoadmin/registry-meta')
   return [
     appConfig.sidebar.topItems,
     [

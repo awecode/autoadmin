@@ -1,25 +1,12 @@
 <script setup lang="ts">
 import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
-import { getIconForLabel } from '#layers/autoadmin/utils/string'
 
 const searchModal = useOverlay().create(SearchModal)
 
-const modelLinks = useState('model-links', () => {
-  const allCfg = useAdminRegistry().all()
-  const links = allCfg.filter(cfg => cfg.enableIndex).map(cfg => ({
-    label: cfg.label,
-    icon: cfg.icon || getIconForLabel(cfg.label),
-    to: { name: 'autoadmin-list', params: { modelKey: cfg.key } },
-    type: 'link' as const,
-    createPath: cfg.create.enabled ? { name: 'autoadmin-create', params: { modelKey: cfg.key } } : undefined,
-    searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
-  }))
+const { data: modelLinks } = await useAsyncData('model-links', () => $fetch('/api/autoadmin/registry-meta'))
 
-  return links
-})
-
-function openSearchModal(link: typeof modelLinks.value[number]) {
+function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   if (link.searchPlaceholder) {
     searchModal.open({
       label: link.label,
