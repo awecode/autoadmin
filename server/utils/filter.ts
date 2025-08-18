@@ -1,4 +1,4 @@
-import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/server/utils/registry'
 import type { SQL, Table } from 'drizzle-orm'
 import type { AdminDbType } from './db'
 import type { Option } from './form'

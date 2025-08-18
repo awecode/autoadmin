@@ -1,6 +1,6 @@
-import type { AdminModelOptions } from '#layers/autoadmin/composables/registry'
-import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import type { AdminModelOptions } from '#layers/autoadmin/server/utils/registry'
 import { deleteRecord } from '#layers/autoadmin/server/services/delete'
+import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { tags } from '../../../db/schema'
 
 export default defineEventHandler(async (event) => {

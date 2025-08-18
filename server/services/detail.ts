@@ -1,4 +1,4 @@
-import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 
 // TODO: Implement actual database calls
 export async function getRecordDetail(cfg: AdminModelConfig, lookupValue: string): Promise<any> {

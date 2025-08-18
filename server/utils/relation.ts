@@ -1,4 +1,4 @@
-import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 import type { AnyColumn, Table } from 'drizzle-orm'
 import type { AdminDbType } from './db'
 import type { FieldSpec, FormSpec } from './form'

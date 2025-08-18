@@ -1,6 +1,6 @@
-import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 import type { SQL, Table } from 'drizzle-orm'
-import { aggregateFunctions } from '#layers/autoadmin/composables/registry'
+import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'

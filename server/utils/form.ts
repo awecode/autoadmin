@@ -1,4 +1,4 @@
-import type { FieldType } from '#layers/autoadmin/composables/registry'
+import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { defu } from 'defu'
 import { colKey } from './drizzle'

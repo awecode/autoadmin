@@ -1,4 +1,4 @@
-import type { AdminModelConfig, ColKey, FieldType, ListColumnDef, ListFieldDef } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig, ColKey, FieldType, ListColumnDef, ListFieldDef } from '#layers/autoadmin/server/utils/registry'
 import type { Column, Table } from 'drizzle-orm'
 import type { ZodObject, ZodTypeAny } from 'zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'

@@ -1,6 +1,6 @@
-import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 import type { Table } from 'drizzle-orm'
-import { useAdminRegistry } from '#layers/autoadmin/composables/registry'
+import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { getTableColumns } from 'drizzle-orm'
 

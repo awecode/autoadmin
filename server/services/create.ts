@@ -1,4 +1,4 @@
-import type { AdminModelConfig } from '#layers/autoadmin/composables/registry'
+import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 import type { Table } from 'drizzle-orm'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
