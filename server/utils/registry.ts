@@ -1,15 +1,15 @@
-import type { CustomFilter, FilterType } from '#layers/autoadmin/server/utils/filter'
-import type { FieldSpec, Option } from '#layers/autoadmin/server/utils/form'
-import type { TableMetadata } from '#layers/autoadmin/server/utils/metdata'
 import type { InferInsertModel, InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { VNode } from 'vue'
-import type { AdminDbType } from '../server/utils/db'
-import { getTableMetadata } from '#layers/autoadmin/server/utils/metdata'
+import type { AdminDbType } from './db'
+import type { CustomFilter, FilterType } from './filter'
+import type { FieldSpec, Option } from './form'
+import type { TableMetadata } from './metdata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
+import { getTableMetadata } from './metdata'
 
 // Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -202,17 +202,12 @@ const generateDefaultOptions = <T extends Table, C extends CustomSelections = Cu
   return dct
 }
 
-// Global registry - maintains state across the application
+const registry = new Map<string, AdminModelConfig>()
+
+// Registry maintains state across the application
 // TODO May be use memory storage instead of globalThis
 function getRegistry(): Map<string, AdminModelConfig<Table, CustomSelections>> {
-  // @ts-expect-error: attach to global for persistence
-  if (!globalThis.__admin_registry__) {
-    // @ts-expect-error: attach to global for persistence
-    globalThis.__admin_registry__ = new Map<string, AdminModelConfig<Table, CustomSelections>>()
-  }
-
-  // @ts-expect-error: attach to global for persistence
-  return globalThis.__admin_registry__
+  return registry
 }
 
 export function useAdminRegistry() {
