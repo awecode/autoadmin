@@ -41,6 +41,8 @@ const fieldValue = computed({
         return formatter(new Date(props.modelValue))
       }
       return props.modelValue
+    } else if (props.field.type === 'json') {
+      return JSON.stringify(props.modelValue, null, 2)
     }
     return props.modelValue
   },
@@ -48,6 +50,8 @@ const fieldValue = computed({
     // Coerce to Date object for datetime-local and date fields
     if ((props.field.type === 'datetime-local' || props.field.type === 'date') && value) {
       emit('update:modelValue', new Date(value))
+    } else if (props.field.type === 'json') {
+      emit('update:modelValue', JSON.parse(value))
     } else {
       emit('update:modelValue', value)
     }
