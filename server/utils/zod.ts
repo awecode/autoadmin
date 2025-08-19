@@ -1,8 +1,5 @@
-import type { ZodDefault, ZodNullable, ZodOptional, ZodTypeAny } from 'zod'
-
-export function getDef(zodType: ZodTypeAny) {
-  return zodType?._def
-}
+import type { ZodType } from 'zod'
+import { ZodDefault, ZodNullable, ZodOptional } from 'zod'
 
 export function mapZodCheckToRules(check: any): Record<string, unknown> {
   switch (check.kind) {
@@ -20,50 +17,31 @@ export function mapZodCheckToRules(check: any): Record<string, unknown> {
   }
 }
 
-type UnwrappedZod<T extends ZodTypeAny> = T extends
-  | ZodOptional<infer U>
-  | ZodNullable<infer U>
-  | ZodDefault<infer U>
-  ? UnwrappedZod<U>
-  : T
-
-export function unwrapZodType<T extends ZodTypeAny>(zodType: T): {
-  innerType: UnwrappedZod<T>
+export function unwrapZodType(zodType: ZodType): {
+  innerType: ZodType
   isOptional: boolean
   defaultValue?: unknown
 } {
-  let currentType: ZodTypeAny = zodType
+  let currentType = zodType
   let isOptional = false
   let defaultValue: unknown
 
-  while (true) {
-    const def = currentType._def
-    if (!def) break
-
-    const typeName = def.typeName ?? def.type
-
-    if (
-      typeName === 'ZodOptional'
-      || typeName === 'optional'
-      || typeName === 'ZodNullable'
-      || typeName === 'nullable'
-    ) {
+  while (currentType) {
+    if (currentType instanceof ZodOptional || currentType instanceof ZodNullable) {
+      currentType = currentType.unwrap() as ZodType
       isOptional = true
-      currentType = def.innerType
-    } else if (typeName === 'ZodDefault' || typeName === 'default') {
+    } else if (currentType instanceof ZodDefault) {
       isOptional = true
-      if (def.defaultValue !== undefined) {
-        defaultValue
-            = typeof def.defaultValue === 'function' ? def.defaultValue() : def.defaultValue
-      }
-      currentType = def.innerType
+      const val = currentType.def.defaultValue
+      defaultValue = typeof val === 'function' ? val() : val
+      currentType = currentType.unwrap() as ZodType
     } else {
       break
     }
   }
 
   return {
-    innerType: currentType as UnwrappedZod<T>,
+    innerType: currentType,
     isOptional,
     defaultValue,
   }

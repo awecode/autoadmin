@@ -5,12 +5,12 @@ import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { createInsertSchema } from 'drizzle-zod'
 import { colKey } from './drizzle'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from './relation'
-import { getDef, unwrapZodType } from './zod'
+import { unwrapZodType } from './zod'
 
 type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
 export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: FieldType, options?: string[] }> {
-  const shape = getDef(schema)?.shape ?? schema.shape
+  const shape = schema.def?.shape ?? schema.shape
   if (!shape) {
     // Fallback for safety, though a ZodObject should always have a shape.
     return {}
@@ -19,7 +19,7 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Fi
   const fields: [string, { type: FieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
     const { innerType } = unwrapZodType(zodType as ZodTypeAny)
 
-    const definition = getDef(innerType)
+    const definition = innerType.def
     const definitionTypeKey = definition?.typeName ?? definition?.type
 
     let type: FieldType = 'text'
@@ -67,10 +67,8 @@ export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: Fi
       case 'ZodUnion':
       case 'union':
         // If a union contains a record type, it's likely a JSON field from drizzle-zod.
-        if (definition.options?.some((opt: any) => {
-          const optDef = getDef(opt)
-          const optTypeKey = optDef?.typeName ?? optDef?.type
-          return optTypeKey === 'ZodRecord' || optTypeKey === 'record'
+        if (definition.options?.some((opt) => {
+          return opt._zod.def.type === 'record'
         })) {
           type = 'json'
         }

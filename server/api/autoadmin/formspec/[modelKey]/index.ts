@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   }
   const model = cfg.model
   const insertSchema = createInsertSchema(model)
-  const spec = zodToFormSpec(insertSchema as any)
+  const spec = zodToFormSpec(insertSchema)
   if (cfg.update.formFields || cfg.fields) {
     spec.fields = useDefinedFields(spec, cfg)
   }

@@ -1,10 +1,11 @@
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
-import type { ZodObject } from 'zod'
+import type { ZodObject, ZodType } from 'zod'
 import type { SzType } from 'zodex'
 import { defu } from 'defu'
+import { z } from 'zod'
 import { colKey } from './drizzle'
 import { getPrimaryKeyColumn } from './relation'
-import { getDef, mapZodCheckToRules, unwrapZodType } from './zod'
+import { mapZodCheckToRules, unwrapZodType } from './zod'
 
 type Rules = Record<string, unknown>
 export type Option = string | number | { label?: string, value: string | number, count?: number }
@@ -63,35 +64,27 @@ export interface FormSpec {
   schema?: SzType
 }
 
-export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
-  const shape = getDef(schema)?.shape ?? schema.shape
+export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormSpec {
+  const shape = schema.shape
   if (!shape) {
     // Fallback for safety, though a ZodObject should always have a shape.
     return { fields: [] }
   }
 
   const fields: FieldSpec[] = Object.entries(shape).map(([name, zodType]) => {
-    const { innerType, isOptional, defaultValue } = unwrapZodType(zodType as ZodTypeAny)
+    const { innerType, isOptional, defaultValue } = unwrapZodType(zodType)
 
-    const definition = getDef(innerType)
-    const definitionTypeKey = definition?.typeName ?? definition?.type
+    const definition = innerType.def
+    const definitionTypeKey = definition?.type
 
     let type: FieldType = 'text'
     const rules: Rules = {}
-    let options: string[] | undefined
+    let options
 
     switch (definitionTypeKey) {
-      case 'ZodString':
       case 'string':
         type = 'text'
-        if (definition.checks) {
-          for (const check of definition.checks) {
-            if (check.kind === 'email') type = 'email'
-            Object.assign(rules, mapZodCheckToRules(check))
-          }
-        }
         break
-      case 'ZodNumber':
       case 'number':
         type = 'number'
         if (definition.checks) {
@@ -101,48 +94,45 @@ export function zodToFormSpec(schema: ZodObject<any>): FormSpec {
         }
         // Check for top-level minValue and maxValue on the innerType object itself,
         // which is where they appear in the provided schema structure.
-        if ((innerType as any).minValue != null) {
-          rules.min = (innerType as any).minValue
-        }
-        if ((innerType as any).maxValue != null) {
-          rules.max = (innerType as any).maxValue
+        if (innerType instanceof z.ZodNumber) {
+          if (innerType.minValue != null) {
+            rules.min = innerType.minValue
+          }
+          if (innerType.maxValue != null) {
+            rules.max = innerType.maxValue
+          }
         }
         break
-      case 'ZodBoolean':
       case 'boolean':
         type = 'boolean'
         break
-      case 'ZodEnum':
       case 'enum':
         type = 'select'
-        options = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
+        if (innerType instanceof z.ZodEnum) {
+          options = innerType.options
+        }
         break
-      case 'ZodDate':
       case 'date':
         type = 'date'
         break
-      case 'ZodBigInt':
       case 'bigint':
         type = 'number' // HTML inputs do not have a 'bigint' type, so 'number' is the closest, separate from number because no min/max
         break
-      case 'ZodCustom':
       case 'custom':
         // Drizzle-zod uses a custom type for blobs, which we'll map to 'file'.
         type = 'blob'
         break
-      case 'ZodRecord':
       case 'record':
         type = 'json'
         break
-      case 'ZodUnion':
       case 'union':
         // If a union contains a record type, it's likely a JSON field from drizzle-zod.
-        if (definition.options?.some((opt: any) => {
-          const optDef = getDef(opt)
-          const optTypeKey = optDef?.typeName ?? optDef?.type
-          return optTypeKey === 'ZodRecord' || optTypeKey === 'record'
-        })) {
-          type = 'json'
+        if (innerType instanceof z.ZodUnion) {
+          if (innerType.options?.some((opt) => {
+            return opt._zod.def.type === 'record'
+          })) {
+            type = 'json'
+          }
         }
         break
     }
