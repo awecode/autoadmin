@@ -185,6 +185,99 @@
       ]
     },
     "warnOnUnsavedChanges": true,
-    "labelString": "Post 1"
+    "labelString": "Post 1",
+    "endpoint": "/api/autoadmin/posts/1",
+    "listTitle": "Posts",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "min": -9007199254740991,
+          "minInclusive": true,
+          "max": 9007199254740991,
+          "maxInclusive": true,
+          "format": "safeint",
+          "isOptional": true
+        },
+        "title": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": "string",
+          "isNullable": true,
+          "isOptional": true
+        },
+        "content": {
+          "type": "string",
+          "isNullable": true,
+          "isOptional": true
+        },
+        "featuredImage": {
+          "type": "string",
+          "isNullable": true,
+          "isOptional": true
+        },
+        "status": {
+          "type": "enum",
+          "values": {
+            "draft": "draft",
+            "published": "published",
+            "archived": "archived"
+          },
+          "isNullable": true,
+          "isOptional": true
+        },
+        "views": {
+          "type": "number",
+          "min": -9007199254740991,
+          "minInclusive": true,
+          "max": 9007199254740991,
+          "maxInclusive": true,
+          "format": "safeint",
+          "isNullable": true,
+          "isOptional": true
+        },
+        "isCommentsEnabled": {
+          "type": "boolean",
+          "isNullable": true,
+          "isOptional": true
+        },
+        "publishedAt": {
+          "type": "date",
+          "isNullable": true,
+          "isOptional": true
+        },
+        "createdAt": {
+          "type": "date",
+          "isOptional": true
+        },
+        "updatedAt": {
+          "type": "date",
+          "isOptional": true
+        },
+        "authorId": {
+          "type": "number",
+          "min": -9007199254740991,
+          "minInclusive": true,
+          "max": 9007199254740991,
+          "maxInclusive": true,
+          "format": "safeint"
+        },
+        "categoryId": {
+          "type": "number",
+          "min": -9007199254740991,
+          "minInclusive": true,
+          "max": 9007199254740991,
+          "maxInclusive": true,
+          "format": "safeint",
+          "isNullable": true,
+          "isOptional": true
+        }
+      }
+    }
   }
 }
