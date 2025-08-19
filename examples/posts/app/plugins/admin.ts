@@ -9,7 +9,7 @@ export default defineNuxtPlugin(() => {
       fields: [
         {
           field: 'authorId.name',
-          cell: ({ row }) => h(NuxtLink, { to: { name: 'autoadmin-list', params: { modelKey: 'users' }, query: { q: `${row.original.authorId__name}` } } }, () => row.getValue('authorId__name')+'x'),
+          cell: ({ row }) => h(NuxtLink, { to: { name: 'autoadmin-list', params: { modelKey: 'users' }, query: { q: `${row.original.authorId__name}` } } }, () => row.getValue('authorId__name')),
         },
       ],
     },

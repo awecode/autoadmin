@@ -73,7 +73,7 @@ export const posts = sqliteTable('posts', {
 Register your Drizzle schemas in a Nuxt plugin.
 
 ```ts
-// plugins/admin.ts
+// plugins/admin.server.ts
 import { posts, users } from '~~/server/db/schema'
 
 export default defineNuxtPlugin(() => {
@@ -90,7 +90,7 @@ Run the project and open `/admin` to access the admin interfaces for users and p
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.
 
 ```ts
-// plugins/admin.ts
+// plugins/admin.server.ts
 import { posts, users } from '~~/server/db/schema'
 
 export default defineNuxtPlugin(() => {
@@ -971,7 +971,7 @@ Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/e
 
 You can also use list, create, update, delete service in your own API routes by passing the model config to the service. See [Example API Routes](https://github.com/awecode/autoadmin/tree/main/examples/posts/server/api) for more details.
 
-You can also customize how cells look in the list view by registering a plugin `useAdminClient`. You can pass custom cell functions to table just like with Nuxt UI Table. See [Example Plugin](https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.client.ts) for more details.
+You can also customize how cells are rendered on table list by defining a cell function using a client side composable `useAdminClient`. See [Example Plugin](https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts).
 
 ## Roadmap
 
