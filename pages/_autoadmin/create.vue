@@ -1,18 +1,12 @@
 <script setup lang="ts">
+import type { ZodObject, ZodType } from 'zod'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
+import { dezerialize } from 'zodex'
 
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
-const cfg = useAdminRegistry().get(modelKey)
-if (!cfg) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: `Model "${modelKey}" is not registered.`,
-  })
-}
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
 
-const apiPrefix = cfg.apiPrefix
-
-const listTitle = cfg.list?.title ?? cfg.label
 const listPath = { name: 'autoadmin-list', params: { modelKey } }
 
 const { data, error } = await useFetch<{ spec: FormSpec }>(`${apiPrefix}/formspec/${modelKey}`, {
@@ -27,19 +21,31 @@ if (error.value) {
 }
 
 const formSpec = data.value?.spec as FormSpec
-const schema = cfg.create.schema
 
-const endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
+if (!formSpec.schema) {
+  throw createError({
+    statusCode: 500,
+    statusMessage: `Form spec schema must be provided.`,
+  })
+}
+const schema = dezerialize(formSpec.schema) as ZodObject<Record<string, ZodType>>
+const endpoint = formSpec.endpoint
+if (!endpoint) {
+  throw createError({
+    statusCode: 500,
+    statusMessage: `Endpoint must be provided.`,
+  })
+}
 
 useHead({
-  title: `${listTitle} > Create | ${getAdminTitle()}`,
+  title: `${formSpec.listTitle} > Create | ${getAdminTitle()}`,
 })
 </script>
 
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${listTitle}`">
+      <UTooltip :text="`Back to ${formSpec.listTitle}`">
         <UButton
           class="mr-1"
           color="neutral"

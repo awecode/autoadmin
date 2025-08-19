@@ -28,9 +28,7 @@ if (!formSpec.schema) {
     statusMessage: `Form spec schema must be provided.`,
   })
 }
-
 const schema = dezerialize(formSpec.schema) as ZodObject<Record<string, ZodType>>
-
 const endpoint = formSpec.endpoint
 if (!endpoint) {
   throw createError({

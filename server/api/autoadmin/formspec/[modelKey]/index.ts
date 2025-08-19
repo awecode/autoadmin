@@ -3,6 +3,7 @@ import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 import { createInsertSchema } from 'drizzle-zod'
+import { zerialize } from 'zodex'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')
@@ -35,6 +36,13 @@ export default defineEventHandler(async (event) => {
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
   specWithMetadata.warnOnUnsavedChanges = cfg.create.warnOnUnsavedChanges
+
+  const config = useRuntimeConfig()
+  const apiPrefix = config.public.apiPrefix
+  specWithMetadata.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}`
+  specWithMetadata.listTitle = cfg.list.title ?? cfg.label
+  specWithMetadata.schema = zerialize(cfg.update.schema)
+
   return {
     spec: specWithMetadata,
   }
