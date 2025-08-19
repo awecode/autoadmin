@@ -22,17 +22,17 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const { data: items } = await useAsyncData('sidebar-items', async () => {
-  const links = await $fetch('/api/autoadmin/registry-meta')
-  return [
+const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', {key: 'model-links'})
+
+const items = [
     appConfig.sidebar.topItems,
     [
       appConfig.sidebar.modelLabel,
-      ...links,
+      ...modelLinks.value ?? [],
     ],
     appConfig.sidebar.additionalItems,
   ]
-})
+
 
 const colorMode = useColorMode()
 

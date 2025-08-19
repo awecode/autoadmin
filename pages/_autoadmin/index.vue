@@ -4,7 +4,7 @@ import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const searchModal = useOverlay().create(SearchModal)
 
-const { data: modelLinks } = await useAsyncData('model-links', () => $fetch('/api/autoadmin/registry-meta'))
+const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', {key: 'model-links'})
 
 function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   if (link.searchPlaceholder) {
