@@ -24,7 +24,7 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
   // Preprocess string values into Date for date fields
   const preprocessed = { ...data }
   for (const key in shape) {
-    const fieldSchema = unwrapZodType(shape[key])
+    const fieldSchema = unwrapZodType(shape[key]!)
     if (fieldSchema.innerType.def.type === 'date' && typeof preprocessed[key] === 'string') {
       const maybeDate = new Date(preprocessed[key])
       if (!Number.isNaN(maybeDate.getTime())) {

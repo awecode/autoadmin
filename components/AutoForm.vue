@@ -2,7 +2,7 @@
 import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import type { RouteLocationRaw } from 'vue-router'
 
-import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod'
+import type { ZodObject, ZodType } from 'zod'
 import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
 import { getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
 
@@ -12,7 +12,7 @@ const props = defineProps<{
   cancelPath?: RouteLocationRaw
   redirectPath?: RouteLocationRaw
   endpoint: string
-  schema: ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, { [x: string]: any }, { [x: string]: any }> | Record<string, any>
+  schema: ZodObject<Record<string, ZodType>>
 }>()
 
 const emit = defineEmits<{
@@ -45,7 +45,7 @@ const initializeState = () => {
 const state = initializeState()
 
 // Process schema to only include fields defined in spec
-const processedSchema = computed(() => processSchemaForForm(props.schema as ZodObject<ZodRawShape>, props.spec))
+const processedSchema = computed(() => processSchemaForForm(props.schema, props.spec))
 
 interface ApiErrorResponse {
   statusCode: number

@@ -1,6 +1,6 @@
 import type { AdminModelOptions } from '#layers/autoadmin/server/utils/registry'
-import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { updateRecord } from '#layers/autoadmin/server/services/update'
+import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { tags } from '../../../db/schema'
 
 export default defineEventHandler(async (event) => {

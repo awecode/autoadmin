@@ -2,14 +2,14 @@
 import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
 import type { TableColumn } from '#ui/types'
 import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
-import type { PropType, VNode } from 'vue'
+// import type { PropType, VNode } from 'vue'
 import DeleteModal from '#layers/autoadmin/components/DeleteModal.vue'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { getErrorMessageFromError } from '#layers/autoadmin/utils/form'
 import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
-import { computed, defineComponent, h, resolveComponent } from 'vue'
+import { h, resolveComponent } from 'vue'
 
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')

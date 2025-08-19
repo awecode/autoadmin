@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ZodObject, ZodType } from 'zod'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 import { dezerialize } from 'zodex'
 
@@ -28,7 +29,7 @@ if (!formSpec.schema) {
   })
 }
 
-const schema = dezerialize(formSpec.schema)
+const schema = dezerialize(formSpec.schema) as ZodObject<Record<string, ZodType>>
 
 const endpoint = formSpec.endpoint
 if (!endpoint) {

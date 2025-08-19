@@ -1,5 +1,5 @@
 import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
-import type { Table } from 'drizzle-orm'
+import type { InferInsertModel, Table } from 'drizzle-orm'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
@@ -23,7 +23,7 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
   // Preprocess string values into Date for date fields
   const preprocessed = { ...data }
   for (const key in shape) {
-    const fieldSchema = unwrapZodType(shape[key])
+    const fieldSchema = unwrapZodType(shape[key]!)
     if (fieldSchema.innerType.def.type === 'date' && typeof preprocessed[key] === 'string') {
       const maybeDate = new Date(preprocessed[key])
       if (!Number.isNaN(maybeDate.getTime())) {
@@ -32,7 +32,7 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
     }
   }
 
-  const validatedData = schema.parse(preprocessed)
+  const validatedData = schema.parse(preprocessed) as InferInsertModel<T>
 
   let result
   try {
