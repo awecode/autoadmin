@@ -22,17 +22,16 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', {key: 'model-links'})
+const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', { key: 'model-links' })
 
 const items = [
-    appConfig.sidebar.topItems,
-    [
-      appConfig.sidebar.modelLabel,
-      ...modelLinks.value ?? [],
-    ],
-    appConfig.sidebar.additionalItems,
-  ]
-
+  appConfig.sidebar.topItems,
+  [
+    appConfig.sidebar.modelLabel,
+    ...modelLinks.value ?? [],
+  ],
+  appConfig.sidebar.additionalItems,
+]
 
 const colorMode = useColorMode()
 

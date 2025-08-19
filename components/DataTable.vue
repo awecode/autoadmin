@@ -122,14 +122,13 @@ const query = computed(() => ({
 
 const endpoint = `${apiPrefix}/${modelKey}`
 
-const { data, status, error, refresh } = useAsyncData<ListApiResponse>(`${modelKey}-list`, async () => {
-  const response = await $fetch<ListApiResponse>(endpoint, { query: query.value })
-  return {
+const { data, status, error, refresh } = useFetch<ListApiResponse>(endpoint, {
+  key: `${modelKey}-list`,
+  query,
+  transform: (response: ListApiResponse) => ({
     ...response,
     spec: response?.spec || {},
-  }
-}, {
-  watch: [query],
+  }),
 })
 
 const spec = computed(() => data.value?.spec || {} as ListApiResponse['spec'])
@@ -167,7 +166,7 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
       description: 'Deleted successfully',
       color: 'success',
     })
-    refresh()
+    await refresh()
   } catch (err: any) {
     toast.add({
       title: 'Error',
@@ -193,7 +192,7 @@ const genericBulkAction = async ({ action, rowLookups }: { action: string, rowLo
       color: 'success',
     })
     if (response.refresh) {
-      refresh()
+      await refresh()
     }
   } catch (err: any) {
     toast.add({
