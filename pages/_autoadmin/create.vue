@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ZodObject, ZodType } from 'zod'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { dezerialize } from 'zodex'
 
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
@@ -37,15 +38,17 @@ if (!endpoint) {
   })
 }
 
+const listTitle = formSpec.listTitle || toTitleCase(modelKey)
+
 useHead({
-  title: `${formSpec.listTitle} > Create | ${getAdminTitle()}`,
+  title: `${listTitle} > Create | ${getAdminTitle()}`,
 })
 </script>
 
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${formSpec.listTitle}`">
+      <UTooltip :text="`Back to ${listTitle}`">
         <UButton
           class="mr-1"
           color="neutral"

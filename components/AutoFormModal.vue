@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type { ZodObject, ZodType } from 'zod'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
+import { dezerialize } from 'zodex'
+
 const props = defineProps<{
   modelKey: string
   mode: 'create' | 'update'
@@ -7,26 +11,34 @@ const props = defineProps<{
 }>()
 
 const modelKey = props.modelKey
-const cfg = useAdminRegistry().get(modelKey)
-
-if (!cfg) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: `Model "${modelKey}" is not registered.`,
-  })
-}
-
-const apiPrefix = cfg.apiPrefix
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
 
 const fetchEndpoint = props.mode === 'create' ? `${apiPrefix}/formspec/${modelKey}` : `${apiPrefix}/formspec/${modelKey}/update/${props.lookupValue}`
 const data = await $fetch<{ spec: FormSpec, values?: Record<string, any> }>(fetchEndpoint)
 const formSpec = data.spec
-const schema = props.mode === 'create' ? cfg.create.schema : cfg.update.schema
+
+if (!formSpec.schema) {
+  throw createError({
+    statusCode: 500,
+    statusMessage: `Form spec schema must be provided.`,
+  })
+}
+
+const listTitle = formSpec.listTitle || toTitleCase(modelKey)
+
+const schema = dezerialize(formSpec.schema) as ZodObject<Record<string, ZodType>>
 const values = props.mode === 'create' ? {} : data.values
 
-const endpoint = props.mode === 'create' ? (cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`) : (cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${props.lookupValue}`)
+const endpoint = data.spec.endpoint
+if (!endpoint) {
+  throw createError({
+    statusCode: 500,
+    statusMessage: `Endpoint must be provided.`,
+  })
+}
 
-const title = props.mode === 'create' ? `${cfg.list.title ?? cfg.label} > Create` : `${cfg.list.title ?? cfg.label} > Update ${formSpec.labelString ?? props.lookupValue}`
+const title = props.mode === 'create' ? `${listTitle} > Create` : `${listTitle} > Update ${formSpec.labelString ?? props.lookupValue}`
 </script>
 
 <template>

@@ -91,17 +91,14 @@ function onSelectMenuOpen() {
 const overlay = useOverlay()
 
 async function openRelationModal(mode: 'create' | 'update', lookupValue?: string | number) {
-  const registry = useAdminRegistry()
   const relationConfig = props.field.relationConfig
   if (!relationConfig) {
     return
   }
   const relatedConfigKey = relationConfig.relatedConfigKey
-  const cfg = registry.get(relatedConfigKey!)!
-  const modelKey = cfg.key
   const modal = overlay.create(AutoFormModal, {
     props: {
-      modelKey,
+      modelKey: relatedConfigKey!,
       mode,
       lookupValue,
       onSave: (data) => {
