@@ -293,9 +293,6 @@ registry.register(posts, {
       {
         field: isArchived,
         type: 'boolean',
-        cell: ({ row }) => {
-          return row.status === 'Archived' ? '✔' : '✘'
-        }
       },
       // A custom function with sort key
       {
@@ -307,7 +304,6 @@ registry.register(posts, {
         field: 'authorId.name',
         // label is auto inferred as `Author Name`
         sortKey: 'authorId.email',
-        cell: ({ row }) => h(NuxtLink, { to: { name: 'autoadmin-list', params: { modelKey: 'authors' }, query: { q: `${row.original.authorId_name}` } } }, row.getValue('authorId.name')),
       }
     ],
 
@@ -974,6 +970,8 @@ SQlite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/se
 Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts
 
 You can also use list, create, update, delete service in your own API routes by passing the model config to the service. See [Example API Routes](https://github.com/awecode/autoadmin/tree/main/examples/posts/server/api) for more details.
+
+You can also customize how cells look in the list view by registering a plugin `useAdminClient`. You can pass custom cell functions to table just like with Nuxt UI Table. See [Example Plugin](https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.client.ts) for more details.
 
 ## Roadmap
 
