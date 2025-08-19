@@ -271,8 +271,10 @@ export function useAdminRegistry() {
     model: T,
     opts: AdminModelOptions<T, C> = {},
   ): void {
-    const cfg = configure(model, opts)
-    registry.set(cfg.key, cfg as unknown as AdminModelConfig<Table, C>)
+    if (import.meta.server) {
+      const cfg = configure(model, opts)
+      registry.set(cfg.key, cfg as unknown as AdminModelConfig<Table, C>)
+    }
   }
 
   function getModelConfig<T extends Table>(
