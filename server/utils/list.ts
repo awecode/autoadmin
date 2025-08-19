@@ -1,76 +1,63 @@
 import type { AdminModelConfig, ColKey, FieldType, ListColumnDef, ListFieldDef } from '#layers/autoadmin/server/utils/registry'
 import type { Column, Table } from 'drizzle-orm'
-import type { ZodObject, ZodTypeAny } from 'zod'
+import type { ZodObject, ZodType } from 'zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { createInsertSchema } from 'drizzle-zod'
+import { ZodEnum, ZodUnion } from 'zod'
 import { colKey } from './drizzle'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from './relation'
 import { unwrapZodType } from './zod'
 
 type JoinDef = [ReturnType<typeof getTableForeignKeysByColumn>[0], string]
 
-export function zodToListSpec(schema: ZodObject<any>): Record<string, { type: FieldType, options?: string[] }> {
-  const shape = schema.def?.shape ?? schema.shape
-  if (!shape) {
-    // Fallback for safety, though a ZodObject should always have a shape.
-    return {}
-  }
+export function zodToListSpec(schema: ZodObject<Record<string, ZodType>>): Record<string, { type: FieldType, options?: string[] }> {
+  const shape = schema.shape
 
-  const fields: [string, { type: FieldType, options?: string[] }][] = Object.entries(shape).map(([name, zodType]) => {
-    const { innerType } = unwrapZodType(zodType as ZodTypeAny)
+  const fields: [string, { type: FieldType, options?: any }][] = Object.entries(shape).map(([name, zodType]) => {
+    const { innerType } = unwrapZodType(zodType)
 
     const definition = innerType.def
-    const definitionTypeKey = definition?.typeName ?? definition?.type
+    const definitionTypeKey = definition?.type
 
     let type: FieldType = 'text'
-    let options: string[] | undefined
+    let options
     switch (definitionTypeKey) {
-      case 'ZodString':
       case 'string':
         type = 'text'
-        if (definition.checks) {
-          for (const check of definition.checks) {
-            if (check.kind === 'email') type = 'email'
-          }
-        }
         break
-      case 'ZodNumber':
       case 'number':
         type = 'number'
         break
-      case 'ZodBoolean':
       case 'boolean':
         type = 'boolean'
         break
-      case 'ZodEnum':
       case 'enum':
         type = 'select'
-        options = definition.values ?? (innerType as any).options ?? Object.keys(definition.entries ?? {})
+        if (innerType instanceof ZodEnum) {
+          options = innerType.options
+        }
         break
-      case 'ZodDate':
       case 'date':
         type = 'date'
         break
-      case 'ZodBigInt':
       case 'bigint':
         type = 'number'
         break
-      case 'ZodCustom':
       case 'custom':
         // Drizzle-zod uses a custom type for blobs, which we'll map to 'file'.
         type = 'blob'
         break
-      case 'ZodRecord':
       case 'record':
         type = 'json'
         break
-      case 'ZodUnion':
       case 'union':
         // If a union contains a record type, it's likely a JSON field from drizzle-zod.
-        if (definition.options?.some((opt) => {
-          return opt._zod.def.type === 'record'
-        })) {
-          type = 'json'
+        if (innerType instanceof ZodUnion) {
+          if (innerType.options?.some((opt) => {
+            return opt._zod.def.type === 'record'
+          })) {
+            type = 'json'
+          }
         }
         break
     }

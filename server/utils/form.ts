@@ -2,7 +2,7 @@ import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
 import type { SzType } from 'zodex'
 import { defu } from 'defu'
-import { z } from 'zod'
+import { ZodEnum, ZodNumber, ZodUnion } from 'zod'
 import { colKey } from './drizzle'
 import { getPrimaryKeyColumn } from './relation'
 import { mapZodCheckToRules, unwrapZodType } from './zod'
@@ -66,10 +66,6 @@ export interface FormSpec {
 
 export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormSpec {
   const shape = schema.shape
-  if (!shape) {
-    // Fallback for safety, though a ZodObject should always have a shape.
-    return { fields: [] }
-  }
 
   const fields: FieldSpec[] = Object.entries(shape).map(([name, zodType]) => {
     const { innerType, isOptional, defaultValue } = unwrapZodType(zodType)
@@ -94,7 +90,7 @@ export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormS
         }
         // Check for top-level minValue and maxValue on the innerType object itself,
         // which is where they appear in the provided schema structure.
-        if (innerType instanceof z.ZodNumber) {
+        if (innerType instanceof ZodNumber) {
           if (innerType.minValue != null) {
             rules.min = innerType.minValue
           }
@@ -108,7 +104,7 @@ export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormS
         break
       case 'enum':
         type = 'select'
-        if (innerType instanceof z.ZodEnum) {
+        if (innerType instanceof ZodEnum) {
           options = innerType.options
         }
         break
@@ -127,7 +123,7 @@ export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormS
         break
       case 'union':
         // If a union contains a record type, it's likely a JSON field from drizzle-zod.
-        if (innerType instanceof z.ZodUnion) {
+        if (innerType instanceof ZodUnion) {
           if (innerType.options?.some((opt) => {
             return opt._zod.def.type === 'record'
           })) {
