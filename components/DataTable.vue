@@ -372,54 +372,54 @@ const performBulkAction = async () => {
   }
 }
 
-const modelCfg = useAdminRegistry().get(modelKey)
-// find fields with cell in modelCfg?.list.fields and get the accessorKey and prepare a dict with accessorKey as key and cell as value
-const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'object' && 'cell' in field).reduce((acc, def) => {
-  if (typeof def === 'object' && 'cell' in def) {
-    let accessorKey: string | undefined
-    if (typeof def.field === 'string') {
-      if (def.field.includes('.')) {
-        accessorKey = def.field.replace('.', '__')
-      }
-      accessorKey = def.field
-    } else if (typeof def.field === 'function') {
-      accessorKey = def.field.name
-    }
-    if (accessorKey && def.cell) {
-      acc[accessorKey] = def.cell
-    }
-  }
-  return acc
-}, {} as Record<string, (row: { row: Record<string, any> }) => string | VNode>)
+// const modelCfg = useAdminRegistry().get(modelKey)
+// // find fields with cell in modelCfg?.list.fields and get the accessorKey and prepare a dict with accessorKey as key and cell as value
+// const cellFunctions = modelCfg?.list.fields?.filter(field => typeof field === 'object' && 'cell' in field).reduce((acc, def) => {
+//   if (typeof def === 'object' && 'cell' in def) {
+//     let accessorKey: string | undefined
+//     if (typeof def.field === 'string') {
+//       if (def.field.includes('.')) {
+//         accessorKey = def.field.replace('.', '__')
+//       }
+//       accessorKey = def.field
+//     } else if (typeof def.field === 'function') {
+//       accessorKey = def.field.name
+//     }
+//     if (accessorKey && def.cell) {
+//       acc[accessorKey] = def.cell
+//     }
+//   }
+//   return acc
+// }, {} as Record<string, (row: { row: Record<string, any> }) => string | VNode>)
 
-// Helper component to render cell functions
-const CellRenderer = defineComponent({
-  props: {
-    cellFunction: {
-      type: Function as PropType<(cell: any) => any>,
-      required: true,
-    },
-    cell: {
-      type: Object,
-      required: true,
-    },
-  },
-  setup(props) {
-    const result = computed(() => props.cellFunction(props.cell))
+// // Helper component to render cell functions
+// const CellRenderer = defineComponent({
+//   props: {
+//     cellFunction: {
+//       type: Function as PropType<(cell: any) => any>,
+//       required: true,
+//     },
+//     cell: {
+//       type: Object,
+//       required: true,
+//     },
+//   },
+//   setup(props) {
+//     const result = computed(() => props.cellFunction(props.cell))
 
-    return () => {
-      const value = result.value
+//     return () => {
+//       const value = result.value
 
-      if (typeof value === 'string') {
-        return h('div', { innerHTML: value })
-      } else if (typeof value === 'object' && value?.__v_isVNode) {
-        return value
-      } else {
-        return String(value)
-      }
-    }
-  },
-})
+//       if (typeof value === 'string') {
+//         return h('div', { innerHTML: value })
+//       } else if (typeof value === 'object' && value?.__v_isVNode) {
+//         return value
+//       } else {
+//         return String(value)
+//       }
+//     }
+//   },
+// })
 </script>
 
 <template>
@@ -509,13 +509,13 @@ const CellRenderer = defineComponent({
           :key="column.id"
           #[`${column.id}-cell`]="{ cell: c }"
         >
-          <template v-if="cellFunctions && 'accessorKey' in c.column.columnDef && cellFunctions[c.column.columnDef.accessorKey]">
+          <!-- <template v-if="cellFunctions && 'accessorKey' in c.column.columnDef && cellFunctions[c.column.columnDef.accessorKey]">
             <CellRenderer
               :cell="c"
               :cell-function="cellFunctions[c.column.columnDef.accessorKey]!"
             />
-          </template>
-          <template v-else-if="'type' in c.column.columnDef">
+          </template> -->
+          <template v-if="'type' in c.column.columnDef">
             <template v-if="c.column.columnDef.type === 'boolean'">
               <span v-if="c.getValue()">Yes</span>
               <span v-else>No</span>
