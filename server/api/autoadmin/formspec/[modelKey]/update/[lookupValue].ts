@@ -3,7 +3,9 @@ import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metdata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
+import { toJsonSchema } from '@valibot/to-json-schema'
 import { eq } from 'drizzle-orm'
+import { zerialize } from 'zodex'
 
 const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) => {
   const db = useAdminDb()
@@ -83,6 +85,15 @@ export default defineEventHandler(async (event) => {
       delete specWithMetadata.values[labelColumnName]
     }
   }
+  const config = useRuntimeConfig()
+  const apiPrefix = config.public.apiPrefix
+  specWithMetadata.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${lookupValue}`
+  specWithMetadata.listTitle = cfg.list.title ?? cfg.label
+  // specWithMetadata.schema = z.toJSONSchema(cfg.update.schema)
+  // specWithMetadata.schema = cfg.update.schema
+  // specWithMetadata.schema = toJsonSchema(createSelectSchema(model))
+  specWithMetadata.schema = zerialize(cfg.update.schema)
+
   return {
     spec: specWithMetadata,
   }

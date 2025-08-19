@@ -35,6 +35,8 @@
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.2",
     "drizzle-zod": "^0.8.2",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "zod": "^4.0.17",
+    "zodex": "^4.0.0"
   }
 }

@@ -58,12 +58,10 @@ export function processSchemaForForm<S extends ZodRawShape>(
 ) {
   if (!schema || !spec?.fields?.length) return z.object({})
 
-  const shape = schema.shape
-
   const pickKeys = Object.fromEntries(
     spec.fields
       .map(({ name }) => name)
-      .filter((name): name is Extract<keyof S, string> => name in shape) // ignore unknown field names
+      .filter((name): name is Extract<keyof S, string> => name in schema) // ignore unknown field names
       .map(name => [name, true] as const), // keep literal true
   ) as { [K in keyof S]?: true }
 

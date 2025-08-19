@@ -1,5 +1,6 @@
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
-import type { ZodObject, ZodTypeAny } from 'zod'
+import type { ZodObject } from 'zod'
+import type { SzType } from 'zodex'
 import { defu } from 'defu'
 import { colKey } from './drizzle'
 import { getPrimaryKeyColumn } from './relation'
@@ -57,6 +58,9 @@ export interface FormSpec {
   values?: Record<string, any>
   warnOnUnsavedChanges?: boolean
   labelString?: string
+  endpoint?: string
+  listTitle?: string
+  schema?: SzType
 }
 
 export function zodToFormSpec(schema: ZodObject<any>): FormSpec {

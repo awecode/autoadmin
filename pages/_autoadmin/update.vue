@@ -1,18 +1,10 @@
 <script setup lang="ts">
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
+import { dezerialize } from 'zodex'
 
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
-const cfg = useAdminRegistry().get(modelKey)
-if (!cfg) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: `Model "${modelKey}" is not registered.`,
-  })
-}
-
-const apiPrefix = cfg.apiPrefix
-
-const listTitle = cfg.list?.title ?? cfg.label
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
 const listPath = { name: 'autoadmin-list', params: { modelKey } }
 const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
 
@@ -28,19 +20,33 @@ if (error.value) {
 }
 const formSpec = data.value?.spec as FormSpec
 const values = data.value?.values as Record<string, any>
-const schema = cfg.update.schema
 
-const endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${lookupValue}`
+if (!formSpec.schema) {
+  throw createError({
+    statusCode: 500,
+    statusMessage: `Form spec schema must be provided.`,
+  })
+}
+
+const schema = dezerialize(formSpec.schema)
+
+const endpoint = formSpec.endpoint
+if (!endpoint) {
+  throw createError({
+    statusCode: 500,
+    statusMessage: `Endpoint must be provided.`,
+  })
+}
 
 useHead({
-  title: `${listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getAdminTitle()}`,
+  title: `${formSpec.listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getAdminTitle()}`,
 })
 </script>
 
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${listTitle}`">
+      <UTooltip :text="`Back to ${formSpec.listTitle}`">
         <UButton
           class="mr-1"
           color="neutral"

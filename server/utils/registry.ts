@@ -1,5 +1,6 @@
 import type { InferInsertModel, InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { VNode } from 'vue'
+import type { ZodObject } from 'zod'
 import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
 import type { FieldSpec, Option } from './form'
@@ -97,7 +98,7 @@ interface UpdateOptions<T extends Table = Table> {
       modelKey: string
     }
   }
-  schema: InferInsertModel<T> // added by generateDefaultOptions
+  schema: ZodObject<any> // added by generateDefaultOptions
   warnOnUnsavedChanges: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
 }
