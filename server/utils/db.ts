@@ -8,7 +8,7 @@ let _db: DrizzleD1Database
 export function useAdminDb() {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
-    const dbBinding = process.env.DB
+    const dbBinding = process.env.DB || globalThis.__env__?.DB || globalThis.DB
     if (dbBinding) {
       _db = drizzleD1(dbBinding, {
         casing: 'snake_case',
@@ -22,7 +22,7 @@ export function useAdminDb() {
           // logger: true,
         })
       } else {
-        throw new Error('No database binding or configuration found.')
+        throw new Error('No database binding or configuration found for autoadmin.')
       }
     }
   }
