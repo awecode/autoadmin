@@ -31,6 +31,9 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
   ],
+  build: {
+    transpile: ['vue'],
+  },
   $meta: {
     name: 'autoadmin',
   },
