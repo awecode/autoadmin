@@ -69,10 +69,10 @@ importers:
         specifier: ^1.0.20
         version: 1.0.20
       drizzle-orm:
-        specifier: ^0.44.2
+        specifier: ^0.44.4
         version: 0.44.4(@libsql/client@0.15.12)
       drizzle-zod:
-        specifier: ^0.8.2
+        specifier: ^0.8.3
         version: 0.8.3(drizzle-orm@0.44.4(@libsql/client@0.15.12))(zod@4.0.17)
       tailwindcss:
         specifier: ^4.1.11
