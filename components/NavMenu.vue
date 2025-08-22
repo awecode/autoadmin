@@ -22,7 +22,11 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', { key: 'model-links' })
+const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta', { key: 'model-links' })
+
+if (error.value?.data?.data?.redirect) {
+  navigateTo(error.value.data.data.redirect)
+}
 
 const items = [
   appConfig.sidebar.topItems,
