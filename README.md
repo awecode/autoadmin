@@ -21,11 +21,10 @@ export default defineNuxtConfig({
 Or you can download the project inside layers directory in your nuxt project (requires using pnpm).
 
 ```bash
-mkdir -p layers
-pnpx giget gh:awecode/autoadmin layers/autoadmin
-echo -e "packages:\n  - 'layers/*'" > pnpm-workspace.yaml
+npx -y giget gh:awecode/autoadmin layers/autoadmin
 rm -rf layers/autoadmin/examples
-pnpm install
+npx -y nypm add @awecode/autoadmin@file:layers/autoadmin
+npx -y nypm install
 ```
 
 ## Usage
