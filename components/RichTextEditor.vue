@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { Editor } from '@tiptap/core'
+import FileHandler from '@tiptap/extension-file-handler'
+import Image from '@tiptap/extension-image'
 import { ListItem } from '@tiptap/extension-list'
 import { Color, TextStyle } from '@tiptap/extension-text-style'
 import { Placeholder } from '@tiptap/extensions'
@@ -15,6 +18,59 @@ const emit = defineEmits<{
 }>()
 
 const isEditingHtml = ref(false)
+const isUploading = ref(false)
+
+const uploadFile = async (file: File): Promise<string> => {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const params = new URLSearchParams({
+    prefix: 'posts/',
+    fileType: file.type,
+  })
+
+  try {
+    isUploading.value = true
+    const response = await fetch(`/api/autoadmin/file-upload?${params}`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`)
+    }
+
+    const result = await response.text()
+    return result
+  } catch (error) {
+    // eslint-disable-next-line no-alert
+    window.alert(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw error
+  } finally {
+    isUploading.value = false
+  }
+}
+
+const handleFiles = async (currentEditor: Editor, files: File[], pos: number) => {
+  files.forEach(async (file) => {
+    try {
+      const uploadedUrl = await uploadFile(file)
+      currentEditor
+        .chain()
+        .insertContentAt(pos, {
+          type: 'image',
+          attrs: {
+            src: uploadedUrl,
+          },
+        })
+        .focus()
+        .run()
+    } catch (error) {
+      // Error already handled in uploadFile function
+      console.error('Failed to upload file:', error)
+    }
+  })
+}
 
 const editor = useEditor({
   content: props.modelValue || '',
@@ -32,6 +88,16 @@ const editor = useEditor({
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle,
     StarterKit,
+    Image,
+    FileHandler.configure({
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
+      onDrop: (currentEditor, files, pos) => {
+        return handleFiles(currentEditor, files, pos)
+      },
+      onPaste: (currentEditor, files) => {
+        return handleFiles(currentEditor, files, currentEditor.state.selection.anchor)
+      },
+    }),
   ],
   onUpdate: ({ editor: editorInstance }) => {
     if (isEditingHtml.value) {
@@ -179,6 +245,11 @@ watch(() => props.modelValue, (value) => {
         >
           <Icon name="lucide:code-2" />
         </button>
+
+        <div v-if="isUploading" class="flex items-center">
+          <div data-divider></div>
+          <Icon class="animate-spin" name="lucide:loader-2" />
+        </div>
       </div>
 
       <!-- Editor Content -->

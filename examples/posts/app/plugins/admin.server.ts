@@ -193,7 +193,7 @@ export default defineNuxtPlugin(() => {
     m2m: {
       tags: postsToTags,
     },
-    warnOnUnsavedChanges: true,
+    warnOnUnsavedChanges: false,
   })
 
   // Tags

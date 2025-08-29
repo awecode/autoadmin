@@ -32,7 +32,7 @@ export default async function uploadToObjectStorage(file: Buffer | File, config?
   prefix?: string
 }) {
   const { s3 } = useRuntimeConfig()
-  const s3Config = s3 as any
+  const s3Config = s3
   if (!s3Config.accessKey || !s3Config.secretKey || !s3Config.bucketName || !s3Config.endpointUrl || !s3Config.region) {
     throw new Error('Object storage is not configured correctly. Please check your environment variables.')
   }
