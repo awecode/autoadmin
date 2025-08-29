@@ -11,12 +11,17 @@ import { EditorContent, useEditor } from '@tiptap/vue-3'
 const props = defineProps<{
   modelValue?: string
   attrs?: Record<string, any>
+  uploadPrefix?: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
+const enableImageUpload = false
+
+const config = useRuntimeConfig()
+const apiPrefix = config.public.apiPrefix
 const isEditingHtml = ref(false)
 const isUploading = ref(false)
 const fileInput = useTemplateRef('fileInput')
@@ -26,13 +31,13 @@ const uploadFile = async (file: File): Promise<string> => {
   formData.append('file', file)
 
   const params = new URLSearchParams({
-    prefix: 'posts/',
+    prefix: props.uploadPrefix || 'uploads/',
     fileType: file.type,
   })
 
   try {
     isUploading.value = true
-    const response = await fetch(`/api/autoadmin/file-upload?${params}`, {
+    const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
       method: 'POST',
       body: formData,
     })
@@ -90,15 +95,17 @@ const editor = useEditor({
     TextStyle,
     StarterKit,
     Image,
-    FileHandler.configure({
-      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
-      onDrop: (currentEditor, files, pos) => {
-        return handleFiles(currentEditor, files, pos)
-      },
-      onPaste: (currentEditor, files) => {
-        return handleFiles(currentEditor, files, currentEditor.state.selection.anchor)
-      },
-    }),
+    ...(enableImageUpload
+      ? [FileHandler.configure({
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
+          onDrop: (currentEditor, files, pos) => {
+            return handleFiles(currentEditor, files, pos)
+          },
+          onPaste: (currentEditor, files) => {
+            return handleFiles(currentEditor, files, currentEditor.state.selection.anchor)
+          },
+        })]
+      : []),
   ],
   onUpdate: ({ editor: editorInstance }) => {
     if (isEditingHtml.value) {
@@ -110,10 +117,12 @@ const editor = useEditor({
 })
 
 const openImageSelector = () => {
+  if (!enableImageUpload) return
   fileInput.value?.click()
 }
 
 const handleFileSelection = (event: Event) => {
+  if (!enableImageUpload) return
   const input = event.target as HTMLInputElement
   const files = input.files
   if (files && files.length > 0 && editor.value) {
@@ -238,6 +247,7 @@ watch(() => props.modelValue, (value) => {
         </button>
 
         <button
+          v-if="enableImageUpload"
           type="button"
           :disabled="isUploading"
           @click="openImageSelector"
