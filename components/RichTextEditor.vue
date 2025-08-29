@@ -18,7 +18,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-const enableImageUpload = false
+const enableImageUpload = true
 
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
@@ -183,6 +183,15 @@ watch(() => props.modelValue, (value) => {
           <Icon name="lucide:strikethrough" />
         </button>
 
+        <button
+          type="button"
+          :data-active="editor.isActive('underline')"
+          :disabled="!editor.can().chain().focus().toggleUnderline().run()"
+          @click="editor.chain().focus().toggleUnderline().run()"
+        >
+          <Icon name="lucide:underline" />
+        </button>
+
         <div data-divider></div>
 
         <button
@@ -212,6 +221,15 @@ watch(() => props.modelValue, (value) => {
           H3
         </button>
 
+        <button
+          data-text-btn="true"
+          type="button"
+          :data-active="editor.isActive('heading', { level: 4 })"
+          @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
+        >
+          H4
+        </button>
+
         <div data-divider></div>
 
         <button
@@ -230,6 +248,17 @@ watch(() => props.modelValue, (value) => {
           <Icon name="lucide:list-ordered" />
         </button>
 
+        <div data-divider></div>
+
+        <button
+          v-if="enableImageUpload"
+          type="button"
+          :disabled="isUploading"
+          @click="openImageSelector"
+        >
+          <Icon name="lucide:image" />
+        </button>
+
         <button
           type="button"
           :data-active="editor.isActive('blockquote')"
@@ -243,16 +272,15 @@ watch(() => props.modelValue, (value) => {
           :data-active="editor.isActive('codeBlock')"
           @click="editor.chain().focus().toggleCodeBlock().run()"
         >
-          <Icon name="lucide:code-2" />
+          <Icon name="lucide:code" />
         </button>
 
-        <button
-          v-if="enableImageUpload"
-          type="button"
-          :disabled="isUploading"
-          @click="openImageSelector"
-        >
-          <Icon name="lucide:image" />
+        <button type="button" @click="editor.chain().focus().setHorizontalRule().run()">
+          <Icon name="lucide:minus" />
+        </button>
+
+        <button type="button" @click="editor.chain().focus().setHardBreak().run()">
+          <Icon name="lucide:corner-down-left" />
         </button>
 
         <div data-divider></div>
