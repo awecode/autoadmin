@@ -18,7 +18,7 @@ export default defineNuxtConfig({
 })
 ```
 
-Or you can download the project inside layers directory in your nuxt project (requires using pnpm).
+Or you can download the project inside layers directory in your nuxt project.
 
 ```bash
 npx -y giget gh:awecode/autoadmin layers/autoadmin
@@ -974,13 +974,19 @@ You can also customize how cells are rendered on table list by defining a cell f
 
 ## Roadmap
 
-- [ ] Integrate Auth Layer
-- [ ] Detail View
+- [x] Integrate Auth Layer - Can use any auth layer like [https://github.com/awecode/nuxt-better-auth-layer](https://github.com/awecode/nuxt-better-auth-layer)
 - [x] Aggregate Support in List View
+- [ ] Image Uploads in WYSIWYG Editor
+- [ ] Detail View
 - [ ] PostgreSQL Dialect Support
 - [ ] MySQL Dialect Support
 - [ ] Hooks/Signals
 - [ ] Audit Logs
+
+## Known Issues
+
+- Tailwind classes not working correctly - https://github.com/tailwindlabs/tailwindcss/discussions/18273
+  - Solution: Use layer locally instead of using GitHub source.
 
 ## Stack
 
