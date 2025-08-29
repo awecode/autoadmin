@@ -19,6 +19,7 @@ const emit = defineEmits<{
 
 const isEditingHtml = ref(false)
 const isUploading = ref(false)
+const fileInput = useTemplateRef('fileInput')
 
 const uploadFile = async (file: File): Promise<string> => {
   const formData = new FormData()
@@ -107,6 +108,22 @@ const editor = useEditor({
     }
   },
 })
+
+const openImageSelector = () => {
+  fileInput.value?.click()
+}
+
+const handleFileSelection = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+  if (files && files.length > 0 && editor.value) {
+    const fileArray = Array.from(files)
+    const pos = editor.value.state.selection.anchor
+    handleFiles(editor.value, fileArray, pos)
+    // Clear the input so the same file can be selected again
+    input.value = ''
+  }
+}
 
 const toggleEditHtml = () => {
   isEditingHtml.value = !isEditingHtml.value
@@ -220,6 +237,14 @@ watch(() => props.modelValue, (value) => {
           <Icon name="lucide:code-2" />
         </button>
 
+        <button
+          type="button"
+          :disabled="isUploading"
+          @click="openImageSelector"
+        >
+          <Icon name="lucide:image" />
+        </button>
+
         <div data-divider></div>
 
         <button
@@ -257,6 +282,16 @@ watch(() => props.modelValue, (value) => {
         <EditorContent :editor="editor" />
       </div>
     </div>
+
+    <!-- Hidden file input for image selection -->
+    <input
+      ref="fileInput"
+      multiple
+      accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+      class="hidden"
+      type="file"
+      @change="handleFileSelection"
+    />
   </div>
 </template>
 
