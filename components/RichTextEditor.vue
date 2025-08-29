@@ -14,6 +14,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
+const isEditingHtml = ref(false)
+
 const editor = useEditor({
   content: props.modelValue || '',
   editorProps: {
@@ -32,9 +34,22 @@ const editor = useEditor({
     StarterKit,
   ],
   onUpdate: ({ editor: editorInstance }) => {
-    emit('update:modelValue', editorInstance.getHTML())
+    if (isEditingHtml.value) {
+      emit('update:modelValue', editorInstance.getText())
+    } else {
+      emit('update:modelValue', editorInstance.getHTML())
+    }
   },
 })
+
+const toggleEditHtml = () => {
+  isEditingHtml.value = !isEditingHtml.value
+  if (isEditingHtml.value) {
+    editor.value?.commands.setContent(`<textarea>${editor.value?.getHTML()}</textarea>`)
+  } else {
+    editor.value?.commands.setContent(editor.value?.getText())
+  }
+}
 
 watch(() => props.modelValue, (value) => {
   if (!editor.value) return
@@ -155,6 +170,14 @@ watch(() => props.modelValue, (value) => {
           @click="editor.chain().focus().redo().run()"
         >
           <Icon name="lucide:redo-2" />
+        </button>
+
+        <button
+          type="button"
+          :data-active="isEditingHtml"
+          @click="toggleEditHtml"
+        >
+          <Icon name="lucide:code-2" />
         </button>
       </div>
 
