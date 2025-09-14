@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import type { Editor } from '@tiptap/core'
+import type { Editor } from '@tiptap/vue-3'
 import FileHandler from '@tiptap/extension-file-handler'
 import Image from '@tiptap/extension-image'
-import { ListItem } from '@tiptap/extension-list'
-import { Color, TextStyle } from '@tiptap/extension-text-style'
 import { Placeholder } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
@@ -91,8 +89,6 @@ const editor = useEditor({
       emptyEditorClass:
     'cursor-text before:content-[attr(data-placeholder)] before:absolute before:top-4 before:left-4 before:opacity-50 before-pointer-events-none text-sm',
     }),
-    Color.configure({ types: [TextStyle.name, ListItem.name] }),
-    TextStyle,
     StarterKit,
     Image,
     ...(enableImageUpload
