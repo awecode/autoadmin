@@ -68,18 +68,16 @@ const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), prop
 })
 
 // Auto-generate slugs based on slugFields configuration
-if (props.spec.slugFields) {
+if (props.mode === 'create' && props.spec.slugFields) {
   for (const [slugField, sourceFields] of Object.entries(props.spec.slugFields)) {
     // Watch the source fields and update the slug field when they change
     watch(
       () => sourceFields.map(field => state[field]).filter(Boolean),
       (values) => {
         if (values.length > 0) {
-          // Only auto-generate if the slug field is empty or hasn't been manually modified
-          const currentSlug = state[slugField]
-          if (!currentSlug || currentSlug === slugify(values.join(' '))) {
-            state[slugField] = slugify(values.join(' '))
-          }
+          // If any value is a Date, use toIsoDateString, else .toString()
+          const slugSource = values.map(v => v instanceof Date && typeof v.toISOString === 'function' ? v.toISOString().split('T')[0] : v.toString()).join(' ')
+          state[slugField] = slugify(slugSource)
         }
       },
       { immediate: true },
