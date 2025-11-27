@@ -85,7 +85,7 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
           return {
             id: def,
             accessorKey: def as string,
-            header: toTitleCase(def),
+            header: cfg.fields?.find(field => field.name === def)?.label ?? toTitleCase(def),
             type: columnTypes[def]!.type,
             sortKey: cfg.list.enableSort ? def : undefined,
           }
