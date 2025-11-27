@@ -18,7 +18,7 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.57",
     "@libsql/client": "^0.15.9",
-    "@nuxt/ui": "3.1.3",
+    "@nuxt/ui": "^4.2.1",
     "@peculiar/webcrypto": "^1.5.0",
     "@tailwindcss/typography": "^0.5.16",
     "@tiptap/extension-file-handler": "^3.3.0",
