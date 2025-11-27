@@ -387,12 +387,10 @@ The top-level `formFields` option is a convenient shortcut to apply the same fie
 
 The `slugFields` option enables automatic generation of URL-friendly slugs from other form fields. This is particularly useful for creating SEO-friendly URLs from titles, names, or other text fields.
 
-### Basic Usage
-
 ```ts
 registry.register(posts, {
   slugFields: {
-    slug: ['title', 'publishedOn'] // You can also use single field like 'slug': ['title']
+    slug: ['title', 'publishedOn'] // You can also use a single field like `'slug': ['title']`
   }
 })
 ```
