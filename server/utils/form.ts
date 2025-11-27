@@ -62,6 +62,7 @@ export interface FormSpec {
   endpoint?: string
   listTitle?: string
   schema?: SzType
+  slugFields?: Record<string, string[]>
 }
 
 export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormSpec {

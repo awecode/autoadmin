@@ -42,6 +42,7 @@ export default defineEventHandler(async (event) => {
   specWithMetadata.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}`
   specWithMetadata.listTitle = cfg.list.title ?? cfg.label
   specWithMetadata.schema = zerialize(cfg.update.schema)
+  specWithMetadata.slugFields = cfg.slugFields
 
   return {
     spec: specWithMetadata,

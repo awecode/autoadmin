@@ -17,6 +17,21 @@ export function createNoSpaceString(value: string): string {
   return value
 }
 
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    // Handle accented characters
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F]/g, '') // Remove diacritics
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w-]+/g, '') // Remove all non-word chars
+    .replace(/-{2,}/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
+}
+
 const defaultIconMap: Record<string, string> = {
   user: 'user-circle',
   profile: 'user-circle',

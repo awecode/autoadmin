@@ -114,6 +114,8 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   key?: string
   label?: string
   icon?: string
+  /** Example: { slug: ["title", "date"] } */
+  slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
   enableIndex?: boolean
   labelColumnName?: ColKey<T>
   lookupColumnName?: ColKey<T>

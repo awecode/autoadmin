@@ -70,6 +70,7 @@ export default defineNuxtPlugin(() => {
 
   // Posts - Complex setup with relationships and custom functions
   registry.register(posts, {
+    slugFields: { slug: ['title'] },
     fields: [
       {
         name: 'content',

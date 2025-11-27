@@ -5,6 +5,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import type { ZodObject, ZodType } from 'zod'
 import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
 import { getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
+import { slugify } from '#layers/autoadmin/utils/string'
 
 const props = defineProps<{
   spec: FormSpec
@@ -65,6 +66,26 @@ const toast = useToast()
 const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), props.spec.values, {
   enabled: props.spec.warnOnUnsavedChanges ?? false,
 })
+
+// Auto-generate slugs based on slugFields configuration
+if (props.spec.slugFields) {
+  for (const [slugField, sourceFields] of Object.entries(props.spec.slugFields)) {
+    // Watch the source fields and update the slug field when they change
+    watch(
+      () => sourceFields.map(field => state[field]).filter(Boolean),
+      (values) => {
+        if (values.length > 0) {
+          // Only auto-generate if the slug field is empty or hasn't been manually modified
+          const currentSlug = state[slugField]
+          if (!currentSlug || currentSlug === slugify(values.join(' '))) {
+            state[slugField] = slugify(values.join(' '))
+          }
+        }
+      },
+      { immediate: true },
+    )
+  }
+}
 
 const handleError = (error: Error) => {
   if (error instanceof Error) {
