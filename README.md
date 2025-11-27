@@ -127,6 +127,7 @@ This is the main configuration object passed to `registry.register(model, option
 | `icon` | `string` | `undefined` | Iconify icon name. Auto-detected for common names. |
 | `labelColumnName` | `string` | `name`, `title`, etc. | Column used for display labels in relationships and select options. |
 | `lookupColumnName` | `string` | `id` | The primary or unique key used to fetch single records. |
+| `slugFields` | `Record<string, string[]>` | `undefined` | Auto-generate URL-friendly slugs from other fields. [Reference ↗](#automatic-slug-generation-slugfields) |
 | `warnOnUnsavedChanges` | `boolean` | `false` | Prompt user before leaving a form with unsaved changes. |
 | `list` | `Partial<ListOptions>` | `{}` | Configuration for the list/table view. [Reference ↗](#list-view-configuration) |
 | `create` | `Partial<CreateOptions>` | `{}` | Create form configuration. [Reference ↗](#form-configuration-create-update-formfields) |
@@ -381,6 +382,20 @@ Both options share these properties:
 The top-level `formFields` option is a convenient shortcut to apply the same field configuration to both create and update forms.
 
 `formFields` is an array of field spec as defined in [Overriding Field Behavior with fields](#overriding-field-behavior-with-fields).
+
+## Automatic Slug Generation (`slugFields`)
+
+The `slugFields` option enables automatic generation of URL-friendly slugs from other form fields. This is particularly useful for creating SEO-friendly URLs from titles, names, or other text fields.
+
+### Basic Usage
+
+```ts
+registry.register(posts, {
+  slugFields: {
+    slug: ['title', 'publishedOn'] // You can also use single field like 'slug': ['title']
+  }
+})
+```
 
 ## Relationship Configuration
 
