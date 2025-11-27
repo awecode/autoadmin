@@ -4,7 +4,7 @@ import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const searchModal = useOverlay().create(SearchModal)
 
-const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', {key: 'model-links'})
+const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', { key: 'model-links' })
 
 function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   if (link.searchPlaceholder) {
@@ -26,7 +26,7 @@ useHead({
 
 <template>
   <AutoAdmin>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div class="grid !grid-cols-2 md:!grid-cols-3 lg:!grid-cols-4 xl:grid-cols-6 gap-4">
       <div
         v-for="link in modelLinks"
         :key="link.label"
