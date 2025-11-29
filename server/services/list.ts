@@ -9,7 +9,7 @@ import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
-export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, query: Record<string, any> = {}): Promise<any> {
+export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, query: Record<string, any> = {}, returnSpec: boolean = true): Promise<any> {
   const model = cfg.model
   const tableColumns = cfg.columns
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
@@ -18,24 +18,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   const db = useAdminDb()
   const filters = cfg.list.enableFilter ? await getFilters(cfg, db, columnTypes, cfg.metadata, query) : undefined
 
-  const spec = {
-    endpoint: cfg.list.endpoint,
-    updatePage: cfg.update.enabled ? cfg.update.route : undefined,
-    deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
-    enableDelete: cfg.delete.enabled,
-    bulkActions: cfg.list.bulkActions.map(action => ({
-      label: action.label,
-      icon: action.icon,
-    })),
-    title: cfg.list.title,
-    showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
-    enableSort: cfg.list.enableSort,
-    enableSearch: cfg.list.enableSearch,
-    searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
-    searchFields: cfg.list.enableSearch ? cfg.list.searchFields : undefined,
-    columns,
-    lookupColumnName: cfg.lookupColumnName,
-  }
+  const enableSort = cfg.list.enableSort
 
   // Build joins and foreign column selections
   const joins: { table: Table, on: SQL }[] = []
@@ -131,12 +114,12 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
 
   let baseQuery
   // We need to select all columns from the table if we have accessor functions because the accessor functions may need to access other columns
-  const shouldSelectAllColumns = spec.columns.some(column => column.accessorFn)
+  const shouldSelectAllColumns = columns.some(column => column.accessorFn)
   if (shouldSelectAllColumns) {
     selections = { ...tableColumns, ...selections }
     baseQuery = db.select(selections).from(model)
   } else {
-    const columnNames = spec.columns.map(column => column.accessorKey)
+    const columnNames = columns.map(column => column.accessorKey)
     // only select the required column names from the table, not all columns
     const columnselections = Object.fromEntries(
       columnNames
@@ -270,9 +253,9 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
 
   // Handle ordering (after joins are applied)
   const ordering = query.ordering
-  if (spec.enableSort && ordering && typeof ordering === 'string') {
+  if (enableSort && ordering && typeof ordering === 'string') {
     const [columnAccessorKey, direction] = ordering.split(':')
-    const column = spec.columns.find(column => column.accessorKey === columnAccessorKey)
+    const column = columns.find(column => column.accessorKey === columnAccessorKey)
 
     if (column?.sortKey && (direction === 'asc' || direction === 'desc')) {
       const orderFn = direction === 'desc' ? desc : asc
@@ -352,7 +335,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     // run the columns through the accessor functions
     response.results = await Promise.all(response.results.map(async (result: any) => {
       // loop through the columns and run the accessor functions
-      for (const column of spec.columns) {
+      for (const column of columns) {
         if (column.accessorFn) {
           result[column.accessorKey] = await column.accessorFn(db, result)
         }
@@ -363,13 +346,39 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     // only return the columns that have accessor keys or the lookup column
     response.results = response.results.map((result) => {
       return Object.fromEntries(
-        Object.entries(result).filter(([key]) => spec.columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
+        Object.entries(result).filter(([key]) => columns.some(column => column.accessorKey === key) || key === cfg.lookupColumnName),
       )
     })
   }
-  return {
-    ...response,
-    filters,
-    spec,
+
+  if (returnSpec) {
+    const spec = {
+      endpoint: cfg.list.endpoint,
+      updatePage: cfg.update.enabled ? cfg.update.route : undefined,
+      deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
+      enableDelete: cfg.delete.enabled,
+      bulkActions: cfg.list.bulkActions.map(action => ({
+        label: action.label,
+        icon: action.icon,
+      })),
+      title: cfg.list.title,
+      showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
+      enableSort: cfg.list.enableSort,
+      enableSearch: cfg.list.enableSearch,
+      searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
+      searchFields: cfg.list.enableSearch ? cfg.list.searchFields : undefined,
+      columns,
+      lookupColumnName: cfg.lookupColumnName,
+    }
+    return {
+      ...response,
+      filters,
+      spec,
+    }
+  } else {
+    return {
+      ...response,
+      filters,
+    }
   }
 }
