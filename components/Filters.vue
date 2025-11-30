@@ -5,6 +5,10 @@ import { useRouteQuery } from '@vueuse/router'
 
 defineProps<{
   filters: FilterSpec[]
+  showLabel?: {
+    type: boolean
+    default: true
+  }
 }>()
 
 const route = useRoute()
@@ -121,7 +125,7 @@ const booleanOptions = [
       <div :class="mobileFiltersOpen ? 'space-y-4' : 'contents'">
         <template v-for="filter in filters" :key="filter.field">
           <div :class="mobileFiltersOpen ? 'space-y-2' : ''">
-            <div :class="mobileFiltersOpen ? 'text-sm font-medium text-gray-700 dark:text-gray-300' : 'text-sm text-dimmed mb-1'">
+            <div v-if="showLabel" :class="mobileFiltersOpen ? 'text-sm font-medium text-gray-700 dark:text-gray-300' : 'text-sm text-dimmed mb-1'">
               {{ filter.label }}
             </div>
 
