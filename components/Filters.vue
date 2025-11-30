@@ -35,7 +35,7 @@ function getFilterModel(filter: { field: string, type?: string }) {
   return computed({
     get: () => {
       if (filter.type === 'boolean') {
-        return filterQuery.value[filter.field] || 'all'
+        return filterQuery.value[filter.field] || undefined
       } else {
         return filterQuery.value[filter.field] || ''
       }
@@ -70,7 +70,7 @@ const hasActiveFilters = computed(() => {
 
 // Boolean filter options
 const booleanOptions = [
-  { value: null, label: 'All' },
+  { value: undefined, label: 'All' },
   { value: 'true', label: 'Yes' },
   { value: 'false', label: 'No' },
 ]
