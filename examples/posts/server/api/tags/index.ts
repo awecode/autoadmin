@@ -12,5 +12,5 @@ export default defineEventHandler(async (event) => {
     },
   }
   const cfg = useAdminRegistry().configure(tags, options)
-  return await listRecords(cfg, event)
+  return await listRecords(cfg, getQuery(event))
 })
