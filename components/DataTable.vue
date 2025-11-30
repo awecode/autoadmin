@@ -89,7 +89,6 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] |
 })
 
 const search = useRouteQuery('q', '', { route, router })
-const page = useRouteQuery('page', 1, { route, router, transform: Number })
 
 const paginationConfig = config.public?.pagination
 const defaultSize = (paginationConfig && typeof paginationConfig === 'object' && 'defaultSize' in paginationConfig && typeof paginationConfig.defaultSize === 'number' ? paginationConfig.defaultSize : 20)
@@ -311,7 +310,7 @@ defineExpose({ data, status, refresh, sort, page, size, filterQuery, search, res
 async function reset() {
   // Reset the filters and pagination
   filterQuery.value = {}
-  page.value = 1
+  // page.value = 1
   // size.value = 10
   search.value = ''
   sort.value = undefined
@@ -610,23 +609,7 @@ const CellRenderer = defineComponent({
     </slot>
 
     <slot name="footer">
-      <div v-if="data?.pagination.count! > 0" class="mt-auto flex items-center justify-between">
-        <div>
-          <span class="text-sm text-dimmed italic">
-            {{ `${data?.pagination?.size! * (data?.pagination.page! - 1) + 1} to
-            ${Math.min(data?.pagination.size!
-            * data?.pagination.page!, data?.pagination.count!)} of ${data?.pagination.count} entries` }}
-          </span>
-        </div>
-        <UPagination
-          v-if="data?.pagination.pages! > 1"
-          v-model:page="page"
-          size="xs"
-          :items-per-page="data?.pagination.size!"
-          :show-edges="true"
-          :total="data?.pagination.count!"
-        />
-      </div>
+      <Pagination :pagination="data?.pagination" />
     </slot>
   </div>
 </template>
