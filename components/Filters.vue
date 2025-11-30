@@ -132,19 +132,19 @@ const booleanOptions = [
             <USelect
               v-if="filter.type === 'boolean'"
               v-model="getFilterModel(filter).value"
-              placeholder="All"
               :class="mobileFiltersOpen ? 'w-full' : 'min-w-24'"
               :items="booleanOptions"
+              :placeholder="showLabel ? 'All' : filter.label"
             />
 
             <USelectMenu
               v-else-if="(filter.type === 'text' || filter.type === 'select' || !filter.type) && filter.options"
               v-model="getFilterModel(filter).value"
-              placeholder="All"
               value-key="value"
               :class="mobileFiltersOpen ? 'w-full' : 'min-w-32'"
               :content="{ align: 'start' }"
               :items="normalizeOptions(filter.options)"
+              :placeholder="showLabel ? 'All' : filter.label"
               :ui="{ content: 'min-w-fit' }"
             >
               <template #item-label="{ item }">
