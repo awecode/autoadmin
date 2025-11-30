@@ -88,8 +88,6 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] |
   },
 })
 
-const search = useRouteQuery('q', '', { route, router })
-
 const paginationConfig = config.public?.pagination
 const defaultSize = (paginationConfig && typeof paginationConfig === 'object' && 'defaultSize' in paginationConfig && typeof paginationConfig.defaultSize === 'number' ? paginationConfig.defaultSize : 20)
 const size = useRouteQuery('size', defaultSize, { route, router, transform: Number })
@@ -305,19 +303,6 @@ useHead({
   title: computed(() => `${title.value} | ${baseTitle}`),
 })
 
-defineExpose({ data, status, refresh, sort, page, size, filterQuery, search, reset })
-
-async function reset() {
-  // Reset the filters and pagination
-  filterQuery.value = {}
-  // page.value = 1
-  // size.value = 10
-  search.value = ''
-  sort.value = undefined
-
-  // Refresh the data
-  await refresh()
-}
 // TODO: Emit this maybe
 async function deleteObj(id: string) {
   if (!spec.value.deleteEndpoint) {
@@ -447,13 +432,7 @@ const CellRenderer = defineComponent({
           <!-- <div class="text-sm text-dimmed mb-1">
             Search {{ title }}
           </div> -->
-          <UInput
-            v-if="spec.enableSearch"
-            v-model="search"
-            class="max-w-xl"
-            color="neutral"
-            :placeholder="spec.searchPlaceholder"
-          />
+          <Search v-if="spec.enableSearch" :placeholder="spec.searchPlaceholder" />
         </div>
         <Filters v-if="data?.filters" :filters="data.filters" />
         <!-- Multi-row Actions -->
