@@ -3,13 +3,12 @@ import type { FilterSpec } from '#layers/autoadmin/server/utils/filter'
 import { normalizeOptions } from '#layers/autoadmin/utils/form'
 import { useRouteQuery } from '@vueuse/router'
 
-defineProps<{
+const props = withDefaults(defineProps<{
   filters: FilterSpec[]
-  showLabel?: {
-    type: boolean
-    default: true
-  }
-}>()
+  showLabel?: boolean
+}>(), {
+  showLabel: true,
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -125,7 +124,7 @@ const booleanOptions = [
       <div :class="mobileFiltersOpen ? 'space-y-4' : 'contents'">
         <template v-for="filter in filters" :key="filter.field">
           <div :class="mobileFiltersOpen ? 'space-y-2' : ''">
-            <div v-if="showLabel" :class="mobileFiltersOpen ? 'text-sm font-medium text-gray-700 dark:text-gray-300' : 'text-sm text-dimmed mb-1'">
+            <div v-if="props.showLabel" :class="mobileFiltersOpen ? 'text-sm font-medium text-gray-700 dark:text-gray-300' : 'text-sm text-dimmed mb-1'">
               {{ filter.label }}
             </div>
 
