@@ -6,20 +6,11 @@ import { listRecords } from '../services/list'
 import { useAdminRegistry } from './registry'
 
 /**
- * Utility Type: Prettify
- * Collapses complex intersection types into a clean, readable object structure.
- */
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {}
-
-/**
  * Utility Type: PathToObject
- * Recursively transforms a dot-notation string (e.g., "a.b.c")
- * into a nested object type.
+ * Recursively transforms a dot-notation string (e.g., "a.b.c") into a nested object type.
  * Default leaf value is 'any' to accommodate DB record types (string, number, date, etc).
  */
-type PathToObject<P extends string, Value = any> = P extends `${infer Key}.${infer Rest}`
+type PathToObject<P extends string, Value = any> = P extends `${infer Key}Id.${infer Rest}`
   ? { [K in Key]: PathToObject<Rest, Value> }
   : { [K in P]: Value }
 
@@ -53,19 +44,15 @@ type TupleToObject<T extends readonly string[]> = T extends readonly [
     ? Tail extends readonly string[]
       ? DeepMerge<PathToObject<Head>, TupleToObject<Tail>>
       : PathToObject<Head>
-    : {}
-  : {}
-
-// ==========================================
-// Runtime Logic (Your Implementation)
-// ==========================================
+    : object
+  : object
 
 /**
  * Transforms a single object by grouping fields with the pattern {prefix}__{field}.
  * Normalizes 'prefixId' -> 'prefix'.
  */
-function transformItem(item: Record<string, unknown>) {
-  const result: Record<string, unknown> = {}
+function transformItem<T extends Table | Record<string, unknown>>(item: T) {
+  const result: T | Record<string, unknown> = {}
   const groupedFields = new Map<string, Record<string, unknown>>()
   const keysToSkip = new Set<string>()
 
@@ -108,60 +95,13 @@ function transformItem(item: Record<string, unknown>) {
   return result
 }
 
-/**
- * Generic Overloads for groupNestedFields
- * Passing the 'fields' array as the second argument triggers the type inference.
- */
-
-// Overload 1: Array Input with Schema
-export function groupNestedFields<const TFields extends readonly string[]>(
-  input: Array<Record<string, unknown>>,
-  fieldsSchema: TFields
-): Prettify<TupleToObject<TFields>>[]
-
-// Overload 2: Single Object Input with Schema
-export function groupNestedFields<const TFields extends readonly string[]>(
-  input: Record<string, unknown>,
-  fieldsSchema: TFields
-): Prettify<TupleToObject<TFields>>
-
-// Overload 3: Array Input (No Schema - returns any[])
-export function groupNestedFields(
-  input: Array<Record<string, unknown>>
-): Array<Record<string, unknown>>
-
-// Overload 4: Single Object Input (No Schema - returns any)
-export function groupNestedFields(
-  input: Record<string, unknown>
-): Record<string, unknown>
-
-// Overload 5: Null/Undefined
-export function groupNestedFields(input: null | undefined): null | undefined
-
-/**
- * Implementation
- */
-export function groupNestedFields(
-  input: Record<string, unknown> | Array<Record<string, unknown>> | null | undefined,
-  _fieldsSchema?: readonly string[], // Unused at runtime, specifically for Type Inference
-) {
-  if (input == null) return input
-
-  if (Array.isArray(input)) {
-    return input.map(item => transformItem(item))
-  }
-
-  return transformItem(input)
-}
-
 export async function publicListRecords<
   T extends Table,
   const TFields extends readonly string[], // Capture fields as literals for Type Inference
 >(model: T, options: AdminModelOptions<T> & { list?: { fields?: TFields } }, event: H3Event) {
   const cfg = useAdminRegistry().configure(model, options)
   const result = await listRecords(cfg, getQuery(event), false)
-
-  const transformedResults = groupNestedFields(result.results, options.list?.fields)
+  const transformedResults = result.results.map(item => transformItem(item)) as TupleToObject<TFields>[]
   return {
     ...result,
     results: transformedResults,
