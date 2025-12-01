@@ -15,7 +15,7 @@ import { useAdminRegistry } from './registry'
  */
 function groupNestedFields(
   input: Record<string, unknown> | Array<Record<string, unknown>> | null | undefined,
-): Record<string, unknown> | Array<Record<string, unknown>> | null | undefined {
+) {
   // Handle null/undefined
   if (input == null) {
     return input
@@ -33,7 +33,7 @@ function groupNestedFields(
 /**
  * Transforms a single object by grouping fields with the pattern {prefix}__{field} into nested objects.
  */
-function transformItem(item: Record<string, unknown>): Record<string, unknown> {
+function transformItem(item: Record<string, unknown>) {
   const result: Record<string, unknown> = {}
   const groupedFields = new Map<string, Record<string, unknown>>()
   const keysToSkip = new Set<string>()
@@ -78,7 +78,7 @@ function transformItem(item: Record<string, unknown>): Record<string, unknown> {
   return result
 }
 
-export async function publicListRecords(model: Table, options: AdminModelOptions<Table>, event: H3Event) {
+export async function publicListRecords<T extends Table>(model: T, options: AdminModelOptions<T>, event: H3Event) {
   const cfg = useAdminRegistry().configure(model, options)
   const result = await listRecords(cfg, getQuery(event), false)
 
