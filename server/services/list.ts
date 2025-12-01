@@ -9,7 +9,7 @@ import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
-export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, query: Record<string, any> = {}, returnSpec: boolean = true): Promise<any> {
+export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, query: Record<string, any> = {}, returnSpec: boolean = true) {
   const model = cfg.model
   const tableColumns = cfg.columns
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
