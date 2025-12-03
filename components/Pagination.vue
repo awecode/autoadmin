@@ -17,7 +17,7 @@ const page = useRouteQuery('page', 1, { route, router, transform: Number })
 </script>
 
 <template>
-  <div v-if="pagination.count! > 0" class="mt-auto flex items-center justify-between">
+  <div v-if="pagination?.count! > 0" class="mt-auto flex items-center justify-between">
     <div>
       <span class="text-sm text-dimmed italic">
         {{ `${pagination?.size! * (pagination.page! - 1) + 1} to

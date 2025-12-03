@@ -5,3 +5,5 @@
 
 @source "../../pages/";
 @source "../../components/";
+/* Classes frequently used with fieldAttrs */
+@source inline("md:w-1/2 md:w-1/3 md:w-1/4 w-full");
