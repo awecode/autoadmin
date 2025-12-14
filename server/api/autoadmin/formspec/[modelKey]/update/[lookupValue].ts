@@ -59,7 +59,6 @@ export default defineEventHandler(async (event) => {
   if (cfg.update.formFields || cfg.fields) {
     spec.fields = useDefinedFields(spec, cfg)
   }
-  spec.values = await getTableValues(cfg, spec, lookupValue)
 
   const foreignKeys = getTableForeignKeys(model)
   const specWithForeignKeys = await addForeignKeysToFormSpec(spec, cfg, foreignKeys)
@@ -76,6 +75,9 @@ export default defineEventHandler(async (event) => {
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
   specWithMetadata.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
+
+  // Get values for fields after removing unneeded fields from spec with useMetadataOnFormSpec
+  specWithMetadata.values = await getTableValues(cfg, specWithMetadata, lookupValue)
 
   const labelColumnName = cfg.labelColumnName
   if (specWithMetadata.values && labelColumnName in specWithMetadata.values) {
