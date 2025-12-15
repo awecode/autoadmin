@@ -35,6 +35,7 @@ interface ListApiResponse {
   spec: {
     endpoint: string
     updatePage?: { name: string, params: { modelKey: string } }
+    createPage?: { name: string, params: { modelKey: string } }
     deleteEndpoint?: string
     title: string
     // API return header as string, and an optional sortKey
@@ -141,7 +142,7 @@ const pageActions = computed(() => {
       icon: 'i-lucide-plus',
       color: 'neutral',
       variant: 'solid',
-      to: { name: 'autoadmin-create', params: { modelKey } },
+      to: spec.value.createPage ?? { name: 'autoadmin-create', params: { modelKey } },
     })
   }
   return actions
@@ -588,7 +589,7 @@ const CellRenderer = defineComponent({
     </slot>
 
     <slot name="footer">
-      <Pagination :pagination="data?.pagination" />
+      <Pagination v-if="data?.pagination" :pagination="data.pagination" />
     </slot>
   </div>
 </template>

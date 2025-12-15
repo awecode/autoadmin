@@ -83,6 +83,12 @@ interface ListOptions<T extends Table = Table, C extends CustomSelections = Cust
 interface CreateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
+  route?: {
+    name: string
+    params?: {
+      modelKey: string
+    }
+  }
   schema: ZodObject<Record<string, ZodType>> // added by generateDefaultOptions
   warnOnUnsavedChanges: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
@@ -94,7 +100,7 @@ interface UpdateOptions<T extends Table = Table> {
   // showDeleteButton: boolean
   route?: {
     name: string
-    params: {
+    params?: {
       modelKey: string
     }
   }
@@ -183,7 +189,8 @@ const generateDefaultOptions = <T extends Table, C extends CustomSelections = Cu
       title: toTitleCase(label),
       endpoint: `${apiPrefix}/${key}`,
     },
-    update: { route: { name: 'autoadmin-update', params: { modelKey: key } } },
+    update: { route: opts.update?.route ?? { name: 'autoadmin-update', params: { modelKey: key } } },
+    create: { route: opts.create?.route ?? { name: 'autoadmin-create', params: { modelKey: key } } },
     delete: { endpoint: `${apiPrefix}/${key}` },
   }) as unknown as AdminModelConfig<T, C>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {

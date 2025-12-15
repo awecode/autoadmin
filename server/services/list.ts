@@ -355,6 +355,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     const spec = {
       endpoint: cfg.list.endpoint,
       updatePage: cfg.update.enabled ? cfg.update.route : undefined,
+      createPage: cfg.create.enabled ? cfg.create.route : undefined,
       deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
       enableDelete: cfg.delete.enabled,
       bulkActions: cfg.list.bulkActions.map(action => ({
