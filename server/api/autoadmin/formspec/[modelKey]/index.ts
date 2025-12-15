@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, cfg, m2mRelations)
 
   if (cfg.update.formFields || cfg.fields) {
-    spec.fields = useDefinedFields(specWithM2mRelations, cfg)
+    specWithM2mRelations.fields = useDefinedFields(specWithM2mRelations, cfg)
   }
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)

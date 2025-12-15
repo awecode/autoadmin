@@ -56,9 +56,6 @@ export default defineEventHandler(async (event) => {
   }
   const model = cfg.model
   const spec = zodToFormSpec(cfg.update.schema as any)
-  if (cfg.update.formFields || cfg.fields) {
-    spec.fields = useDefinedFields(spec, cfg)
-  }
 
   spec.values = await getTableValues(cfg, spec, lookupValue)
 
@@ -74,6 +71,10 @@ export default defineEventHandler(async (event) => {
 
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
   const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, cfg, m2mRelations)
+
+  if (cfg.update.formFields || cfg.fields) {
+    specWithM2mRelations.fields = useDefinedFields(specWithM2mRelations, cfg)
+  }
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
   specWithMetadata.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
