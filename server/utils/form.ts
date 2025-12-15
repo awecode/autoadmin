@@ -168,6 +168,9 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
         statusMessage: `Invalid form field: ${typeof field === 'object' && 'name' in field ? field.name : field}`,
       })
     })
+    // Also add the fields with type 'relation-many' that are not in the cfg.update.formFields but are in the spec.fields and are not already in the definedFieldSpecs
+    const relationManyFields = spec.fields.filter(f => f.type === 'relation-many' && !definedFieldSpecs.some(df => df.name === f.name))
+    definedFieldSpecs = [...definedFieldSpecs, ...relationManyFields]
   } else {
     definedFieldSpecs = spec.fields
   }
