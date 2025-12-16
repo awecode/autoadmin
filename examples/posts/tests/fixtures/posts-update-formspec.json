@@ -166,7 +166,6 @@
       }
     ],
     "values": {
-      "id": 1,
       "title": "Post 1",
       "slug": "post-1",
       "excerpt": "Excerpt 1",
@@ -184,7 +183,7 @@
         1
       ]
     },
-    "warnOnUnsavedChanges": true,
+    "warnOnUnsavedChanges": false,
     "labelString": "Post 1",
     "endpoint": "/api/autoadmin/posts/1",
     "listTitle": "Posts",

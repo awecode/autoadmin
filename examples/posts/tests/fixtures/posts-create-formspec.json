@@ -148,7 +148,12 @@
         "options": []
       }
     ],
-    "warnOnUnsavedChanges": true,
+    "slugFields": {
+      "slug": [
+        "title"
+      ]
+    },
+    "warnOnUnsavedChanges": false,
     "endpoint": "/api/autoadmin/posts",
     "listTitle": "Posts",
     "schema": {
