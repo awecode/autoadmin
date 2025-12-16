@@ -1,4 +1,8 @@
 export function humanifyDateTime(date: string | Date, options: { includeTime?: boolean } = {}): string {
+  if (!date) {
+    return ''
+  }
+
   if (typeof options.includeTime !== 'boolean') {
     options.includeTime = true
   }
