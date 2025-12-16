@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { formatBytes } from '#layers/autoadmin/utils/string'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   label: string
   name: string
   modelValue?: string | number | undefined | null
@@ -12,7 +12,10 @@ const props = defineProps<{
   }
   type?: 'file' | 'image'
   attrs?: Record<string, any>
-}>()
+  enableClear?: boolean
+}>(), {
+  enableClear: true,
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | undefined]
@@ -26,6 +29,7 @@ const dialogPreviewExtensions = ['jpg', 'png', 'jpeg', 'svg', 'pdf', 'txt', 'md'
 const allowedExtensions = props.config?.accept ?? (props.type === 'image' ? ['.jpg', '.jpeg', '.png', '.svg'] : [])
 const allowedExtensionsString = allowedExtensions.join(', ')
 const type = props.type ?? 'file'
+const isClearEnabled = computed(() => props.enableClear ?? true)
 
 const placeholder = props.attrs?.placeholder || `Drop ${type} here or click to upload`
 
@@ -369,7 +373,7 @@ const replaceFile = () => {
               @click.stop="downloadFile"
             />
           </UTooltip>
-          <UTooltip text="Clear">
+          <UTooltip v-if="isClearEnabled" text="Clear">
             <UButton
               class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
               icon="i-lucide-x"
