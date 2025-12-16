@@ -35,6 +35,17 @@ const uploadedFile = ref(props.modelValue)
 
 const fileUrl = ref(typeof props.modelValue === 'string' ? props.modelValue : undefined)
 
+// Watch for changes to modelValue from parent and sync to local state
+watch(() => props.modelValue, (newValue) => {
+  if (typeof newValue === 'string' && newValue) {
+    fileUrl.value = newValue
+    uploadedFile.value = newValue
+  } else {
+    fileUrl.value = undefined
+    uploadedFile.value = undefined
+  }
+}, { immediate: false })
+
 const isFileUploading = ref(false)
 
 // Dialog preview state
