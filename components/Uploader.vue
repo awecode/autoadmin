@@ -31,6 +31,10 @@ const placeholder = props.attrs?.placeholder || `Drop ${type} here or click to u
 
 const fileRef = useTemplateRef('fileRef')
 
+defineExpose({
+  fileInput: fileRef,
+})
+
 const uploadedFile = ref(props.modelValue)
 
 const fileUrl = ref(typeof props.modelValue === 'string' ? props.modelValue : undefined)
