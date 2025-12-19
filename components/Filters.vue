@@ -95,8 +95,8 @@ const booleanOptions = [
     </div>
 
     <!-- Single set of filters - responsive visibility based on filter count -->
-    <div :class="filters.length === 1 ? 'contents' : (mobileFiltersOpen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 z-50 p-4 border-t border-gray-200 dark:border-gray-800 max-h-[80vh] overflow-y-auto md:static md:bg-transparent md:z-auto md:p-0 md:border-0 md:max-h-none md:overflow-visible' : 'hidden md:!contents')">
-      <div v-if="mobileFiltersOpen && filters.length > 1" class="md:hidden flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+    <div :class="filters.length === 1 ? 'contents' : (mobileFiltersOpen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-800 z-50 p-4 border-t border-neutral-200 dark:border-neutral-800 max-h-[80vh] overflow-y-auto md:static md:bg-transparent md:z-auto md:p-0 md:border-0 md:max-h-none md:overflow-visible' : 'hidden md:!contents')">
+      <div v-if="mobileFiltersOpen && filters.length > 1" class="md:hidden flex items-center justify-between mb-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
         <div class="flex gap-2">
           <h3 class="text-lg font-semibold">
             Filters

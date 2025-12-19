@@ -148,10 +148,10 @@ watch(() => props.modelValue, (value) => {
 </script>
 
 <template>
-  <div v-bind="attrs" class="min-h-[265px] border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+  <div v-bind="attrs" class="min-h-[265px] border rounded-lg overflow-hidden bg-white dark:bg-neutral-800">
     <div v-if="editor">
       <!-- Toolbar -->
-      <div class="toolbar flex flex-wrap gap-1 p-3 border-b bg-gray-50 dark:bg-gray-800">
+      <div class="toolbar flex flex-wrap gap-1 p-3 border-b bg-neutral-50 dark:bg-neutral-800">
         <button
           type="button"
           :data-active="editor.isActive('bold')"
@@ -312,7 +312,7 @@ watch(() => props.modelValue, (value) => {
       </div>
 
       <!-- Editor Content -->
-      <div class="bg-white dark:bg-gray-900">
+      <div class="bg-white dark:bg-neutral-800">
         <EditorContent :editor="editor" />
       </div>
     </div>

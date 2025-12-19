@@ -573,13 +573,13 @@ const CellRenderer = defineComponent({
           <div
             v-for="(aggregate, key) in data.aggregates"
             :key="key"
-            class="flex-1 min-w-40 sm:min-w-48 max-w-64 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
+            class="flex-1 min-w-40 sm:min-w-48 max-w-64 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
           >
             <div class="flex flex-col">
-              <dt class="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+              <dt class="text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                 {{ aggregate.label }}
               </dt>
-              <dd class="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">
+              <dd class="text-lg sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                 {{ typeof aggregate.value === 'number' ? aggregate.value.toLocaleString() : aggregate.value }}
               </dd>
             </div>

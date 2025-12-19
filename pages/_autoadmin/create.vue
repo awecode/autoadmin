@@ -65,7 +65,7 @@ useHead({
 
     <AutoForm
       v-if="formSpec"
-      class="space-y-4 p-6 rounded-lg bg-gray-100 dark:bg-gray-800"
+      class="space-y-4"
       mode="create"
       :endpoint="endpoint"
       :redirect-path="listPath"

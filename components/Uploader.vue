@@ -334,11 +334,11 @@ const replaceFile = () => {
       <!-- Non-image file display -->
       <div v-else class="flex flex-col items-center justify-center text-center px-4 py-2">
         <UIcon class="mb-3 text-2xl" name="i-lucide-file-check" />
-        <div class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 max-w-full">
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-300 break-all">
+        <div class="bg-white dark:bg-neutral-800 max-w-full">
+          <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200 break-all">
             {{ fileName }}
           </p>
-          <p v-if="extension?.length > 0 && extension.length < 10" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p v-if="extension?.length > 0 && extension.length < 10" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
             {{ extension.toUpperCase() }} File
           </p>
         </div>
@@ -347,8 +347,8 @@ const replaceFile = () => {
       <!-- Hover overlay with action icons -->
       <div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-4 pointer-events-none group-hover:pointer-events-auto">
         <!-- File name display -->
-        <div class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 rounded-lg px-4 py-2 shadow-lg max-w-[80%]">
-          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 text-center break-all">
+        <div class="bg-white dark:bg-neutral-800 rounded-lg px-4 py-2 shadow-lg max-w-[80%]">
+          <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200 text-center break-all">
             {{ fileName }}
           </p>
         </div>
@@ -429,11 +429,11 @@ const replaceFile = () => {
               v-else-if="['txt', 'md'].includes(extension)"
               class="w-full max-h-full"
             >
-              <pre class="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded dark:bg-gray-800 dark:text-white">{{ previewContent }}</pre>
+              <pre class="whitespace-pre-wrap text-sm bg-neutral-50 p-4 rounded dark:bg-neutral-800 dark:text-white">{{ previewContent }}</pre>
             </div>
           </div>
 
-          <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
             <UButton
               variant="outline"
               @click="isPreviewDialogOpen = false"

@@ -89,7 +89,7 @@ const mobileMenuOpen = ref(false)
   </div>
 
   <!-- Mobile Top Bar -->
-  <div class="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+  <div class="md:hidden bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-800 px-4 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <UButton
@@ -131,9 +131,9 @@ const mobileMenuOpen = ref(false)
     >
       <div
         v-if="mobileMenuOpen"
-        class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50"
+        class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-800 z-50"
       >
-        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+        <div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
           <div class="text-lg font-bold">
             {{ getAdminTitle() }}
           </div>
