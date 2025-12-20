@@ -37,7 +37,7 @@ useHead({
           class="block"
           :to="link.to"
         >
-          <UCard class="hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-200 cursor-pointer h-full">
+          <UCard class="hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200 cursor-pointer h-full">
             <div class="flex flex-col items-center text-center space-y-3 p-2">
               <UIcon
                 class="w-8 h-8 text-neutral-600 dark:text-neutral-400 transition-colors duration-200"

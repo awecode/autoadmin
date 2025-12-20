@@ -2,19 +2,6 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
-// import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
-// import { inject } from 'vue'
-
-// if (import.meta.server) {
-//   const portalTarget = inject(portalTargetInjectionKey, null)
-
-//   if (!portalTarget) {
-//     throw new Error(
-//       `UApp is not present. Please wrap your app.vue with Nuxt UI's UApp app component. https://ui.nuxt.com/components/app`,
-//     )
-//   }
-// }
-
 const appConfig = useAppConfig()
 
 const collapsed = useCookie<boolean>('sidebar-collapsed', {
@@ -32,23 +19,26 @@ if (error.value?.data?.data?.redirect) {
 let auth
 
 try {
+  // @ts-expect-error - useAuth may not be available
   auth = useAuth()
 } catch {
   auth = null
 }
 
-const additionalItems: NavigationMenuItem[] = appConfig.sidebar.additionalItems
-
-if (auth) {
-  additionalItems.push({
-    label: 'Sign Out',
-    icon: 'i-lucide-log-out',
-    onSelect: () => {
-      auth.signOut()
-      navigateTo('/')
-    },
-  })
-}
+const additionalItems = computed(() => {
+  const items: NavigationMenuItem[] = [...appConfig.sidebar.additionalItems]
+  if (auth && auth.signOut && typeof auth.signOut === 'function') {
+    items.push({
+      label: 'Sign Out',
+      icon: 'i-lucide-log-out',
+      onSelect: () => {
+        auth.signOut()
+        navigateTo('/')
+      },
+    })
+  }
+  return items
+})
 
 const items = [
   appConfig.sidebar.topItems,
@@ -56,7 +46,7 @@ const items = [
     appConfig.sidebar.modelLabel,
     ...modelLinks.value ?? [],
   ],
-  additionalItems,
+  additionalItems.value,
 ]
 
 const colorMode = useColorMode()
@@ -76,7 +66,7 @@ const mobileMenuOpen = ref(false)
 <template>
   <!-- Desktop Sidebar -->
   <div
-    class="hidden md:!block rounded-lg border border-gray-200 dark:border-gray-800 py-4 transition-all duration-300 ease-in-out mt-2 ml-1"
+    class="hidden md:!block rounded-lg border border-neutral-200 dark:border-neutral-700 py-4 transition-all duration-300 ease-in-out mt-2 ml-1"
     :class="{ 'px-4': !collapsed }"
   >
     <div class="flex justify-between items-center mb-4 transition-all duration-300 ease-in-out">
