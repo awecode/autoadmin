@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { NavigationMenuItem } from '@nuxt/ui'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 // import { portalTargetInjectionKey } from '@nuxt/ui/composables/usePortal.js'
@@ -28,13 +29,34 @@ if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
 }
 
+let auth
+
+try {
+  auth = useAuth()
+} catch {
+  auth = null
+}
+
+const additionalItems: NavigationMenuItem[] = appConfig.sidebar.additionalItems
+
+if (auth) {
+  additionalItems.push({
+    label: 'Sign Out',
+    icon: 'i-lucide-log-out',
+    onSelect: () => {
+      auth.signOut()
+      navigateTo('/')
+    },
+  })
+}
+
 const items = [
   appConfig.sidebar.topItems,
   [
     appConfig.sidebar.modelLabel,
     ...modelLinks.value ?? [],
   ],
-  appConfig.sidebar.additionalItems,
+  additionalItems,
 ]
 
 const colorMode = useColorMode()

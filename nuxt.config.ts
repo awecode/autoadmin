@@ -7,6 +7,9 @@ const apiPrefix = process.env.NUXT_PUBLIC_API_PREFIX || '/api/autoadmin'
 export default defineNuxtConfig({
   runtimeConfig: {
     adminUrlPrefix,
+    auth: {
+      adminOnlyApiRoutes: '/api/autoadmin',
+    },
     public: {
       apiPrefix,
       autoadmin: {
