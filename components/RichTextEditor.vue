@@ -80,7 +80,7 @@ const editor = useEditor({
   content: props.modelValue || '',
   editorProps: {
     attributes: {
-      class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl focus:outline-none dark:prose-invert min-h-[200px] p-4',
+      class: 'prose prose-base max-w-none focus:outline-none dark:prose-invert min-h-[200px] p-4',
     },
   },
   extensions: [
