@@ -1,55 +1,16 @@
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
 
-function normalizeKey(key: string): string {
-  return key.startsWith('/') ? key.slice(1) : key
-}
-
-// R2 Bucket binding interface (Cloudflare Workers)
-// Based on: https://developers.cloudflare.com/r2/api/workers/workers-api-usage/
-export interface R2Bucket {
+export interface R2Binding {
   put: (key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob, options?: {
     httpMetadata?: HeadersInit
     customMetadata?: Record<string, string>
-  }) => Promise<R2Object | null>
+  }) => Promise<Record<string, unknown> | null>
   get: (key: string, options?: {
     onlyIf?: HeadersInit
     range?: HeadersInit
-  }) => Promise<R2ObjectBody | null>
+  }) => Promise<Record<string, unknown> | null>
   delete: (keys: string | string[]) => Promise<void>
-}
-
-interface R2Object {
-  key: string
-  size: number
-  etag: string
-  httpEtag: string
-  uploaded: Date
-  checksums: R2Checksums
-  httpMetadata?: R2HTTPMetadata
-  customMetadata?: Record<string, string>
-}
-
-interface R2ObjectBody extends R2Object {
-  body: ReadableStream
-  bodyUsed: boolean
-}
-
-interface R2Checksums {
-  md5?: ArrayBuffer
-  sha1?: ArrayBuffer
-  sha256?: ArrayBuffer
-  sha384?: ArrayBuffer
-  sha512?: ArrayBuffer
-}
-
-interface R2HTTPMetadata {
-  contentType?: string
-  contentLanguage?: string
-  contentDisposition?: string
-  contentEncoding?: string
-  cacheControl?: string
-  cacheExpiry?: Date
 }
 
 export const r2Backend = {
@@ -63,28 +24,21 @@ export const r2Backend = {
     return binding
   },
 
-  getUrl: () => {
-    return ''
-  },
-
-  checkIfFileExists: async (bucket: R2Bucket, key: string): Promise<boolean> => {
-    const object = await bucket.get(key)
+  checkIfFileExists: async (binding: R2Binding, key: string): Promise<boolean> => {
+    const object = await binding.get(key)
     return object !== null
   },
 
   getPublicUrl: () => {
-    const { s3 } = useRuntimeConfig()
-    let publicUrl = s3.publicUrl || ''
-    if (publicUrl.endsWith('/')) {
-      publicUrl = publicUrl.slice(0, -1)
+    const config = useRuntimeConfig()
+    let publicUrl = (config.publicR2Url as string) || config.s3?.publicUrl || ''
+    if (!publicUrl.endsWith('/')) {
+      publicUrl = `${publicUrl}/`
     }
     return publicUrl
   },
 
-  put: async (bucket: R2Bucket, path: string, body: BodyInit, headers: Record<string, string>) => {
-    // Upload to R2 using binding API
-  // Reference: https://developers.cloudflare.com/r2/api/workers/workers-api-usage/
-
+  put: async (binding: R2Binding, path: string, body: BodyInit, headers: Record<string, string>) => {
     // Convert file to appropriate format for R2
     let fileBody: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob
     if (body instanceof File) {
@@ -102,14 +56,13 @@ export const r2Backend = {
         httpMetadata.set(key, value)
       })
     }
-    const r2Key = normalizeKey(path)
-    const result = await bucket.put(r2Key, fileBody, {
+
+    const result = await binding.put(path, fileBody, {
       httpMetadata: Object.keys(httpMetadata).length > 0 ? httpMetadata : undefined,
     })
 
     if (!result) {
       throw new Error('Error uploading file to R2: Upload returned null')
     }
-    return true
   },
 }

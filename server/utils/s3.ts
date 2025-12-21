@@ -16,13 +16,10 @@ export const s3Backend = {
     })
   },
 
-  getUrl: () => {
-    const { s3 } = useRuntimeConfig()
-    return `${s3.endpointUrl}/${s3.bucketName}`
-  },
-
   checkIfFileExists: async (client: AwsClient, path: string) => {
-    const request = await client.sign(path, {
+    const { s3 } = useRuntimeConfig()
+    const url = `${s3.endpointUrl}/${s3.bucketName}`
+    const request = await client.sign(`${url}/${path}`, {
       method: 'GET',
     })
     const response = await fetch(request)
@@ -35,22 +32,22 @@ export const s3Backend = {
   getPublicUrl: () => {
     const { s3 } = useRuntimeConfig()
     let publicUrl = s3.publicUrl || ''
-    if (publicUrl.endsWith('/')) {
-      publicUrl = publicUrl.slice(0, -1)
+    if (!publicUrl.endsWith('/')) {
+      publicUrl = `${publicUrl}/`
     }
     return publicUrl
   },
 
   put: async (client: AwsClient, path: string, body: BodyInit, headers: Record<string, string>) => {
-    const request = await client.sign(path, {
+    const { s3 } = useRuntimeConfig()
+    const url = `${s3.endpointUrl}/${s3.bucketName}`
+    const request = await client.sign(`${url}/${path}`, {
       method: 'PUT',
       body,
       headers,
     })
     const response = await fetch(request)
-    if (response.ok) {
-      return true
-    } else {
+    if (!response.ok) {
       throw new Error(`Error uploading file to object storage: ${response.statusText}`)
     }
   },

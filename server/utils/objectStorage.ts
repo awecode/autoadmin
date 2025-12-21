@@ -9,6 +9,11 @@ if (typeof globalThis.crypto === 'undefined') {
   globalThis.crypto = new Crypto()
 }
 
+const normalizePath = (path: string): string => {
+  // remove leading and trailing slashes
+  return path.replace(/^\/+|\/+$/g, '')
+}
+
 const USE_UUID_FILENAMES = false
 const OVERWRITE_FILENAME = false
 
@@ -22,16 +27,15 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
 }) {
   // @ts-expect-error - globalThis is not typed
   const binding = process.env.R2 || globalThis.__env__?.R2 || globalThis.R2
-  const backend = binding ? s3Backend : s3Backend
+  const backend = binding ? r2Backend : s3Backend
   const client = backend.getClient()
 
-  const url = backend.getUrl()
-
-  const prefix = config?.prefix ? (config.prefix.endsWith('/') ? config.prefix : `${config.prefix}/`) : ''
+  const prefix = normalizePath(config?.prefix || '')
 
   let fullFileName: string
   if (config?.filename && !USE_UUID_FILENAMES) {
-    const baseFileName = prefix ? `${prefix}${config.filename}` : config.filename
+    const filename = normalizePath(config.filename)
+    const baseFileName = prefix ? `${prefix}/${filename}` : filename
     fullFileName = baseFileName
 
     if (!OVERWRITE_FILENAME) {
@@ -39,11 +43,7 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
       let counter = 0
       let testFileName = fullFileName
 
-      if (!testFileName.startsWith('/')) {
-        testFileName = `/${testFileName}`
-      }
-
-      let fileExists = await backend.checkIfFileExists(client, `${url}${testFileName}`)
+      let fileExists = await backend.checkIfFileExists(client, testFileName)
 
       while (fileExists) {
         counter++
@@ -58,20 +58,16 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
           fullFileName = `${baseFileName}-${counter}`
         }
 
-        testFileName = fullFileName.startsWith('/') ? fullFileName : `/${fullFileName}`
-        fileExists = await backend.checkIfFileExists(client, `${url}${testFileName}`)
+        testFileName = fullFileName
+        fileExists = await backend.checkIfFileExists(client, testFileName)
       }
     }
   } else {
     const filename = uuid()
-    fullFileName = prefix ? `${prefix}${filename}` : filename
+    fullFileName = prefix ? `${prefix}/${filename}` : filename
     if (config?.extension) {
       fullFileName = `${fullFileName}.${config.extension}`
     }
-  }
-
-  if (!fullFileName.startsWith('/')) {
-    fullFileName = `/${fullFileName}`
   }
 
   const headers: Record<string, string> = {
@@ -83,6 +79,6 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
     headers['Content-Disposition'] = 'inline'
   }
 
-  await backend.put(client, `${url}${fullFileName}`, file as unknown as BodyInit, headers)
+  await backend.put(client, fullFileName, file as unknown as BodyInit, headers)
   return `${backend.getPublicUrl()}${fullFileName}`
 }
