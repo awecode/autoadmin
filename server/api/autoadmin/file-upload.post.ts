@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import uploadToObjectStorage from '../../utils/s3'
+import uploadToObjectStorage from '../../utils/objectStorage'
 
 export default defineEventHandler(async (event) => {
   const contentType = getRequestHeader(event, 'content-type')
