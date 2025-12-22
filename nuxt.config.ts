@@ -29,6 +29,7 @@ export default defineNuxtConfig({
       region: process.env.NUXT_S3_REGION || 'us-east-1',
       publicUrl: process.env.NUXT_S3_PUBLIC_URL || '',
     },
+    r2PublicUrl: process.env.NUXT_R2_PUBLIC_URL || '',
   },
   css: [fileURLToPath(new URL('./assets/css/main.css', import.meta.url))],
   modules: [

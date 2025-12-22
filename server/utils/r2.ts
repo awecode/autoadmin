@@ -31,7 +31,7 @@ export const r2Backend = {
 
   getPublicUrl: () => {
     const config = useRuntimeConfig()
-    let publicUrl = (config.publicR2Url as string) || config.s3?.publicUrl || ''
+    let publicUrl = (config.r2PublicUrl as string) || config.s3?.publicUrl || ''
     if (!publicUrl.endsWith('/')) {
       publicUrl = `${publicUrl}/`
     }
