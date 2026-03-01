@@ -962,7 +962,7 @@ AutoAdmin can be configured using environment variables:
 
 ### Object Storage Configuration
 
-AutoAdmin can use any S3-compatible object storage (supported by `awsfetch`) to store files and images. You can configure the object storage with environment variables.
+AutoAdmin can use any S3-compatible object storage (supported by `aws4fetch`) to store files and images. You can configure the object storage with environment variables.
 
 ```ini
 NUXT_S3_ACCESS_KEY=<your-access-key>

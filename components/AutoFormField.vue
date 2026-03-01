@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>()
 
 // Helper function to format Date to datetime-local string using local time
-const formatDateToLocal = (date: Date): string => {
+function formatDateToLocal(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -24,7 +24,7 @@ const formatDateToLocal = (date: Date): string => {
 }
 
 // Helper function to format Date to date string (yyyy-MM-dd)
-const formatDateToDateString = (date: Date): string => {
+function formatDateToDateString(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -37,11 +37,13 @@ const fieldValue = computed({
       const formatter = props.field.type === 'datetime-local' ? formatDateToLocal : formatDateToDateString
       if (props.modelValue instanceof Date) {
         return formatter(props.modelValue)
-      } else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
+      }
+      else if (typeof props.modelValue === 'string' && props.modelValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
         return formatter(new Date(props.modelValue))
       }
       return props.modelValue
-    } else if (props.field.type === 'json') {
+    }
+    else if (props.field.type === 'json') {
       return JSON.stringify(props.modelValue, null, 2)
     }
     return props.modelValue
@@ -50,9 +52,11 @@ const fieldValue = computed({
     // Coerce to Date object for datetime-local and date fields
     if ((props.field.type === 'datetime-local' || props.field.type === 'date') && value) {
       emit('update:modelValue', new Date(value))
-    } else if (props.field.type === 'json') {
+    }
+    else if (props.field.type === 'json') {
       emit('update:modelValue', JSON.parse(value))
-    } else {
+    }
+    else {
       emit('update:modelValue', value)
     }
   },
@@ -109,7 +113,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         }
         if (mode === 'create') {
           selectMenuItemsRaw.value = normalizeOptions([...(selectMenuItemsRaw.value ?? []), option])
-        } else if (selectMenuItemsRaw.value) {
+        }
+        else if (selectMenuItemsRaw.value) {
           selectMenuItemsRaw.value = normalizeOptions(selectMenuItemsRaw.value.map(item => item.value === lookupValue ? option : item))
         }
         if (props.field.type === 'relation-many') {
@@ -117,7 +122,8 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           if (!fieldValue.value || !fieldValue.value.includes(value)) {
             fieldValue.value = [...(fieldValue.value ?? []), value]
           }
-        } else {
+        }
+        else {
           fieldValue.value = value
         }
         // Clear any validation errors for this field after programmatic value change
@@ -193,7 +199,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             variant="soft"
             @click.prevent="openRelationModal('update', fieldValue)"
           />
-          <span v-else class="ml-6"></span>
+          <span v-else class="ml-6" />
         </div>
 
         <!-- Relation (multi-select) -->
@@ -237,7 +243,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             variant="soft"
             @click.prevent="openRelationModal('update', fieldValue[0])"
           />
-          <span v-else class="ml-6"></span>
+          <span v-else class="ml-6" />
         </div>
 
         <!-- Select dropdown -->
@@ -276,32 +282,33 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           color="neutral"
         />
 
-        <!-- Text input with nullify modifier -->
+        <!-- Text input with nullable modifier -->
         <UInput
           v-else-if="field.type === 'text'"
-          v-model.nullify="fieldValue"
+          v-model.nullable="fieldValue"
           v-bind="field.inputAttrs"
           class="w-full"
           color="neutral"
           type="text"
         />
 
-        <!-- Textarea input with nullify modifier -->
+        <!-- Textarea input with nullable modifier -->
         <UTextarea
           v-else-if="field.type === 'textarea'"
-          v-model.nullify="fieldValue"
+          v-model.nullable="fieldValue"
           v-bind="field.inputAttrs"
           class="w-full"
           color="neutral"
         />
 
-        <!-- Rich text editor -->
-        <RichTextEditor
-          v-else-if="field.type === 'rich-text'"
-          v-model="fieldValue"
-          class="w-full"
-          :attrs="field.inputAttrs"
-        />
+        <div v-else-if="field.type === 'rich-text'">
+          <!-- Rich text editor -->
+          <RichTextEditor
+            v-model="fieldValue"
+            class="w-full"
+            :attrs="field.inputAttrs"
+          />
+        </div>
 
         <Uploader
           v-else-if="field.type === 'image'"
