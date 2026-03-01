@@ -1,10 +1,10 @@
-export function humanifyDateTime(date: string | Date, options: { includeTime?: boolean } = {}): string {
+export function humanifyDateTime(date: string | Date, opts: { includeTime?: boolean } = {}): string {
   if (!date) {
     return ''
   }
 
-  if (typeof options.includeTime !== 'boolean') {
-    options.includeTime = true
+  if (typeof opts.includeTime !== 'boolean') {
+    opts.includeTime = true
   }
 
   const inputDate = new Date(date)
@@ -21,12 +21,12 @@ export function humanifyDateTime(date: string | Date, options: { includeTime?: b
     minute: '2-digit',
     hour12: true,
   }
-  const timeString = options.includeTime ? inputDate.toLocaleTimeString('en-US', timeOptions) : ''
+  const timeString = opts.includeTime ? inputDate.toLocaleTimeString('en-US', timeOptions) : ''
 
   if (inputDateOnly.getTime() === today.getTime()) {
-    return options.includeTime ? `Today at ${timeString}` : 'Today'
+    return opts.includeTime ? `Today at ${timeString}` : 'Today'
   } else if (inputDateOnly.getTime() === yesterday.getTime()) {
-    return options.includeTime ? `Yesterday at ${timeString}` : 'Yesterday'
+    return opts.includeTime ? `Yesterday at ${timeString}` : 'Yesterday'
   } else {
     // Format as "Jul 3, 2025, 5:45 AM"
     const dateOptions: Intl.DateTimeFormatOptions = {
@@ -36,6 +36,6 @@ export function humanifyDateTime(date: string | Date, options: { includeTime?: b
     }
     const dateString = inputDate.toLocaleDateString('en-US', dateOptions)
 
-    return options.includeTime ? `${dateString}, ${timeString}` : dateString
+    return opts.includeTime ? `${dateString}, ${timeString}` : dateString
   }
 }
