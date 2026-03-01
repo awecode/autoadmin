@@ -4,7 +4,6 @@ import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
-// import { CodeBlockShiki } from 'tiptap-extension-code-block-shiki'
 import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
 import { useEditorCompletion } from './EditorUseCompletion'
@@ -38,16 +37,6 @@ Try out these powerful capabilities:
 2. **Multiple Content Types** — Support for JSON, HTML, and Markdown
 3. **Customizable Toolbars** — Fixed, bubble, and floating layouts
 4. **Theme Integration** — Fully styled with Nuxt UI theme system
-
-#### Code Blocks
-
-Perfect for technical documentation:
-
-\`\`\`vue
-<template>
-  <UEditor v-model="value" content-type="markdown" />
-</template>
-\`\`\`
 
 ---
 
@@ -119,10 +108,6 @@ const fixedToolbarItems = [[{
   kind: 'blockquote',
   icon: 'i-lucide-text-quote',
   tooltip: { text: 'Blockquote' },
-}, {
-  kind: 'codeBlock',
-  icon: 'i-lucide-square-code',
-  tooltip: { text: 'Code Block' },
 }], [{
   kind: 'mark',
   mark: 'bold',
@@ -289,10 +274,6 @@ const bubbleToolbarItems = computed(() => [[{
     kind: 'blockquote',
     icon: 'i-lucide-text-quote',
     label: 'Blockquote',
-  }, {
-    kind: 'codeBlock',
-    icon: 'i-lucide-square-code',
-    label: 'Code Block',
   }],
 }], [{
   kind: 'mark',
@@ -418,7 +399,6 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
         { kind: 'bulletList', label: 'Bullet List', icon: 'i-lucide-list' },
         { kind: 'orderedList', label: 'Ordered List', icon: 'i-lucide-list-ordered' },
         { kind: 'blockquote', label: 'Blockquote', icon: 'i-lucide-text-quote' },
-        { kind: 'codeBlock', label: 'Code Block', icon: 'i-lucide-square-code' },
       ],
     },
     {
@@ -512,10 +492,6 @@ const suggestionItems = [[{
   kind: 'blockquote',
   label: 'Blockquote',
   icon: 'i-lucide-text-quote',
-}, {
-  kind: 'codeBlock',
-  label: 'Code Block',
-  icon: 'i-lucide-square-code',
 }], [{
   type: 'label',
   label: 'Insert',
@@ -566,13 +542,6 @@ const mentionItems: EditorMentionMenuItem[] = [{
     :extensions="[
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ImageUpload,
-      // CodeBlockShiki.configure({
-      //   defaultTheme: 'material-theme',
-      //   themes: {
-      //     light: 'material-theme-lighter',
-      //     dark: 'material-theme-palenight',
-      //   },
-      // }),
       completionExtension,
     ]"
     :handlers="customHandlers"
