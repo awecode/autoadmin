@@ -2,8 +2,8 @@ import type { FormSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { ZodObject, ZodRawShape } from 'zod'
 import { z } from 'zod'
 
-export const normalizeOptions = (options: Option[]) => {
-  return options.map((option) => {
+export const normalizeOptions = (opts: Option[]) => {
+  return opts.map((option) => {
     if (typeof option === 'string') {
       return { label: option, value: option }
     }

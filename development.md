@@ -16,6 +16,7 @@ Drizzle ORM is a peer dependency of autoadmin. Installing it in your project wil
 # Make sure you have commited your changes
 rm -rf node_modules/drizzle-orm
 pnpm store prune
-pnpm add ../../wpress/node_modules/drizzle-orm --dir
+pnpm add examples/posts/node_modules/drizzle-orm --dir
+# pnpm add ../../wpress/node_modules/drizzle-orm --dir
 git reset --hard
 ```
