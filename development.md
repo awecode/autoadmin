@@ -13,8 +13,9 @@ export default defineNuxtConfig({
 Drizzle ORM is a peer dependency of autoadmin. Installing it in your project will do for runtime. To get IDE support for Drizzle ORM within autoadmin project, you can instruct pnpm inside autoadmin project to use drizzle-orm from your project that utilizes autoadmin. Example:
 
 ```bash
+# Make sure you have commited your changes
 rm -rf node_modules/drizzle-orm
 pnpm store prune
 pnpm add ../../wpress/node_modules/drizzle-orm --dir
-git stash
+git reset --hard
 ```
