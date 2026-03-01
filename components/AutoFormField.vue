@@ -308,6 +308,12 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             class="w-full"
             :attrs="field.inputAttrs"
           />
+
+          <EditorRichEditor
+            v-model="fieldValue"
+            class="mt-8 border rounded"
+            :attrs="field.inputAttrs"
+          />
         </div>
 
         <Uploader

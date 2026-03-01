@@ -16,6 +16,7 @@
     "drizzle-orm": "0.44.4"
   },
   "dependencies": {
+    "@ai-sdk/vue": "^3.0.105",
     "@iconify-json/lucide": "^1.2.57",
     "@libsql/client": "^0.15.9",
     "@nuxt/ui": "^4.5.0",
@@ -27,11 +28,15 @@
     "@tiptap/pm": "^3.0.7",
     "@tiptap/starter-kit": "^3.0.7",
     "@tiptap/vue-3": "^3.0.7",
+    "@tiptap/y-tiptap": "^3.0.2",
     "@vueuse/router": "^13.5.0",
     "aws4fetch": "^1.0.20",
     "drizzle-zod": "0.8.3",
+    "extension-emoji": "link:@@tiptap/extension-emoji",
     "tailwindcss": "^4.2.1",
     "uuid": "^13.0.0",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.29",
     "zod": "^4.0.17",
     "zodex": "^4.0.0"
   },
