@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, EditorCustomHandlers, EditorEmojiMenuItem, EditorMentionMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
+import type { DropdownMenuItem, EditorCustomHandlers, EditorMentionMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
-import { Emoji, gitHubEmojis } from '@tiptap/extension-emoji'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
-import { CodeBlockShiki } from 'tiptap-extension-code-block-shiki'
+// import { CodeBlockShiki } from 'tiptap-extension-code-block-shiki'
 import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
 import { useEditorCompletion } from './EditorUseCompletion'
@@ -29,7 +28,6 @@ Try out these powerful capabilities:
 - **Bubble Menu** — Select any text to see formatting options appear
 - **Slash Commands** — Type \`/\` for quick access to blocks and formatting
 - **Mentions** — Use \`@\` to tag people or entities
-- **Emoji Picker** — Type \`:\` followed by an emoji name like :smile:
 - **Drag & Drop** — Hover over any block to see the drag handle
 
 > **Pro tip:** You can use keyboard shortcuts like Cmd/Ctrl + B for bold, Cmd/Ctrl + I for italic, and more!
@@ -526,10 +524,6 @@ const suggestionItems = [[{
   label: 'Mention',
   icon: 'i-lucide-at-sign',
 }, {
-  kind: 'emoji',
-  label: 'Emoji',
-  icon: 'i-lucide-smile-plus',
-}, {
   kind: 'imageUpload',
   label: 'Image',
   icon: 'i-lucide-image',
@@ -561,8 +555,6 @@ const mentionItems: EditorMentionMenuItem[] = [{
   label: 'genu',
   avatar: { src: 'https://avatars.githubusercontent.com/u/928780?v=4' },
 }]
-
-const emojiItems: EditorEmojiMenuItem[] = gitHubEmojis.filter(emoji => !emoji.name.startsWith('regional_indicator_'))
 </script>
 
 <template>
@@ -570,18 +562,17 @@ const emojiItems: EditorEmojiMenuItem[] = gitHubEmojis.filter(emoji => !emoji.na
     ref="editorRef"
     v-slot="{ editor, handlers }"
     v-model="value"
-    content-type="markdown"
+    content-type="html"
     :extensions="[
-      Emoji,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ImageUpload,
-      CodeBlockShiki.configure({
-        defaultTheme: 'material-theme',
-        themes: {
-          light: 'material-theme-lighter',
-          dark: 'material-theme-palenight',
-        },
-      }),
+      // CodeBlockShiki.configure({
+      //   defaultTheme: 'material-theme',
+      //   themes: {
+      //     light: 'material-theme-lighter',
+      //     dark: 'material-theme-palenight',
+      //   },
+      // }),
       completionExtension,
     ]"
     :handlers="customHandlers"
@@ -658,7 +649,6 @@ const emojiItems: EditorEmojiMenuItem[] = gitHubEmojis.filter(emoji => !emoji.na
 
     <UEditorSuggestionMenu :editor="editor" :items="suggestionItems" />
     <UEditorMentionMenu :editor="editor" :items="mentionItems" />
-    <UEditorEmojiMenu :editor="editor" :items="emojiItems" />
   </UEditor>
 </template>
 
