@@ -4,7 +4,8 @@ import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
-import { ImageUpload } from './EditorImageUploadExtension'
+import EditorImagePopover from './EditorImagePopover.vue'
+// import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
 
 const editorRef = useTemplateRef('editorRef')
@@ -103,7 +104,7 @@ const fixedToolbarItems = [[{
   slot: 'link' as const,
   icon: 'i-lucide-link',
 }, {
-  kind: 'imageUpload',
+  slot: 'imageUpload',
   icon: 'i-lucide-image',
   tooltip: { text: 'Image' },
 }], [{
@@ -426,7 +427,7 @@ const suggestionItems = [[{
     content-type="html"
     :extensions="[
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      ImageUpload,
+      // ImageUpload,
     ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."
@@ -436,6 +437,9 @@ const suggestionItems = [[{
     <UEditorToolbar :editor="editor" :items="fixedToolbarItems" class="border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto">
       <template #link>
         <EditorLinkPopover :editor="editor" auto-open />
+      </template>
+      <template #imageUpload>
+        <EditorImagePopover :editor="editor" auto-open />
       </template>
     </UEditorToolbar>
 

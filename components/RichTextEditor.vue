@@ -24,7 +24,7 @@ const isEditingHtml = ref(false)
 const isUploading = ref(false)
 const fileInput = useTemplateRef('fileInput')
 
-const uploadFile = async (file: File): Promise<string> => {
+async function uploadFile(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
 
@@ -46,16 +46,18 @@ const uploadFile = async (file: File): Promise<string> => {
 
     const result = await response.text()
     return result
-  } catch (error) {
+  }
+  catch (error) {
     // eslint-disable-next-line no-alert
     window.alert(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error
-  } finally {
+  }
+  finally {
     isUploading.value = false
   }
 }
 
-const handleFiles = async (currentEditor: Editor, files: File[], pos: number) => {
+async function handleFiles(currentEditor: Editor, files: File[], pos: number) {
   files.forEach(async (file) => {
     try {
       const uploadedUrl = await uploadFile(file)
@@ -69,7 +71,8 @@ const handleFiles = async (currentEditor: Editor, files: File[], pos: number) =>
         })
         .focus()
         .run()
-    } catch (error) {
+    }
+    catch (error) {
       // Error already handled in uploadFile function
       console.error('Failed to upload file:', error)
     }
@@ -106,19 +109,22 @@ const editor = useEditor({
   onUpdate: ({ editor: editorInstance }) => {
     if (isEditingHtml.value) {
       emit('update:modelValue', editorInstance.getText())
-    } else {
+    }
+    else {
       emit('update:modelValue', editorInstance.getHTML())
     }
   },
 })
 
-const openImageSelector = () => {
-  if (!enableImageUpload) return
+function openImageSelector() {
+  if (!enableImageUpload)
+    return
   fileInput.value?.click()
 }
 
-const handleFileSelection = (event: Event) => {
-  if (!enableImageUpload) return
+function handleFileSelection(event: Event) {
+  if (!enableImageUpload)
+    return
   const input = event.target as HTMLInputElement
   const files = input.files
   if (files && files.length > 0 && editor.value) {
@@ -130,19 +136,22 @@ const handleFileSelection = (event: Event) => {
   }
 }
 
-const toggleEditHtml = () => {
+function toggleEditHtml() {
   isEditingHtml.value = !isEditingHtml.value
   if (isEditingHtml.value) {
     editor.value?.commands.setContent(`<textarea>${editor.value?.getHTML()}</textarea>`)
-  } else {
+  }
+  else {
     editor.value?.commands.setContent(editor.value?.getText())
   }
 }
 
 watch(() => props.modelValue, (value) => {
-  if (!editor.value) return
+  if (!editor.value)
+    return
   const isSame = editor.value.getHTML() === value
-  if (isSame) return
+  if (isSame)
+    return
   editor.value.commands.setContent(value ?? '')
 })
 </script>
@@ -188,7 +197,7 @@ watch(() => props.modelValue, (value) => {
           <Icon name="lucide:underline" />
         </button>
 
-        <div data-divider></div>
+        <div data-divider />
 
         <button
           data-text-btn="true"
@@ -226,7 +235,7 @@ watch(() => props.modelValue, (value) => {
           H4
         </button>
 
-        <div data-divider></div>
+        <div data-divider />
 
         <button
           type="button"
@@ -244,7 +253,7 @@ watch(() => props.modelValue, (value) => {
           <Icon name="lucide:list-ordered" />
         </button>
 
-        <div data-divider></div>
+        <div data-divider />
 
         <button
           v-if="enableImageUpload"
@@ -279,7 +288,7 @@ watch(() => props.modelValue, (value) => {
           <Icon name="lucide:corner-down-left" />
         </button>
 
-        <div data-divider></div>
+        <div data-divider />
 
         <button
           type="button"
@@ -306,7 +315,7 @@ watch(() => props.modelValue, (value) => {
         </button>
 
         <div v-if="isUploading" class="flex items-center">
-          <div data-divider></div>
+          <div data-divider />
           <Icon class="animate-spin" name="lucide:loader-2" />
         </div>
       </div>
@@ -325,7 +334,7 @@ watch(() => props.modelValue, (value) => {
       class="hidden"
       type="file"
       @change="handleFileSelection"
-    />
+    >
   </div>
 </template>
 
