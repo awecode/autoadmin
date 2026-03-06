@@ -150,7 +150,7 @@ const pageActions = computed(() => {
 
 const toast = useToast()
 
-const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
+async function bulkDelete({ rowLookups }: { rowLookups: string[] }) {
   try {
     await $fetch(`${apiPrefix}/bulk-delete`, {
       method: 'POST',
@@ -165,7 +165,8 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
       color: 'success',
     })
     await refresh()
-  } catch (err: any) {
+  }
+  catch (err: any) {
     toast.add({
       title: 'Error',
       description: getErrorMessageFromError(err) || 'Failed to delete',
@@ -174,7 +175,7 @@ const bulkDelete = async ({ rowLookups }: { rowLookups: string[] }) => {
   }
 }
 
-const genericBulkAction = async ({ action, rowLookups }: { action: string, rowLookups: string[] }) => {
+async function genericBulkAction({ action, rowLookups }: { action: string, rowLookups: string[] }) {
   try {
     const response = await $fetch<{ message: string, refresh?: boolean }>(`${apiPrefix}/bulk-actions`, {
       method: 'POST',
@@ -192,7 +193,8 @@ const genericBulkAction = async ({ action, rowLookups }: { action: string, rowLo
     if (response.refresh) {
       await refresh()
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     toast.add({
       title: 'Error',
       description: getErrorMessageFromError(err) || 'Failed to perform action',
@@ -241,14 +243,17 @@ function getHeader(column: Column<T>, label?: string, sortKey?: string) {
         // Cycle through: no sort → asc → desc → no sort
         if (!isSorted) {
           column.toggleSorting(false) // asc
-        } else if (isSorted === 'asc') {
+        }
+        else if (isSorted === 'asc') {
           column.toggleSorting(true) // desc
-        } else {
+        }
+        else {
           column.clearSorting() // no sort
         }
       },
     })
-  } else {
+  }
+  else {
     return label
   }
 }
@@ -327,13 +332,15 @@ async function handleDelete(id: string) {
         description: 'Deleted successfully',
         color: 'success',
       })
-    } catch (err: any) {
+    }
+    catch (err: any) {
       useToast().add({
         title: 'Error',
         description: getErrorMessageFromError(err) || 'Failed to delete',
         color: 'error',
       })
-    } finally {
+    }
+    finally {
       deleteModal.close()
     }
   }
@@ -347,7 +354,7 @@ const selectedRows = computed(() => table.value?.tableApi?.getFilteredSelectedRo
 
 const bulkAction = ref<string | undefined>(undefined)
 
-const performBulkAction = async () => {
+async function performBulkAction() {
   const actionValue = bulkAction.value
   if (actionValue) {
     const rows = selectedRows.value
@@ -365,10 +372,12 @@ const cellFunctions = modelCfg?.list?.fields?.filter(field => typeof field === '
     if (typeof def.field === 'string') {
       if (def.field.includes('.')) {
         accessorKey = def.field.replace('.', '__')
-      } else {
+      }
+      else {
         accessorKey = def.field
       }
-    } else if (typeof def.field === 'function') {
+    }
+    else if (typeof def.field === 'function') {
       accessorKey = def.field.name
     }
     if (accessorKey && def.cell) {
@@ -398,9 +407,11 @@ const CellRenderer = defineComponent({
 
       if (typeof value === 'string') {
         return h('div', { innerHTML: value })
-      } else if (typeof value === 'object' && value?.__v_isVNode) {
+      }
+      else if (typeof value === 'object' && value?.__v_isVNode) {
         return value
-      } else {
+      }
+      else {
         return String(value)
       }
     }
@@ -419,9 +430,9 @@ const CellRenderer = defineComponent({
         </slot>
         <slot name="actions">
           <div class="flex items-center gap-2">
-            <slot name="actions-prepend"></slot>
+            <slot name="actions-prepend" />
             <UButton v-for="action in pageActions" :key="action.label" v-bind="action" />
-            <slot name="actions-append"></slot>
+            <slot name="actions-append" />
           </div>
         </slot>
       </div>
@@ -511,15 +522,19 @@ const CellRenderer = defineComponent({
             </template>
             <template v-else-if="c.column.columnDef.type === 'image' && c.getValue()">
               <NuxtLink target="_blank" :to="c.getValue() as string">
-                <img class="w-10 h-10 rounded-md" :src="c.getValue() as string" />
+                <img class="w-10 h-10 rounded-md" :src="c.getValue() as string">
               </NuxtLink>
             </template>
 
             <template v-else-if="c.column.columnDef.type === 'date'">
-              {{ humanifyDateTime(c.getValue() as string | Date, { includeTime: false }) }}
+              <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date, { includeTime: false }) }}</span>
             </template>
             <template v-else-if="c.column.columnDef.type === 'datetime-local'">
-              {{ humanifyDateTime(c.getValue() as string | Date) }}
+              <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date) }}</span>
+            </template>
+            <template v-else-if="c.column.columnDef.type === 'rich-text'">
+              <!-- <div v-html="c.getValue().replace(/<[^>]*>?/g, ' ')" /> -->
+              <div :title="c.getValue() as string || ''" class="max-h-10 overflow-hidden line-clamp-2" v-html="c.getValue()" />
             </template>
             <template v-else>
               {{ c.getValue() }}
@@ -532,7 +547,7 @@ const CellRenderer = defineComponent({
 
         <template #actions-cell="scope">
           <div class="flex items-center gap-2">
-            <slot name="actions-cell-prepend" v-bind="scope ?? {}"></slot>
+            <slot name="actions-cell-prepend" v-bind="scope ?? {}" />
             <slot name="actions-cell" v-bind="scope ?? {}">
               <NuxtLink
                 v-if="defaultActions?.includes('edit') && spec.updatePage"
@@ -558,7 +573,7 @@ const CellRenderer = defineComponent({
                 <!-- Delete -->
               </UButton>
             </slot>
-            <slot name="actions-cell-append" v-bind="scope ?? {}"></slot>
+            <slot name="actions-cell-append" v-bind="scope ?? {}" />
           </div>
         </template>
         <!-- <template v-for="(_, name) in $slots" #[name]="scope">
