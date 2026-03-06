@@ -10,37 +10,7 @@ import { useEditorCompletion } from './EditorUseCompletion'
 
 const editorRef = useTemplateRef('editorRef')
 
-const value = ref(`# Building Modern Interfaces with Nuxt UI
-
-Welcome to the **Nuxt UI Editor** — a powerful rich text editing experience built on [TipTap](https://tiptap.dev). This editor combines *flexibility* with ease of use, making content creation a breeze.
-
-![Placeholder](/placeholder.jpeg)
-
-## Rich Formatting Options
-
-The editor supports all common text formatting including **bold**, *italic*, <u>underline</u>, ~~strikethrough~~, and \`inline code\`. You can also combine them for **_bold and italic_** text.
-
-### Interactive Features
-
-Try out these powerful capabilities:
-
-- **Bubble Menu** — Select any text to see formatting options appear
-- **Slash Commands** — Type \`/\` for quick access to blocks and formatting
-- **Mentions** — Use \`@\` to tag people or entities
-- **Drag & Drop** — Hover over any block to see the drag handle
-
-> **Pro tip:** You can use keyboard shortcuts like Cmd/Ctrl + B for bold, Cmd/Ctrl + I for italic, and more!
-
-### Advanced Capabilities
-
-1. **Custom Extensions** — Add your own TipTap extensions seamlessly
-2. **Multiple Content Types** — Support for JSON, HTML, and Markdown
-3. **Customizable Toolbars** — Fixed, bubble, and floating layouts
-4. **Theme Integration** — Fully styled with Nuxt UI theme system
-
----
-
-Whether you're building a blog, documentation site, or content management system, the Nuxt UI Editor provides everything you need for a professional editing experience. Visit [ui.nuxt.com](https://ui.nuxt.com) to explore more components.`)
+const value = ref('')
 
 const { extension: completionExtension, handlers: aiHandlers, isLoading: aiLoading } = useEditorCompletion(editorRef)
 

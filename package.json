@@ -28,7 +28,7 @@
     "@tiptap/starter-kit": "^3.0.7",
     "@tiptap/vue-3": "^3.0.7",
     "@tiptap/y-tiptap": "^3.0.2",
-    "@vueuse/router": "^13.5.0",
+    "@vueuse/router": "^14.2.1",
     "aws4fetch": "^1.0.20",
     "drizzle-zod": "0.8.3",
     "extension-emoji": "link:@@tiptap/extension-emoji",
@@ -41,5 +41,10 @@
   },
   "devDependencies": {
     "vite": "^7.3.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "unimport": "~5.6.0"
+    }
   }
 }
