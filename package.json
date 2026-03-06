@@ -15,12 +15,12 @@
     "drizzle-orm": "^0.45.1"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^3.0.105",
     "@iconify-json/lucide": "^1.2.57",
     "@libsql/client": "^0.15.9",
     "@nuxt/ui": "^4.5.1",
     "@peculiar/webcrypto": "^1.5.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@tiptap/extension-text-align": "^3.20.0",
     "@vueuse/router": "^14.2.1",
     "aws4fetch": "^1.0.20",
     "drizzle-zod": "0.8.3",
@@ -30,9 +30,6 @@
     "yjs": "^13.6.29",
     "zod": "^4.0.17",
     "zodex": "^4.0.0"
-  },
-  "devDependencies": {
-    "vite": "^7.3.1"
   },
   "pnpm": {
     "overrides": {

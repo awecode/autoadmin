@@ -6,13 +6,13 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
 import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
-import { useEditorCompletion } from './EditorUseCompletion'
+// import { useEditorCompletion } from './EditorUseCompletion'
 
 const editorRef = useTemplateRef('editorRef')
 
-const value = ref('')
+const value = ref(``)
 
-const { extension: completionExtension, handlers: aiHandlers, isLoading: aiLoading } = useEditorCompletion(editorRef)
+// const { extension: completionExtension, handlers: aiHandlers, isLoading: aiLoading } = useEditorCompletion(editorRef)
 
 const customHandlers = {
   imageUpload: {
@@ -21,7 +21,7 @@ const customHandlers = {
     isActive: (editor: Editor) => editor.isActive('imageUpload'),
     isDisabled: undefined,
   },
-  ...aiHandlers,
+  // ...aiHandlers,
 } satisfies EditorCustomHandlers
 
 const fixedToolbarItems = [[{
@@ -144,7 +144,7 @@ const bubbleToolbarItems = computed(() => [[{
   label: 'Improve',
   activeColor: 'neutral',
   activeVariant: 'ghost',
-  loading: aiLoading.value,
+  // loading: aiLoading.value,
   content: {
     align: 'start',
   },
@@ -509,6 +509,11 @@ const mentionItems: EditorMentionMenuItem[] = [{
     v-slot="{ editor, handlers }"
     v-model="value"
     content-type="html"
+    :extensions="[
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      ImageUpload,
+      // completionExtension,
+    ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
