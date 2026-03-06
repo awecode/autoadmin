@@ -1,5 +1,5 @@
-import { Node, mergeAttributes } from '@tiptap/core'
 import type { CommandProps, NodeViewRenderer } from '@tiptap/core'
+import { mergeAttributes, Node } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import ImageUploadNodeComponent from './EditorImageUploadNode.vue'
 
@@ -21,7 +21,7 @@ export const ImageUpload = Node.create({
   },
   parseHTML() {
     return [{
-      tag: 'div[data-type="image-upload"]'
+      tag: 'div[data-type="image-upload"]',
     }]
   },
   renderHTML({ HTMLAttributes }) {
@@ -34,9 +34,9 @@ export const ImageUpload = Node.create({
     return {
       insertImageUpload: () => ({ commands }: CommandProps) => {
         return commands.insertContent({ type: this.name })
-      }
+      },
     }
-  }
+  },
 })
 
 export default ImageUpload

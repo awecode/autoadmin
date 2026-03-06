@@ -8,7 +8,8 @@ const file = ref<File | null>(null)
 const loading = ref(false)
 
 watch(file, async (newFile) => {
-  if (!newFile) return
+  if (!newFile)
+    return
 
   loading.value = true
 

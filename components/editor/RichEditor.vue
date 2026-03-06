@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, EditorCustomHandlers, EditorMentionMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
+import type { DropdownMenuItem, EditorCustomHandlers, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
 import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
-// import { useEditorCompletion } from './EditorUseCompletion'
 
 const editorRef = useTemplateRef('editorRef')
 
 const value = ref(``)
-
-// const { extension: completionExtension, handlers: aiHandlers, isLoading: aiLoading } = useEditorCompletion(editorRef)
 
 const customHandlers = {
   imageUpload: {
@@ -21,7 +18,6 @@ const customHandlers = {
     isActive: (editor: Editor) => editor.isActive('imageUpload'),
     isDisabled: undefined,
   },
-  // ...aiHandlers,
 } satisfies EditorCustomHandlers
 
 const fixedToolbarItems = [[{
@@ -431,7 +427,6 @@ const suggestionItems = [[{
     :extensions="[
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ImageUpload,
-      // completionExtension,
     ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."

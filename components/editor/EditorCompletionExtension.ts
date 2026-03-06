@@ -1,7 +1,7 @@
-import { Extension } from '@tiptap/core'
-import { Decoration, DecorationSet } from '@tiptap/pm/view'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
+import { Extension } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { useDebounceFn } from '@vueuse/core'
 
 export interface CompletionOptions {
@@ -55,7 +55,7 @@ export const Completion = Extension.create<CompletionOptions, CompletionStorage>
       triggerCharacters: ['/', ':', '@'],
       onTrigger: undefined,
       onAccept: undefined,
-      onDismiss: undefined
+      onDismiss: undefined,
     }
   },
 
@@ -72,7 +72,7 @@ export const Completion = Extension.create<CompletionOptions, CompletionStorage>
         this.suggestion = ''
         this.position = undefined
         this.visible = false
-      }
+      },
     }
   },
 
@@ -97,9 +97,9 @@ export const Completion = Extension.create<CompletionOptions, CompletionStorage>
             }, { side: 1 })
 
             return DecorationSet.create(state.doc, [widget])
-          }
-        }
-      })
+          },
+        },
+      }),
     ]
   },
 
@@ -145,7 +145,7 @@ export const Completion = Extension.create<CompletionOptions, CompletionStorage>
           return true
         }
         return false
-      }
+      },
     }
   },
 
@@ -179,7 +179,8 @@ export const Completion = Extension.create<CompletionOptions, CompletionStorage>
 
     // Create debounced trigger function for this instance
     this.storage.debouncedTrigger = useDebounceFn((editor: Editor) => {
-      if (!options.onTrigger) return
+      if (!options.onTrigger)
+        return
 
       const { state } = editor
       const { selection } = state
@@ -212,7 +213,7 @@ export const Completion = Extension.create<CompletionOptions, CompletionStorage>
 
   onDestroy() {
     this.storage.debouncedTrigger = null
-  }
+  },
 })
 
 export default Completion
