@@ -509,11 +509,6 @@ const mentionItems: EditorMentionMenuItem[] = [{
     v-slot="{ editor, handlers }"
     v-model="value"
     content-type="html"
-    :extensions="[
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      ImageUpload,
-      completionExtension,
-    ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"

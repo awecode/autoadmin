@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.44.4",
-    "extension-emoji": "link:@@tiptap/extension-emoji",
     "nuxt": "^4.3.1",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1"
