@@ -135,11 +135,11 @@ watch(file, async (newFile) => {
   handleFiles(newFile)
 })
 
-async function handleFiles(file: File) {
+async function handleFiles(fileObj: File) {
   const pos = props.editor.state.selection.anchor
 
   try {
-    const uploadedUrl = await uploadFile(file)
+    const uploadedUrl = await uploadFile(fileObj)
     props.editor
       .chain()
       .insertContentAt(pos, {
@@ -154,6 +154,11 @@ async function handleFiles(file: File) {
   catch (error) {
     // Error already handled in uploadFile function
     console.error('Failed to upload file:', error)
+  }
+  finally {
+    isUploading.value = false
+    file.value = null
+    open.value = false
   }
 }
 </script>
@@ -216,12 +221,23 @@ async function handleFiles(file: File) {
           />
         </div>
       </UInput>
+      <div v-if="isUploading" class="flex flex-col items-center justify-center gap-4 h-36">
+        <UIcon name="i-lucide-loader-circle" class="animate-spin" />
+        <div class="text-sm font-medium">
+          Uploading...
+        </div>
+        <div class="text-sm text-neutral-500">
+          {{ file?.name }}
+        </div>
+      </div>
       <UFileUpload
+        v-else
         v-model="file"
+        icon="i-lucide-image"
         accept="image/*"
-        label="Upload an image"
+        label="Upload an image..."
         description="SVG, PNG, JPG or GIF (max. 2MB)"
-        class="min-h-48"
+        :preview="false"
       />
     </template>
   </UPopover>
