@@ -140,60 +140,6 @@ const fixedToolbarItems = [[{
 }]] satisfies EditorToolbarItem<typeof customHandlers>[][]
 
 const bubbleToolbarItems = computed(() => [[{
-  icon: 'i-lucide-sparkles',
-  label: 'Improve',
-  activeColor: 'neutral',
-  activeVariant: 'ghost',
-  // loading: aiLoading.value,
-  content: {
-    align: 'start',
-  },
-  items: [{
-    kind: 'aiFix',
-    icon: 'i-lucide-spell-check',
-    label: 'Fix spelling & grammar',
-  }, {
-    kind: 'aiExtend',
-    icon: 'i-lucide-unfold-vertical',
-    label: 'Extend text',
-  }, {
-    kind: 'aiReduce',
-    icon: 'i-lucide-fold-vertical',
-    label: 'Reduce text',
-  }, {
-    kind: 'aiSimplify',
-    icon: 'i-lucide-lightbulb',
-    label: 'Simplify text',
-  }, {
-    kind: 'aiContinue',
-    icon: 'i-lucide-text',
-    label: 'Continue sentence',
-  }, {
-    kind: 'aiSummarize',
-    icon: 'i-lucide-list',
-    label: 'Summarize',
-  }, {
-    icon: 'i-lucide-languages',
-    label: 'Translate',
-    children: [{
-      kind: 'aiTranslate',
-      language: 'English',
-      label: 'English',
-    }, {
-      kind: 'aiTranslate',
-      language: 'French',
-      label: 'French',
-    }, {
-      kind: 'aiTranslate',
-      language: 'Spanish',
-      label: 'Spanish',
-    }, {
-      kind: 'aiTranslate',
-      language: 'German',
-      label: 'German',
-    }],
-  }],
-}], [{
   label: 'Turn into',
   trailingIcon: 'i-lucide-chevron-down',
   activeColor: 'neutral',
@@ -466,10 +412,6 @@ const suggestionItems = [[{
   type: 'label',
   label: 'Insert',
 }, {
-  kind: 'mention',
-  label: 'Mention',
-  icon: 'i-lucide-at-sign',
-}, {
   kind: 'imageUpload',
   label: 'Image',
   icon: 'i-lucide-image',
@@ -478,29 +420,6 @@ const suggestionItems = [[{
   label: 'Horizontal Rule',
   icon: 'i-lucide-separator-horizontal',
 }]] satisfies EditorSuggestionMenuItem<typeof customHandlers>[][]
-
-const mentionItems: EditorMentionMenuItem[] = [{
-  label: 'benjamincanac',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/739984?v=4' },
-}, {
-  label: 'HugoRCD',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/71938701?v=4' },
-}, {
-  label: 'romhml',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/25613751?v=4' },
-}, {
-  label: 'sandros94',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/13056429?v=4' },
-}, {
-  label: 'hywax',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/149865959?v=4' },
-}, {
-  label: 'J-Michalek',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/71264422?v=4' },
-}, {
-  label: 'genu',
-  avatar: { src: 'https://avatars.githubusercontent.com/u/928780?v=4' },
-}]
 </script>
 
 <template>
@@ -587,7 +506,6 @@ const mentionItems: EditorMentionMenuItem[] = [{
     </UEditorDragHandle>
 
     <UEditorSuggestionMenu :editor="editor" :items="suggestionItems" />
-    <UEditorMentionMenu :editor="editor" :items="mentionItems" />
   </UEditor>
 </template>
 
