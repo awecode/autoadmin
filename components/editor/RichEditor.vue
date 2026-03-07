@@ -438,15 +438,6 @@ const suggestionItems = [[{
       }"
     />
 
-    <UEditorToolbar
-      :editor="editor"
-      :items="mediaTextToolbarItems(editor)"
-      layout="bubble"
-      :should-show="({ editor, view }) => {
-        return editor.isActive('mediaText') && view.hasFocus()
-      }"
-    />
-
     <UEditorDragHandle v-slot="{ ui, onClick }" :editor="editor" @node-change="selectedNode = $event">
       <UButton
         icon="i-lucide-plus"
@@ -497,29 +488,25 @@ const suggestionItems = [[{
 .media-text-left,
 .media-text-right {
   display: grid;
-  gap: 1.5rem;
+  column-gap: 1.5rem;
+  row-gap: 0;
   margin: 1.5rem 0;
   align-items: start;
 }
-
 .media-text-left {
   grid-template-columns: 1fr 1fr;
 }
 .media-text-right {
   grid-template-columns: 1fr 1fr;
 }
-
-/* LEFT LAYOUT: Image in Col 1, Text in Col 2 */
 .media-text-left > *:first-child {
   grid-column: 1;
-  grid-row: 1 / span 100; /* Spans down so text paragraphs can stack next to it */
+  grid-row: 1 / span 100;
   width: 100%;
 }
 .media-text-left > *:not(:first-child) {
   grid-column: 2;
 }
-
-/* RIGHT LAYOUT: Image in Col 2, Text in Col 1 */
 .media-text-right > *:first-child {
   grid-column: 2;
   grid-row: 1 / span 100;
