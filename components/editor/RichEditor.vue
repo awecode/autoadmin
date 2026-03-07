@@ -4,7 +4,9 @@ import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
+import { AdvancedImage } from './AdvancedImage'
 import EditorImagePopover from './EditorImagePopover.vue'
+
 // import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
 
@@ -427,6 +429,12 @@ const suggestionItems = [[{
     content-type="html"
     :extensions="[
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      AdvancedImage.configure({
+        inline: true,
+        HTMLAttributes: {
+          class: 'content-image',
+        },
+      }),
       // ImageUpload,
     ]"
     :handlers="customHandlers"
@@ -509,9 +517,10 @@ const suggestionItems = [[{
 </template>
 
 <style>
-html.dark .tiptap .shiki,
-html.dark .tiptap .shiki span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--ui-bg-muted) !important;
+.tiptap .content-image{
+  display: inline-block;
+}
+.tiptap {
+  display: flow-root;
 }
 </style>
