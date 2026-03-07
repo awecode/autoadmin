@@ -1,30 +1,138 @@
+import type { EditorToolbarItem } from '@nuxt/ui'
+import type { Editor } from '@tiptap/vue-3'
 import Image from '@tiptap/extension-image'
 
 export const AdvancedImage = Image.extend({
   addAttributes() {
     return {
-      // Keep all the default attributes (like src, alt, title)
       ...this.parent?.(),
-      // Add our custom float attribute
       float: {
         default: null,
-        // Tell Tiptap how to read this from pasted HTML
         parseHTML: element => element.style.float,
-        // Tell Tiptap how to output this into the editor DOM and v-model
         renderHTML: (attributes) => {
-          if (!attributes.float) {
+          if (!attributes.float)
             return {}
-          }
-
-          // Automatically add a margin on the opposite side of the float
-          // so the text doesn't touch the image
           const marginSide = attributes.float === 'left' ? 'right' : 'left'
-
-          return {
-            style: `float: ${attributes.float}; margin-${marginSide}: 1rem; margin-bottom: 1rem;`,
-          }
+          return { style: `float: ${attributes.float}; margin-${marginSide}: 1.5rem; margin-bottom: 1.5rem;` }
         },
       },
     }
   },
 })
+
+export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
+  const node = editor.state.doc.nodeAt(editor.state.selection.from)
+
+  return [[{
+    icon: 'i-lucide-download',
+    to: node?.attrs?.src,
+    download: true,
+    tooltip: { text: 'Download' },
+  }, {
+    icon: 'i-lucide-refresh-cw',
+    tooltip: { text: 'Replace' },
+    onClick: () => {
+      const { state } = editor
+      const { selection } = state
+
+      const pos = selection.from
+      const node = state.doc.nodeAt(pos)
+
+      if (node && node.type.name === 'image') {
+        editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, { type: 'imageUpload' }).run()
+      }
+    },
+  }], [{
+    icon: 'i-lucide-trash',
+    tooltip: { text: 'Delete' },
+    onClick: () => {
+      const { state } = editor
+      const { selection } = state
+
+      const pos = selection.from
+      const node = state.doc.nodeAt(pos)
+
+      if (node && node.type.name === 'image') {
+        editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run()
+      }
+    },
+  }], [{
+    icon: 'i-lucide-panel-left',
+    tooltip: { text: 'Image Left, Text Right' },
+    active: editor.isActive('mediaText', { layout: 'left' }),
+    onClick: () => {
+      const { state } = editor
+      const pos = state.selection.from
+
+      if (editor.isActive('mediaText')) {
+        // If already in a MediaText block, just update the direction
+        editor.chain().focus().updateAttributes('mediaText', { layout: 'left' }).run()
+      }
+      else {
+        // If it's a standard image, wrap it in a new MediaText block
+        const node = state.doc.nodeAt(pos)
+        if (node && node.type.name === 'image') {
+          editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
+            type: 'mediaText',
+            attrs: { layout: 'left' },
+            content: [
+              { type: 'image', attrs: node.attrs }, // Keep the real image!
+              { type: 'paragraph' }, // Drop an empty paragraph next to it
+            ],
+          }).run()
+        }
+      }
+    },
+  }, {
+    icon: 'i-lucide-align-justify',
+    tooltip: { text: 'Standard Image (Unwrap)' },
+    active: !editor.isActive('mediaText'),
+    onClick: () => {
+      if (editor.isActive('mediaText')) {
+        const { state } = editor
+        const $from = state.selection.$from
+        let blockNode = null
+        let blockPos = -1
+
+        // Find the parent MediaText boundary
+        for (let depth = $from.depth; depth > 0; depth--) {
+          if ($from.node(depth).type.name === 'mediaText') {
+            blockNode = $from.node(depth)
+            blockPos = $from.before(depth)
+            break
+          }
+        }
+
+        if (blockNode) {
+          // Extract the true image and text, delete the wrapper block, and drop them back
+          editor.chain().focus().deleteRange({ from: blockPos, to: blockPos + blockNode.nodeSize }).insertContentAt(blockPos, blockNode.content.toJSON()).run()
+        }
+      }
+    },
+  }, {
+    icon: 'i-lucide-panel-right',
+    tooltip: { text: 'Image Right, Text Left' },
+    active: editor.isActive('mediaText', { layout: 'right' }),
+    onClick: () => {
+      const { state } = editor
+      const pos = state.selection.from
+
+      if (editor.isActive('mediaText')) {
+        editor.chain().focus().updateAttributes('mediaText', { layout: 'right' }).run()
+      }
+      else {
+        const node = state.doc.nodeAt(pos)
+        if (node && node.type.name === 'image') {
+          editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
+            type: 'mediaText',
+            attrs: { layout: 'right' },
+            content: [
+              { type: 'image', attrs: node.attrs },
+              { type: 'paragraph' },
+            ],
+          }).run()
+        }
+      }
+    },
+  }]]
+}

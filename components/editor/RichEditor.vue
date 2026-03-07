@@ -4,11 +4,12 @@ import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
-import { AdvancedImage } from './AdvancedImage'
+import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
 import EditorImagePopover from './EditorImagePopover.vue'
-
 // import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
+
+import { MediaText, mediaTextToolbarItems } from './MediaText'
 
 const editorRef = useTemplateRef('editorRef')
 
@@ -251,60 +252,6 @@ const bubbleToolbarItems = computed(() => [[{
   }],
 }]] satisfies EditorToolbarItem<typeof customHandlers>[][])
 
-function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
-  const node = editor.state.doc.nodeAt(editor.state.selection.from)
-
-  return [[{
-    icon: 'i-lucide-download',
-    to: node?.attrs?.src,
-    download: true,
-    tooltip: { text: 'Download' },
-  }, {
-    icon: 'i-lucide-refresh-cw',
-    tooltip: { text: 'Replace' },
-    onClick: () => {
-      const { state } = editor
-      const { selection } = state
-
-      const pos = selection.from
-      const node = state.doc.nodeAt(pos)
-
-      if (node && node.type.name === 'image') {
-        editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, { type: 'imageUpload' }).run()
-      }
-    },
-  }], [{
-    icon: 'i-lucide-align-left',
-    tooltip: { text: 'Float Left' },
-    active: editor.isActive('image', { float: 'left' }),
-    onClick: () => editor.chain().focus().updateAttributes('image', { float: 'left' }).run(),
-  }, {
-    icon: 'i-lucide-align-justify', // Using justify or center icon to represent default/inline behavior
-    tooltip: { text: 'Default (No Float)' },
-    active: editor.isActive('image', { float: null }),
-    onClick: () => editor.chain().focus().updateAttributes('image', { float: null }).run(),
-  }, {
-    icon: 'i-lucide-align-right',
-    tooltip: { text: 'Float Right' },
-    active: editor.isActive('image', { float: 'right' }),
-    onClick: () => editor.chain().focus().updateAttributes('image', { float: 'right' }).run(),
-  }], [{
-    icon: 'i-lucide-trash',
-    tooltip: { text: 'Delete' },
-    onClick: () => {
-      const { state } = editor
-      const { selection } = state
-
-      const pos = selection.from
-      const node = state.doc.nodeAt(pos)
-
-      if (node && node.type.name === 'image') {
-        editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run()
-      }
-    },
-  }]]
-}
-
 const selectedNode = ref<{ node: JSONContent, pos: number }>()
 
 function handleItems(editor: Editor): DropdownMenuItem[][] {
@@ -449,6 +396,7 @@ const suggestionItems = [[{
           class: 'content-image',
         },
       }),
+      MediaText,
     ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."
@@ -487,6 +435,15 @@ const suggestionItems = [[{
       layout="bubble"
       :should-show="({ editor, view }) => {
         return editor.isActive('image') && view.hasFocus()
+      }"
+    />
+
+    <UEditorToolbar
+      :editor="editor"
+      :items="mediaTextToolbarItems(editor)"
+      layout="bubble"
+      :should-show="({ editor, view }) => {
+        return editor.isActive('mediaText') && view.hasFocus()
       }"
     />
 
@@ -535,5 +492,40 @@ const suggestionItems = [[{
 }
 .tiptap {
   display: flow-root;
+}
+
+.media-text-left,
+.media-text-right {
+  display: grid;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  align-items: start;
+}
+
+.media-text-left {
+  grid-template-columns: 1fr 1fr;
+}
+.media-text-right {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* LEFT LAYOUT: Image in Col 1, Text in Col 2 */
+.media-text-left > *:first-child {
+  grid-column: 1;
+  grid-row: 1 / span 100; /* Spans down so text paragraphs can stack next to it */
+  width: 100%;
+}
+.media-text-left > *:not(:first-child) {
+  grid-column: 2;
+}
+
+/* RIGHT LAYOUT: Image in Col 2, Text in Col 1 */
+.media-text-right > *:first-child {
+  grid-column: 2;
+  grid-row: 1 / span 100;
+  width: 100%;
+}
+.media-text-right > *:not(:first-child) {
+  grid-column: 1;
 }
 </style>
