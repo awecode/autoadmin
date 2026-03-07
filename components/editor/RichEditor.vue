@@ -274,6 +274,21 @@ function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
       }
     },
   }], [{
+    icon: 'i-lucide-align-left',
+    tooltip: { text: 'Float Left' },
+    active: editor.isActive('image', { float: 'left' }),
+    onClick: () => editor.chain().focus().updateAttributes('image', { float: 'left' }).run(),
+  }, {
+    icon: 'i-lucide-align-justify', // Using justify or center icon to represent default/inline behavior
+    tooltip: { text: 'Default (No Float)' },
+    active: editor.isActive('image', { float: null }),
+    onClick: () => editor.chain().focus().updateAttributes('image', { float: null }).run(),
+  }, {
+    icon: 'i-lucide-align-right',
+    tooltip: { text: 'Float Right' },
+    active: editor.isActive('image', { float: 'right' }),
+    onClick: () => editor.chain().focus().updateAttributes('image', { float: 'right' }).run(),
+  }], [{
     icon: 'i-lucide-trash',
     tooltip: { text: 'Delete' },
     onClick: () => {
@@ -430,12 +445,10 @@ const suggestionItems = [[{
     :extensions="[
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       AdvancedImage.configure({
-        inline: true,
         HTMLAttributes: {
           class: 'content-image',
         },
       }),
-      // ImageUpload,
     ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."
