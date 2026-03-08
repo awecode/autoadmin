@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const open = ref(false)
 const url = ref('')
+const alt = ref('')
 const caption = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
@@ -26,7 +27,9 @@ watch(() => props.editor, (editor, _, onCleanup) => {
 
   const syncFromSelection = () => {
     if (editor.isActive('figure')) {
-      url.value = editor.getAttributes('figure').src || ''
+      const attrs = editor.getAttributes('figure')
+      url.value = attrs.src || ''
+      alt.value = attrs.alt || ''
       const { state } = editor
       const { $from } = state.selection
       for (let d = $from.depth; d > 0; d--) {
@@ -37,11 +40,14 @@ watch(() => props.editor, (editor, _, onCleanup) => {
       }
     }
     else if (editor.isActive('image')) {
-      url.value = editor.getAttributes('image').src || ''
+      const attrs = editor.getAttributes('image')
+      url.value = attrs.src || ''
+      alt.value = attrs.alt || ''
       caption.value = ''
     }
     else {
       url.value = editor.getAttributes('link').href || ''
+      alt.value = ''
       caption.value = ''
     }
   }
@@ -59,31 +65,33 @@ function setImageFromUrl() {
     return
 
   const hasCaption = caption.value.trim().length > 0
+  const altVal = alt.value.trim() || null
 
   if (props.editor.isActive('figure')) {
-    props.editor.chain().focus().updateAttributes('figure', { src: url.value }).run()
+    props.editor.chain().focus().updateAttributes('figure', { src: url.value, alt: altVal }).run()
     props.editor.chain().focus().updateFigureCaption(caption.value.trim()).run()
   }
   else if (props.editor.isActive('image')) {
     if (hasCaption) {
       props.editor.chain().focus().imageToFigure({ caption: caption.value.trim() }).run()
-      props.editor.chain().focus().updateAttributes('figure', { src: url.value }).run()
+      props.editor.chain().focus().updateAttributes('figure', { src: url.value, alt: altVal }).run()
     }
     else {
-      props.editor.chain().focus().updateAttributes('image', { src: url.value }).run()
+      props.editor.chain().focus().updateAttributes('image', { src: url.value, alt: altVal }).run()
     }
   }
   else if (hasCaption) {
-    props.editor.chain().focus().setFigure({ src: url.value, caption: caption.value.trim() }).run()
+    props.editor.chain().focus().setFigure({ src: url.value, caption: caption.value.trim(), alt: altVal ?? undefined }).run()
   }
   else {
     props.editor
       .chain()
       .focus()
-      .insertContent({ type: 'image', attrs: { src: url.value } })
+      .insertContent({ type: 'image', attrs: { src: url.value, alt: altVal ?? undefined } })
       .run()
   }
   url.value = ''
+  alt.value = ''
   caption.value = ''
   open.value = false
 }
@@ -158,6 +166,13 @@ watch(file, async (newFile) => {
             />
           </div>
         </UInput>
+        <UInput
+          v-model="alt"
+          name="alt"
+          variant="none"
+          placeholder="Alt text (optional)"
+          @keydown.enter.prevent="setImageFromUrl"
+        />
         <UInput
           v-model="caption"
           name="caption"
