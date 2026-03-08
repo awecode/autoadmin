@@ -53,11 +53,6 @@ watch(() => props.editor, (editor, _, onCleanup) => {
       alt.value = attrs.alt || ''
       caption.value = ''
     }
-    else {
-      url.value = editor.getAttributes('link').href || ''
-      alt.value = ''
-      caption.value = ''
-    }
   }
 
   syncFromSelection()
