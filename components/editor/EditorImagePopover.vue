@@ -26,6 +26,8 @@ const height = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
 
+const syncFromSelectionRef = ref<(() => void) | null>(null)
+
 const active = computed(() => props.editor.isActive('image') || props.editor.isActive('figure'))
 
 const disabled = computed(() => {
@@ -79,13 +81,20 @@ watch(() => props.editor, (editor, _, onCleanup) => {
     }
   }
 
+  syncFromSelectionRef.value = syncFromSelection
   syncFromSelection()
   editor.on('selectionUpdate', syncFromSelection)
 
   onCleanup(() => {
+    syncFromSelectionRef.value = null
     editor.off('selectionUpdate', syncFromSelection)
   })
 }, { immediate: true })
+
+watch(open, (isOpen) => {
+  if (isOpen && syncFromSelectionRef.value)
+    nextTick(syncFromSelectionRef.value)
+})
 
 async function setImageFromUrl() {
   if (!url.value)
@@ -133,6 +142,7 @@ async function setImageFromUrl() {
       .insertContent({ type: 'image', attrs: { src: url.value, alt: altVal ?? undefined, ...sizeAttrs } })
       .run()
   }
+
   url.value = ''
   alt.value = ''
   caption.value = ''
