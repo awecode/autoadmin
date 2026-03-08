@@ -21,13 +21,35 @@ export const AdvancedImage = Image.extend({
 })
 
 export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
-  const node = editor.state.doc.nodeAt(editor.state.selection.from)
-
   return [[{
     icon: 'i-lucide-download',
-    to: node?.attrs?.src,
-    download: true,
     tooltip: { text: 'Download' },
+    onClick: async () => {
+      const node = editor.state.doc.nodeAt(editor.state.selection.from)
+      if (node && node.type.name === 'image') {
+        const imageUrl = node.attrs.src
+        try {
+          const response = await fetch(imageUrl)
+          if (!response.ok)
+            throw new Error('Network response was not ok')
+          const blob = await response.blob()
+          const blobUrl = window.URL.createObjectURL(blob)
+          const fileName = imageUrl.split('/').pop().split('?')[0] || 'downloaded-image'
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = fileName
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(blobUrl)
+        }
+        catch (error) {
+          console.error('Failed to download image:', error)
+          // Fallback: If fetch fails just open in a new tab
+          window.open(imageUrl, '_blank')
+        }
+      }
+    },
   }, {
     icon: 'i-lucide-refresh-cw',
     tooltip: { text: 'Replace' },
