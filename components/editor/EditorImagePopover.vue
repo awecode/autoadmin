@@ -30,12 +30,20 @@ watch(() => props.editor, (editor, _, onCleanup) => {
       const attrs = editor.getAttributes('figure')
       url.value = attrs.src || ''
       alt.value = attrs.alt || ''
+      caption.value = ''
       const { state } = editor
-      const { $from } = state.selection
-      for (let d = $from.depth; d > 0; d--) {
-        if ($from.node(d).type.name === 'figure') {
-          caption.value = $from.node(d).textContent
-          break
+      const { selection } = state
+      const sel = selection as { node?: { type?: { name?: string }, textContent?: string } }
+      if (sel?.node?.type?.name === 'figure') {
+        caption.value = sel.node.textContent ?? ''
+      }
+      else {
+        const { $from } = selection
+        for (let d = $from.depth; d > 0; d--) {
+          if ($from.node(d).type.name === 'figure') {
+            caption.value = $from.node(d).textContent
+            break
+          }
         }
       }
     }
