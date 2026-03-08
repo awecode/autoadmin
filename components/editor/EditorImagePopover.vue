@@ -15,6 +15,8 @@ const caption = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
 
+const active = computed(() => props.editor.isActive('image') || props.editor.isActive('figure'))
+
 const disabled = computed(() => {
   if (!props.editor.isEditable)
     return true
@@ -144,13 +146,33 @@ watch(file, async (newFile) => {
       <UButton
         icon="i-lucide-image"
         color="neutral"
+        active-color="primary"
         variant="ghost"
+        active-variant="soft"
         size="sm"
+        :active="active"
         :disabled="disabled"
       />
     </UTooltip>
 
     <template #content>
+      <div v-if="isUploading" class="flex flex-col items-center justify-center gap-4 h-36">
+        <UIcon name="i-lucide-loader-circle" class="animate-spin" />
+        <div class="text-sm font-medium">
+          Uploading...
+        </div>
+        <div class="text-sm text-neutral-500">
+          {{ file?.name }}
+        </div>
+      </div>
+      <UFileUpload
+        v-else
+        v-model="file"
+        icon="i-lucide-image"
+        accept="image/*"
+        label="Upload an image"
+        :preview="false"
+      />
       <div class="flex flex-col gap-2 p-2 min-w-64">
         <UInput
           v-model="url"
@@ -158,7 +180,7 @@ watch(file, async (newFile) => {
           name="url"
           type="url"
           variant="none"
-          placeholder="Paste link to image..."
+          placeholder="Or paste image URL..."
           @keydown="handleKeyDown"
         >
           <div class="flex items-center mr-0.5">
@@ -199,24 +221,6 @@ watch(file, async (newFile) => {
           @keydown.enter.prevent="setImageFromUrl"
         />
       </div>
-      <div v-if="isUploading" class="flex flex-col items-center justify-center gap-4 h-36">
-        <UIcon name="i-lucide-loader-circle" class="animate-spin" />
-        <div class="text-sm font-medium">
-          Uploading...
-        </div>
-        <div class="text-sm text-neutral-500">
-          {{ file?.name }}
-        </div>
-      </div>
-      <UFileUpload
-        v-else
-        v-model="file"
-        icon="i-lucide-image"
-        accept="image/*"
-        label="Or upload a file"
-        description="Add alt text and caption above before or after uploading (optional)."
-        :preview="false"
-      />
     </template>
   </UPopover>
 </template>

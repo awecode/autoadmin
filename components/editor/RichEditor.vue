@@ -20,7 +20,7 @@ const customHandlers = {
   imageUpload: {
     canExecute: (editor: Editor) => editor.can().insertContent({ type: 'imageUpload' }),
     execute: (editor: Editor) => editor.chain().focus().insertContent({ type: 'imageUpload' }),
-    isActive: (editor: Editor) => editor.isActive('imageUpload'),
+    isActive: (editor: Editor) => editor.isActive('imageUpload') || editor.isActive('image') || editor.isActive('figure'),
     isDisabled: undefined,
   },
 } satisfies EditorCustomHandlers
