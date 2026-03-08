@@ -55,6 +55,11 @@ watch(() => props.editor, (editor, _, onCleanup) => {
       alt.value = attrs.alt || ''
       caption.value = ''
     }
+    else {
+      url.value = ''
+      alt.value = ''
+      caption.value = ''
+    }
   }
 
   syncFromSelection()
@@ -206,20 +211,26 @@ watch(file, async (newFile) => {
             />
           </div>
         </UInput>
-        <UInput
-          v-model="alt"
-          name="alt"
-          variant="none"
-          placeholder="Alt text (optional)"
-          @keydown.enter.prevent="setImageFromUrl"
-        />
-        <UInput
-          v-model="caption"
-          name="caption"
-          variant="none"
-          placeholder="Caption (optional)"
-          @keydown.enter.prevent="setImageFromUrl"
-        />
+        <UFormField label="Alt text(optional)">
+          <UInput
+            v-model="alt"
+            name="alt"
+            class="w-full"
+            variant="outline"
+            placeholder="Describe the image for screen readers"
+            @keydown.enter.prevent="setImageFromUrl"
+          />
+        </UFormField>
+        <UFormField label="Caption(optional)">
+          <UInput
+            v-model="caption"
+            name="caption"
+            class="w-full"
+            variant="outline"
+            placeholder="Add a caption for the image"
+            @keydown.enter.prevent="setImageFromUrl"
+          />
+        </UFormField>
       </div>
     </template>
   </UPopover>
