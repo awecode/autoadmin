@@ -13,7 +13,6 @@ const url = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
 
-const active = computed(() => props.editor.isActive('link'))
 const disabled = computed(() => {
   if (!props.editor.isEditable)
     return true
@@ -25,8 +24,12 @@ watch(() => props.editor, (editor, _, onCleanup) => {
     return
 
   const updateUrl = () => {
-    const { href } = editor.getAttributes('link')
-    url.value = href || ''
+    if (editor.isActive('image')) {
+      url.value = editor.getAttributes('image').src || ''
+    }
+    else {
+      url.value = editor.getAttributes('link').href || ''
+    }
   }
 
   updateUrl()
@@ -37,47 +40,20 @@ watch(() => props.editor, (editor, _, onCleanup) => {
   })
 }, { immediate: true })
 
-watch(active, (isActive) => {
-  if (isActive && props.autoOpen) {
-    open.value = true
-  }
-})
-
-function setLink() {
+function setImageFromUrl() {
   if (!url.value)
     return
 
-  const { selection } = props.editor.state
-  const isEmpty = selection.empty
-  const hasCode = props.editor.isActive('code')
-
-  let chain = props.editor.chain().focus()
-
-  // When linking code, extend the code mark range first to select the full code
-  if (hasCode && !isEmpty) {
-    chain = chain.extendMarkRange('code').setLink({ href: url.value })
+  if (props.editor.isActive('image')) {
+    props.editor.chain().focus().updateAttributes('image', { src: url.value }).run()
   }
   else {
-    chain = chain.extendMarkRange('link').setLink({ href: url.value })
-
-    if (isEmpty) {
-      chain = chain.insertContent({ type: 'text', text: url.value })
-    }
+    props.editor
+      .chain()
+      .focus()
+      .insertContent({ type: 'image', attrs: { src: url.value } })
+      .run()
   }
-
-  chain.run()
-  open.value = false
-}
-
-function removeLink() {
-  props.editor
-    .chain()
-    .focus()
-    .extendMarkRange('link')
-    .unsetLink()
-    .setMeta('preventAutolink', true)
-    .run()
-
   url.value = ''
   open.value = false
 }
@@ -91,7 +67,7 @@ function openLink() {
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Enter') {
     event.preventDefault()
-    setLink()
+    setImageFromUrl()
   }
 }
 
@@ -112,11 +88,8 @@ watch(file, async (newFile) => {
       <UButton
         icon="i-lucide-image"
         color="neutral"
-        active-color="primary"
         variant="ghost"
-        active-variant="soft"
         size="sm"
-        :active="active"
         :disabled="disabled"
       />
     </UTooltip>
@@ -128,7 +101,7 @@ watch(file, async (newFile) => {
         name="url"
         type="url"
         variant="none"
-        placeholder="Paste a link..."
+        placeholder="Paste link to image..."
         @keydown="handleKeyDown"
       >
         <div class="flex items-center mr-0.5">
@@ -136,9 +109,9 @@ watch(file, async (newFile) => {
             icon="i-lucide-corner-down-left"
             variant="ghost"
             size="sm"
-            :disabled="!url && !active"
-            title="Apply link"
-            @click="setLink"
+            :disabled="!url"
+            title="Insert image"
+            @click="setImageFromUrl"
           />
 
           <USeparator orientation="vertical" class="h-6 mx-1" />
@@ -148,19 +121,9 @@ watch(file, async (newFile) => {
             color="neutral"
             variant="ghost"
             size="sm"
-            :disabled="!url && !active"
+            :disabled="!url"
             title="Open in new window"
             @click="openLink"
-          />
-
-          <UButton
-            icon="i-lucide-trash"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            :disabled="!url && !active"
-            title="Remove link"
-            @click="removeLink"
           />
         </div>
       </UInput>
