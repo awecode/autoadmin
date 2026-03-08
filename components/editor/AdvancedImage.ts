@@ -35,7 +35,7 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
   return [[
     ...(selected
       ? [{
-          icon: isFigure ? 'i-lucide-align-justify' : 'i-lucide-type',
+          icon: isFigure ? 'i-lucide-captions-off' : 'i-lucide-captions',
           tooltip: { text: isFigure ? 'Remove caption' : 'Add caption' },
           onClick: () => {
             if (isFigure)
@@ -122,7 +122,7 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
       }
     },
   }, {
-    icon: 'i-lucide-align-justify',
+    icon: 'i-lucide-panel-top',
     tooltip: { text: 'Standard Image (Unwrap)' },
     active: !editor.isActive('mediaText'),
     onClick: () => {

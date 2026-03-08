@@ -43,7 +43,7 @@ export function mediaTextToolbarItems(editor: Editor): EditorToolbarItem[][] {
   }, {
     // This allows the user to break the block back into a normal image and text,
     // so they can use your standard image replacement/upload tools!
-    icon: 'i-lucide-image',
+    icon: 'i-lucide-ungroup',
     tooltip: { text: 'Revert to Standard Image' },
     onClick: () => {
       const { state } = editor
