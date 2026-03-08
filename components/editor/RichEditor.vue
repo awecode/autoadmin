@@ -326,8 +326,7 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
       label: 'Delete',
       icon: 'i-lucide-trash',
     },
-  ], ...(selectedNode.value?.node?.type === 'image' ? [[{ label: 'Add caption', icon: 'i-lucide-type', onSelect: () => editor.chain().focus().imageToFigure().run() }]] : selectedNode.value?.node?.type === 'figure' ? [[{ label: 'Remove caption', icon: 'i-lucide-align-justify', onSelect: () => editor.chain().focus().figureToImage().run() }]] : []),
-  ], customHandlers) as DropdownMenuItem[][]
+  ], ...(selectedNode.value?.node?.type === 'image' ? [[{ label: 'Add caption', icon: 'i-lucide-type', onSelect: () => editor.chain().focus().imageToFigure().run() }]] : selectedNode.value?.node?.type === 'figure' ? [[{ label: 'Remove caption', icon: 'i-lucide-align-justify', onSelect: () => editor.chain().focus().figureToImage().run() }]] : [])], customHandlers) as DropdownMenuItem[][]
 }
 
 const suggestionItems = [[{

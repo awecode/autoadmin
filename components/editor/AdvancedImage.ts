@@ -104,15 +104,18 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
         editor.chain().focus().updateAttributes('mediaText', { layout: 'left' }).run()
       }
       else {
-        // If it's a standard image (not figure), wrap it in a new MediaText block
+        // Wrap selected image or figure in a new MediaText block
         const node = state.doc.nodeAt(pos)
-        if (node && node.type.name === 'image' && !editor.isActive('figure')) {
+        if (node && (node.type.name === 'image' || node.type.name === 'figure')) {
+          const firstChild = node.type.name === 'image'
+            ? { type: 'image' as const, attrs: node.attrs }
+            : { type: 'figure' as const, attrs: node.attrs, content: node.content.toJSON() }
           editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
             type: 'mediaText',
             attrs: { layout: 'left' },
             content: [
-              { type: 'image', attrs: node.attrs }, // Keep the real image!
-              { type: 'paragraph' }, // Drop an empty paragraph next to it
+              firstChild,
+              { type: 'paragraph' },
             ],
           }).run()
         }
@@ -157,12 +160,15 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
       }
       else {
         const node = state.doc.nodeAt(pos)
-        if (node && node.type.name === 'image' && !editor.isActive('figure')) {
+        if (node && (node.type.name === 'image' || node.type.name === 'figure')) {
+          const firstChild = node.type.name === 'image'
+            ? { type: 'image' as const, attrs: node.attrs }
+            : { type: 'figure' as const, attrs: node.attrs, content: node.content.toJSON() }
           editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
             type: 'mediaText',
             attrs: { layout: 'right' },
             content: [
-              { type: 'image', attrs: node.attrs },
+              firstChild,
               { type: 'paragraph' },
             ],
           }).run()

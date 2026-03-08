@@ -5,7 +5,7 @@ import { mergeAttributes, Node } from '@tiptap/core'
 export const MediaText = Node.create({
   name: 'mediaText',
   group: 'block',
-  content: 'image block+', // Must start with an image, followed by paragraphs
+  content: '(image | figure) block+', // First child is image or figure, then one or more blocks
   defining: true,
   isolating: true, // Traps the cursor nicely
 
@@ -62,10 +62,13 @@ export function mediaTextToolbarItems(editor: Editor): EditorToolbarItem[][] {
       }
 
       if (mediaTextNode) {
-        const src = mediaTextNode.attrs.src
-        const textContent = mediaTextNode.content
-
-        editor.chain().focus().deleteRange({ from: mediaTextPos, to: mediaTextPos + mediaTextNode.nodeSize }).insertContentAt(mediaTextPos, { type: 'image', attrs: { src } }).insertContentAt(mediaTextPos + 1, textContent.toJSON()).run()
+        const firstChild = mediaTextNode.firstChild
+        const content = mediaTextNode.content
+        if (firstChild) {
+          const restFragment = content.cut(firstChild.nodeSize, content.size)
+          const insertContent = [firstChild.toJSON(), ...restFragment.toJSON()]
+          editor.chain().focus().deleteRange({ from: mediaTextPos, to: mediaTextPos + mediaTextNode.nodeSize }).insertContentAt(mediaTextPos, insertContent).run()
+        }
       }
     },
   }], [{
