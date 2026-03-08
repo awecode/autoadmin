@@ -445,8 +445,15 @@ const suggestionItems = [[{
       :editor="editor"
       :items="imageToolbarItems(editor)"
       layout="bubble"
-      :should-show="({ editor, view }) => {
-        return (editor.isActive('image') || editor.isActive('figure')) && view.hasFocus()
+      :should-show="({ editor, view, state }) => {
+        if (!view.hasFocus())
+          return false
+        if (editor.isActive('image') && !editor.isActive('figure'))
+          return true
+        const sel = state.selection as { node?: { type?: { name?: string } } }
+        if (sel?.node?.type?.name === 'figure')
+          return true
+        return false
       }"
     />
 
