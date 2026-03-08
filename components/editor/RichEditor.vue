@@ -2,14 +2,14 @@
 import type { DropdownMenuItem, EditorCustomHandlers, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
+import FileHandler from '@tiptap/extension-file-handler'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
 import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
 import EditorImagePopover from './EditorImagePopover.vue'
-// import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
-
-import { MediaText, mediaTextToolbarItems } from './MediaText'
+import { handleFiles } from './FileUpload'
+import { MediaText } from './MediaText'
 
 const editorRef = useTemplateRef('editorRef')
 
@@ -397,6 +397,16 @@ const suggestionItems = [[{
         },
       }),
       MediaText,
+      FileHandler.configure({
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
+        onDrop: (currentEditor, files, pos) => {
+          return handleFiles(files, currentEditor as Editor, undefined, pos)
+        },
+        onPaste: (currentEditor, files) => {
+          return handleFiles(files, currentEditor as Editor)
+        },
+      },
+      ),
     ]"
     :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."

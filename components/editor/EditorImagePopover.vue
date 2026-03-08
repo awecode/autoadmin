@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
+import { handleFiles } from './FileUpload'
 
 const props = defineProps<{
   editor: Editor
@@ -11,8 +12,6 @@ const open = ref(false)
 const url = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
-const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
 
 const active = computed(() => props.editor.isActive('link'))
 const disabled = computed(() => {
@@ -96,71 +95,15 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-async function uploadFile(file: File): Promise<string> {
-  const formData = new FormData()
-  formData.append('file', file)
-
-  const params = new URLSearchParams({
-    prefix: props.uploadPrefix || 'uploads/',
-    fileType: file.type,
-  })
-
-  try {
-    isUploading.value = true
-    const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
-      method: 'POST',
-      body: formData,
-    })
-
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`)
-    }
-
-    const result = await response.text()
-    return result
-  }
-  catch (error) {
-    // eslint-disable-next-line no-alert
-    window.alert(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    throw error
-  }
-  finally {
-    isUploading.value = false
-  }
-}
-
 watch(file, async (newFile) => {
   if (!newFile)
     return
-  handleFiles(newFile)
+  isUploading.value = true
+  await handleFiles([newFile], props.editor, props.uploadPrefix)
+  isUploading.value = false
+  file.value = null
+  open.value = false
 })
-
-async function handleFiles(fileObj: File) {
-  const pos = props.editor.state.selection.anchor
-
-  try {
-    const uploadedUrl = await uploadFile(fileObj)
-    props.editor
-      .chain()
-      .insertContentAt(pos, {
-        type: 'image',
-        attrs: {
-          src: uploadedUrl,
-        },
-      })
-      .focus()
-      .run()
-  }
-  catch (error) {
-    // Error already handled in uploadFile function
-    console.error('Failed to upload file:', error)
-  }
-  finally {
-    isUploading.value = false
-    file.value = null
-    open.value = false
-  }
-}
 </script>
 
 <template>
