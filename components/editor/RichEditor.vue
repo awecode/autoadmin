@@ -398,7 +398,7 @@ const suggestionItems = [[{
       }),
       MediaText,
       FileHandler.configure({
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'],
         onDrop: (currentEditor, files, pos) => {
           return handleFiles(files, currentEditor as Editor, undefined, pos)
         },

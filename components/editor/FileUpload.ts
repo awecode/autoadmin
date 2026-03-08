@@ -38,16 +38,29 @@ export async function handleFiles(files: File[], editor: Editor, uploadPrefix?: 
   for (const file of files) {
     try {
       const uploadedUrl = await uploadFile(file, uploadPrefix)
-      editor
-        .chain()
-        .insertContentAt(pos, {
-          type: 'image',
-          attrs: {
-            src: uploadedUrl,
-          },
-        })
-        .focus()
-        .run()
+      if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
+        editor
+          .chain()
+          .insertContentAt(pos, {
+            type: 'image',
+            attrs: {
+              src: uploadedUrl,
+            },
+          })
+          .focus()
+          .run()
+      }
+      else {
+        editor
+          .chain()
+          .insertContentAt(pos, {
+            type: 'text',
+            text: file.name,
+            marks: [{ type: 'link', attrs: { href: uploadedUrl } }],
+          })
+          .focus()
+          .run()
+      }
     }
     catch (error) {
       console.error('Failed to upload file:', error)
