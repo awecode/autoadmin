@@ -5,7 +5,7 @@ import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import FileHandler from '@tiptap/extension-file-handler'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
-import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
+import { imageToolbarItems } from './AdvancedImage'
 import EditorImagePopover from './EditorImagePopover.vue'
 import EditorLinkPopover from './EditorLinkPopover.vue'
 import { Figure } from './Figure'
@@ -392,11 +392,6 @@ const suggestionItems = [[{
     content-type="html"
     :extensions="[
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      AdvancedImage.configure({
-        HTMLAttributes: {
-          class: 'content-image',
-        },
-      }),
       Figure,
       MediaText,
       FileHandler.configure({
