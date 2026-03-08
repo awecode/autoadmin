@@ -115,11 +115,26 @@ function handleKeyDown(event: KeyboardEvent) {
 watch(file, async (newFile) => {
   if (!newFile)
     return
+  const pendingAlt = alt.value.trim() || null
+  const pendingCaption = caption.value.trim() || null
   isUploading.value = true
-  await handleFiles([newFile], props.editor, props.uploadPrefix)
+  const imagePos = await handleFiles([newFile], props.editor, props.uploadPrefix, undefined, {
+    alt: pendingAlt,
+    caption: pendingCaption,
+  })
   isUploading.value = false
   file.value = null
-  open.value = false
+  if (imagePos != null) {
+    props.editor.chain().focus().setNodeSelection(imagePos).run()
+    await nextTick()
+    const isFig = props.editor.isActive('figure')
+    const attrs = props.editor.getAttributes(isFig ? 'figure' : 'image')
+    url.value = attrs.src ?? ''
+    alt.value = attrs.alt ?? ''
+    caption.value = isFig ? ((props.editor.state.selection as { node?: { textContent?: string } }).node?.textContent ?? '') : ''
+  }
+  if (imagePos == null)
+    open.value = false
 })
 </script>
 
@@ -198,8 +213,8 @@ watch(file, async (newFile) => {
         v-model="file"
         icon="i-lucide-image"
         accept="image/*"
-        label="Upload an image..."
-        description="SVG, PNG, JPG or GIF (max. 2MB)"
+        label="Or upload a file"
+        description="Add alt text and caption above before or after uploading (optional)."
         :preview="false"
       />
     </template>

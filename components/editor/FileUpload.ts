@@ -31,24 +31,53 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
   }
 }
 
-export async function handleFiles(files: File[], editor: Editor, uploadPrefix?: string, pos?: number) {
+export interface HandleFilesOptions {
+  alt?: string | null
+  caption?: string | null
+}
+
+/** Returns the document position of the first inserted image/figure, or undefined if none. */
+export async function handleFiles(
+  files: File[],
+  editor: Editor,
+  uploadPrefix?: string,
+  pos?: number,
+  options?: HandleFilesOptions,
+): Promise<number | undefined> {
   if (!pos) {
     pos = editor.state.selection.anchor
   }
+  let firstImagePos: number | undefined
+  const alt = options?.alt?.trim() || undefined
+  const caption = options?.caption?.trim() || undefined
   for (const file of files) {
     try {
       const uploadedUrl = await uploadFile(file, uploadPrefix)
       if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
-        editor
-          .chain()
-          .insertContentAt(pos, {
-            type: 'image',
-            attrs: {
-              src: uploadedUrl,
-            },
-          })
-          .focus()
-          .run()
+        if (firstImagePos === undefined)
+          firstImagePos = pos
+        if (caption) {
+          editor
+            .chain()
+            .insertContentAt(pos, {
+              type: 'figure',
+              attrs: { src: uploadedUrl, alt: alt ?? null },
+              content: [{ type: 'text', text: caption }],
+            })
+            .focus()
+            .run()
+        }
+        else {
+          editor
+            .chain()
+            .insertContentAt(pos, {
+              type: 'image',
+              attrs: { src: uploadedUrl, alt: alt ?? undefined },
+            })
+            .focus()
+            .run()
+        }
+        pos += (editor.state.doc.nodeAt(pos)?.nodeSize ?? 1)
       }
       else {
         editor
@@ -66,4 +95,5 @@ export async function handleFiles(files: File[], editor: Editor, uploadPrefix?: 
       console.error('Failed to upload file:', error)
     }
   }
+  return firstImagePos
 }
