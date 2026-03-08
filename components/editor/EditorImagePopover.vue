@@ -179,38 +179,40 @@ watch(file, async (newFile) => {
         :preview="false"
       />
       <div class="flex flex-col gap-2 p-2 min-w-64">
-        <UInput
-          v-model="url"
-          autofocus
-          name="url"
-          type="url"
-          variant="none"
-          placeholder="Or paste image URL..."
-          @keydown="handleKeyDown"
-        >
-          <div class="flex items-center mr-0.5">
-            <UButton
-              icon="i-lucide-corner-down-left"
-              variant="ghost"
-              size="sm"
-              :disabled="!url"
-              title="Insert image"
-              @click="setImageFromUrl"
-            />
+        <template v-if="!active">
+          <UInput
+            v-model="url"
+            autofocus
+            name="url"
+            type="url"
+            variant="none"
+            placeholder="Or paste image URL..."
+            @keydown="handleKeyDown"
+          >
+            <div class="flex items-center mr-0.5">
+              <UButton
+                icon="i-lucide-corner-down-left"
+                variant="ghost"
+                size="sm"
+                :disabled="!url"
+                title="Insert image"
+                @click="setImageFromUrl"
+              />
 
-            <USeparator orientation="vertical" class="h-6 mx-1" />
+              <USeparator orientation="vertical" class="h-6 mx-1" />
 
-            <UButton
-              icon="i-lucide-external-link"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              :disabled="!url"
-              title="Open in new window"
-              @click="openLink"
-            />
-          </div>
-        </UInput>
+              <UButton
+                icon="i-lucide-external-link"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                :disabled="!url"
+                title="Open in new window"
+                @click="openLink"
+              />
+            </div>
+          </UInput>
+        </template>
         <UFormField label="Alt text(optional)">
           <UInput
             v-model="alt"
