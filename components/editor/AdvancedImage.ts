@@ -20,63 +20,76 @@ export const AdvancedImage = Image.extend({
   },
 })
 
+function getSelectedImageOrFigure(editor: Editor) {
+  const pos = editor.state.selection.from
+  const node = editor.state.doc.nodeAt(pos)
+  if (node && (node.type.name === 'image' || node.type.name === 'figure'))
+    return { node, pos }
+  return null
+}
+
 export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
-  return [[{
-    icon: 'i-lucide-download',
-    tooltip: { text: 'Download' },
-    onClick: async () => {
-      const node = editor.state.doc.nodeAt(editor.state.selection.from)
-      if (node && node.type.name === 'image') {
-        const imageUrl = node.attrs.src
-        try {
-          const response = await fetch(imageUrl)
-          if (!response.ok)
-            throw new Error('Network response was not ok')
-          const blob = await response.blob()
-          const blobUrl = window.URL.createObjectURL(blob)
-          const fileName = imageUrl.split('/').pop().split('?')[0] || 'downloaded-image'
-          const link = document.createElement('a')
-          link.href = blobUrl
-          link.download = fileName
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          window.URL.revokeObjectURL(blobUrl)
-        }
-        catch (error) {
-          console.error('Failed to download image:', error)
-          // Fallback: If fetch fails just open in a new tab
-          window.open(imageUrl, '_blank')
-        }
-      }
-    },
-  }, {
-    icon: 'i-lucide-refresh-cw',
-    tooltip: { text: 'Replace' },
-    onClick: () => {
-      const { state } = editor
-      const { selection } = state
+  const selected = getSelectedImageOrFigure(editor)
+  const isFigure = selected?.node.type.name === 'figure'
 
-      const pos = selection.from
-      const node = state.doc.nodeAt(pos)
-
-      if (node && node.type.name === 'image') {
-        editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, { type: 'imageUpload' }).run()
-      }
+  return [[
+    ...(selected
+      ? [{
+          icon: isFigure ? 'i-lucide-align-justify' : 'i-lucide-type',
+          tooltip: { text: isFigure ? 'Remove caption' : 'Add caption' },
+          onClick: () => {
+            if (isFigure)
+              editor.chain().focus().figureToImage().run()
+            else
+              editor.chain().focus().imageToFigure().run()
+          },
+        }]
+      : []),
+    {
+      icon: 'i-lucide-download',
+      tooltip: { text: 'Download' },
+      onClick: async () => {
+        const sel = getSelectedImageOrFigure(editor)
+        if (sel) {
+          const imageUrl = sel.node.attrs.src
+          try {
+            const response = await fetch(imageUrl)
+            if (!response.ok)
+              throw new Error('Network response was not ok')
+            const blob = await response.blob()
+            const blobUrl = window.URL.createObjectURL(blob)
+            const fileName = imageUrl.split('/').pop().split('?')[0] || 'downloaded-image'
+            const link = document.createElement('a')
+            link.href = blobUrl
+            link.download = fileName
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(blobUrl)
+          }
+          catch (error) {
+            console.error('Failed to download image:', error)
+            window.open(imageUrl, '_blank')
+          }
+        }
+      },
     },
-  }], [{
+    {
+      icon: 'i-lucide-refresh-cw',
+      tooltip: { text: 'Replace' },
+      onClick: () => {
+        const sel = getSelectedImageOrFigure(editor)
+        if (sel)
+          editor.chain().focus().deleteRange({ from: sel.pos, to: sel.pos + sel.node.nodeSize }).insertContentAt(sel.pos, { type: 'imageUpload' }).run()
+      },
+    },
+  ], [{
     icon: 'i-lucide-trash',
     tooltip: { text: 'Delete' },
     onClick: () => {
-      const { state } = editor
-      const { selection } = state
-
-      const pos = selection.from
-      const node = state.doc.nodeAt(pos)
-
-      if (node && node.type.name === 'image') {
-        editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run()
-      }
+      const sel = getSelectedImageOrFigure(editor)
+      if (sel)
+        editor.chain().focus().deleteRange({ from: sel.pos, to: sel.pos + sel.node.nodeSize }).run()
     },
   }], [{
     icon: 'i-lucide-panel-left',
@@ -91,9 +104,9 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
         editor.chain().focus().updateAttributes('mediaText', { layout: 'left' }).run()
       }
       else {
-        // If it's a standard image, wrap it in a new MediaText block
+        // If it's a standard image (not figure), wrap it in a new MediaText block
         const node = state.doc.nodeAt(pos)
-        if (node && node.type.name === 'image') {
+        if (node && node.type.name === 'image' && !editor.isActive('figure')) {
           editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
             type: 'mediaText',
             attrs: { layout: 'left' },
@@ -144,7 +157,7 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
       }
       else {
         const node = state.doc.nodeAt(pos)
-        if (node && node.type.name === 'image') {
+        if (node && node.type.name === 'image' && !editor.isActive('figure')) {
           editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
             type: 'mediaText',
             attrs: { layout: 'right' },

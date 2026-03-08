@@ -8,6 +8,7 @@ import { upperFirst } from 'scule'
 import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
 import EditorImagePopover from './EditorImagePopover.vue'
 import EditorLinkPopover from './EditorLinkPopover.vue'
+import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
 import { MediaText } from './MediaText'
 
@@ -325,7 +326,8 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
       label: 'Delete',
       icon: 'i-lucide-trash',
     },
-  ]], customHandlers) as DropdownMenuItem[][]
+  ], ...(selectedNode.value?.node?.type === 'image' ? [[{ label: 'Add caption', icon: 'i-lucide-type', onSelect: () => editor.chain().focus().imageToFigure().run() }]] : selectedNode.value?.node?.type === 'figure' ? [[{ label: 'Remove caption', icon: 'i-lucide-align-justify', onSelect: () => editor.chain().focus().figureToImage().run() }]] : []),
+  ], customHandlers) as DropdownMenuItem[][]
 }
 
 const suggestionItems = [[{
@@ -396,6 +398,7 @@ const suggestionItems = [[{
           class: 'content-image',
         },
       }),
+      Figure,
       MediaText,
       FileHandler.configure({
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'],
@@ -427,7 +430,7 @@ const suggestionItems = [[{
       :items="bubbleToolbarItems"
       layout="bubble"
       :should-show="({ editor, view, state }) => {
-        if (editor.isActive('imageUpload') || editor.isActive('image')) {
+        if (editor.isActive('imageUpload') || editor.isActive('image') || editor.isActive('figure')) {
           return false
         }
         const { selection } = state
@@ -444,7 +447,7 @@ const suggestionItems = [[{
       :items="imageToolbarItems(editor)"
       layout="bubble"
       :should-show="({ editor, view }) => {
-        return editor.isActive('image') && view.hasFocus()
+        return (editor.isActive('image') || editor.isActive('figure')) && view.hasFocus()
       }"
     />
 
@@ -524,5 +527,35 @@ const suggestionItems = [[{
 }
 .media-text-right > *:not(:first-child) {
   grid-column: 1;
+}
+
+/* Figure (image with caption) */
+.tiptap figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  width: 100%;
+  max-width: 100%;
+}
+.tiptap figure > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  margin: 0;
+  object-fit: contain;
+}
+.tiptap figure figcaption {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ui-text-dimmed, #6b7280);
+  text-align: center;
+  outline: none;
+}
+.tiptap figure.ProseMirror-selectednode,
+.tiptap figure:has(figcaption:focus) {
+  outline: 2px solid var(--ui-primary, #3b82f6);
+  border-radius: 0.375rem;
 }
 </style>

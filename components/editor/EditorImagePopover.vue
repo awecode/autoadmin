@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const open = ref(false)
 const url = ref('')
+const caption = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
 
@@ -23,20 +24,33 @@ watch(() => props.editor, (editor, _, onCleanup) => {
   if (!editor)
     return
 
-  const updateUrl = () => {
-    if (editor.isActive('image')) {
+  const syncFromSelection = () => {
+    if (editor.isActive('figure')) {
+      url.value = editor.getAttributes('figure').src || ''
+      const { state } = editor
+      const { $from } = state.selection
+      for (let d = $from.depth; d > 0; d--) {
+        if ($from.node(d).type.name === 'figure') {
+          caption.value = $from.node(d).textContent
+          break
+        }
+      }
+    }
+    else if (editor.isActive('image')) {
       url.value = editor.getAttributes('image').src || ''
+      caption.value = ''
     }
     else {
       url.value = editor.getAttributes('link').href || ''
+      caption.value = ''
     }
   }
 
-  updateUrl()
-  editor.on('selectionUpdate', updateUrl)
+  syncFromSelection()
+  editor.on('selectionUpdate', syncFromSelection)
 
   onCleanup(() => {
-    editor.off('selectionUpdate', updateUrl)
+    editor.off('selectionUpdate', syncFromSelection)
   })
 }, { immediate: true })
 
@@ -44,8 +58,23 @@ function setImageFromUrl() {
   if (!url.value)
     return
 
-  if (props.editor.isActive('image')) {
-    props.editor.chain().focus().updateAttributes('image', { src: url.value }).run()
+  const hasCaption = caption.value.trim().length > 0
+
+  if (props.editor.isActive('figure')) {
+    props.editor.chain().focus().updateAttributes('figure', { src: url.value }).run()
+    props.editor.chain().focus().updateFigureCaption(caption.value.trim()).run()
+  }
+  else if (props.editor.isActive('image')) {
+    if (hasCaption) {
+      props.editor.chain().focus().imageToFigure({ caption: caption.value.trim() }).run()
+      props.editor.chain().focus().updateAttributes('figure', { src: url.value }).run()
+    }
+    else {
+      props.editor.chain().focus().updateAttributes('image', { src: url.value }).run()
+    }
+  }
+  else if (hasCaption) {
+    props.editor.chain().focus().setFigure({ src: url.value, caption: caption.value.trim() }).run()
   }
   else {
     props.editor
@@ -55,6 +84,7 @@ function setImageFromUrl() {
       .run()
   }
   url.value = ''
+  caption.value = ''
   open.value = false
 }
 
@@ -95,38 +125,47 @@ watch(file, async (newFile) => {
     </UTooltip>
 
     <template #content>
-      <UInput
-        v-model="url"
-        autofocus
-        name="url"
-        type="url"
-        variant="none"
-        placeholder="Paste link to image..."
-        @keydown="handleKeyDown"
-      >
-        <div class="flex items-center mr-0.5">
-          <UButton
-            icon="i-lucide-corner-down-left"
-            variant="ghost"
-            size="sm"
-            :disabled="!url"
-            title="Insert image"
-            @click="setImageFromUrl"
-          />
+      <div class="flex flex-col gap-2 p-2 min-w-64">
+        <UInput
+          v-model="url"
+          autofocus
+          name="url"
+          type="url"
+          variant="none"
+          placeholder="Paste link to image..."
+          @keydown="handleKeyDown"
+        >
+          <div class="flex items-center mr-0.5">
+            <UButton
+              icon="i-lucide-corner-down-left"
+              variant="ghost"
+              size="sm"
+              :disabled="!url"
+              title="Insert image"
+              @click="setImageFromUrl"
+            />
 
-          <USeparator orientation="vertical" class="h-6 mx-1" />
+            <USeparator orientation="vertical" class="h-6 mx-1" />
 
-          <UButton
-            icon="i-lucide-external-link"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            :disabled="!url"
-            title="Open in new window"
-            @click="openLink"
-          />
-        </div>
-      </UInput>
+            <UButton
+              icon="i-lucide-external-link"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              :disabled="!url"
+              title="Open in new window"
+              @click="openLink"
+            />
+          </div>
+        </UInput>
+        <UInput
+          v-model="caption"
+          name="caption"
+          variant="none"
+          placeholder="Caption (optional)"
+          @keydown.enter.prevent="setImageFromUrl"
+        />
+      </div>
       <div v-if="isUploading" class="flex flex-col items-center justify-center gap-4 h-36">
         <UIcon name="i-lucide-loader-circle" class="animate-spin" />
         <div class="text-sm font-medium">
