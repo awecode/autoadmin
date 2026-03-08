@@ -52,6 +52,14 @@ export const Figure = Node.create({
         default: null,
         parseHTML: element => element.querySelector('img')?.getAttribute('title'),
       },
+      width: {
+        default: null,
+        parseHTML: element => element.querySelector('img')?.getAttribute('width'),
+      },
+      height: {
+        default: null,
+        parseHTML: element => element.querySelector('img')?.getAttribute('height'),
+      },
     }
   },
 
@@ -85,6 +93,10 @@ export const Figure = Node.create({
         img.setAttribute('alt', node.attrs.alt)
       if (node.attrs.title)
         img.setAttribute('title', node.attrs.title)
+      if (node.attrs.width != null)
+        img.setAttribute('width', String(node.attrs.width))
+      if (node.attrs.height != null)
+        img.setAttribute('height', String(node.attrs.height))
       const figcaption = document.createElement('figcaption')
       figure.appendChild(img)
       figure.appendChild(figcaption)
@@ -172,6 +184,8 @@ export const Figure = Node.create({
                 src: node.attrs.src,
                 alt: node.attrs.alt,
                 title: node.attrs.title,
+                width: node.attrs.width,
+                height: node.attrs.height,
               }, content))
             }
             if (dispatch)
@@ -203,6 +217,8 @@ export const Figure = Node.create({
                 src: node.attrs.src,
                 alt: node.attrs.alt,
                 title: node.attrs.title,
+                width: node.attrs.width,
+                height: node.attrs.height,
               }))
             }
             if (dispatch)

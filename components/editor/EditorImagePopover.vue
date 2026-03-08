@@ -8,10 +8,21 @@ const props = defineProps<{
   uploadPrefix?: string
 }>()
 
+function getImageDimensions(src: string): Promise<{ width: number, height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+    img.onerror = () => resolve(null)
+    img.src = src
+  })
+}
+
 const open = ref(false)
 const url = ref('')
 const alt = ref('')
 const caption = ref('')
+const width = ref('')
+const height = ref('')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
 
@@ -32,6 +43,8 @@ watch(() => props.editor, (editor, _, onCleanup) => {
       const attrs = editor.getAttributes('figure')
       url.value = attrs.src || ''
       alt.value = attrs.alt || ''
+      width.value = attrs.width != null ? String(attrs.width) : ''
+      height.value = attrs.height != null ? String(attrs.height) : ''
       caption.value = ''
       const { state } = editor
       const { selection } = state
@@ -53,12 +66,16 @@ watch(() => props.editor, (editor, _, onCleanup) => {
       const attrs = editor.getAttributes('image')
       url.value = attrs.src || ''
       alt.value = attrs.alt || ''
+      width.value = attrs.width != null ? String(attrs.width) : ''
+      height.value = attrs.height != null ? String(attrs.height) : ''
       caption.value = ''
     }
     else {
       url.value = ''
       alt.value = ''
       caption.value = ''
+      width.value = ''
+      height.value = ''
     }
   }
 
@@ -70,39 +87,59 @@ watch(() => props.editor, (editor, _, onCleanup) => {
   })
 }, { immediate: true })
 
-function setImageFromUrl() {
+async function setImageFromUrl() {
   if (!url.value)
     return
 
   const hasCaption = caption.value.trim().length > 0
   const altVal = alt.value.trim() || null
+  const wTrim = width.value.trim()
+  const hTrim = height.value.trim()
+  let widthVal: number | null = wTrim ? Number(wTrim) : null
+  let heightVal: number | null = hTrim ? Number(hTrim) : null
+  const needDims = (widthVal == null || heightVal == null || Number.isNaN(widthVal) || Number.isNaN(heightVal))
+  if (needDims && url.value) {
+    const dims = await getImageDimensions(url.value)
+    if (dims) {
+      if (widthVal == null || Number.isNaN(widthVal))
+        widthVal = dims.width
+      if (heightVal == null || Number.isNaN(heightVal))
+        heightVal = dims.height
+    }
+  }
+  const sizeAttrs = {
+    ...(widthVal != null && !Number.isNaN(widthVal) ? { width: widthVal } : {}),
+    ...(heightVal != null && !Number.isNaN(heightVal) ? { height: heightVal } : {}),
+  }
 
   if (props.editor.isActive('figure')) {
-    props.editor.chain().focus().updateAttributes('figure', { src: url.value, alt: altVal }).run()
+    props.editor.chain().focus().updateAttributes('figure', { src: url.value, alt: altVal, ...sizeAttrs }).run()
     props.editor.chain().focus().updateFigureCaption(caption.value.trim()).run()
   }
   else if (props.editor.isActive('image')) {
     if (hasCaption) {
       props.editor.chain().focus().imageToFigure({ caption: caption.value.trim() }).run()
-      props.editor.chain().focus().updateAttributes('figure', { src: url.value, alt: altVal }).run()
+      props.editor.chain().focus().updateAttributes('figure', { src: url.value, alt: altVal, ...sizeAttrs }).run()
     }
     else {
-      props.editor.chain().focus().updateAttributes('image', { src: url.value, alt: altVal }).run()
+      props.editor.chain().focus().updateAttributes('image', { src: url.value, alt: altVal, ...sizeAttrs }).run()
     }
   }
   else if (hasCaption) {
-    props.editor.chain().focus().setFigure({ src: url.value, caption: caption.value.trim(), alt: altVal ?? undefined }).run()
+    props.editor.chain().focus().setFigure({ src: url.value, caption: caption.value.trim(), alt: altVal ?? undefined, ...sizeAttrs }).run()
   }
   else {
     props.editor
       .chain()
       .focus()
-      .insertContent({ type: 'image', attrs: { src: url.value, alt: altVal ?? undefined } })
+      .insertContent({ type: 'image', attrs: { src: url.value, alt: altVal ?? undefined, ...sizeAttrs } })
       .run()
   }
   url.value = ''
   alt.value = ''
   caption.value = ''
+  width.value = ''
+  height.value = ''
   open.value = false
 }
 
@@ -138,7 +175,22 @@ watch(file, async (newFile) => {
     const attrs = props.editor.getAttributes(isFig ? 'figure' : 'image')
     url.value = attrs.src ?? ''
     alt.value = attrs.alt ?? ''
+    width.value = attrs.width != null ? String(attrs.width) : ''
+    height.value = attrs.height != null ? String(attrs.height) : ''
     caption.value = isFig ? ((props.editor.state.selection as { node?: { textContent?: string } }).node?.textContent ?? '') : ''
+    const src = attrs.src
+    if (src && (attrs.width == null || attrs.height == null)) {
+      const dims = await getImageDimensions(src)
+      if (dims) {
+        const nodeType = isFig ? 'figure' : 'image'
+        props.editor.chain().focus().updateAttributes(nodeType, {
+          width: attrs.width ?? dims.width,
+          height: attrs.height ?? dims.height,
+        }).run()
+        width.value = String(attrs.width ?? dims.width)
+        height.value = String(attrs.height ?? dims.height)
+      }
+    }
   }
   if (imagePos == null)
     open.value = false
@@ -213,7 +265,7 @@ watch(file, async (newFile) => {
             </div>
           </UInput>
         </template>
-        <UFormField label="Alt text(optional)">
+        <UFormField label="Alt text (optional)">
           <UInput
             v-model="alt"
             name="alt"
@@ -223,7 +275,33 @@ watch(file, async (newFile) => {
             @keydown.enter.prevent="setImageFromUrl"
           />
         </UFormField>
-        <UFormField label="Caption(optional)">
+        <div class="grid grid-cols-2 gap-2">
+          <UFormField label="Width">
+            <UInput
+              v-model="width"
+              name="width"
+              type="number"
+              class="w-full"
+              variant="outline"
+              placeholder="Auto"
+              min="1"
+              @keydown.enter.prevent="setImageFromUrl"
+            />
+          </UFormField>
+          <UFormField label="Height">
+            <UInput
+              v-model="height"
+              name="height"
+              type="number"
+              class="w-full"
+              variant="outline"
+              placeholder="Auto"
+              min="1"
+              @keydown.enter.prevent="setImageFromUrl"
+            />
+          </UFormField>
+        </div>
+        <UFormField label="Caption (optional)">
           <UInput
             v-model="caption"
             name="caption"
