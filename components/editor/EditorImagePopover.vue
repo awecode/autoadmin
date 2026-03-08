@@ -93,10 +93,8 @@ async function setImageFromUrl() {
 
   const hasCaption = caption.value.trim().length > 0
   const altVal = alt.value.trim() || null
-  const wTrim = width.value.trim()
-  const hTrim = height.value.trim()
-  let widthVal: number | null = wTrim ? Number(wTrim) : null
-  let heightVal: number | null = hTrim ? Number(hTrim) : null
+  let widthVal: number | null = (width.value === '' || width.value == null) ? null : Number(width.value)
+  let heightVal: number | null = (height.value === '' || height.value == null) ? null : Number(height.value)
   const needDims = (widthVal == null || heightVal == null || Number.isNaN(widthVal) || Number.isNaN(heightVal))
   if (needDims && url.value) {
     const dims = await getImageDimensions(url.value)

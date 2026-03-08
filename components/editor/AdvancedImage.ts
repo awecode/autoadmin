@@ -1,5 +1,32 @@
 import type { EditorToolbarItem } from '@nuxt/ui'
 import type { Editor } from '@tiptap/vue-3'
+import Image from '@tiptap/extension-image'
+
+export const AdvancedImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: element => element.getAttribute('width'),
+        renderHTML: (attributes) => {
+          if (attributes.width == null)
+            return {}
+          return { width: String(attributes.width) }
+        },
+      },
+      height: {
+        default: null,
+        parseHTML: element => element.getAttribute('height'),
+        renderHTML: (attributes) => {
+          if (attributes.height == null)
+            return {}
+          return { height: String(attributes.height) }
+        },
+      },
+    }
+  },
+})
 
 function getSelectedImageOrFigure(editor: Editor) {
   const pos = editor.state.selection.from

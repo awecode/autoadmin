@@ -1,5 +1,14 @@
 import type { Editor } from '@tiptap/vue-3'
 
+function getImageDimensions(src: string): Promise<{ width: number, height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+    img.onerror = () => resolve(null)
+    img.src = src
+  })
+}
+
 export async function uploadFile(file: File, uploadPrefix?: string): Promise<string> {
   const config = useRuntimeConfig()
   const apiPrefix = config.public.apiPrefix
@@ -56,12 +65,16 @@ export async function handleFiles(
       if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
         if (firstImagePos === undefined)
           firstImagePos = pos
+        const dims = await getImageDimensions(uploadedUrl)
+        const sizeAttrs = dims
+          ? { width: dims.width, height: dims.height }
+          : {}
         if (caption) {
           editor
             .chain()
             .insertContentAt(pos, {
               type: 'figure',
-              attrs: { src: uploadedUrl, alt: alt ?? null },
+              attrs: { src: uploadedUrl, alt: alt ?? null, ...sizeAttrs },
               content: [{ type: 'text', text: caption }],
             })
             .focus()
@@ -72,7 +85,7 @@ export async function handleFiles(
             .chain()
             .insertContentAt(pos, {
               type: 'image',
-              attrs: { src: uploadedUrl, alt: alt ?? undefined },
+              attrs: { src: uploadedUrl, alt: alt ?? undefined, ...sizeAttrs },
             })
             .focus()
             .run()
