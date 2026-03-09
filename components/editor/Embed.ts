@@ -39,7 +39,7 @@ export const Embed = Node.create({
   parseHTML() {
     return [{
       tag: 'div[data-type="embed"]',
-      getAttrs: element => {
+      getAttrs: (element) => {
         const el = element as HTMLElement
         const iframe = el.querySelector('iframe')
         return {
@@ -71,7 +71,7 @@ export const Embed = Node.create({
     const wrapperAttrs: Record<string, string> = {
       'data-type': 'embed',
       'data-embed-type': embedType,
-      class: 'embed-node',
+      'class': 'embed-node',
     }
 
     let wrapperStyle = ''
@@ -83,7 +83,7 @@ export const Embed = Node.create({
       if (!trimmed)
         return null
       // If it's purely numeric and doesn't end with %, treat as px
-      if (/^\d+(\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
+      if (/^\d+(?:\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
         return `${trimmed}px`
       return trimmed
     }
@@ -119,7 +119,7 @@ export const Embed = Node.create({
         const trimmed = value.trim()
         if (!trimmed)
           return null
-        if (/^\d+(\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
+        if (/^\d+(?:\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
           return `${trimmed}px`
         return trimmed
       }
@@ -172,4 +172,3 @@ export const Embed = Node.create({
     }
   },
 })
-

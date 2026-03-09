@@ -15,15 +15,11 @@ const width = ref('')
 const height = ref('')
 
 const active = computed(() => props.editor.isActive('embed'))
+const isEditing = computed(() => props.editor.isActive('embed'))
 const disabled = computed(() => {
   if (!props.editor.isEditable)
     return true
   return false
-})
-
-watch(active, (isActive) => {
-  if (isActive && props.autoOpen)
-    open.value = true
 })
 
 function isProbablyCode(input: string) {
@@ -72,7 +68,26 @@ function getYoutubeEmbedSrc(urlStr: string): string | null {
   }
 }
 
+watch(open, (isOpen) => {
+  if (!isOpen || !isEditing.value)
+    return
+  const attrs = props.editor.getAttributes('embed') as { width?: string | null, height?: string | null }
+  width.value = attrs.width ?? ''
+  height.value = attrs.height ?? ''
+})
+
 function setEmbed() {
+  if (isEditing.value) {
+    const attrs: Record<string, unknown> = {}
+    const w = width.value.trim()
+    const h = height.value.trim()
+    attrs.width = w || null
+    attrs.height = h || null
+    props.editor.chain().focus().updateAttributes('embed', attrs).run()
+    open.value = false
+    return
+  }
+
   const input = value.value.trim()
   if (!input)
     return
@@ -153,26 +168,29 @@ function handleKeyDown(event: KeyboardEvent) {
 
     <template #content>
       <div class="flex flex-col gap-2 p-2 min-w-72">
-        <UFormField label="Embed type">
-          <USelect
-            v-model="embedType"
-            :items="[
-              { label: 'YouTube', value: 'youtube' },
-              { label: 'Iframe', value: 'iframe' },
-            ]"
-          />
-        </UFormField>
+        <template v-if="!isEditing">
+          <UFormField label="Embed type">
+            <USelect
+              v-model="embedType"
+              :items="[
+                { label: 'YouTube', value: 'youtube' },
+                { label: 'Iframe', value: 'iframe' },
+              ]"
+            />
+          </UFormField>
 
-        <UFormField label="URL or embed code">
-          <UTextarea
-            v-model="value"
-            name="embed"
-            :rows="4"
-            variant="outline"
-            placeholder="Paste a URL or iframe code"
-            @keydown="handleKeyDown"
-          />
-        </UFormField>
+          <UFormField label="URL or embed code">
+            <UTextarea
+              v-model="value"
+              class="w-full"
+              name="embed"
+              :rows="4"
+              variant="outline"
+              placeholder="Paste a URL or iframe code"
+              @keydown="handleKeyDown"
+            />
+          </UFormField>
+        </template>
 
         <div class="grid grid-cols-2 gap-2">
           <UFormField label="Width">
@@ -182,6 +200,7 @@ function handleKeyDown(event: KeyboardEvent) {
               type="text"
               variant="outline"
               placeholder="100%"
+              @keydown.enter.prevent="setEmbed"
             />
           </UFormField>
           <UFormField label="Height">
@@ -191,6 +210,7 @@ function handleKeyDown(event: KeyboardEvent) {
               type="text"
               variant="outline"
               placeholder="auto"
+              @keydown.enter.prevent="setEmbed"
             />
           </UFormField>
         </div>
@@ -198,11 +218,11 @@ function handleKeyDown(event: KeyboardEvent) {
           color="primary"
           variant="solid"
           size="sm"
-          class="mt-2 w-full"
-          :disabled="!value.trim()"
+          class="mt-2 inline"
+          :disabled="!isEditing && !value.trim()"
           @click="setEmbed"
         >
-          Save
+          {{ isEditing ? 'Update' : 'Embed' }}
         </UButton>
       </div>
     </template>

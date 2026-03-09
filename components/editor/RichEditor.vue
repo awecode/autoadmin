@@ -624,4 +624,8 @@ const suggestionItems = [[{
   width: 100%;
   height: 100%;
 }
+.tiptap .embed-node.ProseMirror-selectednode {
+  outline: 2px solid var(--ui-primary, #3b82f6);
+  border-radius: 0.375rem;
+}
 </style>
