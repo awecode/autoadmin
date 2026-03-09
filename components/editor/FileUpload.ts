@@ -45,19 +45,45 @@ export interface HandleFilesOptions {
   caption?: string | null
 }
 
-/** Derive alt text from filename (strip extension, replace -_ with space, sentence case). */
+/** Simple check: does the filename/path segment look like a word or phrase (not a hash, UUID, or only numbers)? */
+export function looksLikeFilenameWord(name: string): boolean {
+  let stem = name.replace(/\.[^.]+$/, '').trim()
+  try {
+    stem = decodeURIComponent(stem)
+  }
+  catch {
+    /* leave as-is */
+  }
+  if (!stem || stem.length > 40)
+    return false
+  if (/^[0-9a-f-]{36}$/i.test(stem))
+    return false // UUID
+  if (/^[a-f0-9]{20,}$/i.test(stem))
+    return false // long hex hash
+  if (/^\d+$/.test(stem))
+    return false // only digits
+  const hasLetter = /[a-z]/i.test(stem)
+  const hasVowel = /[aeiou]/i.test(stem)
+  return hasLetter && hasVowel
+}
+
+/** Derive alt text from filename (strip extension, replace -_ with space, sentence case). Returns '' if filename doesn't look word-like. */
 export function getAltFromFilename(name: string): string {
+  if (!looksLikeFilenameWord(name))
+    return ''
   const base = name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() || name
   return base.length ? base.charAt(0).toUpperCase() + base.slice(1).toLowerCase() : base
 }
 
-/** Derive alt text from image URL (last path segment, same formatting as getAltFromFilename). */
+/** Derive alt text from image URL (last path segment, same formatting as getAltFromFilename). Returns '' if segment doesn't look word-like. */
 export function getAltFromUrl(urlStr: string): string {
   try {
     const pathname = urlStr.startsWith('http://') || urlStr.startsWith('https://')
       ? new URL(urlStr).pathname
       : urlStr.split('?')[0]
     const name = pathname.split('/').filter(Boolean).pop() ?? ''
+    if (!looksLikeFilenameWord(name))
+      return ''
     return getAltFromFilename(decodeURIComponent(name))
   }
   catch {
