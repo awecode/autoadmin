@@ -331,13 +331,6 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
 
 const suggestionItems = [[{
   type: 'label',
-  label: 'AI',
-}, {
-  kind: 'aiContinue',
-  label: 'Continue writing',
-  icon: 'i-lucide-sparkles',
-}], [{
-  type: 'label',
   label: 'Style',
 }, {
   kind: 'paragraph',
@@ -373,10 +366,6 @@ const suggestionItems = [[{
 }], [{
   type: 'label',
   label: 'Insert',
-}, {
-  kind: 'imageUpload',
-  label: 'Image',
-  icon: 'i-lucide-image',
 }, {
   kind: 'horizontalRule',
   label: 'Horizontal Rule',

@@ -87,15 +87,6 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
         }
       },
     },
-    {
-      icon: 'i-lucide-refresh-cw',
-      tooltip: { text: 'Replace' },
-      onClick: () => {
-        const sel = getSelectedImageOrFigure(editor)
-        if (sel)
-          editor.chain().focus().deleteRange({ from: sel.pos, to: sel.pos + sel.node.nodeSize }).insertContentAt(sel.pos, { type: 'imageUpload' }).run()
-      },
-    },
   ], [{
     icon: 'i-lucide-trash',
     tooltip: { text: 'Delete' },
