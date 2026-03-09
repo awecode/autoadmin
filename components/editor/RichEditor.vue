@@ -104,7 +104,7 @@ const fixedToolbarItems = [[{
   slot: 'link' as const,
   icon: 'i-lucide-link',
 }, {
-  slot: 'imageUpload',
+  slot: 'image' as const,
   icon: 'i-lucide-image',
   tooltip: { text: 'Image' },
 }, {
@@ -225,7 +225,7 @@ const bubbleToolbarItems = computed(() => [[{
   slot: 'link' as const,
   icon: 'i-lucide-link',
 }, {
-  kind: 'imageUpload',
+  kind: 'image',
   icon: 'i-lucide-image',
   tooltip: { text: 'Image' },
 }], [{
@@ -413,7 +413,7 @@ const suggestionItems = [[{
       <template #link>
         <EditorLinkPopover :editor="editor" auto-open />
       </template>
-      <template #imageUpload>
+      <template #image>
         <EditorImagePopover :editor="editor" auto-open />
       </template>
       <template #embed>
@@ -429,7 +429,7 @@ const suggestionItems = [[{
       :items="bubbleToolbarItems"
       layout="bubble"
       :should-show="({ editor, view, state }) => {
-        if (editor.isActive('imageUpload') || editor.isActive('image') || editor.isActive('figure')) {
+        if (editor.isActive('image') || editor.isActive('figure') || editor.isActive('embed')) {
           return false
         }
         const { selection } = state
