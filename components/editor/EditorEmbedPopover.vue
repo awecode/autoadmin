@@ -224,6 +224,7 @@ function handleKeyDown(event: KeyboardEvent) {
                 { label: 'PDF', value: 'pdf' },
                 { label: 'Iframe', value: 'iframe' },
               ]"
+              :ui="{ content: 'w-full' }"
             />
           </UFormField>
 

@@ -100,22 +100,7 @@ const fixedToolbarItems = [[{
   mark: 'code',
   icon: 'i-lucide-code',
   tooltip: { text: 'Code' },
-}], [{
-  slot: 'link' as const,
-  icon: 'i-lucide-link',
 }, {
-  slot: 'image' as const,
-  icon: 'i-lucide-image',
-  tooltip: { text: 'Image' },
-}, {
-  slot: 'embed' as const,
-  icon: 'i-lucide-square-dashed-bottom-code',
-  tooltip: { text: 'Embed' },
-}, {
-  slot: 'table' as const,
-  icon: 'i-lucide-table',
-  tooltip: { text: 'Table' },
-}], [{
   icon: 'i-lucide-align-justify',
   tooltip: { text: 'Text Align' },
   content: {
@@ -142,6 +127,21 @@ const fixedToolbarItems = [[{
     icon: 'i-lucide-align-justify',
     label: 'Align Justify',
   }],
+}], [{
+  slot: 'link' as const,
+  icon: 'i-lucide-link',
+}, {
+  slot: 'image' as const,
+  icon: 'i-lucide-image',
+  tooltip: { text: 'Image' },
+}, {
+  slot: 'embed' as const,
+  icon: 'i-lucide-square-dashed-bottom-code',
+  tooltip: { text: 'Embed' },
+}, {
+  slot: 'table' as const,
+  icon: 'i-lucide-table',
+  tooltip: { text: 'Table' },
 }]] satisfies EditorToolbarItem[][]
 
 const bubbleToolbarItems = computed(() => [[{
@@ -221,14 +221,7 @@ const bubbleToolbarItems = computed(() => [[{
   mark: 'code',
   icon: 'i-lucide-code',
   tooltip: { text: 'Code' },
-}], [{
-  slot: 'link' as const,
-  icon: 'i-lucide-link',
 }, {
-  kind: 'image',
-  icon: 'i-lucide-image',
-  tooltip: { text: 'Image' },
-}], [{
   icon: 'i-lucide-align-justify',
   tooltip: { text: 'Text Align' },
   content: {
@@ -255,6 +248,9 @@ const bubbleToolbarItems = computed(() => [[{
     icon: 'i-lucide-align-justify',
     label: 'Align Justify',
   }],
+}], [{
+  slot: 'link' as const,
+  icon: 'i-lucide-link',
 }]] satisfies EditorToolbarItem[][])
 
 const selectedNode = ref<{ node: JSONContent, pos: number }>()
