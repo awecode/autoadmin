@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, EditorCustomHandlers, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
+import type { DropdownMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import FileHandler from '@tiptap/extension-file-handler'
@@ -18,15 +18,6 @@ import { tableToolbarItems } from './TableToolbar'
 const editorRef = useTemplateRef('editorRef')
 
 const value = ref(``)
-
-const customHandlers = {
-  imageUpload: {
-    canExecute: (editor: Editor) => editor.can().insertContent({ type: 'imageUpload' }),
-    execute: (editor: Editor) => editor.chain().focus().insertContent({ type: 'imageUpload' }),
-    isActive: (editor: Editor) => editor.isActive('imageUpload') || editor.isActive('image') || editor.isActive('figure'),
-    isDisabled: undefined,
-  },
-} satisfies EditorCustomHandlers
 
 const fixedToolbarItems = [[{
   kind: 'undo',
@@ -145,7 +136,7 @@ const fixedToolbarItems = [[{
     icon: 'i-lucide-align-justify',
     label: 'Align Justify',
   }],
-}]] satisfies EditorToolbarItem<typeof customHandlers>[][]
+}]] satisfies EditorToolbarItem[][]
 
 const bubbleToolbarItems = computed(() => [[{
   label: 'Turn into',
@@ -258,7 +249,7 @@ const bubbleToolbarItems = computed(() => [[{
     icon: 'i-lucide-align-justify',
     label: 'Align Justify',
   }],
-}]] satisfies EditorToolbarItem<typeof customHandlers>[][])
+}]] satisfies EditorToolbarItem[][])
 
 const selectedNode = ref<{ node: JSONContent, pos: number }>()
 
@@ -333,7 +324,7 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
       label: 'Delete',
       icon: 'i-lucide-trash',
     },
-  ], ...(selectedNode.value?.node?.type === 'image' ? [[{ label: 'Add caption', icon: 'i-lucide-type', onSelect: () => editor.chain().focus().imageToFigure().run() }]] : selectedNode.value?.node?.type === 'figure' ? [[{ label: 'Remove caption', icon: 'i-lucide-panel-top', onSelect: () => editor.chain().focus().figureToImage().run() }]] : [])], customHandlers) as DropdownMenuItem[][]
+  ], ...(selectedNode.value?.node?.type === 'image' ? [[{ label: 'Add caption', icon: 'i-lucide-type', onSelect: () => editor.chain().focus().imageToFigure().run() }]] : selectedNode.value?.node?.type === 'figure' ? [[{ label: 'Remove caption', icon: 'i-lucide-panel-top', onSelect: () => editor.chain().focus().figureToImage().run() }]] : [])]) as DropdownMenuItem[][]
 }
 
 const suggestionItems = [[{
@@ -377,7 +368,7 @@ const suggestionItems = [[{
   kind: 'horizontalRule',
   label: 'Horizontal Rule',
   icon: 'i-lucide-separator-horizontal',
-}]] satisfies EditorSuggestionMenuItem<typeof customHandlers>[][]
+}]] satisfies EditorSuggestionMenuItem[][]
 </script>
 
 <template>
@@ -407,7 +398,6 @@ const suggestionItems = [[{
       },
       ),
     ]"
-    :handlers="customHandlers"
     placeholder="Write, type '/' for commands..."
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
     class="w-full"
@@ -509,10 +499,7 @@ const suggestionItems = [[{
   height: auto;
   max-width: 100%;
 }
-.tiptap {
-  display: flow-root;
-}
-
+/* Media text */
 .media-text-left,
 .media-text-right {
   display: grid;
@@ -608,31 +595,8 @@ const suggestionItems = [[{
   position: absolute;
   z-index: 2;
 }
-.tiptap table .column-resize-handle {
-  background-color: var(--ui-color-purple-500);
-  bottom: -2px;
-  pointer-events: none;
-  position: absolute;
-  right: -2px;
-  top: 0;
-  width: 4px;
-}
 .tiptap .tableWrapper {
   margin: 1.5rem 0;
   overflow-x: auto;
 }
-.tiptap.resize-cursor {
-  cursor: ew-resize;
-  cursor: col-resize;
-}
-/* .tiptap table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #e2e8f0;
-}
-.tiptap table th,
-.tiptap table td {
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem;
-} */
 </style>
