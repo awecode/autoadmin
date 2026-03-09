@@ -1,4 +1,5 @@
 import { Node } from '@tiptap/core'
+import { NodeSelection } from '@tiptap/pm/state'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -129,6 +130,7 @@ export const Embed = Node.create({
       iframe.setAttribute('contenteditable', 'false')
       iframe.setAttribute('tabindex', '-1')
       iframe.style.display = 'block'
+      iframe.style.pointerEvents = 'none'
 
       const widthAttr = node.attrs.width as string | null
       const heightAttr = node.attrs.height as string | null
@@ -145,6 +147,7 @@ export const Embed = Node.create({
 
       container.appendChild(iframe)
 
+      // Single-click: select the embed node in the editor.
       container.addEventListener('click', (event) => {
         const pos = typeof getPos === 'function' ? getPos() : undefined
         if (typeof pos === 'number') {
@@ -154,8 +157,31 @@ export const Embed = Node.create({
         }
       })
 
+      // Double-click: enable interaction with the iframe content.
+      container.addEventListener('dblclick', (event) => {
+        iframe.style.pointerEvents = 'auto'
+        event.stopPropagation()
+      })
+
+      // When selection moves away from this node, disable interaction again.
+      const onSelectionUpdate = () => {
+        const { state } = editor
+        const { selection } = state
+        const pos = typeof getPos === 'function' ? getPos() : undefined
+        if (typeof pos !== 'number')
+          return
+        if (selection instanceof NodeSelection && selection.from === pos)
+          return
+        iframe.style.pointerEvents = 'none'
+      }
+
+      editor.on('selectionUpdate', onSelectionUpdate)
+
       return {
         dom: container,
+        destroy() {
+          editor.off('selectionUpdate', onSelectionUpdate)
+        },
       }
     }
   },
