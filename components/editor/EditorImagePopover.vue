@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
-import { handleFiles } from './FileUpload'
+import { getAltFromFilename, handleFiles } from './FileUpload'
 
 const props = defineProps<{
   editor: Editor
@@ -167,6 +167,8 @@ function handleKeyDown(event: KeyboardEvent) {
 watch(file, async (newFile) => {
   if (!newFile)
     return
+  if (!alt.value.trim())
+    alt.value = getAltFromFilename(newFile.name)
   const pendingAlt = alt.value.trim() || null
   const pendingCaption = caption.value.trim() || null
   isUploading.value = true

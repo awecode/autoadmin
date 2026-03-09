@@ -6,6 +6,11 @@ export const AdvancedImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
+      alt: {
+        default: '',
+        parseHTML: element => element.getAttribute('alt') ?? '',
+        renderHTML: attributes => ({ alt: attributes.alt ?? '' }),
+      },
       width: {
         default: null,
         parseHTML: element => element.getAttribute('width'),

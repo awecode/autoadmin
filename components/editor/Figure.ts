@@ -46,7 +46,8 @@ export const Figure = Node.create({
       },
       alt: {
         default: null,
-        parseHTML: element => element.querySelector('img')?.getAttribute('alt'),
+        parseHTML: element => element.querySelector('img')?.getAttribute('alt') ?? '',
+        renderHTML: attributes => ({ alt: attributes.alt ?? '' }),
       },
       title: {
         default: null,
@@ -89,8 +90,7 @@ export const Figure = Node.create({
       img.setAttribute('contenteditable', 'false')
       if (node.attrs.src)
         img.setAttribute('src', node.attrs.src)
-      if (node.attrs.alt)
-        img.setAttribute('alt', node.attrs.alt)
+      img.setAttribute('alt', node.attrs.alt ?? '')
       if (node.attrs.title)
         img.setAttribute('title', node.attrs.title)
       if (node.attrs.width != null)

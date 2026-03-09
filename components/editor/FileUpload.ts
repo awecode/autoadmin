@@ -45,6 +45,12 @@ export interface HandleFilesOptions {
   caption?: string | null
 }
 
+/** Derive alt text from filename (strip extension, replace -_ with space, sentence case). */
+export function getAltFromFilename(name: string): string {
+  const base = name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() || name
+  return base.length ? base.charAt(0).toUpperCase() + base.slice(1).toLowerCase() : base
+}
+
 /** Returns the document position of the first inserted image/figure, or undefined if none. */
 export async function handleFiles(
   files: File[],
@@ -57,7 +63,6 @@ export async function handleFiles(
     pos = editor.state.selection.anchor
   }
   let firstImagePos: number | undefined
-  const alt = options?.alt?.trim() || undefined
   const caption = options?.caption?.trim() || undefined
   for (const file of files) {
     try {
@@ -65,6 +70,7 @@ export async function handleFiles(
       if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
         if (firstImagePos === undefined)
           firstImagePos = pos
+        const alt = (options?.alt?.trim() || undefined) ?? getAltFromFilename(file.name)
         const dims = await getImageDimensions(uploadedUrl)
         const sizeAttrs = dims
           ? { width: dims.width, height: dims.height }
@@ -74,7 +80,7 @@ export async function handleFiles(
             .chain()
             .insertContentAt(pos, {
               type: 'figure',
-              attrs: { src: uploadedUrl, alt: alt ?? null, ...sizeAttrs },
+              attrs: { src: uploadedUrl, alt: alt ?? '', ...sizeAttrs },
               content: [{ type: 'text', text: caption }],
             })
             .focus()
@@ -85,7 +91,7 @@ export async function handleFiles(
             .chain()
             .insertContentAt(pos, {
               type: 'image',
-              attrs: { src: uploadedUrl, alt: alt ?? undefined, ...sizeAttrs },
+              attrs: { src: uploadedUrl, alt: alt ?? '', ...sizeAttrs },
             })
             .focus()
             .run()
