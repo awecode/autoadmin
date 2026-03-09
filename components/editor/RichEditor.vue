@@ -611,21 +611,39 @@ const suggestionItems = [[{
 }
 
 /* Embed (iframe) */
-.tiptap .embed-node[data-embed-type="youtube"] {
+
+.tiptap .embed-node.ProseMirror-selectednode {
+  outline: 2px solid var(--ui-primary, #3b82f6);
+  border-radius: 0.375rem;
+}
+
+.embed-node[data-embed-type="youtube"] {
   position: relative;
   width: 100%;
   height: 0;
   padding-bottom: 56.25%;
 }
-.tiptap .embed-node[data-embed-type="youtube"] iframe {
+.embed-node iframe {
+  width: 100%;
+  height: 100%;
+}
+.embed-node[data-embed-type="youtube"] iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* .embed-node[data-embed-type="youtube"] {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+}
+.embed-node[data-embed-type="youtube"] iframe {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-}
-.tiptap .embed-node.ProseMirror-selectednode {
-  outline: 2px solid var(--ui-primary, #3b82f6);
-  border-radius: 0.375rem;
-}
+} */
 </style>

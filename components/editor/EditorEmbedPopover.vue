@@ -6,7 +6,7 @@ const props = defineProps<{
   autoOpen?: boolean
 }>()
 
-type EmbedType = 'youtube' | 'iframe' | 'facebook'
+type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin'
 
 const open = ref(false)
 const embedType = ref<EmbedType>('youtube')
@@ -81,6 +81,23 @@ function getFacebookEmbedSrc(urlStr: string): string | null {
   }
 }
 
+function getLinkedInEmbedSrc(urlStr: string): string | null {
+  try {
+    const url = new URL(urlStr)
+    if (!/linkedin\.com/.test(url.hostname))
+      return null
+    // If it's already an embed URL, keep as is.
+    if (url.pathname.includes('/embed/'))
+      return url.toString()
+    // Common feed URL: /feed/update/urn:li:activity:...
+    url.pathname = url.pathname.replace('/feed/update/', '/embed/feed/update/')
+    return url.toString()
+  }
+  catch {
+    return null
+  }
+}
+
 watch(open, (isOpen) => {
   if (!isOpen || !isEditing.value)
     return
@@ -121,6 +138,8 @@ function setEmbed() {
       kind = 'youtube'
     else if (/facebook\.com/.test(src))
       kind = 'facebook'
+    else if (/linkedin\.com/.test(src))
+      kind = 'linkedin'
   }
   else {
     if (!/^https?:\/\//i.test(input))
@@ -130,6 +149,9 @@ function setEmbed() {
     }
     else if (kind === 'facebook') {
       src = getFacebookEmbedSrc(input)
+    }
+    else if (kind === 'linkedin') {
+      src = getLinkedInEmbedSrc(input)
     }
     else {
       src = input
@@ -193,6 +215,7 @@ function handleKeyDown(event: KeyboardEvent) {
               :items="[
                 { label: 'YouTube', value: 'youtube' },
                 { label: 'Facebook post', value: 'facebook' },
+                { label: 'LinkedIn post', value: 'linkedin' },
                 { label: 'Iframe', value: 'iframe' },
               ]"
             />
