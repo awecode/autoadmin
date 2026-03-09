@@ -6,7 +6,7 @@ const props = defineProps<{
   autoOpen?: boolean
 }>()
 
-type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin'
+type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf'
 
 const open = ref(false)
 const embedType = ref<EmbedType>('youtube')
@@ -140,6 +140,8 @@ function setEmbed() {
       kind = 'facebook'
     else if (/linkedin\.com/.test(src))
       kind = 'linkedin'
+    else if (/\.pdf(?:[?#]|$)/i.test(src))
+      kind = 'pdf'
   }
   else {
     if (!/^https?:\/\//i.test(input))
@@ -152,6 +154,9 @@ function setEmbed() {
     }
     else if (kind === 'linkedin') {
       src = getLinkedInEmbedSrc(input)
+    }
+    else if (kind === 'pdf') {
+      src = input
     }
     else {
       src = input
@@ -216,6 +221,7 @@ function handleKeyDown(event: KeyboardEvent) {
                 { label: 'YouTube', value: 'youtube' },
                 { label: 'Facebook post', value: 'facebook' },
                 { label: 'LinkedIn post', value: 'linkedin' },
+                { label: 'PDF', value: 'pdf' },
                 { label: 'Iframe', value: 'iframe' },
               ]"
             />
