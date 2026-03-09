@@ -3,14 +3,17 @@ import type { DropdownMenuItem, EditorCustomHandlers, EditorSuggestionMenuItem, 
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import FileHandler from '@tiptap/extension-file-handler'
+import { TableKit } from '@tiptap/extension-table'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
 import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
 import EditorImagePopover from './EditorImagePopover.vue'
 import EditorLinkPopover from './EditorLinkPopover.vue'
+import EditorTablePopover from './EditorTablePopover.vue'
 import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
 import { MediaText } from './MediaText'
+import { tableToolbarItems } from './TableToolbar'
 
 const editorRef = useTemplateRef('editorRef')
 
@@ -111,6 +114,10 @@ const fixedToolbarItems = [[{
   slot: 'imageUpload',
   icon: 'i-lucide-image',
   tooltip: { text: 'Image' },
+}, {
+  slot: 'table' as const,
+  icon: 'i-lucide-table',
+  tooltip: { text: 'Table' },
 }], [{
   icon: 'i-lucide-align-justify',
   tooltip: { text: 'Text Align' },
@@ -380,6 +387,7 @@ const suggestionItems = [[{
     v-model="value"
     content-type="html"
     :extensions="[
+      TableKit,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       AdvancedImage.configure({
         HTMLAttributes: {
@@ -410,6 +418,9 @@ const suggestionItems = [[{
       </template>
       <template #imageUpload>
         <EditorImagePopover :editor="editor" auto-open />
+      </template>
+      <template #table>
+        <EditorTablePopover :editor="editor" />
       </template>
     </UEditorToolbar>
 
@@ -444,6 +455,13 @@ const suggestionItems = [[{
           return true
         return false
       }"
+    />
+
+    <UEditorToolbar
+      :editor="editor"
+      :items="tableToolbarItems(editor)"
+      layout="bubble"
+      :should-show="({ editor }) => editor.isActive('table')"
     />
 
     <UEditorDragHandle v-slot="{ ui, onClick }" :editor="editor" @node-change="selectedNode = $event">
@@ -552,4 +570,69 @@ const suggestionItems = [[{
   outline: 2px solid var(--ui-primary, #3b82f6);
   border-radius: 0.375rem;
 }
+
+/* Table-specific styling */
+.tiptap table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+.tiptap table td,
+.tiptap table th {
+  border: 1px solid var(--ui-color-neutral-200);
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+.tiptap table td > *,
+.tiptap table th > * {
+  margin-bottom: 0;
+}
+.tiptap table th {
+  background-color: var(--ui-color-neutral-100);
+  font-weight: bold;
+  text-align: left;
+}
+.tiptap table .selectedCell:after {
+  background: var(--ui-color-neutral-300);
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+.tiptap table .column-resize-handle {
+  background-color: var(--ui-color-purple-500);
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
+}
+.tiptap .tableWrapper {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+.tiptap.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+/* .tiptap table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+}
+.tiptap table th,
+.tiptap table td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+} */
 </style>
