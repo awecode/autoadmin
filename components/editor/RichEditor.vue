@@ -515,10 +515,10 @@ const suggestionItems = [[{
   align-items: start;
 }
 .media-text-left {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 1fr;
 }
 .media-text-right {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto;
 }
 .media-text-left > *:first-child {
   grid-column: 1;
@@ -541,12 +541,11 @@ const suggestionItems = [[{
   flex-direction: column;
   gap: 0.5rem;
   margin: 1rem 0;
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
 }
 .tiptap figure > img {
   display: block;
-  width: 100%;
   height: auto;
   max-width: 100%;
   margin: 0;

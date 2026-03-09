@@ -273,52 +273,55 @@ watch(file, async (newFile) => {
             </div>
           </UInput>
         </template>
-        <UFormField label="Alt text (optional)">
-          <UInput
-            v-model="alt"
-            name="alt"
-            class="w-full"
-            variant="outline"
-            placeholder="Describe the image for screen readers"
-            @keydown.enter.prevent="setImageFromUrl"
-          />
-        </UFormField>
-        <div class="grid grid-cols-2 gap-2">
-          <UFormField label="Width">
+        <div class="flex flex-col gap-2">
+          <span class="text-xs font-medium text-dimmed">Optional fields</span>
+          <UFormField label="Alt text">
             <UInput
-              v-model="width"
-              name="width"
-              type="number"
+              v-model="alt"
+              name="alt"
               class="w-full"
               variant="outline"
-              placeholder="Auto"
-              min="1"
+              placeholder="Describe the image for screen readers"
               @keydown.enter.prevent="setImageFromUrl"
             />
           </UFormField>
-          <UFormField label="Height">
+          <UFormField label="Caption">
             <UInput
-              v-model="height"
-              name="height"
-              type="number"
+              v-model="caption"
+              name="caption"
               class="w-full"
               variant="outline"
-              placeholder="Auto"
-              min="1"
+              placeholder="Add a caption for the image"
               @keydown.enter.prevent="setImageFromUrl"
             />
           </UFormField>
+          <div class="grid grid-cols-2 gap-2">
+            <UFormField label="Width">
+              <UInput
+                v-model="width"
+                name="width"
+                type="number"
+                class="w-full"
+                variant="outline"
+                placeholder="Auto"
+                min="1"
+                @keydown.enter.prevent="setImageFromUrl"
+              />
+            </UFormField>
+            <UFormField label="Height">
+              <UInput
+                v-model="height"
+                name="height"
+                type="number"
+                class="w-full"
+                variant="outline"
+                placeholder="Auto"
+                min="1"
+                @keydown.enter.prevent="setImageFromUrl"
+              />
+            </UFormField>
+          </div>
         </div>
-        <UFormField label="Caption (optional)">
-          <UInput
-            v-model="caption"
-            name="caption"
-            class="w-full"
-            variant="outline"
-            placeholder="Add a caption for the image"
-            @keydown.enter.prevent="setImageFromUrl"
-          />
-        </UFormField>
       </div>
     </template>
   </UPopover>
