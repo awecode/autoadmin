@@ -303,7 +303,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
 
         <div v-else-if="field.type === 'rich-text'">
           <!-- Rich text editor -->
-          <RichTextEditor
+          <EditorRichText
             v-model="fieldValue"
             class="w-full"
             :attrs="field.inputAttrs"

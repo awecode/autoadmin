@@ -383,6 +383,7 @@ const suggestionItems = [[{
   <UEditor
     v-slot="{ editor, handlers }"
     v-model="value"
+    v-bind="attrs"
     content-type="html"
     :extensions="[
       TableKit,
@@ -408,7 +409,7 @@ const suggestionItems = [[{
     ]"
     :placeholder="attrs?.placeholder || 'Write, type / for commands...'"
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
-    class="w-full"
+    class="p-0"
   >
     <UEditorToolbar :editor="editor" :items="fixedToolbarItems" class="border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto">
       <template #link>
