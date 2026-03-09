@@ -497,8 +497,10 @@ const suggestionItems = [[{
 </template>
 
 <style>
-.tiptap .content-image{
+.tiptap img{
   display: inline-block;
+  height: auto;
+  max-width: 100%;
 }
 .tiptap {
   display: flow-root;
@@ -521,7 +523,6 @@ const suggestionItems = [[{
 .media-text-left > *:first-child {
   grid-column: 1;
   grid-row: 1 / span 100;
-  width: 100%;
 }
 .media-text-left > *:not(:first-child) {
   grid-column: 2;
@@ -529,7 +530,6 @@ const suggestionItems = [[{
 .media-text-right > *:first-child {
   grid-column: 2;
   grid-row: 1 / span 100;
-  width: 100%;
 }
 .media-text-right > *:not(:first-child) {
   grid-column: 1;
