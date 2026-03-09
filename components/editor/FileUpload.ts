@@ -51,6 +51,20 @@ export function getAltFromFilename(name: string): string {
   return base.length ? base.charAt(0).toUpperCase() + base.slice(1).toLowerCase() : base
 }
 
+/** Derive alt text from image URL (last path segment, same formatting as getAltFromFilename). */
+export function getAltFromUrl(urlStr: string): string {
+  try {
+    const pathname = urlStr.startsWith('http://') || urlStr.startsWith('https://')
+      ? new URL(urlStr).pathname
+      : urlStr.split('?')[0]
+    const name = pathname.split('/').filter(Boolean).pop() ?? ''
+    return getAltFromFilename(decodeURIComponent(name))
+  }
+  catch {
+    return ''
+  }
+}
+
 /** Returns the document position of the first inserted image/figure, or undefined if none. */
 export async function handleFiles(
   files: File[],

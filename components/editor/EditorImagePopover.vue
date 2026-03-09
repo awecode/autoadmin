@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
-import { getAltFromFilename, handleFiles } from './FileUpload'
+import { getAltFromFilename, getAltFromUrl, handleFiles } from './FileUpload'
 
 const props = defineProps<{
   editor: Editor
@@ -99,7 +99,8 @@ watch(open, (isOpen) => {
 async function setImageFromUrl() {
   if (!url.value)
     return
-
+  if (!alt.value.trim())
+    alt.value = getAltFromUrl(url.value)
   const hasCaption = caption.value.trim().length > 0
   const altVal = alt.value.trim() || null
   let widthVal: number | null = (width.value === '' || width.value == null) ? null : Number(width.value)
