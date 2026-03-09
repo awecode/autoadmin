@@ -4,7 +4,7 @@ import { NodeSelection } from '@tiptap/pm/state'
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     embed: {
-      setEmbed: (attrs: { embedType: 'youtube' | 'iframe', src: string, width?: number | null, height?: number | null }) => ReturnType
+      setEmbed: (attrs: { embedType: 'youtube' | 'iframe' | 'facebook', src: string, width?: number | null, height?: number | null }) => ReturnType
     }
   }
 }
@@ -54,7 +54,7 @@ export const Embed = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const embedType = (HTMLAttributes.embedType as 'youtube' | 'iframe') ?? 'iframe'
+    const embedType = (HTMLAttributes.embedType as 'youtube' | 'iframe' | 'facebook') ?? 'iframe'
     const src = HTMLAttributes.src as string | null
     const widthAttr = HTMLAttributes.width as string | null
     const heightAttr = HTMLAttributes.height as string | null
@@ -113,6 +113,8 @@ export const Embed = Node.create({
     return ({ editor, node, getPos }) => {
       const container = document.createElement('div')
       container.classList.add('embed-node')
+      container.setAttribute('data-type', 'embed')
+      container.setAttribute('data-embed-type', (node.attrs.embedType as string) ?? 'iframe')
 
       const normalizeDim = (value: string | null) => {
         if (!value)

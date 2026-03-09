@@ -611,13 +611,13 @@ const suggestionItems = [[{
 }
 
 /* Embed (iframe) */
-.tiptap .embed-node {
+.tiptap .embed-node[data-embed-type="youtube"] {
   position: relative;
   width: 100%;
   height: 0;
   padding-bottom: 56.25%;
 }
-.tiptap .embed-node iframe {
+.tiptap .embed-node[data-embed-type="youtube"] iframe {
   position: absolute;
   top: 0;
   left: 0;

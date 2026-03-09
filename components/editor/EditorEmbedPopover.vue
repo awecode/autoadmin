@@ -6,7 +6,7 @@ const props = defineProps<{
   autoOpen?: boolean
 }>()
 
-type EmbedType = 'youtube' | 'iframe'
+type EmbedType = 'youtube' | 'iframe' | 'facebook'
 
 const open = ref(false)
 const embedType = ref<EmbedType>('youtube')
@@ -68,6 +68,19 @@ function getYoutubeEmbedSrc(urlStr: string): string | null {
   }
 }
 
+function getFacebookEmbedSrc(urlStr: string): string | null {
+  try {
+    const url = new URL(urlStr)
+    // Basic check that it's a Facebook URL
+    if (!/facebook\.com/.test(url.hostname))
+      return null
+    return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url.toString())}`
+  }
+  catch {
+    return null
+  }
+}
+
 watch(open, (isOpen) => {
   if (!isOpen || !isEditing.value)
     return
@@ -106,12 +119,17 @@ function setEmbed() {
     parsedHeight = parsed.height
     if (/youtu\.be|youtube\.com/.test(src))
       kind = 'youtube'
+    else if (/facebook\.com/.test(src))
+      kind = 'facebook'
   }
   else {
     if (!/^https?:\/\//i.test(input))
       return
     if (kind === 'youtube') {
       src = getYoutubeEmbedSrc(input)
+    }
+    else if (kind === 'facebook') {
+      src = getFacebookEmbedSrc(input)
     }
     else {
       src = input
@@ -174,6 +192,7 @@ function handleKeyDown(event: KeyboardEvent) {
               v-model="embedType"
               :items="[
                 { label: 'YouTube', value: 'youtube' },
+                { label: 'Facebook post', value: 'facebook' },
                 { label: 'Iframe', value: 'iframe' },
               ]"
             />
