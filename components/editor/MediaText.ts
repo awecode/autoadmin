@@ -1,6 +1,9 @@
 import type { EditorToolbarItem } from '@nuxt/ui'
 import type { Editor } from '@tiptap/core'
 import { mergeAttributes, Node } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+
+const mediaTextUnwrapPluginKey = new PluginKey('mediaTextUnwrap')
 
 export const MediaText = Node.create({
   name: 'mediaText',
@@ -27,6 +30,39 @@ export const MediaText = Node.create({
         'class': `media-text-${HTMLAttributes.layout}`, // Drives the CSS Grid
       }),
       0, // The real Tiptap image node and text nodes are rendered here
+    ]
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: mediaTextUnwrapPluginKey,
+        appendTransaction(transactions, _oldState, state) {
+          const toUnwrap: { pos: number, node: import('@tiptap/pm/model').Node }[] = []
+          state.doc.descendants((node, pos) => {
+            if (node.type.name !== 'mediaText')
+              return
+            const first = node.firstChild
+            const emptyOrNoMedia = !first
+              || (first.type.name !== 'image' && first.type.name !== 'figure')
+              || (first.attrs?.src == null || String(first.attrs?.src).trim() === '')
+            if (emptyOrNoMedia)
+              toUnwrap.push({ pos, node })
+          })
+          if (toUnwrap.length === 0)
+            return null
+          toUnwrap.sort((a, b) => b.pos - a.pos)
+          let tr = state.tr
+          for (const { pos, node } of toUnwrap) {
+            const first = node.firstChild
+            const blockContent = (first?.type.name === 'image' || first?.type.name === 'figure')
+              ? node.content.cut(first.nodeSize, node.content.size)
+              : node.content
+            tr = tr.delete(pos, pos + node.nodeSize).insert(pos, blockContent)
+          }
+          return tr
+        },
+      }),
     ]
   },
 })
