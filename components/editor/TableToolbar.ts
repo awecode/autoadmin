@@ -48,14 +48,14 @@ export function tableToolbarItems(editor: Editor): EditorToolbarItem[][] {
     },
   ], [
     {
-      icon: 'i-lucide-heading-1',
+      icon: 'i-lucide-layout-panel-top',
       tooltip: { text: 'Toggle header row' },
       onClick: () => {
         editor.chain().focus().toggleHeaderRow().run()
       },
     },
     {
-      icon: 'i-lucide-heading-2',
+      icon: 'i-lucide-layout-panel-left',
       tooltip: { text: 'Toggle header column' },
       onClick: () => {
         editor.chain().focus().toggleHeaderColumn().run()
