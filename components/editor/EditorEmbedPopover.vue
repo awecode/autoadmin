@@ -11,6 +11,8 @@ type EmbedType = 'youtube' | 'iframe'
 const open = ref(false)
 const embedType = ref<EmbedType>('youtube')
 const value = ref('')
+const width = ref('')
+const height = ref('')
 
 const active = computed(() => props.editor.isActive('embed'))
 const disabled = computed(() => {
@@ -35,11 +37,13 @@ function parseIframeFromHtml(html: string) {
     if (!iframe)
       return null
     const src = iframe.getAttribute('src') || ''
-    const widthAttr = iframe.getAttribute('width')
-    const heightAttr = iframe.getAttribute('height')
-    const width = widthAttr ? Number(widthAttr) || null : null
-    const height = heightAttr ? Number(heightAttr) || null : null
-    return { src, width, height }
+    const widthAttr = iframe.getAttribute('width') || ''
+    const heightAttr = iframe.getAttribute('height') || ''
+    return {
+      src,
+      width: widthAttr || null,
+      height: heightAttr || null,
+    }
   }
   catch {
     return null
@@ -75,16 +79,16 @@ function setEmbed() {
 
   let kind: EmbedType = embedType.value
   let src: string | null = null
-  let width: number | null = null
-  let height: number | null = null
+  let parsedWidth: string | null = null
+  let parsedHeight: string | null = null
 
   if (isProbablyCode(input)) {
     const parsed = parseIframeFromHtml(input)
     if (!parsed || !parsed.src)
       return
     src = parsed.src
-    width = parsed.width
-    height = parsed.height
+    parsedWidth = parsed.width
+    parsedHeight = parsed.height
     if (/youtu\.be|youtube\.com/.test(src))
       kind = 'youtube'
   }
@@ -106,10 +110,12 @@ function setEmbed() {
     embedType: kind,
     src,
   }
-  if (width != null)
-    attrs.width = width
-  if (height != null)
-    attrs.height = height
+  const finalWidth = width.value.trim() || parsedWidth
+  const finalHeight = height.value.trim() || parsedHeight
+  if (finalWidth)
+    attrs.width = finalWidth
+  if (finalHeight)
+    attrs.height = finalHeight
 
   props.editor.chain().focus().insertContent({
     type: 'embed',
@@ -118,6 +124,8 @@ function setEmbed() {
 
   open.value = false
   value.value = ''
+  width.value = ''
+  height.value = ''
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -132,7 +140,7 @@ function handleKeyDown(event: KeyboardEvent) {
   <UPopover v-model:open="open" :ui="{ content: 'p-0.5' }">
     <UTooltip text="Embed">
       <UButton
-        icon="i-lucide-play-square"
+        icon="i-lucide-square-dashed-bottom-code"
         color="neutral"
         active-color="primary"
         variant="ghost"
@@ -156,26 +164,46 @@ function handleKeyDown(event: KeyboardEvent) {
         </UFormField>
 
         <UFormField label="URL or embed code">
-          <UInput
+          <UTextarea
             v-model="value"
             name="embed"
-            type="text"
+            :rows="4"
             variant="outline"
             placeholder="Paste a URL or iframe code"
             @keydown="handleKeyDown"
-          >
-            <div class="flex items-center mr-0.5">
-              <UButton
-                icon="i-lucide-corner-down-left"
-                variant="ghost"
-                size="sm"
-                :disabled="!value"
-                title="Insert embed"
-                @click="setEmbed"
-              />
-            </div>
-          </UInput>
+          />
         </UFormField>
+
+        <div class="grid grid-cols-2 gap-2">
+          <UFormField label="Width">
+            <UInput
+              v-model="width"
+              name="width"
+              type="text"
+              variant="outline"
+              placeholder="100%"
+            />
+          </UFormField>
+          <UFormField label="Height">
+            <UInput
+              v-model="height"
+              name="height"
+              type="text"
+              variant="outline"
+              placeholder="auto"
+            />
+          </UFormField>
+        </div>
+        <UButton
+          color="primary"
+          variant="solid"
+          size="sm"
+          class="mt-2 w-full"
+          :disabled="!value.trim()"
+          @click="setEmbed"
+        >
+          Save
+        </UButton>
       </div>
     </template>
   </UPopover>

@@ -109,7 +109,7 @@ const fixedToolbarItems = [[{
   tooltip: { text: 'Image' },
 }, {
   slot: 'embed' as const,
-  icon: 'i-lucide-play-square',
+  icon: 'i-lucide-square-dashed-bottom-code',
   tooltip: { text: 'Embed' },
 }, {
   slot: 'table' as const,
@@ -608,5 +608,20 @@ const suggestionItems = [[{
 .tiptap .tableWrapper {
   margin: 1.5rem 0;
   overflow-x: auto;
+}
+
+/* Embed (iframe) */
+.tiptap .embed-node {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+}
+.tiptap .embed-node iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 </style>

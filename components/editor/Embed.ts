@@ -55,17 +55,12 @@ export const Embed = Node.create({
   renderHTML({ HTMLAttributes }) {
     const embedType = (HTMLAttributes.embedType as 'youtube' | 'iframe') ?? 'iframe'
     const src = HTMLAttributes.src as string | null
-    const width = HTMLAttributes.width
-    const height = HTMLAttributes.height
+    const widthAttr = HTMLAttributes.width as string | null
+    const heightAttr = HTMLAttributes.height as string | null
 
     const iframeAttrs: Record<string, string> = {}
     if (src)
       iframeAttrs.src = src
-    if (width != null)
-      iframeAttrs.width = String(width)
-    if (height != null)
-      iframeAttrs.height = String(height)
-
     iframeAttrs.frameborder = '0'
 
     if (embedType === 'youtube') {
@@ -73,15 +68,96 @@ export const Embed = Node.create({
       iframeAttrs.allowfullscreen = 'true'
     }
 
+    const wrapperAttrs: Record<string, string> = {
+      'data-type': 'embed',
+      'data-embed-type': embedType,
+      class: 'embed-node',
+    }
+
+    let wrapperStyle = ''
+    let iframeStyle = ''
+    const normalizeDim = (value: string | null) => {
+      if (!value)
+        return null
+      const trimmed = value.trim()
+      if (!trimmed)
+        return null
+      // If it's purely numeric and doesn't end with %, treat as px
+      if (/^\d+(\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
+        return `${trimmed}px`
+      return trimmed
+    }
+
+    const normWidth = normalizeDim(widthAttr)
+    const normHeight = normalizeDim(heightAttr)
+
+    if (normWidth)
+      wrapperStyle += `width:${normWidth};`
+    if (normHeight)
+      iframeStyle += `height:${normHeight};`
+
+    if (wrapperStyle)
+      wrapperAttrs.style = wrapperStyle
+    if (iframeStyle)
+      iframeAttrs.style = iframeStyle
+
     return [
       'div',
-      {
-        'data-type': 'embed',
-        'data-embed-type': embedType,
-        class: 'embed-node',
-      },
+      wrapperAttrs,
       ['iframe', iframeAttrs],
     ]
+  },
+
+  addNodeView() {
+    return ({ editor, node, getPos }) => {
+      const container = document.createElement('div')
+      container.classList.add('embed-node')
+
+      const normalizeDim = (value: string | null) => {
+        if (!value)
+          return null
+        const trimmed = value.trim()
+        if (!trimmed)
+          return null
+        if (/^\d+(\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
+          return `${trimmed}px`
+        return trimmed
+      }
+
+      const iframe = document.createElement('iframe')
+      iframe.setAttribute('frameborder', '0')
+      iframe.setAttribute('contenteditable', 'false')
+      iframe.setAttribute('tabindex', '-1')
+      iframe.style.display = 'block'
+
+      const widthAttr = node.attrs.width as string | null
+      const heightAttr = node.attrs.height as string | null
+      const normWidth = normalizeDim(widthAttr)
+      const normHeight = normalizeDim(heightAttr)
+
+      if (normWidth)
+        container.style.width = normWidth
+      if (normHeight)
+        iframe.style.height = normHeight
+
+      if (node.attrs.src)
+        iframe.setAttribute('src', node.attrs.src)
+
+      container.appendChild(iframe)
+
+      container.addEventListener('click', (event) => {
+        const pos = typeof getPos === 'function' ? getPos() : undefined
+        if (typeof pos === 'number') {
+          editor.commands.setNodeSelection(pos)
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      })
+
+      return {
+        dom: container,
+      }
+    }
   },
 
   addCommands() {
