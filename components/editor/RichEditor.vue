@@ -7,9 +7,11 @@ import { TableKit } from '@tiptap/extension-table'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
 import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
+import EditorEmbedPopover from './EditorEmbedPopover.vue'
 import EditorImagePopover from './EditorImagePopover.vue'
 import EditorLinkPopover from './EditorLinkPopover.vue'
 import EditorTablePopover from './EditorTablePopover.vue'
+import { Embed } from './Embed'
 import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
 import { MediaText } from './MediaText'
@@ -105,6 +107,10 @@ const fixedToolbarItems = [[{
   slot: 'imageUpload',
   icon: 'i-lucide-image',
   tooltip: { text: 'Image' },
+}, {
+  slot: 'embed' as const,
+  icon: 'i-lucide-play-square',
+  tooltip: { text: 'Embed' },
 }, {
   slot: 'table' as const,
   icon: 'i-lucide-table',
@@ -380,6 +386,7 @@ const suggestionItems = [[{
     :extensions="[
       TableKit,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Embed,
       AdvancedImage.configure({
         HTMLAttributes: {
           class: 'content-image',
@@ -408,6 +415,9 @@ const suggestionItems = [[{
       </template>
       <template #imageUpload>
         <EditorImagePopover :editor="editor" auto-open />
+      </template>
+      <template #embed>
+        <EditorEmbedPopover :editor="editor" auto-open />
       </template>
       <template #table>
         <EditorTablePopover :editor="editor" />
