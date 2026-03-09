@@ -16,7 +16,7 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
   formData.append('file', file)
 
   const params = new URLSearchParams({
-    prefix: uploadPrefix || 'uploads/',
+    prefix: uploadPrefix || '',
     fileType: file.type,
   })
 

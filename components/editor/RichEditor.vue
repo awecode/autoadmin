@@ -17,7 +17,13 @@ import { handleFiles } from './FileUpload'
 import { MediaText } from './MediaText'
 import { tableToolbarItems } from './TableToolbar'
 
-const editorRef = useTemplateRef('editorRef')
+const props = defineProps<{
+  // modelValue?: string
+  attrs?: Record<string, any>
+  uploadPrefix?: string
+}>()
+
+const uploadPrefix = props.uploadPrefix || 'content/'
 
 const value = ref(``)
 
@@ -73,7 +79,7 @@ const fixedToolbarItems = [[{
   }],
 }, {
   kind: 'blockquote',
-  icon: 'i-lucide-text-quote',
+  icon: 'i-lucide-quote',
   tooltip: { text: 'Blockquote' },
 }], [{
   kind: 'mark',
@@ -193,7 +199,7 @@ const bubbleToolbarItems = computed(() => [[{
     label: 'Ordered List',
   }, {
     kind: 'blockquote',
-    icon: 'i-lucide-text-quote',
+    icon: 'i-lucide-quote',
     label: 'Blockquote',
   }],
 }], [{
@@ -276,7 +282,7 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
         { kind: 'heading', level: 4, label: 'Heading 4', icon: 'i-lucide-heading-4' },
         { kind: 'bulletList', label: 'Bullet List', icon: 'i-lucide-list' },
         { kind: 'orderedList', label: 'Ordered List', icon: 'i-lucide-list-ordered' },
-        { kind: 'blockquote', label: 'Blockquote', icon: 'i-lucide-text-quote' },
+        { kind: 'blockquote', label: 'Blockquote', icon: 'i-lucide-quote' },
       ],
     },
     {
@@ -362,7 +368,7 @@ const suggestionItems = [[{
 }, {
   kind: 'blockquote',
   label: 'Blockquote',
-  icon: 'i-lucide-text-quote',
+  icon: 'i-lucide-quote',
 }], [{
   type: 'label',
   label: 'Insert',
@@ -375,7 +381,6 @@ const suggestionItems = [[{
 
 <template>
   <UEditor
-    ref="editorRef"
     v-slot="{ editor, handlers }"
     v-model="value"
     content-type="html"
@@ -393,15 +398,15 @@ const suggestionItems = [[{
       FileHandler.configure({
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'],
         onDrop: (currentEditor, files, pos) => {
-          return handleFiles(files, currentEditor as Editor, undefined, pos)
+          return handleFiles(files, currentEditor as Editor, uploadPrefix, pos)
         },
         onPaste: (currentEditor, files) => {
-          return handleFiles(files, currentEditor as Editor)
+          return handleFiles(files, currentEditor as Editor, uploadPrefix)
         },
       },
       ),
     ]"
-    placeholder="Write, type '/' for commands..."
+    :placeholder="attrs?.placeholder || 'Write, type / for commands...'"
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
     class="w-full"
   >
@@ -410,7 +415,7 @@ const suggestionItems = [[{
         <EditorLinkPopover :editor="editor" auto-open />
       </template>
       <template #image>
-        <EditorImagePopover :editor="editor" auto-open />
+        <EditorImagePopover :editor="editor" :upload-prefix="uploadPrefix" auto-open />
       </template>
       <template #embed>
         <EditorEmbedPopover :editor="editor" auto-open />
@@ -501,7 +506,7 @@ const suggestionItems = [[{
 
 <style>
 .tiptap img{
-  display: inline-block;
+  /* display: inline-block; */
   height: auto;
   max-width: 100%;
 }
@@ -548,15 +553,10 @@ const suggestionItems = [[{
   display: block;
   height: auto;
   max-width: 100%;
-  margin: 0;
   object-fit: contain;
 }
 .tiptap figure figcaption {
-  padding: 0.5rem;
-  font-size: 0.875rem;
   color: var(--ui-text-dimmed, #6b7280);
-  text-align: center;
-  outline: none;
 }
 .tiptap figure.ProseMirror-selectednode,
 .tiptap figure:has(figcaption:focus) {
@@ -628,18 +628,4 @@ const suggestionItems = [[{
   top: 0;
   left: 0;
 }
-
-/* .embed-node[data-embed-type="youtube"] {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%;
-}
-.embed-node[data-embed-type="youtube"] iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-} */
 </style>
