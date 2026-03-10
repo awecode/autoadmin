@@ -301,20 +301,12 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           color="neutral"
         />
 
-        <div v-else-if="field.type === 'rich-text'">
-          <!-- Rich text editor -->
-          <EditorRichText
-            v-model="fieldValue"
-            class="w-full"
-            :attrs="field.inputAttrs"
-          />
-
-          <EditorRichEditor
-            v-model="fieldValue"
-            class="mt-8 border rounded"
-            :attrs="field.inputAttrs"
-          />
-        </div>
+        <EditorRichText
+          v-else-if="field.type === 'rich-text'"
+          v-model="fieldValue"
+          class="w-full"
+          :attrs="field.inputAttrs"
+        />
 
         <Uploader
           v-else-if="field.type === 'image'"
