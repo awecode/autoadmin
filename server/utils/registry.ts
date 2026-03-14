@@ -4,13 +4,13 @@ import type { ZodObject, ZodType } from 'zod'
 import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
 import type { FieldSpec, Option } from './form'
-import type { TableMetadata } from './metdata'
+import type { TableMetadata } from './matadata'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
-import { getTableMetadata } from './metdata'
+import { getTableMetadata } from './matadata'
 
 // Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>

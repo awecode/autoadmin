@@ -4,7 +4,7 @@ import { getTableColumns } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { getAdminDialectFromUrl } from '../../../server/utils/dialect'
 import { handleDrizzleError } from '../../../server/utils/drizzle'
-import { getTableMetadata } from '../../../server/utils/metdata'
+import { getTableMetadata } from '../../../server/utils/matadata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '../../../server/utils/relation'
 import { posts, postsToTags, users } from '../server/db/postgres'
 
