@@ -38,5 +38,8 @@
     "overrides": {
       "unimport": "~5.6.0"
     }
+  },
+  "devDependencies": {
+    "@types/pg": "^8.18.0"
   }
 }
