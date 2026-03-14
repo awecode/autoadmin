@@ -24,7 +24,8 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
         modelKey,
         routeType: 'list',
       }
-    } else if (method === 'POST') {
+    }
+    else if (method === 'POST') {
       // POST <model-label> <body>: Create
       return {
         modelKey,
@@ -43,14 +44,16 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
         lookupValue,
         routeType: 'detail',
       }
-    } else if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
+    }
+    else if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
       // POST/PATCH/PUT <model-label>/<lookup-field-value> <body>: Update
       return {
         modelKey,
         lookupValue,
         routeType: 'update',
       }
-    } else if (method === 'DELETE') {
+    }
+    else if (method === 'DELETE') {
       // DELETE <model-label>/<lookup-field-value>: Delete
       return {
         modelKey,

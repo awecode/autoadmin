@@ -48,7 +48,8 @@ watch(() => props.modelValue, (newValue) => {
   if (typeof newValue === 'string' && newValue) {
     fileUrl.value = newValue
     uploadedFile.value = newValue
-  } else {
+  }
+  else {
     fileUrl.value = undefined
     uploadedFile.value = undefined
   }
@@ -62,13 +63,14 @@ const previewContent = ref('')
 
 // Computed file name
 const fileName = computed(() => {
-  if (!fileUrl.value) return ''
+  if (!fileUrl.value)
+    return ''
   return decodeURIComponent(fileUrl.value.split('/').pop() || '')
 })
 
 const toast = useToast()
 // const { t } = useI18n()
-const clearFile = () => {
+function clearFile() {
   uploadedFile.value = ''
   fileUrl.value = ''
   emit('update:modelValue', '')
@@ -78,11 +80,13 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   let file: File | undefined
   if (droppedFile) {
     file = droppedFile
-  } else if (e) {
+  }
+  else if (e) {
     const target = e.target as HTMLInputElement
     if (target?.files) {
       file = target.files?.[0]
-    } else {
+    }
+    else {
       file = (e as any)?.[0] as File
     }
   }
@@ -152,17 +156,19 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
 }
 
 function onClick() {
-  if (isFileUploading.value) return
+  if (isFileUploading.value)
+    return
   fileRef.value?.inputRef?.click()
 }
 
-const onFileDrop = (event: DragEvent) => {
+function onFileDrop(event: DragEvent) {
   event.preventDefault()
   if (event?.dataTransfer?.items) {
     if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0]?.kind === 'file') {
       const file = event.dataTransfer.items[0].getAsFile() as File
       handleFileChange(undefined, file)
-    } else if (event.dataTransfer.items.length > 1) {
+    }
+    else if (event.dataTransfer.items.length > 1) {
       toast.add({
         title: 'Upload Error',
         description: 'Please upload a single file.',
@@ -171,17 +177,18 @@ const onFileDrop = (event: DragEvent) => {
     }
   }
 }
-const dragOverHandler = (event: Event) => {
+function dragOverHandler(event: Event) {
   event.preventDefault()
 }
 
 const extension = computed(() => {
-  if (!fileUrl.value) return ''
+  if (!fileUrl.value)
+    return ''
   return fileUrl.value.split('.').pop()?.toLowerCase() || ''
 })
 
 // Add new functions for the hover actions
-const previewFile = async () => {
+async function previewFile() {
   if (fileUrl.value) {
     if (dialogPreviewExtensions.includes(extension.value)) {
       // Show in dialog for supported extensions
@@ -190,24 +197,27 @@ const previewFile = async () => {
         try {
           const response = await fetch(fileUrl.value)
           previewContent.value = await response.text()
-        } catch (error) {
+        }
+        catch (error) {
           console.error('Failed to fetch text content:', error)
           previewContent.value = 'Failed to load file content'
         }
-      } else {
+      }
+      else {
         // For images, SVG, PDF - use the URL directly
         previewContent.value = fileUrl.value
       }
 
       isPreviewDialogOpen.value = true
-    } else {
+    }
+    else {
       // Fall back to opening in new tab for unsupported extensions
       window.open(fileUrl.value, '_blank')
     }
   }
 }
 
-const downloadFile = async () => {
+async function downloadFile() {
   if (fileUrl.value) {
     try {
       // Fetch the file as a blob to force download regardless of Content-Disposition
@@ -225,7 +235,8 @@ const downloadFile = async () => {
 
       // Clean up the blob URL
       window.URL.revokeObjectURL(blobUrl)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Download failed:', error)
       // Fallback to direct link if fetch fails
       const link = document.createElement('a')
@@ -239,8 +250,9 @@ const downloadFile = async () => {
   }
 }
 
-const replaceFile = () => {
-  if (isFileUploading.value) return
+function replaceFile() {
+  if (isFileUploading.value)
+    return
   fileRef.value?.inputRef?.click()
 }
 </script>
@@ -329,7 +341,7 @@ const replaceFile = () => {
         alt="Uploaded File"
         class="max-w-full max-h-full object-contain px-2"
         :src="fileUrl"
-      />
+      >
 
       <!-- Non-image file display -->
       <div v-else class="flex flex-col items-center justify-center text-center px-4 py-2">
@@ -414,7 +426,7 @@ const replaceFile = () => {
               alt="Preview"
               class="max-w-full max-h-[80vh] object-contain"
               :src="previewContent"
-            />
+            >
 
             <!-- PDF preview -->
             <iframe
@@ -422,7 +434,7 @@ const replaceFile = () => {
               class="w-full h-[80vh]"
               frameborder="0"
               :src="previewContent"
-            ></iframe>
+            />
 
             <!-- Text content preview -->
             <div

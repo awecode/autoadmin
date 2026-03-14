@@ -153,7 +153,7 @@ export function getTableForeignKeysByColumn(table: Table, columnName: string) {
   return relations
 }
 
-export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminModelConfig, relations: ReturnType<typeof getTableForeignKeys>) => {
+export async function addForeignKeysToFormSpec(formSpec: FormSpec, cfg: AdminModelConfig, relations: ReturnType<typeof getTableForeignKeys>) {
   const updatedFormSpec = { ...formSpec, fields: [...formSpec.fields] }
 
   await Promise.all(relations.map(async (relation) => {
@@ -190,7 +190,7 @@ export const addForeignKeysToFormSpec = async (formSpec: FormSpec, cfg: AdminMod
   return updatedFormSpec
 }
 
-export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminModelConfig) => {
+export async function addO2mRelationsToFormSpec(formSpec: FormSpec, cfg: AdminModelConfig) {
   const o2mTables = cfg.o2m
   if (!o2mTables) {
     return formSpec
@@ -244,7 +244,7 @@ export const addO2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminMo
   return { ...formSpec, fields: updatedFields }
 }
 
-export const addM2mRelationsToFormSpec = async (formSpec: FormSpec, cfg: AdminModelConfig, relations: M2MRelation[]) => {
+export async function addM2mRelationsToFormSpec(formSpec: FormSpec, cfg: AdminModelConfig, relations: M2MRelation[]) {
   const updatedFields = formSpec.fields
 
   // Process all relations in parallel
@@ -311,7 +311,8 @@ export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: Adm
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
         try {
           await db.update(table).set({ [colKey(relationData.foreignRelatedColumn)]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
-        } catch (error) {
+        }
+        catch (error) {
           if (error instanceof DrizzleQueryError) {
             if (error.cause && 'code' in error.cause && typeof error.cause.code === 'string' && NOTNULL_CONSTRAINT_CODES.includes(error.cause.code)) {
               const userFriendlyMessage = `Cannot remove the relation to ${modelKey} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`

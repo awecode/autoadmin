@@ -43,10 +43,12 @@ export const r2Backend = {
     let fileBody: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob
     if (body instanceof File) {
       fileBody = body
-    } else if (Buffer.isBuffer(body)) {
+    }
+    else if (Buffer.isBuffer(body)) {
     // Convert Buffer to Uint8Array for R2
       fileBody = new Uint8Array(body)
-    } else {
+    }
+    else {
       fileBody = body as unknown as Blob
     }
 

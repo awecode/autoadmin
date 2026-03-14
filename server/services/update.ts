@@ -38,7 +38,8 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
   let result
   try {
     result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
-  } catch (error) {
+  }
+  catch (error) {
     throw handleDrizzleError(error)
   }
 

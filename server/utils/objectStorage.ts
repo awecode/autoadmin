@@ -9,7 +9,7 @@ if (typeof globalThis.crypto === 'undefined') {
   globalThis.crypto = new Crypto()
 }
 
-const normalizePath = (path: string): string => {
+function normalizePath(path: string): string {
   // remove leading and trailing slashes
   return path.replace(/^\/+|\/+$/g, '')
 }
@@ -54,7 +54,8 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
           const nameWithoutExt = baseFileName.substring(0, lastDotIndex)
           const extension = baseFileName.substring(lastDotIndex)
           fullFileName = `${nameWithoutExt}-${counter}${extension}`
-        } else {
+        }
+        else {
           fullFileName = `${baseFileName}-${counter}`
         }
 
@@ -62,7 +63,8 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
         fileExists = await backend.checkIfFileExists(client, testFileName)
       }
     }
-  } else {
+  }
+  else {
     const filename = uuid()
     fullFileName = prefix ? `${prefix}/${filename}` : filename
     if (config?.extension) {

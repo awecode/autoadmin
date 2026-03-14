@@ -25,7 +25,8 @@ export function getTableMetadata(columns: Record<string, Column>): TableMetadata
     if (isDateTimeColumn(column)) {
       if (column.hasDefault) {
         metadata.autoTimestampColumns.push(columnName)
-      } else {
+      }
+      else {
         metadata.datetimeColumns.push(columnName)
       }
     }
@@ -66,10 +67,7 @@ async function resolveDefault(raw: unknown) {
   return raw
 }
 
-export const useMetadataOnFormSpec = async (
-  formSpec: FormSpec,
-  metadata: TableMetadata,
-): Promise<FormSpec> => {
+export async function useMetadataOnFormSpec(formSpec: FormSpec, metadata: TableMetadata): Promise<FormSpec> {
   let fields = formSpec.fields
 
   // Drop primary autoincrement columns

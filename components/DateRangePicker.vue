@@ -24,11 +24,14 @@ let dateMode: 'date' | 'string'
 // Get or infer the date mode
 if (props.mode) {
   dateMode = props.mode
-} else if (typeof props.modelValue === 'string') {
+}
+else if (typeof props.modelValue === 'string') {
   dateMode = 'string'
-} else if (typeof props.modelValue === 'object') {
+}
+else if (typeof props.modelValue === 'object') {
   dateMode = 'date'
-} else {
+}
+else {
   dateMode = defaultMode
 }
 
@@ -37,7 +40,7 @@ const uCalendarValue: Ref<{ start: CalendarDate | undefined, end: CalendarDate |
   end: undefined,
 })
 
-const syncFromModelValue = (modelValue: typeof props.modelValue) => {
+function syncFromModelValue(modelValue: typeof props.modelValue) {
   if (typeof modelValue === 'string') {
     const [start, end] = modelValue.split(',')
     if (start && end) {
@@ -50,19 +53,22 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
             end: new CalendarDate(endSplits[0]!, endSplits[1]!, endSplits[2]!),
           }
         }
-      } else {
+      }
+      else {
         uCalendarValue.value = {
           start: undefined,
           end: undefined,
         }
       }
-    } else {
+    }
+    else {
       uCalendarValue.value = {
         start: undefined,
         end: undefined,
       }
     }
-  } else if (modelValue) {
+  }
+  else if (modelValue) {
     const start = modelValue.start
     const end = modelValue.end
     if (start && end) {
@@ -70,13 +76,15 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
         start: new CalendarDate(start.getFullYear(), start.getMonth() + 1, start.getDate()),
         end: new CalendarDate(end.getFullYear(), end.getMonth() + 1, end.getDate()),
       }
-    } else {
+    }
+    else {
       uCalendarValue.value = {
         start: undefined,
         end: undefined,
       }
     }
-  } else {
+  }
+  else {
     uCalendarValue.value = {
       start: undefined,
       end: undefined,
@@ -87,7 +95,7 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
 // Initialize with the initial modelValue
 syncFromModelValue(props.modelValue)
 
-const formatDate = (date: CalendarDate) => {
+function formatDate(date: CalendarDate) {
   if (dateMode === 'string') {
     const d = date.toDate(getLocalTimeZone())
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -95,7 +103,7 @@ const formatDate = (date: CalendarDate) => {
   return date.toDate(getLocalTimeZone())
 }
 
-const formatRange = (value: { start: CalendarDate | undefined, end: CalendarDate | undefined }): DateRange => {
+function formatRange(value: { start: CalendarDate | undefined, end: CalendarDate | undefined }): DateRange {
   if (!value.start || !value.end) {
     return dateMode === 'string' ? undefined : { start: undefined, end: undefined }
   }

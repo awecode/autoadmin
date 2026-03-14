@@ -140,14 +140,18 @@ export function getIconForLabel(name: string): string {
 
 // Naive plural → singular converter
 function toSingular(word: string): string {
-  if (word.endsWith('ies')) return `${word.slice(0, -3)}y`
-  if (word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1)
+  if (word.endsWith('ies'))
+    return `${word.slice(0, -3)}y`
+  if (word.endsWith('s') && !word.endsWith('ss'))
+    return word.slice(0, -1)
   return word
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes'
-  if (bytes === 1) return '1 Byte'
+  if (bytes === 0)
+    return '0 Bytes'
+  if (bytes === 1)
+    return '1 Byte'
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
   const value = bytes / 1024 ** i

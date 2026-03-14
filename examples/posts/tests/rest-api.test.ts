@@ -113,7 +113,8 @@ describe('api', async () => {
         method: 'POST',
         body: { name: 'Tag 1', color: 'red' },
       })
-    } catch (error) {
+    }
+    catch (error) {
       expect((error as any).data.statusCode).toBe(400)
       expect((error as any).data.statusMessage).toBe('Validation Error')
       expect((error as any).data.data.message).toBe('One of the tags with this name already exists.')
@@ -236,7 +237,8 @@ describe('api', async () => {
       await $fetch(`${apiPrefix}/users/${userId}`, {
         method: 'DELETE',
       })
-    } catch (error) {
+    }
+    catch (error) {
       expect((error as any).data.statusCode).toBe(400)
       expect((error as any).data.statusMessage).toBe('Cannot delete record because it is referenced by another record')
     }

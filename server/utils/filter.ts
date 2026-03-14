@@ -46,13 +46,15 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
       label: label || toTitleCase(field),
       type: 'boolean',
     }
-  } else if (type === 'date' || type === 'daterange') {
+  }
+  else if (type === 'date' || type === 'daterange') {
     return {
       field,
       label: label || toTitleCase(field),
       type: definedType || 'daterange', // uses `daterange` for computed `date` type unless type specifically defined as `date`
     }
-  } else if (type === 'text' || type === 'number') {
+  }
+  else if (type === 'text' || type === 'number') {
     const column = cfg.columns[field]
     // TODO Test for all dialects
     //   const options = await db.all(
@@ -74,7 +76,8 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
       type: 'text',
       options: filterOptions,
     }
-  } else if (type === 'select') {
+  }
+  else if (type === 'select') {
     const filterOptions = options ?? (columnTypes[field]?.options || [])
     return {
       field,
@@ -82,7 +85,8 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
       type: 'select',
       options: filterOptions,
     }
-  } else if (type === 'relation') { 
+  }
+  else if (type === 'relation') {
     if (relations.length === 0) {
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }
@@ -90,7 +94,8 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
     let filterOptions: Option[] | undefined
     if (options) {
       filterOptions = options
-    } else if (query[field]) {
+    }
+    else if (query[field]) {
       const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, query[field]))
       filterOptions = rows.map(row => ({
         label: row[getLabelColumnFromModel(relation.foreignTable)],
@@ -113,7 +118,8 @@ async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: Adm
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
       return await prepareFilter(cfg, db, columnTypes, filter, undefined, undefined, undefined, query)
-    } else if (typeof filter === 'object') {
+    }
+    else if (typeof filter === 'object') {
       if ('parameterName' in filter && 'label' in filter) {
         return await prepareCustomFilter(cfg, db, columnTypes, filter as unknown as CustomFilter, query)
       }

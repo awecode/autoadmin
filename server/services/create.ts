@@ -37,7 +37,8 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
   let result
   try {
     result = await db.insert(model).values(validatedData).returning()
-  } catch (error) {
+  }
+  catch (error) {
     throw handleDrizzleError(error)
   }
 

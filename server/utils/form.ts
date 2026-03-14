@@ -148,7 +148,7 @@ export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormS
   return { fields }
 }
 
-export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
+export function useDefinedFields(spec: FormSpec, cfg: AdminModelConfig) {
   let definedFieldSpecs: FieldSpec[] = []
   if (cfg.update.formFields) {
     definedFieldSpecs = cfg.update.formFields.map((field) => {
@@ -157,7 +157,8 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
         if (fieldSpec) {
           return { ...fieldSpec, _defined: true }
         }
-      } else if (typeof field === 'object' && field !== null && 'name' in field) {
+      }
+      else if (typeof field === 'object' && field !== null && 'name' in field) {
         const fieldSpec = spec.fields.find(f => f.name === field.name)
         if (fieldSpec) {
           return { ...defu(field, fieldSpec), _defined: true }
@@ -171,7 +172,8 @@ export const useDefinedFields = (spec: FormSpec, cfg: AdminModelConfig) => {
     // Also add the fields with type 'relation-many' that are not in the cfg.update.formFields but are in the spec.fields and are not already in the definedFieldSpecs
     const relationManyFields = spec.fields.filter(f => f.type === 'relation-many' && !definedFieldSpecs.some(df => df.name === f.name))
     definedFieldSpecs = [...definedFieldSpecs, ...relationManyFields]
-  } else {
+  }
+  else {
     definedFieldSpecs = spec.fields
   }
   if (typeof cfg.fields !== 'undefined') {

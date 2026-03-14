@@ -3,7 +3,7 @@ import type { VNode } from 'vue'
 interface AdminClientConfig {
   list?: {
     fields?: Array<{
-      field: string | { name: string, }
+      field: string | { name: string }
       label?: string
       cell?: (cell: { row: Record<string, any> }) => VNode | string
     }>

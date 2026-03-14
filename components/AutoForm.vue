@@ -24,7 +24,7 @@ const form = useTemplateRef('form')
 const loading = ref(false)
 
 // Initialize state with values for update and default values for create
-const initializeState = () => {
+function initializeState() {
   if (props.spec.values) {
     return reactive(props.spec.values) as Record<string, any>
   }
@@ -85,7 +85,7 @@ if (props.mode === 'create' && props.spec.slugFields) {
   }
 }
 
-const handleError = (error: Error) => {
+function handleError(error: Error) {
   if (error instanceof Error) {
     if ('data' in error) {
       const errorData = error.data as ApiErrorResponse
@@ -105,7 +105,7 @@ const handleError = (error: Error) => {
 
 const router = useRouter()
 
-const performSave = async () => {
+async function performSave() {
   loading.value = true
   try {
     const response = await $fetch<{ success: boolean, data: Record<string, any> }>(props.endpoint, {
@@ -122,9 +122,11 @@ const performSave = async () => {
       }
       emit('save', response.data)
     }
-  } catch (error) {
+  }
+  catch (error) {
     handleError(error as Error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }

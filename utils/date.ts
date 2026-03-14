@@ -25,9 +25,11 @@ export function humanifyDateTime(date: string | Date, opts: { includeTime?: bool
 
   if (inputDateOnly.getTime() === today.getTime()) {
     return opts.includeTime ? `Today at ${timeString}` : 'Today'
-  } else if (inputDateOnly.getTime() === yesterday.getTime()) {
+  }
+  else if (inputDateOnly.getTime() === yesterday.getTime()) {
     return opts.includeTime ? `Yesterday at ${timeString}` : 'Yesterday'
-  } else {
+  }
+  else {
     // Format as "Jul 3, 2025, 5:45 AM"
     const dateOptions: Intl.DateTimeFormatOptions = {
       month: 'short',

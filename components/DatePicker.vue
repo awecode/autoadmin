@@ -21,31 +21,37 @@ let dateMode: 'date' | 'string'
 // Get or infer the date mode
 if (props.mode) {
   dateMode = props.mode
-} else if (typeof props.modelValue === 'string') {
+}
+else if (typeof props.modelValue === 'string') {
   dateMode = 'string'
-} else if (typeof props.modelValue === 'object') {
+}
+else if (typeof props.modelValue === 'object') {
   dateMode = 'date'
-} else {
+}
+else {
   dateMode = defaultMode
 }
 
 const uCalendarValue: Ref<CalendarDate | undefined> = shallowRef(undefined)
 
-const syncFromModelValue = (modelValue: typeof props.modelValue) => {
+function syncFromModelValue(modelValue: typeof props.modelValue) {
   if (typeof modelValue === 'string' && modelValue !== '') {
     const dateParts = modelValue.split('-').map(Number)
     if (dateParts.length === 3) {
       uCalendarValue.value = new CalendarDate(dateParts[0]!, dateParts[1]!, dateParts[2]!)
-    } else {
+    }
+    else {
       uCalendarValue.value = undefined
     }
-  } else if (modelValue instanceof Date) {
+  }
+  else if (modelValue instanceof Date) {
     uCalendarValue.value = new CalendarDate(
       modelValue.getFullYear(),
       modelValue.getMonth() + 1,
       modelValue.getDate(),
     )
-  } else {
+  }
+  else {
     uCalendarValue.value = undefined
   }
 }
@@ -53,7 +59,7 @@ const syncFromModelValue = (modelValue: typeof props.modelValue) => {
 // Initialize with the initial modelValue
 syncFromModelValue(props.modelValue)
 
-const formatValue = (value: CalendarDate | undefined): DateDef => {
+function formatValue(value: CalendarDate | undefined): DateDef {
   if (!value) {
     return undefined
   }

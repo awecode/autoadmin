@@ -2,7 +2,7 @@ import type { FormSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { ZodObject, ZodRawShape } from 'zod'
 import { z } from 'zod'
 
-export const normalizeOptions = (opts: Option[]) => {
+export function normalizeOptions(opts: Option[]) {
   return opts.map((option) => {
     if (typeof option === 'string') {
       return { label: option, value: option }
@@ -14,14 +14,14 @@ export const normalizeOptions = (opts: Option[]) => {
   })
 }
 
-export const getErrorMessageFromError = (error: Error) => {
+export function getErrorMessageFromError(error: Error) {
   return typeof error === 'object' && error !== null
     ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
     : String(error)
 }
 
 // Transform Zod error messages to be more user-friendly
-export const transformErrorMessage = (message: string, fieldType?: string): string => {
+export function transformErrorMessage(message: string, fieldType?: string): string {
   // Handle common Zod error patterns
   if (message.includes('expected string, received null')
     || message.includes('expected string, received undefined')) {
@@ -32,9 +32,11 @@ export const transformErrorMessage = (message: string, fieldType?: string): stri
     || message.includes('expected number, received undefined')) {
     if (fieldType === 'relation') {
       return 'Please select an option'
-    } else if (fieldType === 'relation-many') {
+    }
+    else if (fieldType === 'relation-many') {
       return 'Please select at least one option'
-    } else {
+    }
+    else {
       return 'Please enter a number'
     }
   }
@@ -56,7 +58,8 @@ export function processSchemaForForm<S extends ZodRawShape>(
   schema: ZodObject<S>,
   spec: FormSpec,
 ) {
-  if (!schema || !spec?.fields?.length) return z.object({})
+  if (!schema || !spec?.fields?.length)
+    return z.object({})
 
   const pickKeys = Object.fromEntries(
     spec.fields

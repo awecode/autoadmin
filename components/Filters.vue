@@ -36,7 +36,8 @@ function getFilterModel(filter: { field: string, type?: string }) {
     get: () => {
       if (filter.type === 'boolean') {
         return filterQuery.value[filter.field] || undefined
-      } else {
+      }
+      else {
         return filterQuery.value[filter.field] || ''
       }
     },
@@ -45,7 +46,8 @@ function getFilterModel(filter: { field: string, type?: string }) {
 
       if (value === null || value === '' || value === undefined) {
         delete current[filter.field]
-      } else {
+      }
+      else {
         current[filter.field] = value
       }
 
@@ -204,6 +206,6 @@ const booleanOptions = [
       v-if="mobileFiltersOpen && filters.length > 1"
       class="md:hidden fixed inset-0 bg-black opacity-50 z-40"
       @click="mobileFiltersOpen = false"
-    ></div>
+    />
   </template>
 </template>

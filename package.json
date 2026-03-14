@@ -34,12 +34,12 @@
     "zod": "^4.0.17",
     "zodex": "^4.0.0"
   },
+  "devDependencies": {
+    "@types/pg": "^8.18.0"
+  },
   "pnpm": {
     "overrides": {
       "unimport": "~5.6.0"
     }
-  },
-  "devDependencies": {
-    "@types/pg": "^8.18.0"
   }
 }

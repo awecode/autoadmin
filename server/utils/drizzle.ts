@@ -84,7 +84,8 @@ export function handleDrizzleError(error: any) {
       userFriendlyMessage = `One of the ${table} with this ${column} already exists.`
       errorData.name = column
       errorData.message = 'This value must be unique but is already in use.'
-    } else if (code === '23505') {
+    }
+    else if (code === '23505') {
       const column = cause?.column ?? cause?.detail?.match(/\(([^)]+)\)=/)?.[1] ?? ''
       const table = cause?.table ?? cause?.constraint?.split('_').slice(0, -2).join('_') ?? 'records'
       userFriendlyMessage = `One of the ${table} with this ${column || 'value'} already exists.`

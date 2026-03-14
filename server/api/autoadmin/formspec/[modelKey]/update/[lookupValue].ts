@@ -6,7 +6,7 @@ import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToF
 import { eq } from 'drizzle-orm'
 import { zerialize } from 'zodex'
 
-const getTableValues = async (cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) => {
+async function getTableValues(cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) {
   const db = useAdminDb()
   const model = cfg.model
   const lookupColumn = cfg.lookupColumn
@@ -65,7 +65,8 @@ export default defineEventHandler(async (event) => {
   let specWithO2mRelations: FormSpec
   if (cfg.o2m) {
     specWithO2mRelations = await addO2mRelationsToFormSpec(specWithForeignKeys, cfg)
-  } else {
+  }
+  else {
     specWithO2mRelations = specWithForeignKeys
   }
 

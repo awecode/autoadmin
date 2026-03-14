@@ -62,7 +62,8 @@ watch(() => props.modelValue, (newValue) => {
   isUpdatingFromParent = true
   if (typeof internalValue.value === 'number' && typeof newValue === 'string' && newValue.trim() !== '' && !Number.isNaN(Number(newValue))) {
     internalValue.value = Number(newValue)
-  } else {
+  }
+  else {
     internalValue.value = newValue
   }
   nextTick(() => {

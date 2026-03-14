@@ -1,6 +1,6 @@
 import type { Column } from 'drizzle-orm'
 
-export const getAdminTitle = () => {
+export function getAdminTitle() {
   const config = useRuntimeConfig()
   if (config.public.autoadmin?.title) {
     return config.public.autoadmin.title

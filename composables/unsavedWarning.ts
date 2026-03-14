@@ -66,10 +66,12 @@ export function useWarnOnUnsavedChanges(
         if (confirmed) {
           hasUnsavedChanges.value = false
           next()
-        } else {
+        }
+        else {
           next(false)
         }
-      } else {
+      }
+      else {
         next()
       }
     })

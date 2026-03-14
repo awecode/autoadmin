@@ -67,7 +67,7 @@ export function zodToListSpec(schema: ZodObject<Record<string, ZodType>>): Recor
   return Object.fromEntries(fields)
 }
 
-const uniqifyFieldName = (fieldName: string) => {
+function uniqifyFieldName(fieldName: string) {
   if (fieldName === 'field') {
     // anonymous functions get the name `field`, and multiple anonymous functions can have the same name
     return `f_${Math.random().toString(36).substring(2, 15)}`
@@ -89,7 +89,8 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
             type: columnTypes[def]!.type,
             sortKey: cfg.list.enableSort ? def : undefined,
           }
-        } else if (def.includes('.')) {
+        }
+        else if (def.includes('.')) {
           const [fk, foreignColumnName] = def.split('.')
           // TODO Check if fk is a foreign key using getTableForeignKeys
           if (fk && foreignColumnName && fk in tableColumns) {
@@ -111,12 +112,14 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               type: columnTypes[accessorKey]?.type || foreignTableListSpec[foreignColumnName]?.type,
               sortKey: cfg.list.enableSort ? def : undefined,
             }
-          } else {
+          }
+          else {
             throw new Error(`Invalid field definition, no column ${fk} found in ${cfg.key}.`)
           }
         }
         throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
-      } else if (typeof def === 'function') {
+      }
+      else if (typeof def === 'function') {
         const fieldName = uniqifyFieldName(def.name)
         return {
           id: fieldName,
@@ -125,7 +128,8 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
           type: columnTypes[fieldName]?.type,
           accessorFn: def,
         }
-      } else if (typeof def === 'object') {
+      }
+      else if (typeof def === 'object') {
         if (typeof def.field === 'string') {
           if (def.field in tableColumns) {
             return {
@@ -135,7 +139,8 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
               type: def.type ?? columnTypes[def.field]?.type,
               sortKey: cfg.list.enableSort ? def.sortKey ?? def.field : undefined,
             }
-          } else if (def.field.includes('.')) {
+          }
+          else if (def.field.includes('.')) {
             const [fk, foreignColumnName] = def.field.split('.')
             if (fk && foreignColumnName && fk in tableColumns) {
               const accessorKey = def.field.replace('.', '__')
@@ -157,10 +162,12 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
                 sortKey: cfg.list.enableSort ? def.sortKey ?? def.field : undefined,
               }
             }
-          } else {
+          }
+          else {
             throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
           }
-        } else if (typeof def.field === 'function') {
+        }
+        else if (typeof def.field === 'function') {
           if (def.field.name === 'field' && def.cell) {
             throw new Error('Anonymous functions are not supported for list fields with a cell function.')
           }
@@ -178,7 +185,8 @@ export function getListColumns<T extends Table>(cfg: AdminModelConfig<T>, tableC
       }
       throw new Error(`Invalid field definition: ${JSON.stringify(def)}`)
     })
-  } else {
+  }
+  else {
     columns = Object.keys(tableColumns).map(key => ({
       id: key,
       accessorKey: key,

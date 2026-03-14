@@ -30,12 +30,14 @@ export function unwrapZodType(zodType: ZodType): {
     if (currentType instanceof ZodOptional || currentType instanceof ZodNullable) {
       currentType = currentType.unwrap() as ZodType
       isOptional = true
-    } else if (currentType instanceof ZodDefault) {
+    }
+    else if (currentType instanceof ZodDefault) {
       isOptional = true
       const val = currentType.def.defaultValue
       defaultValue = typeof val === 'function' ? val() : val
       currentType = currentType.unwrap() as ZodType
-    } else {
+    }
+    else {
       break
     }
   }

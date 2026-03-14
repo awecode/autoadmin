@@ -21,7 +21,8 @@ let auth
 try {
   // @ts-expect-error - useAuth may not be available
   auth = useAuth()
-} catch {
+}
+catch {
   auth = null
 }
 
@@ -130,7 +131,7 @@ const mobileMenuOpen = ref(false)
       v-if="mobileMenuOpen"
       class="fixed inset-0 bg-black opacity-80 z-40"
       @click="mobileMenuOpen = false"
-    ></div>
+    />
 
     <!-- Mobile Menu Sidebar -->
     <Transition
@@ -178,7 +179,7 @@ const mobileMenuOpen = ref(false)
         />
 
         <template #fallback>
-          <div class="size-8"></div>
+          <div class="size-8" />
         </template>
       </UTooltip>
     </ClientOnly>

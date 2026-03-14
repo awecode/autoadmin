@@ -162,28 +162,30 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   apiPrefix: string
 }
 
-const getStaticDefaultOptions = () => ({
-  enableIndex: true,
-  lookupColumnName: defaultLookupColumnName,
-  list: {
-    enableSort: true,
-    enableFilter: true,
-    showCreateButton: true,
-    enableSearch: true,
-    searchPlaceholder: 'Search ...',
-    bulkActions: [],
-  },
-  update: {
-    enabled: true,
+function getStaticDefaultOptions() {
+  return {
+    enableIndex: true,
+    lookupColumnName: defaultLookupColumnName,
+    list: {
+      enableSort: true,
+      enableFilter: true,
+      showCreateButton: true,
+      enableSearch: true,
+      searchPlaceholder: 'Search ...',
+      bulkActions: [],
+    },
+    update: {
+      enabled: true,
     // showDeleteButton: true,
-  },
-  delete: { enabled: true },
-  create: { enabled: true },
-  fields: undefined,
-  warnOnUnsavedChanges: false,
-})
+    },
+    delete: { enabled: true },
+    create: { enabled: true },
+    fields: undefined,
+    warnOnUnsavedChanges: false,
+  }
+}
 
-const generateDefaultOptions = <T extends Table, C extends CustomSelections = CustomSelections>(model: T, label: string, key: string, apiPrefix: string, opts: AdminModelOptions<T, C>) => {
+function generateDefaultOptions<T extends Table, C extends CustomSelections = CustomSelections>(model: T, label: string, key: string, apiPrefix: string, opts: AdminModelOptions<T, C>) {
   const dct = defu(getStaticDefaultOptions(), {
     list: {
       title: toTitleCase(label),
@@ -195,7 +197,8 @@ const generateDefaultOptions = <T extends Table, C extends CustomSelections = Cu
   }) as unknown as AdminModelConfig<T, C>
   if ((typeof opts.list?.enableSearch === 'undefined' || opts.list?.enableSearch === true) && !opts.list?.searchFields) {
     dct.list.searchFields = [opts.labelColumnName || dct.labelColumnName]
-  } else if (!opts.list?.searchFields) {
+  }
+  else if (!opts.list?.searchFields) {
     dct.list.searchFields = []
   }
   if (!opts.create?.schema) {
@@ -258,7 +261,8 @@ export function useAdminRegistry() {
         throw new Error(
           `The default lookup field "${lookupColumnName}" does not exist on the table "${getTableName(model)}". Pass a different "lookupColumnName" value during registration. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
         )
-      } else {
+      }
+      else {
         throw new Error(
           `Invalid lookupColumnName "${lookupColumnName}" provided for model "${label}". Field does not exist on the table. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
         )
