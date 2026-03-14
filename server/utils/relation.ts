@@ -5,12 +5,12 @@ import type { FieldSpec, FormSpec } from './form'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { and, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
-import { getTableConfig } from 'drizzle-orm/sqlite-core'
 import { getEnabledStatuses, getLabelColumnFromModel } from './autoadmin'
 import { useAdminDb } from './db'
+import { getTableConfigByDialect } from './dialect'
 import { colKey, handleDrizzleError } from './drizzle'
 
-const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL']
+const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL', '23502']
 
 interface M2MRelationSelf {
   selfTable: Table
@@ -90,7 +90,7 @@ export function parseM2mRelations(model: Table, m2mTables: Record<string, Table>
 
 export function getTableForeignKeys(table: Table) {
   const relations = []
-  const foreignKeys = getTableConfig(table).foreignKeys
+  const foreignKeys = getTableConfigByDialect(table).foreignKeys
 
   if (!foreignKeys || !Array.isArray(foreignKeys)) {
     return []
@@ -122,7 +122,7 @@ export function getTableForeignKeys(table: Table) {
 
 export function getTableForeignKeysByColumn(table: Table, columnName: string) {
   const relations = []
-  const foreignKeys = getTableConfig(table).foreignKeys
+  const foreignKeys = getTableConfigByDialect(table).foreignKeys
 
   if (!foreignKeys || !Array.isArray(foreignKeys)) {
     return []

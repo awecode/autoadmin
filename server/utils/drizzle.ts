@@ -67,10 +67,11 @@ export async function getPaginatedResults<T>(
 
 // Careful, this function exposes table names and column names in the error message
 export function handleDrizzleError(error: any) {
-  const code = error.cause?.code ?? error.code
+  const cause = error.cause ?? error
+  const code = cause?.code ?? error.code
 
   if (code === 'SQLITE_CONSTRAINT_UNIQUE' || code === '23505' || code === 'ER_DUP_ENTRY') {
-    const fullMessage = error.cause?.message ?? error.message
+    const fullMessage = cause?.message ?? error.message ?? ''
     // const fullMessage = 'SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: customers.phoneNumber'
     // Programatically extract the table name and column name from the full message
     let userFriendlyMessage = 'Operation failed'
@@ -79,8 +80,14 @@ export function handleDrizzleError(error: any) {
       message: '',
     }
     if (fullMessage.includes('SQLITE_CONSTRAINT_UNIQUE')) {
-      const [table, column] = fullMessage.split(' ').at(-1).split('.')
+      const [table, column] = fullMessage.split(' ').at(-1)!.split('.')
       userFriendlyMessage = `One of the ${table} with this ${column} already exists.`
+      errorData.name = column
+      errorData.message = 'This value must be unique but is already in use.'
+    } else if (code === '23505') {
+      const column = cause?.column ?? cause?.detail?.match(/\(([^)]+)\)=/)?.[1] ?? ''
+      const table = cause?.table ?? cause?.constraint?.split('_').slice(0, -2).join('_') ?? 'records'
+      userFriendlyMessage = `One of the ${table} with this ${column || 'value'} already exists.`
       errorData.name = column
       errorData.message = 'This value must be unique but is already in use.'
     }
@@ -95,10 +102,38 @@ export function handleDrizzleError(error: any) {
     }
   }
 
-  if (code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+  if (code === 'SQLITE_CONSTRAINT_FOREIGNKEY' || code === '23503') {
     return {
       statusCode: 400,
       statusMessage: 'Cannot delete record because it is referenced by another record',
+    }
+  }
+
+  if (code === '23502') {
+    const column = cause?.column ?? ''
+    return {
+      statusCode: 400,
+      statusMessage: 'Validation Error',
+      stack: '',
+      data: {
+        message: `${column || 'A required field'} cannot be empty.`,
+        errors: [{
+          name: column,
+          message: 'This field is required.',
+        }],
+      },
+    }
+  }
+
+  if (code === '23514') {
+    return {
+      statusCode: 400,
+      statusMessage: 'Validation Error',
+      stack: '',
+      data: {
+        message: 'One of the submitted values violates a database constraint.',
+        errors: [],
+      },
     }
   }
 
