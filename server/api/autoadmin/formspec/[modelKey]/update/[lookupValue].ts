@@ -1,7 +1,7 @@
 import type { Table } from 'drizzle-orm'
 import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
-import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/matadata'
+import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metadata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 import { eq } from 'drizzle-orm'
 import { zerialize } from 'zodex'
