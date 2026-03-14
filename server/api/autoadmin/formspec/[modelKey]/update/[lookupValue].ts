@@ -59,6 +59,13 @@ export default defineEventHandler(async (event) => {
 
   spec.values = await getTableValues(cfg, spec, lookupValue)
 
+  if (!spec.values) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `No instance found for model "${modelKey}" with lookup value "${lookupValue}".`,
+    })
+  }
+
   const foreignKeys = getTableForeignKeys(model)
   const specWithForeignKeys = await addForeignKeysToFormSpec(spec, cfg, foreignKeys)
 
