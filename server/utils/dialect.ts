@@ -110,20 +110,31 @@ export function buildTextSearchCondition(column: AnyColumn, value: string): SQL 
   return like(column, `%${value}%`)
 }
 
+// export function buildAggregateExpression(
+//   fn: 'avg' | 'sum' | 'min' | 'max' | 'count',
+//   column: AnyColumn,
+// ): SQL<number> {
+//   switch (fn) {
+//     case 'avg':
+//       return sql<number>`avg(${column}) OVER ()`
+//     case 'sum':
+//       return sql<number>`sum(${column}) OVER ()`
+//     case 'min':
+//       return sql<number>`min(${column}) OVER ()`
+//     case 'max':
+//       return sql<number>`max(${column}) OVER ()`
+//     case 'count':
+//       return sql<number>`sum(case when cast(${column} as text) not in ('', '0', 'false') then 1 else 0 end) OVER ()`
+//   }
+// }
+
 export function buildAggregateExpression(
-  fn: 'avg' | 'sum' | 'min' | 'max' | 'count',
-  column: AnyColumn,
+  fn: string,
+  colName: string,
+  key: string,
 ): SQL<number> {
-  switch (fn) {
-    case 'avg':
-      return sql<number>`avg(${column}) OVER ()`
-    case 'sum':
-      return sql<number>`sum(${column}) OVER ()`
-    case 'min':
-      return sql<number>`min(${column}) OVER ()`
-    case 'max':
-      return sql<number>`max(${column}) OVER ()`
-    case 'count':
-      return sql<number>`sum(case when cast(${column} as text) not in ('', '0', 'false') then 1 else 0 end) OVER ()`
+  if (fn === 'count') {
+    return sql<number>`${sql.raw(`sum(CASE WHEN ${colName} THEN 1 ELSE 0 END) OVER () AS ${key}`)}`
   }
+  return sql<number>`${sql.raw(`${fn}(${colName}) OVER () AS ${key}`)}`
 }

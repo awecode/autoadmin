@@ -2,8 +2,9 @@ import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 import type { SQL, Table } from 'drizzle-orm'
 import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { asc, count, desc, eq, getTableColumns, like, or, sql } from 'drizzle-orm'
+import { asc, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
+import { buildAggregateExpression, buildTextSearchCondition } from '../utils/dialect'
 import { colKey, getPaginatedResults } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
@@ -80,7 +81,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
           // if (!column) {
           //   throw new Error(`Invalid aggregate column: ${value.column}`)
           // }
-        } else {
+        }
+        else {
           colName = value.column.name
         }
         if (!value.function) {
@@ -89,17 +91,10 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
         if (!aggregateFunctions.includes(value.function)) {
           throw new Error('Invalid function')
         }
-        let sqlExpression: SQL<number>
-        // This breaks for snake case in db, camelCase in drizzle without name specified
-        // column.name returns camelCase but we need snake case for raw sql
-        // https://github.com/drizzle-team/drizzle-orm/issues/3094
-        if (value.function === 'count') {
-          sqlExpression = sql<number>`${sql.raw(`sum(CASE WHEN ${colName} THEN 1 ELSE 0 END) OVER () AS ${key}`)
-          }`
-        } else {
-          sqlExpression = sql<number>`${sql.raw(`${value.function}(${colName}) OVER () AS ${key}`)
-          }`
-        }
+        // if (!column) {
+        //   throw new Error(`Invalid aggregate column: ${String(value.column)}`)
+        // }
+        const sqlExpression = buildAggregateExpression(value.function, colName, key)
         return [key, sqlExpression]
       }),
     )
@@ -118,7 +113,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   if (shouldSelectAllColumns) {
     selections = { ...tableColumns, ...selections }
     baseQuery = db.select(selections).from(model)
-  } else {
+  }
+  else {
     const columnNames = columns.map(column => column.accessorKey)
     // only select the required column names from the table, not all columns
     const columnselections = Object.fromEntries(
@@ -145,8 +141,9 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
     for (const field of searchFields) {
       if (field in tableColumns) {
         // Direct column search
-        searchConditions.push(like(tableColumns[field]!, `%${searchQuery}%`))
-      } else if (field.includes('.')) {
+        searchConditions.push(buildTextSearchCondition(tableColumns[field]!, searchQuery))
+      }
+      else if (field.includes('.')) {
         // Foreign key field search (e.g., preferredLocationId.name)
         const [fk, foreignColumnName] = field.split('.')
         if (fk && foreignColumnName && fk in tableColumns) {
@@ -168,7 +165,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
               }
 
               // Add search condition for foreign column
-              searchConditions.push(like(foreignTableColumns[foreignColumnName]!, `%${searchQuery}%`))
+              searchConditions.push(buildTextSearchCondition(foreignTableColumns[foreignColumnName]!, searchQuery))
             }
           }
         }
@@ -184,7 +181,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   if (cfg.list.enableFilter && filters && filters.length > 0) {
     for (const filter of filters) {
       // Skip if filter is a string (shouldn't happen after prepareFilters, but type safety)
-      if (typeof filter === 'string') continue
+      if (typeof filter === 'string')
+        continue
 
       const filterValue = query[filter.field]
       if (filterValue !== undefined && filterValue !== null && filterValue !== '') {
@@ -193,11 +191,13 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
             const boolValue = filterValue === 'true' || filterValue === true
             const conditions = await filter.queryConditions(db, boolValue)
             filterConditions.push(...conditions)
-          } else {
+          }
+          else {
             const conditions = await filter.queryConditions(db, filterValue)
             filterConditions.push(...conditions)
           }
-        } else {
+        }
+        else {
           const column = tableColumns[filter.field]
           if (!column) {
             throw new Error(`Invalid filter field: ${filter.field}`)
@@ -206,7 +206,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
             // Handle boolean filters
             const boolValue = filterValue === 'true' || filterValue === true
             filterConditions.push(eq(column, boolValue))
-          } else if (filter.type === 'daterange') {
+          }
+          else if (filter.type === 'daterange') {
             const condition = createDateRangeFilterCondition(
               column,
               filterValue,
@@ -215,7 +216,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
             if (condition) {
               filterConditions.push(condition)
             }
-          } else if (filter.type === 'date') {
+          }
+          else if (filter.type === 'date') {
             const condition = createDateFilterCondition(
               column,
               filterValue,
@@ -224,7 +226,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
             if (condition) {
               filterConditions.push(condition)
             }
-          } else if (filter.type === 'text' || filter.type === 'relation' || filter.type === 'select') {
+          }
+          else if (filter.type === 'text' || filter.type === 'relation' || filter.type === 'select') {
             filterConditions.push(eq(column, filterValue))
           }
         }
@@ -236,9 +239,11 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   let combinedConditions: SQL | undefined
   if (searchCondition && filterConditions.length > 0) {
     combinedConditions = sql`${searchCondition} AND ${sql.join(filterConditions, sql` AND `)}`
-  } else if (searchCondition) {
+  }
+  else if (searchCondition) {
     combinedConditions = searchCondition
-  } else if (filterConditions.length > 0) {
+  }
+  else if (filterConditions.length > 0) {
     combinedConditions = sql.join(filterConditions, sql` AND `)
   }
   // Add joins to the query and prepare ordering
@@ -286,14 +291,16 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
             baseQuery = baseQuery.orderBy(orderFn(foreignTableColumns[foreignColumnName]!))
           }
         }
-      } else {
+      }
+      else {
         // Direct column sorting
         if (column.sortKey in tableColumns) {
           baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]!))
         }
       }
     }
-  } else {
+  }
+  else {
     // default ordering by primary key descending
     const primaryKeyColumn = getPrimaryKeyColumn(model)
     baseQuery = baseQuery.orderBy(desc(primaryKeyColumn))
@@ -376,7 +383,8 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       filters,
       spec,
     }
-  } else {
+  }
+  else {
     return {
       ...response,
       filters,
