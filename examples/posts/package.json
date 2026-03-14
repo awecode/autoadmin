@@ -10,7 +10,9 @@
     "postinstall": "nuxt prepare",
     "test": "pnpm run test:sqlite",
     "test:sqlite": "NUXT_PUBLIC_AUTOADMIN_TITLE='Autoadmin Example' vitest",
-    "test:postgres": "NUXT_DATABASE_DIALECT=postgres NUXT_PUBLIC_AUTOADMIN_TITLE='Autoadmin Example' vitest"
+    "test:postgres": "NUXT_DATABASE_DIALECT=postgres NUXT_PUBLIC_AUTOADMIN_TITLE='Autoadmin Example' vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@tiptap/y-tiptap": "^3.0.2",
