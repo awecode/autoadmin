@@ -5,7 +5,7 @@ import type { Option } from './form'
 import type { zodToListSpec } from './list'
 import type { TableMetadata } from './metdata'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { eq, sql } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { getLabelColumnFromModel } from './autoadmin'
 import { colKey } from './drizzle'
 import { getTableForeignKeysByColumn } from './relation'
@@ -54,13 +54,20 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
     }
   } else if (type === 'text' || type === 'number') {
     const column = cfg.columns[field]
-    // TODO Fix for other dialects
+    // TODO Test for all dialects
     //   const options = await db.all(
     //     sql`SELECT DISTINCT ${column} AS value FROM ${cfg.model}`,
     //   )
-    const filterOptions = options ?? await db.all(
-      sql`SELECT ${column} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${column}`,
-    ) as { value: string, count: number }[]
+    // const filterOptions = options ?? await db.all(
+    //   sql`SELECT ${column} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${column}`,
+    // ) as { value: string, count: number }[]
+    const filterOptions = options ?? await db
+      .select({
+        value: column,
+        count: count(),
+      })
+      .from(cfg.model)
+      .groupBy(column)
     return {
       field,
       label: label || toTitleCase(field),
@@ -75,7 +82,7 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
       type: 'select',
       options: filterOptions,
     }
-  } else if (type === 'relation') {
+  } else if (type === 'relation') { 
     if (relations.length === 0) {
       throw new Error(`Invalid relation: ${JSON.stringify(field)}`)
     }

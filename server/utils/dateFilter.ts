@@ -1,10 +1,11 @@
 import type { Column } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
+import { getSQLiteTimestampDivisor, isDateOnlyColumn, isSQLiteTimestampColumn } from './dialect'
 
 export const createDateRangeFilterCondition = (column: Column, value: string, hasMs: boolean = false) => {
   // Handle date range filters - expects format "startDate,endDate"
-  const isSqlite = column.columnType === 'SQLiteTimestamp'
-  const divisor = hasMs ? 1 : 1000
+  const isSqlite = isSQLiteTimestampColumn(column)
+  const divisor = isSqlite ? (hasMs ? 1 : getSQLiteTimestampDivisor(column)) : 1000
   if (typeof value === 'string' && value.includes(',')) {
     const [startDate, endDate] = value.split(',')
 
@@ -22,6 +23,8 @@ export const createDateRangeFilterCondition = (column: Column, value: string, ha
         const startTimestamp = Math.floor(startDateTime.getTime() / divisor)
         const endTimestamp = Math.floor(endDateTime.getTime() / divisor)
         return sql`${column} >= ${startTimestamp} AND ${column} <= ${endTimestamp}`
+      } else if (isDateOnlyColumn(column)) {
+        return sql`${column} >= ${startDate} AND ${column} <= ${endDate}`
       } else {
         const startOfDay = `${startDate} 00:00:00`
         const endOfDay = `${endDate} 23:59:59`
@@ -39,6 +42,8 @@ export const createDateRangeFilterCondition = (column: Column, value: string, ha
 
         const startTimestamp = Math.floor(startDateTime.getTime() / divisor)
         return sql`${column} >= ${startTimestamp}`
+      } else if (isDateOnlyColumn(column)) {
+        return sql`${column} >= ${startDate}`
       } else {
         const startOfDay = `${startDate} 00:00:00`
         return sql`${column} >= ${startOfDay}`
@@ -55,6 +60,8 @@ export const createDateRangeFilterCondition = (column: Column, value: string, ha
 
         const endTimestamp = Math.floor(endDateTime.getTime() / divisor)
         return sql`${column} <= ${endTimestamp}`
+      } else if (isDateOnlyColumn(column)) {
+        return sql`${column} <= ${endDate}`
       } else {
         const endOfDay = `${endDate} 23:59:59`
         return sql`${column} <= ${endOfDay}`
@@ -65,8 +72,8 @@ export const createDateRangeFilterCondition = (column: Column, value: string, ha
 
 export const createDateFilterCondition = (column: Column, value: string, hasMs: boolean = false) => {
   // Handle single date filter - expects format "YYYY-MM-DD"
-  const isSqlite = column.columnType === 'SQLiteTimestamp'
-  const divisor = hasMs ? 1 : 1000
+  const isSqlite = isSQLiteTimestampColumn(column)
+  const divisor = isSqlite ? (hasMs ? 1 : getSQLiteTimestampDivisor(column)) : 1000
 
   if (typeof value === 'string' && value.trim() !== '') {
     // Validate date format first
@@ -83,6 +90,8 @@ export const createDateFilterCondition = (column: Column, value: string, hasMs: 
       const startTimestamp = Math.floor(startDate.getTime() / divisor)
       const endTimestamp = Math.floor(endDate.getTime() / divisor)
       return sql`${column} >= ${startTimestamp} AND ${column} <= ${endTimestamp}`
+    } else if (isDateOnlyColumn(column)) {
+      return sql`${column} = ${value}`
     } else {
       // TODO Other dialects can directly use the date string without the time
       const startOfDay = `${value} 00:00:00`
