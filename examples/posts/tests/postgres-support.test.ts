@@ -2,10 +2,12 @@
 
 import { getTableColumns } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 import { getAdminDialectFromUrl } from '../../../server/utils/dialect'
 import { handleDrizzleError } from '../../../server/utils/drizzle'
 import { getTableMetadata } from '../../../server/utils/metadata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '../../../server/utils/relation'
+import { processSchemaForForm } from '../../../utils/form'
 import { posts, postsToTags, users } from '../server/db/postgres'
 
 describe('postgres support helpers', () => {
@@ -69,5 +71,23 @@ describe('postgres support helpers', () => {
         }],
       },
     })
+  })
+
+  it('keeps real schema fields when processing form schemas', () => {
+    const schema = z.object({
+      title: z.string(),
+      slug: z.string(),
+      authorId: z.number(),
+    })
+
+    const processed = processSchemaForForm(schema, {
+      fields: [
+        { name: 'title', type: 'text' },
+        { name: 'authorId', type: 'relation' },
+        { name: '___tags___tagId', type: 'relation-many' },
+      ],
+    })
+
+    expect(Object.keys(processed.shape)).toEqual(['title', 'authorId'])
   })
 })
