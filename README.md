@@ -6,7 +6,7 @@ AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your
 
 ## Installation
 
-Configure `NUXT_DATABASE_URL` environment variable with your database connection URL. PostgreSQL can be selected explicitly with `NUXT_DATABASE_DIALECT=postgres`, or inferred from a `postgres://` / `postgresql://` URL.
+Configure `NUXT_DATABASE_URL` environment variable with your database connection URL. PostgreSQL can be selected explicitly with `NUXT_DATABASE_DIALECT=postgresql`, or inferred from a `postgres://` / `postgresql://` URL.
 
 ## Supported Databases
 
@@ -991,7 +991,7 @@ AutoAdmin can be configured using environment variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `NUXT_DATABASE_DIALECT` | Optional explicit database dialect (`sqlite` or `postgres`) | inferred from runtime |
+| `NUXT_DATABASE_DIALECT` | Optional explicit database dialect (`sqlite` or `postgresql`) | inferred from runtime |
 | `NUXT_DATABASE_URL` | Database connection URL (e.g. `file:server/db/db.sqlite` or `postgres://user:pass@localhost:5432/db`) | undefined |
 | `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
 | `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |

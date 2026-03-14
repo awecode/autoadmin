@@ -3,18 +3,18 @@
 import { getTableColumns } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { getAdminDialectFromUrl } from '../../../server/utils/dialect'
 import { handleDrizzleError } from '../../../server/utils/drizzle'
 import { getTableMetadata } from '../../../server/utils/metadata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '../../../server/utils/relation'
+import { getDialectFromUrl } from '../../../utils/databaseDialect'
 import { processSchemaForForm } from '../../../utils/form'
-import { posts, postsToTags, users } from '../server/db/postgres'
+import { posts, postsToTags, users } from '../server/db/postgresql'
 
 describe('postgres support helpers', () => {
   it('detects postgres URLs', () => {
-    expect(getAdminDialectFromUrl('postgres://user:pass@localhost:5432/app')).toBe('postgres')
-    expect(getAdminDialectFromUrl('postgresql://user:pass@localhost:5432/app')).toBe('postgres')
-    expect(getAdminDialectFromUrl('file:./db.sqlite')).toBe('sqlite')
+    expect(getDialectFromUrl('postgres://user:pass@localhost:5432/app')).toBe('postgresql')
+    expect(getDialectFromUrl('postgresql://user:pass@localhost:5432/app')).toBe('postgresql')
+    expect(getDialectFromUrl('file:./db.sqlite')).toBe('sqlite')
   })
 
   it('reads postgres foreign keys from schemas', () => {

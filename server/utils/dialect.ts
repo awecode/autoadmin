@@ -1,28 +1,16 @@
 import type { AnyColumn, Column, SQL, Table } from 'drizzle-orm'
+import type { DatabaseDialect } from '../../utils/databaseDialect'
 import process from 'node:process'
 import { getTableColumns, ilike, like, sql } from 'drizzle-orm'
 import { getTableConfig as getPgTableConfig } from 'drizzle-orm/pg-core'
 import { getTableConfig as getSqliteTableConfig } from 'drizzle-orm/sqlite-core'
-
-export type AdminDialect = 'sqlite' | 'postgres'
-
-const SQLITE_URL_PREFIXES = ['file:', 'libsql:', 'sqlite:']
-const POSTGRES_URL_PREFIXES = ['postgres://', 'postgresql://']
+import { getDialectFromUrl, getExplicitDialect } from '../../utils/databaseDialect'
 
 interface SupportedTableConfig {
   foreignKeys?: Array<{ reference: () => { columns: AnyColumn[], foreignColumns: AnyColumn[] } }>
 }
 
-export function getAdminDialectFromUrl(url: string): AdminDialect | undefined {
-  if (POSTGRES_URL_PREFIXES.some(prefix => url.startsWith(prefix))) {
-    return 'postgres'
-  }
-  if (SQLITE_URL_PREFIXES.some(prefix => url.startsWith(prefix))) {
-    return 'sqlite'
-  }
-}
-
-export function getConfiguredAdminDialect(): AdminDialect {
+export function getConfiguredAdminDialect(): DatabaseDialect {
   const globalEnv = globalThis as typeof globalThis & { __env__?: { DB?: unknown }, DB?: unknown }
   const dbBinding = process.env.DB || globalEnv.__env__?.DB || globalEnv.DB
   if (dbBinding) {
@@ -30,13 +18,13 @@ export function getConfiguredAdminDialect(): AdminDialect {
   }
 
   const config = useRuntimeConfig()
-  const explicitDialect = config.databaseDialect
-  if (explicitDialect === 'sqlite' || explicitDialect === 'postgres') {
+  const explicitDialect = getExplicitDialect(config.databaseDialect)
+  if (explicitDialect) {
     return explicitDialect
   }
 
   if (config.databaseUrl) {
-    const inferredDialect = getAdminDialectFromUrl(config.databaseUrl as string)
+    const inferredDialect = getDialectFromUrl(config.databaseUrl as string)
     if (inferredDialect) {
       return inferredDialect
     }
@@ -45,16 +33,16 @@ export function getConfiguredAdminDialect(): AdminDialect {
   return 'sqlite'
 }
 
-export function getColumnDialect(column: Pick<Column, 'columnType'>): AdminDialect | undefined {
+export function getColumnDialect(column: Pick<Column, 'columnType'>): DatabaseDialect | undefined {
   if (column.columnType.startsWith('Pg')) {
-    return 'postgres'
+    return 'postgresql'
   }
   if (column.columnType.startsWith('SQLite')) {
     return 'sqlite'
   }
 }
 
-export function getTableDialect(table: Table): AdminDialect | undefined {
+export function getTableDialect(table: Table): DatabaseDialect | undefined {
   const firstColumn = Object.values(getTableColumns(table))[0]
   if (!firstColumn) {
     return undefined
@@ -64,7 +52,7 @@ export function getTableDialect(table: Table): AdminDialect | undefined {
 
 export function getTableConfigByDialect(table: Table): SupportedTableConfig {
   const dialect = getTableDialect(table)
-  if (dialect === 'postgres') {
+  if (dialect === 'postgresql') {
     return getPgTableConfig(table as never) as SupportedTableConfig
   }
   return getSqliteTableConfig(table as never) as SupportedTableConfig
@@ -104,7 +92,7 @@ export function getSQLiteTimestampDivisor(column: Column) {
 }
 
 export function buildTextSearchCondition(column: AnyColumn, value: string): SQL {
-  if (getColumnDialect(column) === 'postgres') {
+  if (getColumnDialect(column) === 'postgresql') {
     return ilike(column, `%${value}%`)
   }
   return like(column, `%${value}%`)
