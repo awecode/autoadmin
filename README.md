@@ -1,12 +1,20 @@
 # AutoAdmin Documentation
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. Currently, SQLite (and variants like Cloudflare D1) is supported. PostgreSQL and MySQL/MariaDB support is coming soon.
+AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. SQLite and its variants (including Cloudflare D1 and libsql) are supported, and Node PostgreSQL is supported via the `pg` package.
 
-*Requirements: A Nuxt Project with Drizzle configured with a SQLite Schema*
+*Requirements: A Nuxt Project with Drizzle configured with a supported Drizzle schema*
 
 ## Installation
 
-Configure `NUXT_DATABASE_URL` environment variable with your database connection url.
+Configure `NUXT_DATABASE_URL` environment variable with your database connection URL. PostgreSQL can be selected explicitly with `NUXT_DATABASE_DIALECT=postgres`, or inferred from a `postgres://` / `postgresql://` URL.
+
+## Supported Databases
+
+| Database | Runtime | Notes |
+| --- | --- | --- |
+| SQLite / libsql | Node | Uses the libsql adapter |
+| Cloudflare D1 | Cloudflare Workers | Uses the D1 binding automatically |
+| PostgreSQL | Node | Uses `pg` with Drizzle's Node Postgres adapter |
 
 Use autoadmin as a layer in your nuxt project. You can add the following to your nuxt.config.ts
 
@@ -65,6 +73,34 @@ export const posts = sqliteTable('posts', {
   // Enum field
   status: text({ enum: postStatusEnum }).default('Draft'),
   // Foreign key relationship
+  authorId: integer().references(() => users.id),
+})
+```
+
+Here is the equivalent PostgreSQL version using `pgTable`.
+
+```ts
+// server/db/schema.ts
+import { boolean, date, integer, pgEnum, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+
+const postStatusEnum = pgEnum('post_status', ['Draft', 'Published', 'Archived'])
+
+export const users = pgTable('users', {
+  id: serial().primaryKey(),
+  name: text().notNull(),
+  email: text().notNull().unique(),
+})
+
+export const posts = pgTable('posts', {
+  id: serial().primaryKey(),
+  title: text().notNull(),
+  content: text(),
+  featuredImage: text(),
+  views: integer().default(0),
+  isPublished: boolean().default(false),
+  publishedOn: date({ mode: 'date' }).notNull(),
+  createdAt: timestamp({ withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  status: postStatusEnum().default('Draft'),
   authorId: integer().references(() => users.id),
 })
 ```
@@ -954,7 +990,8 @@ AutoAdmin can be configured using environment variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `NUXT_DATABASE_URL` | Database Connection Url (e.g. `file:server/db/db.sqlite`) | undefined |
+| `NUXT_DATABASE_DIALECT` | Optional explicit database dialect (`sqlite` or `postgres`) | inferred from runtime |
+| `NUXT_DATABASE_URL` | Database connection URL (e.g. `file:server/db/db.sqlite` or `postgres://user:pass@localhost:5432/db`) | undefined |
 | `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
 | `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
 | `NUXT_PUBLIC_PAGINATION_DEFAULT_SIZE` | The default page size for the list view | `20` |
@@ -977,7 +1014,9 @@ NUXT_S3_PUBLIC_URL=<your-public-url>
 
 Example Nuxt Project - https://github.com/awecode/autoadmin/tree/main/examples/posts
 
-SQlite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/sqlite.ts
+SQLite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/sqlite.ts
+
+PostgreSQL Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/postgres.ts
 
 Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts
 
@@ -991,7 +1030,7 @@ You can also customize how cells are rendered on table list by defining a cell f
 - [x] Aggregate Support in List View
 - [ ] Image Uploads in WYSIWYG Editor
 - [ ] Detail View
-- [ ] PostgreSQL Dialect Support
+- [x] PostgreSQL Dialect Support
 - [ ] MySQL Dialect Support
 - [ ] Hooks/Signals
 - [ ] Audit Logs
