@@ -179,6 +179,10 @@ export default defineNuxtPlugin(() => {
           function: 'count',
           column: 'views', // counts truthy values
         },
+        // totalViews: {
+        //   function: 'sum',
+        //   column: 'views',
+        // },
         minViews: {
           function: 'min',
           column: 'views',
