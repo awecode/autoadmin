@@ -22,7 +22,7 @@ export function useAdminDb() {
     else {
       const config = useRuntimeConfig()
       if (config.databaseUrl) {
-        const dialect = getConfiguredAdminDialect()
+        const dialect = getConfiguredAdminDialect(config)
         if (dialect === 'postgresql') {
           _pgPool ??= new Pool({
             connectionString: config.databaseUrl as string,

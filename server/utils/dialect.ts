@@ -1,4 +1,5 @@
 import type { AnyColumn, Column, SQL, Table } from 'drizzle-orm'
+import type { RuntimeConfig } from 'nuxt/schema'
 import type { DatabaseDialect } from '../../utils/databaseDialect'
 import process from 'node:process'
 import { getTableColumns, ilike, like, sql } from 'drizzle-orm'
@@ -10,14 +11,13 @@ interface SupportedTableConfig {
   foreignKeys?: Array<{ reference: () => { columns: AnyColumn[], foreignColumns: AnyColumn[] } }>
 }
 
-export function getConfiguredAdminDialect(): DatabaseDialect {
+export function getConfiguredAdminDialect(config: RuntimeConfig): DatabaseDialect {
   const globalEnv = globalThis as typeof globalThis & { __env__?: { DB?: unknown }, DB?: unknown }
   const dbBinding = process.env.DB || globalEnv.__env__?.DB || globalEnv.DB
   if (dbBinding) {
     return 'sqlite'
   }
 
-  const config = useRuntimeConfig()
   const explicitDialect = getExplicitDialect(config.databaseDialect)
   if (explicitDialect) {
     return explicitDialect
@@ -62,11 +62,8 @@ export function isGeneratedPrimaryKey(column: Column) {
   const config = (column as any).config
   return column.primary === true
     && (
-      config?.autoIncrement === true
-      || typeof config?.generatedIdentityType === 'string'
-      || config?.generatedIdentity !== undefined
-      || config?.generated?.type === 'identity'
-      || /Serial|Identity/.test(column.columnType)
+      config?.autoIncrement === true // For SQLite
+      || /Serial|Identity/.test(column.columnType) // For PostgreSQL - type is PgSerial
     )
 }
 
