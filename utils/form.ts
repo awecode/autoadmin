@@ -16,7 +16,7 @@ export function normalizeOptions(opts: Option[]) {
 
 export function getErrorMessageFromError(error: Error) {
   return typeof error === 'object' && error !== null
-    ? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
+    ? (error as any)?.data?.data?.message ?? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)
     : String(error)
 }
 
