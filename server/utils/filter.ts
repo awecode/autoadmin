@@ -56,20 +56,7 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
   }
   else if (type === 'text' || type === 'number') {
     const column = cfg.columns[field]
-    // TODO Test for all dialects
-    //   const options = await db.all(
-    //     sql`SELECT DISTINCT ${column} AS value FROM ${cfg.model}`,
-    //   )
-    // const filterOptions = options ?? await db.all(
-    //   sql`SELECT ${column} AS value, COUNT(*) AS count FROM ${cfg.model} GROUP BY ${column}`,
-    // ) as { value: string, count: number }[]
-    const filterOptions = options ?? await db
-      .select({
-        value: column,
-        count: count(),
-      })
-      .from(cfg.model)
-      .groupBy(column)
+    const filterOptions = options ?? await db.select({ value: column, count: count() }).from(cfg.model).groupBy(column)
     return {
       field,
       label: label || toTitleCase(field),
