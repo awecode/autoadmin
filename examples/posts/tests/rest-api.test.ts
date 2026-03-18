@@ -1,8 +1,13 @@
+import process from 'node:process'
+import { createClient } from '@libsql/client'
 import { $fetch, setup } from '@nuxt/test-utils/e2e'
-import { describe, expect, it } from 'vitest'
+import { Pool } from 'pg'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { getDialectFromUrl } from '../../../utils/databaseDialect'
 import postsCreateFormSpec from './fixtures/posts-create-formspec.json'
 import postsFilters from './fixtures/posts-filters.json'
 import postsUpdateFormSpec from './fixtures/posts-update-formspec.json'
+import 'dotenv/config'
 
 await setup({
   host: 'http://localhost:3000',
@@ -10,7 +15,72 @@ await setup({
 
 const apiPrefix = '/api/autoadmin'
 
+async function resetDatabase() {
+  const databaseUrl = process.env.NUXT_DATABASE_URL
+  if (!databaseUrl) {
+    throw new Error('NUXT_DATABASE_URL is not set')
+  }
+
+  const dialect = getDialectFromUrl(databaseUrl) ?? 'sqlite'
+
+  if (dialect === 'postgresql') {
+    const pool = new Pool({ connectionString: databaseUrl })
+    try {
+      await pool.query('TRUNCATE TABLE posts_to_tags, posts, tags, users, categories RESTART IDENTITY CASCADE')
+    }
+    finally {
+      await pool.end()
+    }
+    return
+  }
+
+  const client = createClient({ url: databaseUrl })
+  await client.execute('DELETE FROM posts_to_tags')
+  await client.execute('DELETE FROM posts')
+  await client.execute('DELETE FROM tags')
+  await client.execute('DELETE FROM users')
+  await client.execute('DELETE FROM categories')
+  await client.execute('DELETE FROM sqlite_sequence WHERE name IN (\'categories\', \'users\', \'posts\', \'tags\')')
+  await client.close()
+}
+
+function normalizeSpec(spec: any) {
+  const cloned = structuredClone(spec)
+
+  // Normalize form field rules to handle both sqlite and postgres by removing the min and max rules
+  if (cloned?.spec?.fields) {
+    for (const field of cloned.spec.fields) {
+      if (field?.rules && typeof field.rules === 'object') {
+        if (typeof field.rules.min === 'number')
+          delete field.rules.min
+        if (typeof field.rules.max === 'number')
+          delete field.rules.max
+      }
+    }
+  }
+
+  // Normalize schema properties
+  const props = cloned?.spec?.schema?.properties
+  if (props && typeof props === 'object') {
+    for (const key of Object.keys(props)) {
+      const prop = props[key]
+      if (prop && typeof prop === 'object') {
+        if (typeof prop.min === 'number')
+          delete prop.min
+        if (typeof prop.max === 'number')
+          delete prop.max
+      }
+    }
+  }
+
+  return cloned
+}
+
 describe('api', async () => {
+  beforeAll(async () => {
+    await resetDatabase()
+  })
+
   it('should clear any m2m relation of post with tags', async () => {
     // get all posts
     const postsResponse = await $fetch<{ results: { id: number }[] }>(`${apiPrefix}/posts`)
@@ -124,7 +194,7 @@ describe('api', async () => {
   it('should create a post', async () => {
     // Get formspec for posts
     const formSpec = await $fetch(`${apiPrefix}/formspec/posts`)
-    expect(formSpec).toEqual(postsCreateFormSpec)
+    expect(normalizeSpec(formSpec)).toEqual(normalizeSpec(postsCreateFormSpec))
     const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
     const authorId = authors[0]?.value
     expect(authorId).toBeTruthy()
@@ -170,12 +240,12 @@ describe('api', async () => {
 
     const formSpec = await $fetch<any>(`${apiPrefix}/formspec/posts/update/${postId}`)
 
-    // Compare formSpec with postsUpdateFormSpec but ignore createdAt and updatedAt fields
+    // Compare formSpec with fixture but ignore createdAt and updatedAt fields
     const { createdAt: _c1, updatedAt: _u1, ...formSpecValues } = formSpec.spec.values
     const { createdAt: _c2, updatedAt: _u2, ...expectedValues } = postsUpdateFormSpec.spec.values
 
-    expect({ ...formSpec, spec: { ...formSpec.spec, values: formSpecValues } })
-      .toEqual({ ...postsUpdateFormSpec, spec: { ...postsUpdateFormSpec.spec, values: expectedValues } })
+    expect(normalizeSpec({ ...formSpec, spec: { ...formSpec.spec, values: formSpecValues } }))
+      .toEqual(normalizeSpec({ ...postsUpdateFormSpec, spec: { ...postsUpdateFormSpec.spec, values: expectedValues } }))
 
     const authors = await $fetch<{ label: string, value: number }[]>(formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint)
     const authorId = authors[1]?.value

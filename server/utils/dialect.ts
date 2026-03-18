@@ -5,7 +5,7 @@ import process from 'node:process'
 import { getTableColumns, ilike, like, sql } from 'drizzle-orm'
 import { getTableConfig as getPgTableConfig } from 'drizzle-orm/pg-core'
 import { getTableConfig as getSqliteTableConfig } from 'drizzle-orm/sqlite-core'
-import { getDialectFromUrl, getExplicitDialect } from '../../utils/databaseDialect'
+import { getDialectFromUrl } from '../../utils/databaseDialect'
 
 interface SupportedTableConfig {
   foreignKeys?: Array<{ reference: () => { columns: AnyColumn[], foreignColumns: AnyColumn[] } }>
@@ -18,7 +18,9 @@ export function getConfiguredAdminDialect(config: RuntimeConfig): DatabaseDialec
     return 'sqlite'
   }
 
-  const explicitDialect = getExplicitDialect(config.databaseDialect)
+  const explicitDialect = config.databaseDialect === 'sqlite' || config.databaseDialect === 'postgresql'
+    ? config.databaseDialect
+    : undefined
   if (explicitDialect) {
     return explicitDialect
   }
