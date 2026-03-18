@@ -1,8 +1,13 @@
 import { $fetch, createPage, setup, url } from '@nuxt/test-utils/e2e'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { resetDatabase } from './helpers/resetDatabase'
 
 await setup({
   host: 'http://localhost:3000',
+})
+
+beforeAll(async () => {
+  await resetDatabase()
 })
 
 describe('index', async () => {

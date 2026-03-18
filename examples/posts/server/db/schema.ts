@@ -1,8 +1,9 @@
-import * as postgresqlSchema from './postgresql'
+// import * as postgresqlSchema from './postgresql'
+
+// const schema = postgresqlSchema
+
 import * as sqliteSchema from './sqlite'
 
-// const dialect = process.env.NUXT_DATABASE_DIALECT === 'postgresql' ? 'postgresql' : 'sqlite'
-const dialect = 'postgresql'
-const schema = dialect === 'postgresql' ? postgresqlSchema : sqliteSchema
+const schema = sqliteSchema
 
 export const { categories, posts, postsToTags, tags, users } = schema

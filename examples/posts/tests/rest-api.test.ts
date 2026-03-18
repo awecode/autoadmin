@@ -1,48 +1,15 @@
-import process from 'node:process'
-import { createClient } from '@libsql/client'
 import { $fetch, setup } from '@nuxt/test-utils/e2e'
-import { Pool } from 'pg'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { getDialectFromUrl } from '../../../utils/databaseDialect'
 import postsCreateFormSpec from './fixtures/posts-create-formspec.json'
 import postsFilters from './fixtures/posts-filters.json'
 import postsUpdateFormSpec from './fixtures/posts-update-formspec.json'
-import 'dotenv/config'
+import { resetDatabase } from './helpers/resetDatabase'
 
 await setup({
   host: 'http://localhost:3000',
 })
 
 const apiPrefix = '/api/autoadmin'
-
-async function resetDatabase() {
-  const databaseUrl = process.env.NUXT_DATABASE_URL
-  if (!databaseUrl) {
-    throw new Error('NUXT_DATABASE_URL is not set')
-  }
-
-  const dialect = getDialectFromUrl(databaseUrl) ?? 'sqlite'
-
-  if (dialect === 'postgresql') {
-    const pool = new Pool({ connectionString: databaseUrl })
-    try {
-      await pool.query('TRUNCATE TABLE posts_to_tags, posts, tags, users, categories RESTART IDENTITY CASCADE')
-    }
-    finally {
-      await pool.end()
-    }
-    return
-  }
-
-  const client = createClient({ url: databaseUrl })
-  await client.execute('DELETE FROM posts_to_tags')
-  await client.execute('DELETE FROM posts')
-  await client.execute('DELETE FROM tags')
-  await client.execute('DELETE FROM users')
-  await client.execute('DELETE FROM categories')
-  await client.execute('DELETE FROM sqlite_sequence WHERE name IN (\'categories\', \'users\', \'posts\', \'tags\')')
-  await client.close()
-}
 
 function normalizeSpec(spec: any) {
   const cloned = structuredClone(spec)
