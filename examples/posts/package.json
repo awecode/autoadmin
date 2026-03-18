@@ -8,9 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "pnpm run test:sqlite",
-    "test:sqlite": "NUXT_PUBLIC_AUTOADMIN_TITLE='Autoadmin Example' vitest",
-    "test:postgresql": "NUXT_DATABASE_DIALECT=postgresql NUXT_PUBLIC_AUTOADMIN_TITLE='Autoadmin Example' vitest",
+    "test": "NUXT_PUBLIC_AUTOADMIN_TITLE='Autoadmin Example' vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },

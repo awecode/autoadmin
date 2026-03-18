@@ -18,6 +18,8 @@ export function useAdminDb() {
         casing: 'snake_case',
         // logger: true,
       })
+      // eslint-disable-next-line no-console
+      console.info('Using D1 database')
     }
     else {
       const config = useRuntimeConfig()
@@ -31,12 +33,16 @@ export function useAdminDb() {
             casing: 'snake_case',
             // logger: true,
           })
+          // eslint-disable-next-line no-console
+          console.info('Using PostgreSQL database')
         }
         else {
           _db = drizzleLibsql(config.databaseUrl as string, {
             casing: 'snake_case',
             // logger: true,
           })
+          // eslint-disable-next-line no-console
+          console.info('Using SQLite database')
         }
       }
       else {
