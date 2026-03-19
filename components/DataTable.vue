@@ -507,7 +507,7 @@ const CellRenderer = defineComponent({
           manualSorting: true,
         }"
         :ui="{ td: 'whitespace-normal py-1 px-4' }"
-        @update:sorting="sort = $event"
+        @update:sorting="sort = $event ?? []"
       >
         <!-- Dynamic cell templates for all columns except actions -->
         <template
