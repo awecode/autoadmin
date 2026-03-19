@@ -8,7 +8,10 @@ import { getConfiguredAdminDialect } from './dialect'
 let _db: ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
 let _pgPool: Pool | undefined
 
-export function useAdminDb() {
+// export type AdminDbType = ReturnType<typeof useAdminDb>
+export type AdminDbType = ReturnType<typeof drizzleLibsql>
+
+export function useAdminDb(): AdminDbType {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
     const globalEnv = globalThis as typeof globalThis & { __env__?: { DB?: unknown }, DB?: unknown }
@@ -50,8 +53,5 @@ export function useAdminDb() {
       }
     }
   }
-  return _db
+  return _db as AdminDbType
 }
-
-// export type AdminDbType = ReturnType<typeof useAdminDb>
-export type AdminDbType = ReturnType<typeof drizzleLibsql>

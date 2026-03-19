@@ -72,9 +72,9 @@ if (props.mode === 'create' && props.spec.slugFields) {
   for (const [slugField, sourceFields] of Object.entries(props.spec.slugFields)) {
     // Watch the source fields and update the slug field when they change
     watch(
-      () => sourceFields.map(field => state[field]).filter(Boolean),
+      () => sourceFields?.map(field => state[field]).filter(Boolean),
       (values) => {
-        if (values.length > 0) {
+        if (values && values.length > 0) {
           // If any value is a Date, use toIsoDateString, else .toString()
           const slugSource = values.map(v => v instanceof Date && typeof v.toISOString === 'function' ? v.toISOString().split('T')[0] : v.toString()).join(' ')
           state[slugField] = slugify(slugSource)

@@ -56,6 +56,9 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
   }
   else if (type === 'text' || type === 'number') {
     const column = cfg.columns[field]
+    if (!column) {
+      throw new Error(`Invalid column: ${JSON.stringify(field)}`)
+    }
     const filterOptions = options ?? await db.select({ value: column, count: count() }).from(cfg.model).groupBy(column)
     return {
       field,

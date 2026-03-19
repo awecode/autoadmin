@@ -81,7 +81,7 @@ export function getAltFromUrl(urlStr: string): string {
     const pathname = urlStr.startsWith('http://') || urlStr.startsWith('https://')
       ? new URL(urlStr).pathname
       : urlStr.split('?')[0]
-    const name = pathname.split('/').filter(Boolean).pop() ?? ''
+    const name = pathname?.split('/').filter(Boolean).pop() ?? ''
     if (!looksLikeFilenameWord(name))
       return ''
     return getAltFromFilename(decodeURIComponent(name))

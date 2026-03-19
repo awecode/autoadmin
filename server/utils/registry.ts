@@ -160,6 +160,7 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   columns: ReturnType<typeof getTableColumns<T>>
   metadata: TableMetadata
   apiPrefix: string
+  slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
 }
 
 function getStaticDefaultOptions() {

@@ -1,4 +1,5 @@
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
+import type { Table } from 'drizzle-orm'
 import type { ZodObject, ZodType } from 'zod'
 import type { SzType } from 'zodex'
 import { defu } from 'defu'
@@ -58,7 +59,7 @@ export interface FieldSpec {
   }
   _defined?: boolean
 }
-export interface FormSpec {
+export interface FormSpec<T extends Table = Table> {
   fields: FieldSpec[]
   values?: Record<string, any>
   warnOnUnsavedChanges?: boolean
@@ -66,7 +67,7 @@ export interface FormSpec {
   endpoint?: string
   listTitle?: string
   schema?: SzType
-  slugFields?: Record<string, string[]>
+  slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
 }
 
 export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormSpec {
