@@ -40,6 +40,18 @@ export default defineNuxtConfig({
   build: {
     transpile: ['vue'],
   },
+  vite: {
+    optimizeDeps: {
+      include: [
+        'prosemirror-keymap',
+        'prosemirror-model',
+        'prosemirror-state',
+        'prosemirror-tables',
+        'prosemirror-transform',
+        'prosemirror-view',
+      ],
+    },
+  },
   $meta: {
     name: 'autoadmin',
   },
