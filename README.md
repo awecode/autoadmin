@@ -6,15 +6,13 @@ AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your
 
 ## Installation
 
-Configure `NUXT_DATABASE_URL` environment variable with your database connection URL. PostgreSQL can be selected explicitly with `NUXT_DATABASE_DIALECT=postgresql`, or inferred from a `postgres://` / `postgresql://` URL.
-
-## Supported Databases
-
-| Database | Runtime | Notes |
-| --- | --- | --- |
-| SQLite / libsql | Node | Uses the libsql adapter |
-| Cloudflare D1 | Cloudflare Workers | Uses the D1 binding automatically |
-| PostgreSQL | Node | Uses `pg` with Drizzle's Node Postgres adapter |
+Configure `NUXT_DATABASE_URL` environment variable with your database connection URL.
+```
+NUXT_DATABASE_URL=file:server/db/db.sqlite
+# OR for Postgres
+NUXT_DATABASE_URL=postgresql://postgres:password@localhost:5432/dbname
+```
+Cloudflare D1 binding is automatically detected for the binding name `DB`.
 
 Use autoadmin as a layer in your nuxt project. You can add the following to your nuxt.config.ts
 
@@ -77,7 +75,7 @@ export const posts = sqliteTable('posts', {
 })
 ```
 
-Here is the equivalent PostgreSQL version using `pgTable`.
+Here is the equivalent PostgreSQL version.
 
 ```ts
 // server/db/schema.ts
@@ -991,7 +989,6 @@ AutoAdmin can be configured using environment variables:
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `NUXT_DATABASE_DIALECT` | Optional explicit database dialect (`sqlite` or `postgresql`) | inferred from runtime |
 | `NUXT_DATABASE_URL` | Database connection URL (e.g. `file:server/db/db.sqlite` or `postgres://user:pass@localhost:5432/db`) | undefined |
 | `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
 | `NUXT_PUBLIC_AUTOADMIN_URL_PREFIX` | The URL prefix for the admin interface | `/admin` |
@@ -1041,17 +1038,17 @@ You can also customize how cells are rendered on table list by defining a cell f
 
 - [x] Integrate Auth Layer - Can use any auth layer like [https://github.com/awecode/nuxt-better-auth-layer](https://github.com/awecode/nuxt-better-auth-layer)
 - [x] Aggregate Support in List View
-- [ ] Image Uploads in WYSIWYG Editor
-- [ ] Detail View
 - [x] PostgreSQL Dialect Support
+- [x] Image Uploads in WYSIWYG Editor
+- [ ] Detail View
 - [ ] MySQL Dialect Support
 - [ ] Hooks/Signals
 - [ ] Audit Logs
 
-## Known Issues
+<!-- ## Known Issues
 
 - Tailwind classes not working correctly - https://github.com/tailwindlabs/tailwindcss/discussions/18273
-  - Solution: Use layer locally instead of using GitHub source.
+  - Solution: Use layer locally instead of using GitHub source. -->
 
 ## Stack
 
