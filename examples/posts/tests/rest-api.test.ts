@@ -144,6 +144,15 @@ describe('api', async () => {
     }
   })
 
+  it('should return 404 for out-of-range list pages', async () => {
+    await expect($fetch(`${apiPrefix}/users?page=4&size=1`)).rejects.toMatchObject({
+      data: {
+        statusCode: 404,
+        statusMessage: 'Page not found',
+      },
+    })
+  })
+
   it('should return an error when creating a tag with a duplicate name', async () => {
     try {
       await $fetch(`${apiPrefix}/tags`, {

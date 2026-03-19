@@ -49,6 +49,15 @@ export async function getPaginatedResults<T>(
   const offset = (page - 1) * size
 
   const [{ resultCount }] = await countQuery
+  const totalCount = Number(resultCount)
+  const totalPages = Math.ceil(totalCount / size)
+
+  if (page > 1 && offset >= totalCount) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'The requested page does not exist.',
+    })
+  }
 
   const results = await baseQuery
     .limit(size)
@@ -57,10 +66,10 @@ export async function getPaginatedResults<T>(
   return {
     results,
     pagination: {
-      count: Number(resultCount),
+      count: totalCount,
       page,
       size,
-      pages: Math.ceil(Number(resultCount) / size),
+      pages: totalPages,
     },
   }
 }
