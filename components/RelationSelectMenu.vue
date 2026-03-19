@@ -38,13 +38,20 @@ if (props.filter.options) {
   }
 }
 const selectFetched = ref(false)
+const isLoadingChoices = ref(false)
 
 // TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
 // Maybe use v-select until fix found for Nuxt UI/Reka UI
-function onSelectMenuOpen() {
-  if (!selectFetched.value && shouldFetch) {
-    execute()
-    selectFetched.value = true
+async function onSelectMenuOpen(open: boolean) {
+  if (open && !selectFetched.value && shouldFetch) {
+    isLoadingChoices.value = true
+    try {
+      await execute()
+      selectFetched.value = true
+    }
+    finally {
+      isLoadingChoices.value = false
+    }
   }
 }
 
@@ -79,8 +86,13 @@ watch(() => props.modelValue, (newValue) => {
     value-key="value"
     :content="{ align: 'start' }"
     :items="selectMenuItems ?? []"
+    :loading="isLoadingChoices"
     :placeholder="filter.label"
     :ui="{ content: 'min-w-fit' }"
     @update:open="onSelectMenuOpen"
-  />
+  >
+    <template #empty>
+      {{ isLoadingChoices ? 'Loading...' : 'No data' }}
+    </template>
+  </USelectMenu>
 </template>

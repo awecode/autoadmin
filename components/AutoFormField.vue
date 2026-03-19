@@ -82,13 +82,20 @@ if (props.field.options) {
   selectMenuItemsRaw.value = normalizeOptions(props.field.options)
 }
 const selectFetched = ref(false)
+const isLoadingChoices = ref(false)
 
 // TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
 // Maybe use v-select until fix found for Nuxt UI/Reka UI
-function onSelectMenuOpen() {
-  if (!selectFetched.value) {
-    execute()
-    selectFetched.value = true
+async function onSelectMenuOpen(open: boolean) {
+  if (open && !selectFetched.value) {
+    isLoadingChoices.value = true
+    try {
+      await execute()
+      selectFetched.value = true
+    }
+    finally {
+      isLoadingChoices.value = false
+    }
   }
 }
 
@@ -169,9 +176,12 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             value-key="value"
             v-bind="field.inputAttrs"
             :items="selectMenuItems ?? []"
-            :loading="status === 'pending'"
+            :loading="status === 'pending' || isLoadingChoices"
             @update:open="onSelectMenuOpen"
           >
+            <template #empty>
+              {{ status === 'pending' || isLoadingChoices ? 'Loading...' : 'No data' }}
+            </template>
             <template #trailing>
               <ClientOnly>
                 <UIcon
@@ -213,9 +223,12 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             value-key="value"
             v-bind="field.inputAttrs"
             :items="selectMenuItems ?? []"
-            :loading="status === 'pending'"
+            :loading="status === 'pending' || isLoadingChoices"
             @update:open="onSelectMenuOpen"
           >
+            <template #empty>
+              {{ status === 'pending' || isLoadingChoices ? 'Loading...' : 'No data' }}
+            </template>
             <template #trailing>
               <ClientOnly>
                 <UIcon
