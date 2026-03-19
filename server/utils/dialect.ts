@@ -108,5 +108,8 @@ export function buildAggregateExpression(
       `CAST(SUM(CASE WHEN ${colName} IS NOT NULL AND CAST(${colName} AS TEXT) NOT IN ('', '0', 'false') THEN 1 ELSE 0 END) OVER () AS INTEGER) AS "${key}"`,
     )}`
   }
-  return sql<number>`${sql.raw(`CAST(${fn}(${colName}) OVER () AS REAL) AS "${key}"`)}`
+  if (['avg', 'sum', 'min', 'max'].includes(fn)) {
+    return sql<number>`${sql.raw(`CAST(${fn}(${colName}) OVER () AS REAL) AS "${key}"`)}`
+  }
+  throw new Error(`Invalid aggregate function: ${fn}`)
 }
