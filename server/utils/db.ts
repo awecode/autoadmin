@@ -5,10 +5,25 @@ import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { getConfiguredAdminDialect } from './dialect'
 
+export type AdminDbDialect = 'sqlite' | 'postgresql' | 'd1'
+
 type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
 
-// export type AdminDbType = DBType
-export type AdminDbType = ReturnType<typeof drizzleLibsql>
+export interface AutoAdminDbTypes {}
+
+type ResolvedAdminDbDialect = AutoAdminDbTypes extends { dialect: infer D }
+  ? D extends AdminDbDialect
+    ? D
+    : 'sqlite'
+  : 'sqlite'
+
+export type AdminDbTypeForDialect<D extends AdminDbDialect> = D extends 'postgresql'
+  ? ReturnType<typeof drizzlePg>
+  : D extends 'd1'
+    ? ReturnType<typeof drizzleD1>
+    : ReturnType<typeof drizzleLibsql>
+
+export type AdminDbType = AdminDbTypeForDialect<ResolvedAdminDbDialect>
 
 let _db: DBType
 let _pgPool: Pool | undefined

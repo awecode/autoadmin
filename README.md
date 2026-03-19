@@ -1011,6 +1011,18 @@ NUXT_S3_ENDPOINT_URL=<your-endpoint-url>
 NUXT_S3_PUBLIC_URL=<your-public-url>
 ```
 
+## Declaring DB Dialect for type-safety
+
+You can optionally declare database dialect for resolving correct database types for `db` (returned by internal `useAdminDb()` as `AdminDbType`) in admin registration plugin. Add a `.d.ts` file and declare the dialect once:
+
+```ts
+declare module '#layers/autoadmin/server/utils/db' {
+  interface AutoAdminDbTypes {
+    dialect: 'postgresql' // or 'sqlite' / 'd1'
+  }
+}
+```
+
 ## Example
 
 Example Nuxt Project - https://github.com/awecode/autoadmin/tree/main/examples/posts
