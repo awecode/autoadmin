@@ -3,7 +3,7 @@ import type { DropdownMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } fr
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
 import FileHandler from '@tiptap/extension-file-handler'
-// import { TableKit } from '@tiptap/extension-table'
+import { TableKit } from '@tiptap/extension-table'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { upperFirst } from 'scule'
 import { AdvancedImage, imageToolbarItems } from './AdvancedImage'
@@ -15,7 +15,7 @@ import { Embed } from './Embed'
 import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
 import { MediaText } from './MediaText'
-// import { tableToolbarItems } from './TableToolbar'
+import { tableToolbarItems } from './TableToolbar'
 
 const props = defineProps<{
   // modelValue?: string
@@ -144,13 +144,11 @@ const fixedToolbarItems = [[{
   slot: 'embed' as const,
   icon: 'i-lucide-square-dashed-bottom-code',
   tooltip: { text: 'Embed' },
-},
-// {
-//   slot: 'table' as const,
-//   icon: 'i-lucide-table',
-//   tooltip: { text: 'Table' },
-// },
-]] satisfies EditorToolbarItem[][]
+}, {
+  slot: 'table' as const,
+  icon: 'i-lucide-table',
+  tooltip: { text: 'Table' },
+}]] satisfies EditorToolbarItem[][]
 
 const bubbleToolbarItems = computed(() => [[{
   label: 'Turn into',
@@ -388,7 +386,7 @@ const suggestionItems = [[{
     v-bind="attrs"
     content-type="html"
     :extensions="[
-      // TableKit,
+      TableKit,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Embed,
       AdvancedImage.configure({
@@ -406,8 +404,7 @@ const suggestionItems = [[{
         onPaste: (currentEditor, files) => {
           return handleFiles(files, currentEditor as Editor, uploadPrefix)
         },
-      },
-      ),
+      }),
     ]"
     :placeholder="attrs?.placeholder || 'Write, type / for commands...'"
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
@@ -423,9 +420,9 @@ const suggestionItems = [[{
       <template #embed>
         <EditorEmbedPopover :editor="editor" auto-open />
       </template>
-      <!-- <template #table>
+      <template #table>
         <EditorTablePopover :editor="editor" />
-      </template> -->
+      </template>
     </UEditorToolbar>
 
     <UEditorToolbar
@@ -461,12 +458,12 @@ const suggestionItems = [[{
       }"
     />
 
-    <!-- <UEditorToolbar
+    <UEditorToolbar
       :editor="editor"
       :items="tableToolbarItems(editor)"
       layout="bubble"
       :should-show="({ editor }) => editor.isActive('table')"
-    /> -->
+    />
 
     <UEditorDragHandle v-slot="{ ui, onClick }" :editor="editor" @node-change="selectedNode = $event">
       <UButton
