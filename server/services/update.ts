@@ -40,7 +40,7 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
     result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
   }
   catch (error) {
-    throw handleDrizzleError(error)
+    throw createError(handleDrizzleError(error))
   }
 
   if (cfg.m2m) {

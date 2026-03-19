@@ -330,7 +330,7 @@ export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: Adm
               })
             }
           }
-          throw handleDrizzleError(error)
+          throw createError(handleDrizzleError(error))
         }
         // Step 2 : Set `relatedColumnName` in `table` for the new values for selfValue
         if (newValues.length > 0) {

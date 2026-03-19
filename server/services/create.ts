@@ -39,7 +39,7 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
     result = await db.insert(model).values(validatedData).returning()
   }
   catch (error) {
-    throw handleDrizzleError(error)
+    throw createError(handleDrizzleError(error))
   }
 
   if (cfg.m2m) {

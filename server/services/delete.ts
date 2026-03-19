@@ -19,7 +19,7 @@ export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
     await db.delete(model).where(eq(lookupColumn, lookupValue))
   }
   catch (error) {
-    throw handleDrizzleError(error)
+    throw createError(handleDrizzleError(error))
   }
 
   return {
@@ -43,7 +43,7 @@ export async function bulkDelete(modelKey: string, rowLookups: (string | number)
     await db.delete(model).where(inArray(lookupColumn, rowLookups))
   }
   catch (error) {
-    throw handleDrizzleError(error)
+    throw createError(handleDrizzleError(error))
   }
 
   return {
