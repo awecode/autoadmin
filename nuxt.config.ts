@@ -3,7 +3,6 @@ import { fileURLToPath } from 'node:url'
 
 const adminUrlPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_URL_PREFIX || '/admin'
 const apiPrefix = process.env.NUXT_PUBLIC_API_PREFIX || '/api/autoadmin'
-const databaseDialect = process.env.NUXT_DATABASE_DIALECT || ''
 
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -21,7 +20,6 @@ export default defineNuxtConfig({
         maxSize: 200,
       },
     },
-    databaseDialect,
     databaseUrl: '',
     s3: {
       accessKey: process.env.NUXT_S3_ACCESS_KEY || '',

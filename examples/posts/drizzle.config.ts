@@ -1,15 +1,13 @@
 import process from 'node:process'
 import { defineConfig } from 'drizzle-kit'
-import { getDialectFromUrl, getExplicitDialect } from '../../utils/databaseDialect'
+import { getDialectFromUrl } from '../../utils/databaseDialect'
 import 'dotenv/config'
 
 if (!process.env.NUXT_DATABASE_URL) {
   throw new Error('NUXT_DATABASE_URL is not set')
 }
 
-const appDialect = getExplicitDialect(process.env.NUXT_DATABASE_DIALECT)
-  ?? getDialectFromUrl(process.env.NUXT_DATABASE_URL)
-  ?? 'sqlite'
+const appDialect = getDialectFromUrl(process.env.NUXT_DATABASE_URL) ?? 'sqlite'
 
 export default defineConfig({
   out: `./server/db/migrations/${appDialect}`,
