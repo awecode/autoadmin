@@ -1,9 +1,9 @@
-import * as postgresqlSchema from './postgresql'
+// import * as postgresqlSchema from './postgresql'
 
-const schema = postgresqlSchema
+// const schema = postgresqlSchema
 
-// import * as sqliteSchema from './sqlite'
+import * as sqliteSchema from './sqlite'
 
-// const schema = sqliteSchema
+const schema = sqliteSchema
 
 export const { categories, posts, postsToTags, tags, users } = schema
