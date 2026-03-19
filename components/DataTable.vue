@@ -151,6 +151,19 @@ const pageActions = computed(() => {
 
 const toast = useToast()
 
+async function refreshAfterDeletion() {
+  await refresh()
+
+  if (error.value?.statusCode === 404 && Number(route.query.page ?? 1) > 1) {
+    router.push({
+      query: {
+        ...route.query,
+        page: Number(route.query.page ?? 1) - 1,
+      },
+    })
+  }
+}
+
 async function bulkDelete({ rowLookups }: { rowLookups: string[] }) {
   try {
     await $fetch(`${apiPrefix}/bulk-delete`, {
@@ -165,7 +178,7 @@ async function bulkDelete({ rowLookups }: { rowLookups: string[] }) {
       description: 'Deleted successfully',
       color: 'success',
     })
-    await refresh()
+    await refreshAfterDeletion()
   }
   catch (err: any) {
     toast.add({
@@ -192,7 +205,7 @@ async function genericBulkAction({ action, rowLookups }: { action: string, rowLo
       color: 'success',
     })
     if (response.refresh) {
-      await refresh()
+      await refreshAfterDeletion()
     }
   }
   catch (err: any) {
@@ -327,7 +340,7 @@ async function handleDelete(id: string) {
     try {
       await deleteObj(id)
       // Refresh the data to get updated list
-      await refresh()
+      await refreshAfterDeletion()
       useToast().add({
         title: 'Success',
         description: 'Deleted successfully',
