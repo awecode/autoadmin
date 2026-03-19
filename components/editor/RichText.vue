@@ -385,6 +385,7 @@ const suggestionItems = [[{
     v-model="value"
     v-bind="attrs"
     content-type="html"
+    :image="false"
     :extensions="[
       TableKit,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
