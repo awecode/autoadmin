@@ -63,13 +63,13 @@ const route = useRoute()
 const router = useRouter()
 const defaultListPath = router.resolve({ name: 'autoadmin-list', params: { modelKey } }).fullPath
 
-const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] | undefined>('sort', '', {
+const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[]>('sort', '', {
   route,
   router,
   transform: {
     get(value: string | undefined) {
       if (!value) {
-        return undefined
+        return []
       }
 
       const [column, direction] = value.split(':')
@@ -79,7 +79,7 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] |
           desc: direction === 'desc',
         }]
       }
-      return undefined
+      return []
     },
     set(value) {
       if (!value?.length) {
