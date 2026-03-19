@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
 import type { ZodObject, ZodType } from 'zod'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 import { dezerialize } from 'zodex'
 
-const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
+const route = useRoute()
+const modelKey = (route.params.modelKey as string).replace(/\/$/, '')
 const config = useRuntimeConfig()
 const apiPrefix = config.public.apiPrefix
-const listPath = { name: 'autoadmin-list', params: { modelKey } }
-const lookupValue = (useRoute().params.lookupValue as string).replace(/\/$/, '')
+const returnTo = route.query.returnTo
+const redirectPath: RouteLocationRaw = typeof returnTo === 'string' && returnTo.startsWith('/')
+  ? returnTo
+  : { name: 'autoadmin-list', params: { modelKey } }
+const lookupValue = (route.params.lookupValue as string).replace(/\/$/, '')
 
 const { data, error } = await useFetch<{ spec: FormSpec, values?: Record<string, any> }>(`${apiPrefix}/formspec/${modelKey}/update/${lookupValue}`, {
   key: `formspec-update-${modelKey}-${lookupValue}`,
@@ -50,7 +55,7 @@ useHead({
           class="mr-1"
           color="neutral"
           variant="ghost"
-          :to="listPath"
+          :to="redirectPath"
         >
           <UIcon name="i-lucide-chevron-left" />
         </UButton>
@@ -66,7 +71,7 @@ useHead({
       class="space-y-4"
       mode="update"
       :endpoint="endpoint"
-      :redirect-path="listPath"
+      :redirect-path="redirectPath"
       :schema="schema"
       :spec="formSpec"
       :values="values"

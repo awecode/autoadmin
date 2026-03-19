@@ -61,6 +61,7 @@ const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 
 const route = useRoute()
 const router = useRouter()
+const defaultListPath = router.resolve({ name: 'autoadmin-list', params: { modelKey } }).fullPath
 
 const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[] | undefined>('sort', '', {
   route,
@@ -551,7 +552,11 @@ const CellRenderer = defineComponent({
             <slot name="actions-cell" v-bind="scope ?? {}">
               <NuxtLink
                 v-if="defaultActions?.includes('edit') && spec.updatePage"
-                :to="{ ...spec.updatePage, params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] } }"
+                :to="{
+                  ...spec.updatePage,
+                  params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] },
+                  query: route.fullPath === defaultListPath ? undefined : { returnTo: route.fullPath },
+                }"
               >
                 <UButton
                   aria-label="Edit"
