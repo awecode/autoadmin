@@ -22,11 +22,9 @@ export function slugify(text: string): string {
     .toString()
     .toLowerCase()
     .trim()
-    // Handle accented characters
     .normalize('NFD')
     .replace(/[\u0300-\u036F]/g, '') // Remove diacritics
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w-]+/g, '') // Remove all non-word chars
+    .replace(/[^a-z0-9]+/g, '-') // Replace any non-alphanumeric run (spaces, punctuation, symbols) with -
     .replace(/-{2,}/g, '-') // Replace multiple - with single -
     .replace(/^-+/, '') // Trim - from start of text
     .replace(/-+$/, '') // Trim - from end of text
