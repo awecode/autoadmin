@@ -5,13 +5,15 @@ import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { getConfiguredAdminDialect } from './dialect'
 
-let _db: ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
-let _pgPool: Pool | undefined
+type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
 
-// export type AdminDbType = ReturnType<typeof useAdminDb>
+// export type AdminDbType = DBType
 export type AdminDbType = ReturnType<typeof drizzleLibsql>
 
-export function useAdminDb(): AdminDbType {
+let _db: DBType
+let _pgPool: Pool | undefined
+
+export function useAdminDb() {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
     const globalEnv = globalThis as typeof globalThis & { __env__?: { DB?: unknown }, DB?: unknown }
