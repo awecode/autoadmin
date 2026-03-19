@@ -7,7 +7,11 @@ import { colKey } from './drizzle'
 import { getPrimaryKeyColumn } from './relation'
 import { mapZodCheckToRules, unwrapZodType } from './zod'
 
-type Rules = Record<string, unknown>
+interface Rules {
+  min?: number
+  max?: number
+  [key: string]: unknown
+}
 export type Option = string | number | { label?: string, value: string | number, count?: number }
 
 export interface FieldSpec {

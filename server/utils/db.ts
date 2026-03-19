@@ -53,4 +53,5 @@ export function useAdminDb() {
   return _db
 }
 
-export type AdminDbType = ReturnType<typeof useAdminDb>
+// export type AdminDbType = ReturnType<typeof useAdminDb>
+export type AdminDbType = ReturnType<typeof drizzleLibsql>
