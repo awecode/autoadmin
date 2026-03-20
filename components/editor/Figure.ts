@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
+import { Fragment, DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model'
 import { NodeSelection } from '@tiptap/pm/state'
 
 function findNodesInRange(doc: import('@tiptap/pm/model').Node, from: number, to: number, predicate: (node: import('@tiptap/pm/model').Node) => boolean): { node: import('@tiptap/pm/model').Node, pos: number }[] {
@@ -68,7 +69,13 @@ export const Figure = Node.create({
     return [
       {
         tag: 'figure',
-        contentElement: 'figcaption',
+        getContent: (node, schema) => {
+          const figcaption = (node as HTMLElement).querySelector('figcaption')
+          if (!figcaption) {
+            return Fragment.empty
+          }
+          return ProseMirrorDOMParser.fromSchema(schema).parseSlice(figcaption).content
+        },
       },
     ]
   },
