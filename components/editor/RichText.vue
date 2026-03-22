@@ -26,8 +26,96 @@ const props = defineProps<{
 const uploadPrefix = props.uploadPrefix || 'content/'
 
 const value = ref(``)
+const supportedHeadingLevels = [1, 2, 3, 4] as const
+const attrs = props.attrs ?? {}
+const { disabledHeadingLevels: rawDisabledHeadingLevels, ...editorAttrs } = attrs
 
-const fixedToolbarItems = [[{
+const disabledHeadingLevels = Array.isArray(rawDisabledHeadingLevels)
+  ? rawDisabledHeadingLevels
+      .map(level => Number(level))
+      .filter((level): level is number => supportedHeadingLevels.includes(level as typeof supportedHeadingLevels[number]))
+  : []
+
+const enabledHeadingLevels = supportedHeadingLevels.filter(level => !disabledHeadingLevels.includes(level))
+
+const headingItems: EditorToolbarItem[] = enabledHeadingLevels.map(level => ({
+  kind: 'heading',
+  level,
+  icon: `i-lucide-heading-${level}`,
+  label: `Heading ${level}`,
+}))
+
+const blockTypeItems: EditorToolbarItem[] = [
+  {
+    kind: 'paragraph',
+    label: 'Paragraph',
+    icon: 'i-lucide-type',
+  },
+  ...headingItems,
+  {
+    kind: 'bulletList',
+    icon: 'i-lucide-list',
+    label: 'Bullet List',
+  },
+  {
+    kind: 'orderedList',
+    icon: 'i-lucide-list-ordered',
+    label: 'Ordered List',
+  },
+  {
+    kind: 'blockquote',
+    icon: 'i-lucide-quote',
+    label: 'Blockquote',
+  },
+]
+
+const blockTypeSuggestionItems: EditorSuggestionMenuItem[] = [
+  {
+    kind: 'paragraph',
+    label: 'Paragraph',
+    icon: 'i-lucide-type',
+  },
+  ...enabledHeadingLevels.map(level => ({
+    kind: 'heading',
+    level,
+    label: `Heading ${level}`,
+    icon: `i-lucide-heading-${level}`,
+  })),
+  {
+    kind: 'bulletList',
+    label: 'Bullet List',
+    icon: 'i-lucide-list',
+  },
+  {
+    kind: 'orderedList',
+    label: 'Numbered List',
+    icon: 'i-lucide-list-ordered',
+  },
+  {
+    kind: 'blockquote',
+    label: 'Blockquote',
+    icon: 'i-lucide-quote',
+  },
+]
+
+const headingDropdownItem: EditorToolbarItem | undefined = headingItems.length
+  ? {
+      icon: 'i-lucide-heading',
+      tooltip: { text: 'Headings' },
+      content: {
+        align: 'start',
+      },
+      items: headingItems,
+    }
+  : undefined
+
+const starterKitOptions = {
+  heading: enabledHeadingLevels.length > 0
+    ? { levels: [...enabledHeadingLevels] }
+    : false as const,
+}
+
+const fixedToolbarItems: EditorToolbarItem[][] = [[{
   kind: 'undo',
   icon: 'i-lucide-undo',
   tooltip: { text: 'Undo' },
@@ -35,53 +123,30 @@ const fixedToolbarItems = [[{
   kind: 'redo',
   icon: 'i-lucide-redo',
   tooltip: { text: 'Redo' },
-}], [{
-  icon: 'i-lucide-heading',
-  tooltip: { text: 'Headings' },
-  content: {
-    align: 'start',
-  },
-  items: [{
-    kind: 'heading',
-    level: 1,
-    icon: 'i-lucide-heading-1',
-    label: 'Heading 1',
-  }, {
-    kind: 'heading',
-    level: 2,
-    icon: 'i-lucide-heading-2',
-    label: 'Heading 2',
-  }, {
-    kind: 'heading',
-    level: 3,
-    icon: 'i-lucide-heading-3',
-    label: 'Heading 3',
-  }, {
-    kind: 'heading',
-    level: 4,
-    icon: 'i-lucide-heading-4',
-    label: 'Heading 4',
-  }],
-}, {
-  icon: 'i-lucide-list',
-  tooltip: { text: 'Lists' },
-  content: {
-    align: 'start',
-  },
-  items: [{
-    kind: 'bulletList',
+}], [
+  ...(headingDropdownItem ? [headingDropdownItem] : []),
+  {
     icon: 'i-lucide-list',
-    label: 'Bullet List',
-  }, {
-    kind: 'orderedList',
-    icon: 'i-lucide-list-ordered',
-    label: 'Ordered List',
-  }],
-}, {
-  kind: 'blockquote',
-  icon: 'i-lucide-quote',
-  tooltip: { text: 'Blockquote' },
-}], [{
+    tooltip: { text: 'Lists' },
+    content: {
+      align: 'start',
+    },
+    items: [{
+      kind: 'bulletList',
+      icon: 'i-lucide-list',
+      label: 'Bullet List',
+    }, {
+      kind: 'orderedList',
+      icon: 'i-lucide-list-ordered',
+      label: 'Ordered List',
+    }],
+  },
+  {
+    kind: 'blockquote',
+    icon: 'i-lucide-quote',
+    tooltip: { text: 'Blockquote' },
+  },
+], [{
   kind: 'mark',
   mark: 'bold',
   icon: 'i-lucide-bold',
@@ -148,9 +213,9 @@ const fixedToolbarItems = [[{
   slot: 'table' as const,
   icon: 'i-lucide-table',
   tooltip: { text: 'Table' },
-}]] satisfies EditorToolbarItem[][]
+}]]
 
-const bubbleToolbarItems = computed(() => [[{
+const bubbleToolbarItems: EditorToolbarItem[][] = [[{
   label: 'Turn into',
   trailingIcon: 'i-lucide-chevron-down',
   activeColor: 'neutral',
@@ -165,43 +230,7 @@ const bubbleToolbarItems = computed(() => [[{
   items: [{
     type: 'label',
     label: 'Turn into',
-  }, {
-    kind: 'paragraph',
-    label: 'Paragraph',
-    icon: 'i-lucide-type',
-  }, {
-    kind: 'heading',
-    level: 1,
-    icon: 'i-lucide-heading-1',
-    label: 'Heading 1',
-  }, {
-    kind: 'heading',
-    level: 2,
-    icon: 'i-lucide-heading-2',
-    label: 'Heading 2',
-  }, {
-    kind: 'heading',
-    level: 3,
-    icon: 'i-lucide-heading-3',
-    label: 'Heading 3',
-  }, {
-    kind: 'heading',
-    level: 4,
-    icon: 'i-lucide-heading-4',
-    label: 'Heading 4',
-  }, {
-    kind: 'bulletList',
-    icon: 'i-lucide-list',
-    label: 'Bullet List',
-  }, {
-    kind: 'orderedList',
-    icon: 'i-lucide-list-ordered',
-    label: 'Ordered List',
-  }, {
-    kind: 'blockquote',
-    icon: 'i-lucide-quote',
-    label: 'Blockquote',
-  }],
+  }, ...blockTypeItems],
 }], [{
   kind: 'mark',
   mark: 'bold',
@@ -257,7 +286,7 @@ const bubbleToolbarItems = computed(() => [[{
 }], [{
   slot: 'link' as const,
   icon: 'i-lucide-link',
-}]] satisfies EditorToolbarItem[][])
+}]]
 
 const selectedNode = ref<{ node: JSONContent, pos: number }>()
 
@@ -274,16 +303,7 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
     {
       label: 'Turn into',
       icon: 'i-lucide-repeat-2',
-      children: [
-        { kind: 'paragraph', label: 'Paragraph', icon: 'i-lucide-type' },
-        { kind: 'heading', level: 1, label: 'Heading 1', icon: 'i-lucide-heading-1' },
-        { kind: 'heading', level: 2, label: 'Heading 2', icon: 'i-lucide-heading-2' },
-        { kind: 'heading', level: 3, label: 'Heading 3', icon: 'i-lucide-heading-3' },
-        { kind: 'heading', level: 4, label: 'Heading 4', icon: 'i-lucide-heading-4' },
-        { kind: 'bulletList', label: 'Bullet List', icon: 'i-lucide-list' },
-        { kind: 'orderedList', label: 'Ordered List', icon: 'i-lucide-list-ordered' },
-        { kind: 'blockquote', label: 'Blockquote', icon: 'i-lucide-quote' },
-      ],
+      children: blockTypeItems,
     },
     {
       kind: 'clearFormatting',
@@ -335,57 +355,27 @@ function handleItems(editor: Editor): DropdownMenuItem[][] {
   ], ...(selectedNode.value?.node?.type === 'image' ? [[{ label: 'Add caption', icon: 'i-lucide-type', onSelect: () => editor.chain().focus().imageToFigure().run() }]] : selectedNode.value?.node?.type === 'figure' ? [[{ label: 'Remove caption', icon: 'i-lucide-panel-top', onSelect: () => editor.chain().focus().figureToImage().run() }]] : [])]) as DropdownMenuItem[][]
 }
 
-const suggestionItems = [[{
+const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   type: 'label',
   label: 'Style',
-}, {
-  kind: 'paragraph',
-  label: 'Paragraph',
-  icon: 'i-lucide-type',
-}, {
-  kind: 'heading',
-  level: 1,
-  label: 'Heading 1',
-  icon: 'i-lucide-heading-1',
-}, {
-  kind: 'heading',
-  level: 2,
-  label: 'Heading 2',
-  icon: 'i-lucide-heading-2',
-}, {
-  kind: 'heading',
-  level: 3,
-  label: 'Heading 3',
-  icon: 'i-lucide-heading-3',
-}, {
-  kind: 'bulletList',
-  label: 'Bullet List',
-  icon: 'i-lucide-list',
-}, {
-  kind: 'orderedList',
-  label: 'Numbered List',
-  icon: 'i-lucide-list-ordered',
-}, {
-  kind: 'blockquote',
-  label: 'Blockquote',
-  icon: 'i-lucide-quote',
-}], [{
+}, ...blockTypeSuggestionItems], [{
   type: 'label',
   label: 'Insert',
 }, {
   kind: 'horizontalRule',
   label: 'Horizontal Rule',
   icon: 'i-lucide-separator-horizontal',
-}]] satisfies EditorSuggestionMenuItem[][]
+}]]
 </script>
 
 <template>
   <UEditor
     v-slot="{ editor, handlers }"
     v-model="value"
-    v-bind="attrs"
+    v-bind="editorAttrs"
     content-type="html"
     :image="false"
+    :starter-kit="starterKitOptions"
     :extensions="[
       TableKit,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -407,7 +397,7 @@ const suggestionItems = [[{
         },
       }),
     ]"
-    :placeholder="attrs?.placeholder || 'Write, type / for commands...'"
+    :placeholder="editorAttrs?.placeholder || 'Write, type / for commands...'"
     :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
     class="min-h-48"
   >

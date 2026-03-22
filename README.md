@@ -189,7 +189,8 @@ registry.register(posts, {
       type: 'rich-text',
       label: 'Post Body',
       inputAttrs: {
-        placeholder: 'Start writing your masterpiece...'
+        placeholder: 'Start writing your masterpiece...',
+        disabledHeadingLevels: [1, 2],
       }
     },
     // Customize the 'featuredImage' to be an image uploader
