@@ -2,7 +2,16 @@
 import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
 
 const searchModal = useOverlay().create(SearchModal)
-const { data: modelLinks } = await useFetch('/api/autoadmin/registry-meta', { key: 'model-links' })
+const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta', {
+  key: 'model-links',
+  headers: {
+    referer: useRequestURL().pathname,
+  },
+})
+
+if (error.value?.data?.data?.redirect) {
+  navigateTo(error.value.data.data.redirect)
+}
 
 function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   if (link.searchPlaceholder) {

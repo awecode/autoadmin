@@ -10,7 +10,12 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta', { key: 'model-links' })
+const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta', {
+  key: 'model-links',
+  headers: {
+    referer: useRequestURL().pathname,
+  },
+})
 
 if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
