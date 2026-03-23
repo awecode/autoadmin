@@ -26,8 +26,23 @@ catch {
   auth = null
 }
 
+const defaultAdditionalItems = [
+  {
+    label: 'GitHub',
+    icon: 'i-lucide-github',
+    to: 'https://github.com/awecode/autoadmin/',
+    target: '_blank',
+  },
+  {
+    label: 'Help',
+    icon: 'i-lucide-circle-help',
+    to: 'https://github.com/awecode/autoadmin/discussions/categories/q-a',
+    target: '_blank',
+  },
+]
+
 const additionalItems = computed(() => {
-  const items: NavigationMenuItem[] = [...appConfig.sidebar.additionalItems]
+  const items: NavigationMenuItem[] = [...appConfig.sidebar.additionalItems?.length ? appConfig.sidebar.additionalItems : defaultAdditionalItems]
   if (auth && auth.signOut && typeof auth.signOut === 'function') {
     items.push({
       label: 'Sign Out',
@@ -41,8 +56,17 @@ const additionalItems = computed(() => {
   return items
 })
 
+const defaultTopItems = [{
+  label: 'Dashboard',
+  icon: 'i-lucide-home',
+  to: { name: 'autoadmin-index' },
+  type: 'link' as const,
+}]
+
 const items = [
-  appConfig.sidebar.topItems,
+  appConfig.sidebar.topItems?.length
+    ? appConfig.sidebar.topItems
+    : defaultTopItems,
   [
     appConfig.sidebar.modelLabel,
     ...modelLinks.value ?? [],
@@ -67,7 +91,7 @@ const mobileMenuOpen = ref(false)
 <template>
   <!-- Desktop Sidebar -->
   <div
-    class="hidden md:!block rounded-lg border border-neutral-200 dark:border-neutral-700 py-4 transition-all duration-300 ease-in-out mt-2 ml-1"
+    class="hidden md:block! rounded-lg border border-neutral-200 dark:border-neutral-700 py-4 transition-all duration-300 ease-in-out mt-2 ml-1"
     :class="{ 'px-4': !collapsed }"
   >
     <div class="flex justify-between items-center mb-4 transition-all duration-300 ease-in-out">
