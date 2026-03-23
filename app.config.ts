@@ -13,18 +13,18 @@ export default defineAppConfig({
       type: 'label' as const,
     },
     additionalItems: [
-      {
-        label: 'GitHub',
-        icon: 'i-lucide-github',
-        to: 'https://github.com/awecode/autoadmin/',
-        target: '_blank',
-      },
-      {
-        label: 'Help',
-        icon: 'i-lucide-circle-help',
-        to: 'https://github.com/awecode/autoadmin/discussions/categories/q-a',
-        target: '_blank',
-      },
+      // {
+      //   label: 'GitHub',
+      //   icon: 'i-lucide-github',
+      //   to: 'https://github.com/awecode/autoadmin/',
+      //   target: '_blank',
+      // },
+      // {
+      //   label: 'Help',
+      //   icon: 'i-lucide-circle-help',
+      //   to: 'https://github.com/awecode/autoadmin/discussions/categories/q-a',
+      //   target: '_blank',
+      // },
     ],
   },
 })
