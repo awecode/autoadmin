@@ -143,6 +143,7 @@ const booleanOptions = [
               v-else-if="(filter.type === 'text' || filter.type === 'select' || !filter.type) && filter.options"
               v-model="getFilterModel(filter).value"
               value-key="value"
+              :virtualize="filter.options.length > 100"
               :class="mobileFiltersOpen ? 'w-full' : 'min-w-32'"
               :content="{ align: 'start' }"
               :items="normalizeOptions(filter.options)"

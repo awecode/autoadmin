@@ -84,6 +84,7 @@ watch(() => props.modelValue, (newValue) => {
     v-model="internalValue"
     class="min-w-32"
     value-key="value"
+    :virtualize="selectMenuItems.length > 100"
     :content="{ align: 'start' }"
     :items="selectMenuItems ?? []"
     :loading="isLoadingChoices"
