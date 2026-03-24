@@ -33,9 +33,10 @@ export function useAdminDb() {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
     const globalEnv = globalThis as typeof globalThis & {
-      __env__?: { DB?: unknown, HYPERDRIVE?: HyperdriveBinding }
+      __env__?: { DB?: unknown, HYPERDRIVE?: HyperdriveBinding, HYPERDRIVE_NO_CACHE?: HyperdriveBinding }
       DB?: unknown
       HYPERDRIVE?: HyperdriveBinding
+      HYPERDRIVE_NO_CACHE?: HyperdriveBinding
     }
     const dbBinding = process.env.DB || globalEnv.__env__?.DB || globalEnv.DB
     if (dbBinding) {
@@ -48,7 +49,14 @@ export function useAdminDb() {
     }
     else {
       const config = useRuntimeConfig()
-      const hyperdriveBinding = (process.env.HYPERDRIVE || globalEnv.__env__?.HYPERDRIVE || globalEnv.HYPERDRIVE) as HyperdriveBinding | undefined
+      let hyperdriveBinding: HyperdriveBinding | undefined
+      const hyperdriveNoCacheBinding = (process.env.HYPERDRIVE_NO_CACHE || globalEnv.__env__?.HYPERDRIVE_NO_CACHE || globalEnv.HYPERDRIVE_NO_CACHE) as HyperdriveBinding | undefined
+      if (hyperdriveNoCacheBinding && hyperdriveNoCacheBinding.connectionString) {
+        hyperdriveBinding = hyperdriveNoCacheBinding
+      }
+      else {
+        hyperdriveBinding = (process.env.HYPERDRIVE || globalEnv.__env__?.HYPERDRIVE || globalEnv.HYPERDRIVE) as HyperdriveBinding | undefined
+      }
       if (hyperdriveBinding && hyperdriveBinding.connectionString) {
         // eslint-disable-next-line no-console
         console.info('Using PostgreSQL database via Hyperdrive')
