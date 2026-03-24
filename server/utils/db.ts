@@ -3,12 +3,11 @@ import { drizzle as drizzleD1 } from 'drizzle-orm/d1'
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { getConfiguredAdminDialect } from './dialect'
+import { getHyperdriveConnectionString, type HyperdriveBindingLike } from './hyperdrive'
 
 export type AdminDbDialect = 'sqlite' | 'postgresql' | 'd1'
 
 type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
-type HyperdriveBinding = { connectionString?: string }
-type HyperdriveBindingLike = string | HyperdriveBinding | undefined | null
 
 export interface AutoAdminDbTypes {}
 
@@ -27,13 +26,6 @@ export type AdminDbTypeForDialect<D extends AdminDbDialect> = D extends 'postgre
 export type AdminDbType = AdminDbTypeForDialect<ResolvedAdminDbDialect>
 
 let _db: DBType
-
-export function getHyperdriveConnectionString(binding: HyperdriveBindingLike) {
-  if (typeof binding === 'string') {
-    return binding
-  }
-  return binding?.connectionString
-}
 
 export function useAdminDb() {
   if (!_db) {

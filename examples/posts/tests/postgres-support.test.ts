@@ -3,7 +3,7 @@
 import { getTableColumns } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { getHyperdriveConnectionString } from '../../../server/utils/db'
+import { getHyperdriveConnectionString } from '../../../server/utils/hyperdrive'
 import { handleDrizzleError } from '../../../server/utils/drizzle'
 import { getTableMetadata } from '../../../server/utils/metadata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '../../../server/utils/relation'
