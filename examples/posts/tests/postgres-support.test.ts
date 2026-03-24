@@ -3,6 +3,7 @@
 import { getTableColumns } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
+import { getHyperdriveConnectionString } from '../../../server/utils/db'
 import { handleDrizzleError } from '../../../server/utils/drizzle'
 import { getTableMetadata } from '../../../server/utils/metadata'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from '../../../server/utils/relation'
@@ -15,6 +16,13 @@ describe('postgres support helpers', () => {
     expect(getDialectFromUrl('postgres://user:pass@localhost:5432/app')).toBe('postgresql')
     expect(getDialectFromUrl('postgresql://user:pass@localhost:5432/app')).toBe('postgresql')
     expect(getDialectFromUrl('file:./db.sqlite')).toBe('sqlite')
+  })
+
+  it('resolves Hyperdrive connection strings from bindings', () => {
+    expect(getHyperdriveConnectionString('postgresql://user:pass@localhost:5432/app')).toBe('postgresql://user:pass@localhost:5432/app')
+    expect(getHyperdriveConnectionString({ connectionString: 'postgresql://user:pass@localhost:5432/app' })).toBe('postgresql://user:pass@localhost:5432/app')
+    expect(getHyperdriveConnectionString({})).toBeUndefined()
+    expect(getHyperdriveConnectionString(undefined)).toBeUndefined()
   })
 
   it('reads postgres foreign keys from schemas', () => {
