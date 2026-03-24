@@ -3,9 +3,10 @@ import { drizzle as drizzleD1 } from 'drizzle-orm/d1'
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { getConfiguredAdminDialect } from './dialect'
-import { getHyperdriveConnectionString, type HyperdriveBindingLike } from './hyperdrive'
 
 export type AdminDbDialect = 'sqlite' | 'postgresql' | 'd1'
+
+export interface HyperdriveBinding { connectionString?: string }
 
 type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
 
@@ -26,57 +27,56 @@ export type AdminDbTypeForDialect<D extends AdminDbDialect> = D extends 'postgre
 export type AdminDbType = AdminDbTypeForDialect<ResolvedAdminDbDialect>
 
 let _db: DBType
+const logDb: boolean = false
 
 export function useAdminDb() {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
     const globalEnv = globalThis as typeof globalThis & {
-      __env__?: { DB?: unknown, HYPERDRIVE?: HyperdriveBindingLike }
+      __env__?: { DB?: unknown, HYPERDRIVE?: HyperdriveBinding }
       DB?: unknown
-      HYPERDRIVE?: HyperdriveBindingLike
+      HYPERDRIVE?: HyperdriveBinding
     }
     const dbBinding = process.env.DB || globalEnv.__env__?.DB || globalEnv.DB
-    const hyperdriveConnectionString = getHyperdriveConnectionString(
-      process.env.HYPERDRIVE || globalEnv.__env__?.HYPERDRIVE || globalEnv.HYPERDRIVE,
-    )
     if (dbBinding) {
       _db = drizzleD1(dbBinding, {
         casing: 'snake_case',
-        // logger: true,
+        logger: logDb,
       })
       // eslint-disable-next-line no-console
       console.info('Using D1 database')
     }
     else {
       const config = useRuntimeConfig()
-      if (hyperdriveConnectionString) {
-        _db = drizzlePg({
-          connection: {
-            connectionString: hyperdriveConnectionString,
-          },
-          casing: 'snake_case',
-          // logger: true,
-        })
+      const hyperdriveBinding = (process.env.HYPERDRIVE || globalEnv.__env__?.HYPERDRIVE || globalEnv.HYPERDRIVE) as HyperdriveBinding | undefined
+      if (hyperdriveBinding && hyperdriveBinding.connectionString) {
         // eslint-disable-next-line no-console
         console.info('Using PostgreSQL database via Hyperdrive')
+        return drizzlePg({
+          connection: {
+            connectionString: hyperdriveBinding.connectionString,
+          },
+          casing: 'snake_case',
+          logger: logDb,
+        })
       }
       else if (config.databaseUrl) {
         const dialect = getConfiguredAdminDialect(config)
         if (dialect === 'postgresql') {
-          _db = drizzlePg({
+          // eslint-disable-next-line no-console
+          console.info('Using PostgreSQL database')
+          return drizzlePg({
             connection: {
               connectionString: config.databaseUrl as string,
             },
             casing: 'snake_case',
-            // logger: true,
+            logger: logDb,
           })
-          // eslint-disable-next-line no-console
-          console.info('Using PostgreSQL database')
         }
         else {
           _db = drizzleLibsql(config.databaseUrl as string, {
             casing: 'snake_case',
-            // logger: true,
+            logger: logDb,
           })
           // eslint-disable-next-line no-console
           console.info('Using SQLite database')
