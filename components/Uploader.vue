@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatBytes } from '#layers/autoadmin/utils/string'
+import { formBusInjectionKey } from '@nuxt/ui/composables/useFormField'
 
 const props = withDefaults(defineProps<{
   label: string
@@ -33,7 +34,14 @@ const isClearEnabled = computed(() => props.enableClear ?? true)
 
 const placeholder = props.attrs?.placeholder || `Drop ${type} here or click to upload`
 
-const fileRef = useTemplateRef('fileRef')
+const fileRef = useTemplateRef<HTMLInputElement>('fileRef')
+const formBus = inject(formBusInjectionKey, undefined)
+
+function notifyFormFieldChanged() {
+  if (formBus && props.name) {
+    formBus.emit({ type: 'change', name: props.name })
+  }
+}
 
 defineExpose({
   fileInput: fileRef,
@@ -73,7 +81,11 @@ const toast = useToast()
 function clearFile() {
   uploadedFile.value = ''
   fileUrl.value = ''
+  if (fileRef.value) {
+    fileRef.value.value = ''
+  }
   emit('update:modelValue', '')
+  notifyFormFieldChanged()
 }
 async function handleFileChange(e: Event | undefined, droppedFile: undefined | File = undefined) {
   isFileUploading.value = true
@@ -92,6 +104,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   }
   // check file type
   if (!file) {
+    isFileUploading.value = false
     return
   }
 
@@ -104,8 +117,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       color: 'error',
     })
     isFileUploading.value = false
-    if (fileRef.value?.inputRef) {
-      fileRef.value.inputRef.value = ''
+    if (fileRef.value) {
+      fileRef.value.value = ''
     }
     return
   }
@@ -119,8 +132,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       color: 'error',
     })
     isFileUploading.value = false
-    if (fileRef.value?.inputRef) {
-      fileRef.value.inputRef.value = ''
+    if (fileRef.value) {
+      fileRef.value.value = ''
     }
     return
   }
@@ -140,8 +153,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
         })
         clearFile()
         isFileUploading.value = false
-        if (fileRef.value?.inputRef) {
-          fileRef.value.inputRef.value = ''
+        if (fileRef.value) {
+          fileRef.value.value = ''
         }
       },
     })
@@ -149,6 +162,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       uploadedFile.value = uploadedFileUrl
       fileUrl.value = uploadedFileUrl
       emit('update:modelValue', uploadedFileUrl)
+      notifyFormFieldChanged()
     }
   }
 
@@ -158,7 +172,7 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
 function onClick() {
   if (isFileUploading.value)
     return
-  fileRef.value?.inputRef?.click()
+  fileRef.value?.click()
 }
 
 function onFileDrop(event: DragEvent) {
@@ -253,7 +267,7 @@ async function downloadFile() {
 function replaceFile() {
   if (isFileUploading.value)
     return
-  fileRef.value?.inputRef?.click()
+  fileRef.value?.click()
 }
 </script>
 
@@ -264,14 +278,14 @@ function replaceFile() {
     :ondrop="onFileDrop"
     @click="onClick"
   >
-    <UInput
+    <input
       ref="fileRef"
       class="hidden"
       type="file"
-      :accept="allowedExtensionsString"
+      :accept="allowedExtensionsString || undefined"
       v-bind="attrs"
       @change="handleFileChange"
-    />
+    >
     <div v-if="isFileUploading">
       <div class="flex items-center gap-2 text-heading-tertiary" variant="label">
         <svg
