@@ -231,7 +231,7 @@ function getRegistry(): Map<string, AdminModelConfig<Table, CustomSelections>> {
 export function useAdminRegistry() {
   const registry = getRegistry()
   const config = useRuntimeConfig()
-  const apiPrefix = config.public.apiPrefix
+  const apiPrefix = config.public.autoadmin.apiPrefix
 
   function configure<T extends Table, C extends CustomSelections = CustomSelections>(
     model: T,

@@ -1,19 +1,16 @@
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
-const adminUrlPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_URL_PREFIX || '/admin'
-const apiPrefix = process.env.NUXT_PUBLIC_API_PREFIX || '/api/autoadmin'
-
 export default defineNuxtConfig({
   runtimeConfig: {
-    adminUrlPrefix,
     auth: {
       adminOnlyApiRoutes: '/api/autoadmin',
     },
     public: {
-      apiPrefix,
       autoadmin: {
         title: 'AutoAdmin',
+        apiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_API_PREFIX || '/api/autoadmin',
+        pathPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin',
       },
       pagination: {
         defaultSize: 20,
@@ -58,24 +55,25 @@ export default defineNuxtConfig({
   },
   hooks: {
     'pages:extend': function (pages) {
+      const adminPathPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin'
       pages.push({
         name: 'autoadmin-index',
-        path: adminUrlPrefix,
+        path: adminPathPrefix,
         file: '#layers/autoadmin/pages/_autoadmin/index.vue',
       })
       pages.push({
         name: 'autoadmin-list',
-        path: `${adminUrlPrefix}/:modelKey`,
+        path: `${adminPathPrefix}/:modelKey`,
         file: '#layers/autoadmin/pages/_autoadmin/list.vue',
       })
       pages.push({
         name: 'autoadmin-create',
-        path: `${adminUrlPrefix}/:modelKey/create`,
+        path: `${adminPathPrefix}/:modelKey/create`,
         file: '#layers/autoadmin/pages/_autoadmin/create.vue',
       })
       pages.push({
         name: 'autoadmin-update',
-        path: `${adminUrlPrefix}/:modelKey/update/:lookupValue`,
+        path: `${adminPathPrefix}/:modelKey/update/:lookupValue`,
         file: '#layers/autoadmin/pages/_autoadmin/update.vue',
       })
     },

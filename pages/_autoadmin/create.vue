@@ -6,7 +6,7 @@ import { dezerialize } from 'zodex'
 
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
+const apiPrefix = config.public.autoadmin.apiPrefix
 
 const listPath = { name: 'autoadmin-list', params: { modelKey } }
 

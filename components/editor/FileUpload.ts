@@ -11,7 +11,7 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
 
 export async function uploadFile(file: File, uploadPrefix?: string): Promise<string> {
   const config = useRuntimeConfig()
-  const apiPrefix = config.public.apiPrefix
+  const apiPrefix = config.public.autoadmin.apiPrefix
   const formData = new FormData()
   formData.append('file', file)
 

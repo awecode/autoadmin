@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
   specWithMetadata.warnOnUnsavedChanges = cfg.create.warnOnUnsavedChanges
 
   const config = useRuntimeConfig()
-  const apiPrefix = config.public.apiPrefix
+  const apiPrefix = config.public.autoadmin.apiPrefix
   specWithMetadata.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}`
   specWithMetadata.listTitle = cfg.list.title ?? cfg.label
   specWithMetadata.schema = zerialize(cfg.update.schema)

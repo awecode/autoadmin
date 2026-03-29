@@ -12,7 +12,7 @@ const props = defineProps<{
 
 const modelKey = props.modelKey
 const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
+const apiPrefix = config.public.autoadmin.apiPrefix
 
 const fetchEndpoint = props.mode === 'create' ? `${apiPrefix}/formspec/${modelKey}` : `${apiPrefix}/formspec/${modelKey}/update/${props.lookupValue}`
 const data = await $fetch<{ spec: FormSpec, values?: Record<string, any> }>(fetchEndpoint)

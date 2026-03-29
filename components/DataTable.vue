@@ -56,7 +56,7 @@ const table = useTemplateRef<{ tableApi: Table<T> } | undefined>('table')
 const defaultActions = ['edit', 'delete']
 
 const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
+const apiPrefix = config.public.autoadmin.apiPrefix
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 
 const route = useRoute()

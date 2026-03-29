@@ -496,11 +496,6 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 </template>
 
 <style>
-.tiptap img{
-  /* display: inline-block; */
-  height: auto;
-  max-width: 100%;
-}
 /* Media text */
 .media-text-left,
 .media-text-right {
@@ -529,6 +524,35 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 }
 .media-text-right > *:not(:first-child) {
   grid-column: 1;
+}
+
+/* Embed (iframe) */
+
+.tiptap .embed-node.ProseMirror-selectednode {
+  outline: 2px solid var(--ui-primary, #3b82f6);
+  border-radius: 0.375rem;
+}
+
+.embed-node[data-embed-type="youtube"] {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+}
+.embed-node iframe {
+  width: 100%;
+  height: 100%;
+}
+.embed-node[data-embed-type="youtube"] iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tiptap img{
+  /* display: inline-block; */
+  height: auto;
+  max-width: 100%;
 }
 
 /* Figure (image with caption) */
@@ -595,28 +619,5 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 .tiptap .tableWrapper {
   margin: 1.5rem 0;
   overflow-x: auto;
-}
-
-/* Embed (iframe) */
-
-.tiptap .embed-node.ProseMirror-selectednode {
-  outline: 2px solid var(--ui-primary, #3b82f6);
-  border-radius: 0.375rem;
-}
-
-.embed-node[data-embed-type="youtube"] {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%;
-}
-.embed-node iframe {
-  width: 100%;
-  height: 100%;
-}
-.embed-node[data-embed-type="youtube"] iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 </style>

@@ -7,7 +7,7 @@ import { dezerialize } from 'zodex'
 const route = useRoute()
 const modelKey = (route.params.modelKey as string).replace(/\/$/, '')
 const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
+const apiPrefix = config.public.autoadmin.apiPrefix
 const returnTo = route.query.returnTo
 const redirectPath: RouteLocationRaw = typeof returnTo === 'string' && returnTo.startsWith('/')
   ? returnTo

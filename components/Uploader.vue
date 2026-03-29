@@ -23,7 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const config = useRuntimeConfig()
-const apiPrefix = config.public.apiPrefix
+const apiPrefix = config.public.autoadmin.apiPrefix
 
 const dialogPreviewExtensions = ['jpg', 'png', 'jpeg', 'svg', 'pdf', 'txt', 'md']
 
