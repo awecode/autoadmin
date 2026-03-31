@@ -55,6 +55,8 @@ export default defineNuxtConfig({
   },
   hooks: {
     'pages:extend': function (pages) {
+      // These are executed at build time.
+      // TODO Move this to a plugin to make it work for runtime.
       const adminPathPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin'
       pages.push({
         name: 'autoadmin-index',

@@ -528,11 +528,6 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 
 /* Embed (iframe) */
 
-.tiptap .embed-node.ProseMirror-selectednode {
-  outline: 2px solid var(--ui-primary, #3b82f6);
-  border-radius: 0.375rem;
-}
-
 .embed-node[data-embed-type="youtube"] {
   position: relative;
   width: 100%;
@@ -547,6 +542,11 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.tiptap .embed-node.ProseMirror-selectednode {
+  outline: 2px solid var(--ui-primary, #3b82f6);
+  border-radius: 0.375rem;
 }
 
 .tiptap img{
