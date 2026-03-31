@@ -85,6 +85,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const specWithMetadata = await useMetadataOnFormSpec(specWithM2mRelations, cfg.metadata)
+  if (cfg.sortField) {
+    specWithMetadata.fields = specWithMetadata.fields.filter(f => f.name !== cfg.sortField)
+  }
   specWithMetadata.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
 
   // Remove values that are not in the spec fields
