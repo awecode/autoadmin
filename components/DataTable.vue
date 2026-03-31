@@ -289,6 +289,10 @@ const { isDragEnabled, isMoving, onDragStart, onDragOver, onDragEnter, onDragEnd
   onReordered: () => refresh(),
 })
 
+const UIcon = resolveComponent('UIcon')
+
+const hasLeadingCol = computed(() => isDragEnabled.value || bulkActions.value.length > 0)
+
 function computeColumns() {
   const tableColumns = spec.value.columns
   if (!tableColumns) {
@@ -304,29 +308,19 @@ function computeColumns() {
       id: 'actions',
     })
   }
-  if (bulkActions.value.length) {
-    parsedColumns!.unshift({
-      id: 'select',
-      header: ({ table }) => h(UCheckbox, {
-        'color': 'neutral',
-        'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-        'aria-label': 'Select all',
-      }),
-      cell: ({ row }: { row: Row<T> }) => h(UCheckbox, {
-        'color': 'neutral',
-        'modelValue': row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'aria-label': 'Select row',
-      }),
-      enableSorting: false,
-      enableHiding: false,
-    })
-  }
 
-  if (isDragEnabled.value) {
+  if (hasLeadingCol.value) {
+    const hasBulk = bulkActions.value.length > 0
     parsedColumns!.unshift({
-      id: 'drag-handle',
+      id: 'row-handle',
+      header: hasBulk
+        ? ({ table }: { table: Table<T> }) => h(UCheckbox, {
+            'color': 'neutral',
+            'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
+            'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
+            'aria-label': 'Select all',
+          })
+        : undefined,
       enableSorting: false,
       enableHiding: false,
     })
@@ -544,7 +538,7 @@ const CellRenderer = defineComponent({
         >
           <!-- Dynamic cell templates for all columns except actions -->
           <template
-            v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select', 'drag-handle'].includes(col.id ?? ''))"
+            v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'row-handle'].includes(col.id ?? ''))"
             :key="column.id"
             #[`${column.id}-cell`]="{ cell: c }"
           >
@@ -641,9 +635,18 @@ const CellRenderer = defineComponent({
               <slot name="actions-cell-append" v-bind="scope ?? {}" />
             </div>
           </template>
-          <template v-if="isDragEnabled" #drag-handle-cell>
-            <div class="cursor-grab active:cursor-grabbing">
-              <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300" />
+          <template v-if="hasLeadingCol" #row-handle-cell="{ row }">
+            <div class="flex items-center gap-1">
+              <div v-if="isDragEnabled" class="cursor-grab active:cursor-grabbing">
+                <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300" />
+              </div>
+              <UCheckbox
+                v-if="bulkActions.length"
+                color="neutral"
+                :model-value="row.getIsSelected()"
+                aria-label="Select row"
+                @update:model-value="(v: boolean | 'indeterminate') => row.toggleSelected(!!v)"
+              />
             </div>
           </template>
 
