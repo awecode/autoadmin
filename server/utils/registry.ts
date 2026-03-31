@@ -125,6 +125,8 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   enableIndex?: boolean
   labelColumnName?: ColKey<T>
   lookupColumnName?: ColKey<T>
+  /** An integer column used for drag-and-drop ordering. When set, the list view enables drag-drop reordering and defaults to sorting by this field ascending. */
+  sortField?: ColKey<T>
   // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T, C>>
   create?: Partial<CreateOptions>
@@ -148,6 +150,7 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   labelColumnName: ColKey<T>
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
+  sortField?: string
   list: ListOptions<T, C>
   create: CreateOptions
   update: UpdateOptions
@@ -277,6 +280,16 @@ export function useAdminRegistry() {
     }
 
     cfg.lookupColumn = cfg.columns[lookupColumnName] as T['_']['columns'][ColKey<T>]
+
+    if (cfg.sortField) {
+      const sortFieldColumn = cfg.columns[cfg.sortField]
+      if (!sortFieldColumn) {
+        throw new Error(
+          `Invalid sortField "${cfg.sortField}" provided for model "${label}". Field does not exist on the table. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
+        )
+      }
+    }
+
     cfg.metadata = getTableMetadata(cfg.columns)
     return cfg
   }

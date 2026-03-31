@@ -300,6 +300,9 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       }
     }
   }
+  else if (cfg.sortField && cfg.sortField in tableColumns) {
+    baseQuery = baseQuery.orderBy(asc(tableColumns[cfg.sortField]!))
+  }
   else {
     // default ordering by primary key descending
     const primaryKeyColumn = getPrimaryKeyColumn(model)
@@ -371,12 +374,13 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
       })),
       title: cfg.list.title,
       showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
-      enableSort: cfg.list.enableSort,
+      enableSort: cfg.sortField ? false : cfg.list.enableSort,
       enableSearch: cfg.list.enableSearch,
       searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
       searchFields: cfg.list.enableSearch ? cfg.list.searchFields : undefined,
       columns,
       lookupColumnName: cfg.lookupColumnName,
+      sortField: cfg.sortField,
     }
     return {
       ...response,
