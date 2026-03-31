@@ -1,8 +1,9 @@
-import { asc, inArray, sql } from 'drizzle-orm'
+import { inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
 import { useAdminDb } from '../../utils/db'
 import { handleDrizzleError } from '../../utils/drizzle'
+import { batchUpdate, fetchSortedRows, resequenceAndUpdate } from '../../utils/reorder'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({
@@ -28,22 +29,18 @@ export default defineEventHandler(async (event) => {
   }
 
   const db = useAdminDb()
-  const model = cfg.model
 
   try {
-    // Fetch current sort values for the page's items
     const pageRows = await (db as any)
       .select({ lookup: cfg.lookupColumn, sortValue: sortColumn })
-      .from(model)
+      .from(cfg.model)
       .where(inArray(cfg.lookupColumn, body.orderedLookups))
 
     const pageValues = pageRows.map((r: any) => r.sortValue as number)
-    const uniqueValues = new Set(pageValues)
-    const hasUniqueValues = uniqueValues.size === pageValues.length
+    const hasUniqueValues = new Set(pageValues).size === pageValues.length
 
     if (hasUniqueValues) {
-      // Fast path: values are already unique — redistribute them among
-      // the reordered items. Only touches the page's rows (1 SELECT + 1 UPDATE).
+      // Fast path: redistribute existing unique values in the new order
       const sorted = [...pageValues].sort((a, b) => a - b)
       const updates = new Map<string | number, number>()
       const oldByLookup = new Map(pageRows.map((r: any) => [String(r.lookup), r.sortValue as number]))
@@ -56,20 +53,13 @@ export default defineEventHandler(async (event) => {
       }
 
       if (updates.size > 0) {
-        await batchUpdate(db, model, cfg.sortField, cfg.lookupColumn, updates)
+        await batchUpdate(db as any, cfg.model, cfg.sortField, cfg.lookupColumn, updates)
       }
     }
     else {
-      // Slow path: values have duplicates — must resequence the full table
-      // to establish unique ordering. Happens once on first use.
-      const allRows = await (db as any)
-        .select({ lookup: cfg.lookupColumn, sortValue: sortColumn })
-        .from(model)
-        .orderBy(asc(sortColumn), asc(cfg.lookupColumn))
+      // Slow path: full-table resequence (first use / duplicate values)
+      const { allLookups, oldValues } = await fetchSortedRows(db, cfg)
 
-      const allLookups: (string | number)[] = allRows.map((r: any) => r.lookup)
-
-      // Find positions occupied by the page's items and substitute the new order
       const reorderedSet = new Set(body.orderedLookups.map(String))
       const pagePositions: number[] = []
       for (let i = 0; i < allLookups.length; i++) {
@@ -83,19 +73,7 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Collect only the rows whose sort value actually changed
-      const oldValues = new Map(allRows.map((r: any) => [String(r.lookup), r.sortValue as number]))
-      const updates = new Map<string | number, number>()
-      for (let i = 0; i < allLookups.length; i++) {
-        const lookup = allLookups[i]!
-        if (oldValues.get(String(lookup)) !== i) {
-          updates.set(lookup, i)
-        }
-      }
-
-      if (updates.size > 0) {
-        await batchUpdate(db, model, cfg.sortField, cfg.lookupColumn, updates)
-      }
+      await resequenceAndUpdate(db as any, cfg, allLookups, oldValues)
     }
   }
   catch (error) {
@@ -104,21 +82,3 @@ export default defineEventHandler(async (event) => {
 
   return { success: true, message: 'Order updated successfully' }
 })
-
-/**
- * Batch-update sort values using a single UPDATE ... SET = CASE statement.
- * Turns N individual UPDATEs into 1 query.
- */
-async function batchUpdate(
-  db: any,
-  model: any,
-  sortField: string,
-  lookupColumn: any,
-  updates: Map<string | number, number>,
-) {
-  const lookups = [...updates.keys()]
-  const caseClauses = lookups.map(lookup => sql`WHEN ${lookupColumn} = ${lookup} THEN CAST(${updates.get(lookup)!} AS INTEGER)`)
-  const caseExpr = sql.join([sql`CASE`, ...caseClauses, sql`END`], sql` `)
-
-  await db.update(model).set({ [sortField]: caseExpr }).where(inArray(lookupColumn, lookups))
-}

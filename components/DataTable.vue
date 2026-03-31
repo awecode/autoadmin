@@ -11,7 +11,7 @@ import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
 import { h, resolveComponent } from 'vue'
 import { useAdminClient } from '../composables/adminClient'
-import { useDragSort } from '../composables/dragSort'
+import { useReorder } from '../composables/useReorder'
 
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
@@ -274,13 +274,16 @@ function getHeader(column: Column<T>, label?: string, sortKey?: string) {
   }
 }
 
-// Drag-drop reordering
+// Drag-drop reordering + cross-page move actions
 const tableWrapper = useTemplateRef<HTMLElement>('tableWrapper')
-const { isDragEnabled, onDragStart, onDragOver, onDragEnter, onDragEnd, onDrop } = useDragSort({
+const { isDragEnabled, isMoving, onDragStart, onDragOver, onDragEnter, onDragEnd, onDrop, getMoveActions } = useReorder({
   sortField: computed(() => spec.value.sortField),
   rows: computed(() => data.value?.results),
   lookupColumnName: computed(() => spec.value.lookupColumnName),
   wrapperRef: tableWrapper,
+  currentPage: computed(() => data.value?.pagination?.page ?? 1),
+  totalPages: computed(() => data.value?.pagination?.pages ?? 1),
+  pageSize: computed(() => data.value?.pagination?.size ?? defaultSize),
   apiPrefix,
   modelKey,
   onReordered: () => refresh(),
@@ -620,6 +623,20 @@ const CellRenderer = defineComponent({
                 >
                 <!-- Delete -->
                 </UButton>
+                <UDropdownMenu
+                  v-if="getMoveActions(scope.row.original[spec.lookupColumnName]).length"
+                  :items="getMoveActions(scope.row.original[spec.lookupColumnName])"
+                  :content="{ side: 'left' }"
+                  :ui="{ content: 'min-w-40' }"
+                >
+                  <UButton
+                    aria-label="Reorder"
+                    color="neutral"
+                    icon="i-lucide-arrow-up-down"
+                    variant="ghost"
+                    :loading="isMoving"
+                  />
+                </UDropdownMenu>
               </slot>
               <slot name="actions-cell-append" v-bind="scope ?? {}" />
             </div>

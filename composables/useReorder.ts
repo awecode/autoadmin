@@ -1,22 +1,34 @@
 import { getErrorMessageFromError } from '#layers/autoadmin/utils/form'
 
-interface DragSortOptions {
+type MoveAction = 'first' | 'page-up' | 'page-down' | 'last'
+
+interface ReorderOptions {
   sortField: Ref<string | undefined>
   rows: Ref<Record<string, any>[] | undefined>
   lookupColumnName: Ref<string>
   wrapperRef: Ref<HTMLElement | null>
+  currentPage: Ref<number>
+  totalPages: Ref<number>
+  pageSize: Ref<number>
   apiPrefix: string
   modelKey: string
   onReordered: () => Promise<void>
 }
 
-export function useDragSort(options: DragSortOptions) {
-  const { sortField, rows, lookupColumnName, wrapperRef, apiPrefix, modelKey, onReordered } = options
+export function useReorder(options: ReorderOptions) {
+  const {
+    sortField, rows, lookupColumnName, wrapperRef,
+    currentPage, totalPages, pageSize,
+    apiPrefix, modelKey, onReordered,
+  } = options
 
   const isDragEnabled = computed(() => !!sortField.value)
   const dragSourceIndex = ref<number | null>(null)
   const isReordering = ref(false)
+  const isMoving = ref(false)
   const toast = useToast()
+
+  // --- Drag-drop (within-page) ---
 
   function getRowIndexFromEvent(event: DragEvent): number | null {
     const tr = (event.target as HTMLElement).closest?.('tr')
@@ -141,13 +153,74 @@ export function useDragSort(options: DragSortOptions) {
     }
   }, { flush: 'post' })
 
+  // --- Cross-page move actions ---
+
+  function getMoveActions(rowLookup: string | number) {
+    if (!isDragEnabled.value || totalPages.value <= 1) {
+      return []
+    }
+
+    const items: { label: string, icon: string, onSelect: () => void }[] = []
+
+    if (currentPage.value > 1) {
+      items.push({
+        label: 'Move to top',
+        icon: 'i-lucide-chevrons-up',
+        onSelect: () => handleMove(rowLookup, 'first'),
+      })
+      items.push({
+        label: 'Move up one page',
+        icon: 'i-lucide-chevron-up',
+        onSelect: () => handleMove(rowLookup, 'page-up'),
+      })
+    }
+
+    if (currentPage.value < totalPages.value) {
+      items.push({
+        label: 'Move down one page',
+        icon: 'i-lucide-chevron-down',
+        onSelect: () => handleMove(rowLookup, 'page-down'),
+      })
+      items.push({
+        label: 'Move to bottom',
+        icon: 'i-lucide-chevrons-down',
+        onSelect: () => handleMove(rowLookup, 'last'),
+      })
+    }
+
+    return [items]
+  }
+
+  async function handleMove(lookup: string | number, action: MoveAction) {
+    isMoving.value = true
+    try {
+      await $fetch(`${apiPrefix}/reorder-move`, {
+        method: 'POST',
+        body: { modelKey, lookup, action, pageSize: pageSize.value },
+      })
+      await onReordered()
+    }
+    catch (err: any) {
+      toast.add({
+        title: 'Error',
+        description: getErrorMessageFromError(err) || 'Failed to move item',
+        color: 'error',
+      })
+    }
+    finally {
+      isMoving.value = false
+    }
+  }
+
   return {
     isDragEnabled,
     isReordering,
+    isMoving,
     onDragStart,
     onDragOver,
     onDragEnter,
     onDragEnd,
     onDrop,
+    getMoveActions,
   }
 }
