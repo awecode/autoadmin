@@ -490,7 +490,7 @@ const CellRenderer = defineComponent({
             <USelect
               v-model="bulkAction"
               highlight
-              class="min-w-24"
+              class="min-w-44"
               color="neutral"
               placeholder="Select an action"
               value-key="label"
