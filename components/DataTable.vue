@@ -637,8 +637,8 @@ const CellRenderer = defineComponent({
           </template>
           <template v-if="hasLeadingCol" #row-handle-cell="{ row }">
             <div class="flex items-center gap-1">
-              <div v-if="isDragEnabled" class="cursor-grab active:cursor-grabbing">
-                <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300" />
+              <div v-if="isDragEnabled" draggable="true" data-drag-handle class="cursor-grab active:cursor-grabbing">
+                <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 pointer-events-none" />
               </div>
               <UCheckbox
                 v-if="bulkActions.length"

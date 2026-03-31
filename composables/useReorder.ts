@@ -47,14 +47,18 @@ export function useReorder(options: ReorderOptions) {
   }
 
   function onDragStart(event: DragEvent) {
+    const handle = (event.target as HTMLElement).closest?.('[data-drag-handle]')
+    if (!handle)
+      return
     const index = getRowIndexFromEvent(event)
     if (index === null || !event.dataTransfer)
       return
     dragSourceIndex.value = index
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', String(index))
-    const tr = (event.target as HTMLElement).closest('tr')
+    const tr = handle.closest('tr')
     if (tr) {
+      event.dataTransfer.setDragImage(tr, 0, tr.offsetHeight / 2)
       requestAnimationFrame(() => tr.classList.add('opacity-50'))
     }
   }
@@ -135,23 +139,6 @@ export function useReorder(options: ReorderOptions) {
       isReordering.value = false
     }
   }
-
-  function setupDragRows() {
-    if (!isDragEnabled.value || !wrapperRef.value)
-      return
-    const tbody = wrapperRef.value.querySelector('tbody')
-    if (!tbody)
-      return
-    Array.from(tbody.children).forEach((row) => {
-      ;(row as HTMLElement).draggable = true
-    })
-  }
-
-  watchEffect(() => {
-    if (rows.value && isDragEnabled.value) {
-      setupDragRows()
-    }
-  }, { flush: 'post' })
 
   // --- Cross-page move actions ---
 
