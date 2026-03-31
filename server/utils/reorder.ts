@@ -42,8 +42,12 @@ export async function resequenceAndUpdate(
 }
 
 /**
- * Batch-update sort values using a single UPDATE ... SET = CASE statement.
+ * Batch-update sort values using UPDATE ... SET = CASE statements.
+ * Each row consumes ~3 SQL params (CASE lookup + value, WHERE IN lookup)
+ * plus a few for auto-set columns. We chunk to stay within D1's 100-param limit.
  */
+const BATCH_CHUNK_SIZE = 30
+
 export async function batchUpdate(
   db: any,
   model: any,
@@ -51,9 +55,13 @@ export async function batchUpdate(
   lookupColumn: any,
   updates: Map<string | number, number>,
 ) {
-  const lookups = [...updates.keys()]
-  const caseClauses = lookups.map(lookup => sql`WHEN ${lookupColumn} = ${lookup} THEN CAST(${updates.get(lookup)!} AS INTEGER)`)
-  const caseExpr = sql.join([sql`CASE`, ...caseClauses, sql`END`], sql` `)
+  const allLookups = [...updates.keys()]
 
-  await db.update(model).set({ [sortField]: caseExpr }).where(inArray(lookupColumn, lookups))
+  for (let offset = 0; offset < allLookups.length; offset += BATCH_CHUNK_SIZE) {
+    const chunk = allLookups.slice(offset, offset + BATCH_CHUNK_SIZE)
+    const caseClauses = chunk.map(lookup => sql`WHEN ${lookupColumn} = ${lookup} THEN CAST(${updates.get(lookup)!} AS INTEGER)`)
+    const caseExpr = sql.join([sql`CASE`, ...caseClauses, sql`END`], sql` `)
+
+    await db.update(model).set({ [sortField]: caseExpr }).where(inArray(lookupColumn, chunk))
+  }
 }
