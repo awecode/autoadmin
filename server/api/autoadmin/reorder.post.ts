@@ -117,7 +117,7 @@ async function batchUpdate(
   updates: Map<string | number, number>,
 ) {
   const lookups = [...updates.keys()]
-  const caseClauses = lookups.map(lookup => sql`WHEN ${lookupColumn} = ${lookup} THEN ${updates.get(lookup)!}`)
+  const caseClauses = lookups.map(lookup => sql`WHEN ${lookupColumn} = ${lookup} THEN CAST(${updates.get(lookup)!} AS INTEGER)`)
   const caseExpr = sql.join([sql`CASE`, ...caseClauses, sql`END`], sql` `)
 
   await db.update(model).set({ [sortField]: caseExpr }).where(inArray(lookupColumn, lookups))
