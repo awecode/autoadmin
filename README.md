@@ -168,6 +168,7 @@ This is the main configuration object passed to `registry.register(model, option
 | `update` | `Partial<UpdateOptions>` | `{}` | Edit form configuration. [Reference ↗](#form-configuration-create-update-formfields) |
 | `delete` | `Partial<DeleteOptions>` | `{}` | Configuration for the delete action. [Reference ↗](#delete-configuration-delete) |
 | `fields` | `FieldSpec[]` | `undefined` | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields) |
+| `sortField` | `string` | `undefined` | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield) |
 | `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
 | `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
 | `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
@@ -652,6 +653,56 @@ registry.register(posts, {
 })
 ```
 
+## Drag-Drop Ordering (`sortField`)
+
+Enable drag-and-drop row ordering on the list view by specifying an *integer column* as the `sortField`.
+
+```ts
+export const categories = pgTable('categories', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  order: integer('order').notNull().default(0),
+})
+
+registry.register(categories, {
+  sortField: 'order',
+})
+```
+
+If the sort field has a default value or is nullable, it is automatically hidden from create and edit forms since its value is managed by the reordering UI. To keep it visible in the form, explicitly mark it as required in the field configuration:
+
+```ts
+registry.register(categories, {
+  sortField: 'order',
+  fields: [
+    { name: 'order', required: true },
+  ],
+})
+```
+<!-- ### How It Works
+
+When `sortField` is set:
+
+- A **drag handle** (grip icon) appears as the first column in the list view.
+- Users can **drag and drop** rows to reorder them within the current page.
+- Column header sorting is disabled — the list is always ordered by the sort field.
+
+### Cross-Page Ordering
+
+When the list is paginated (more than one page), a **reorder menu** (↕ icon) appears in each row's actions column with contextual options:
+
+| Action | Visible When | Effect |
+|--------|-------------|--------|
+| Move to top | Not on first page | Moves the item to the very first position globally |
+| Move up one page | Not on first page | Moves the item up by one page worth of positions |
+| Move down one page | Not on last page | Moves the item down by one page worth of positions |
+| Move to bottom | Not on last page | Moves the item to the very last position globally |
+
+### Performance
+
+- **Within-page reorder**: If sort values are already unique, only the affected page rows are updated (fast path — 1 SELECT + 1 UPDATE). If duplicates exist (e.g., all zeros on first use), the entire table is resequenced once.
+- **Cross-page move**: Fetches all rows, repositions the item, and batch-updates only the rows whose sort value changed.
+- All updates use a batched `UPDATE ... SET = CASE` statement, chunked to stay within database parameter limits (e.g., Cloudflare D1's 100-parameter cap). -->
 ## List Filters
 
 You can filter data in list using a table column, a relation column, or a custom filter.
