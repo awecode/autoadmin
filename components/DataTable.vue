@@ -316,6 +316,7 @@ function computeColumns() {
       header: hasBulk
         ? ({ table }: { table: Table<T> }) => h(UCheckbox, {
             'color': 'neutral',
+            'class': isDragEnabled.value ? 'pl-6' : undefined,
             'modelValue': table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
             'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
             'aria-label': 'Select all',
@@ -638,7 +639,7 @@ const CellRenderer = defineComponent({
           <template v-if="hasLeadingCol" #row-handle-cell="{ row }">
             <div class="flex items-center gap-1">
               <div v-if="isDragEnabled" draggable="true" data-drag-handle class="cursor-grab active:cursor-grabbing">
-                <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 pointer-events-none" />
+                <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 pointer-events-none h-5 min-w-5" />
               </div>
               <UCheckbox
                 v-if="bulkActions.length"
