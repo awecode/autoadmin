@@ -11,6 +11,7 @@ import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
 import { h, resolveComponent } from 'vue'
 import { useAdminClient } from '../composables/adminClient'
+import { useDragSort } from '../composables/dragSort'
 
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
@@ -273,6 +274,18 @@ function getHeader(column: Column<T>, label?: string, sortKey?: string) {
   }
 }
 
+// Drag-drop reordering
+const tableWrapper = useTemplateRef<HTMLElement>('tableWrapper')
+const { isDragEnabled, onDragStart, onDragOver, onDragEnter, onDragEnd, onDrop } = useDragSort({
+  sortField: computed(() => spec.value.sortField),
+  rows: computed(() => data.value?.results),
+  lookupColumnName: computed(() => spec.value.lookupColumnName),
+  wrapperRef: tableWrapper,
+  apiPrefix,
+  modelKey,
+  onReordered: () => refresh(),
+})
+
 function computeColumns() {
   const tableColumns = spec.value.columns
   if (!tableColumns) {
@@ -440,133 +453,6 @@ const CellRenderer = defineComponent({
     }
   },
 })
-
-// Drag-drop reordering
-const isDragEnabled = computed(() => !!spec.value.sortField)
-const dragSourceIndex = ref<number | null>(null)
-const isReordering = ref(false)
-const tableWrapper = useTemplateRef<HTMLElement>('tableWrapper')
-
-function getRowIndexFromEvent(event: DragEvent): number | null {
-  const tr = (event.target as HTMLElement).closest?.('tr')
-  if (!tr?.parentElement || tr.parentElement.tagName !== 'TBODY') return null
-  return Array.from(tr.parentElement.children).indexOf(tr)
-}
-
-function clearDropIndicators() {
-  if (!tableWrapper.value) return
-  tableWrapper.value.querySelectorAll('tbody tr').forEach((tr) => {
-    ;(tr as HTMLElement).style.boxShadow = ''
-    tr.classList.remove('opacity-50')
-  })
-}
-
-function onDragStart(event: DragEvent) {
-  const index = getRowIndexFromEvent(event)
-  if (index === null || !event.dataTransfer) return
-  dragSourceIndex.value = index
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/plain', String(index))
-  const tr = (event.target as HTMLElement).closest('tr')
-  if (tr) {
-    requestAnimationFrame(() => { tr.classList.add('opacity-50') })
-  }
-}
-
-function onDragOver(event: DragEvent) {
-  event.preventDefault()
-  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
-}
-
-function onDragEnter(event: DragEvent) {
-  event.preventDefault()
-  const index = getRowIndexFromEvent(event)
-  if (index === null || index === dragSourceIndex.value) return
-
-  clearDropIndicators()
-  if (dragSourceIndex.value !== null && tableWrapper.value) {
-    const tbody = tableWrapper.value.querySelector('tbody')
-    if (tbody) {
-      const sourceRow = tbody.children[dragSourceIndex.value] as HTMLElement | undefined
-      sourceRow?.classList.add('opacity-50')
-    }
-  }
-
-  const tr = (event.target as HTMLElement).closest('tr')
-  if (tr && dragSourceIndex.value !== null) {
-    tr.style.boxShadow = index > dragSourceIndex.value
-      ? 'inset 0 -2px 0 0 var(--ui-primary)'
-      : 'inset 0 2px 0 0 var(--ui-primary)'
-  }
-}
-
-function onDragEnd() {
-  dragSourceIndex.value = null
-  clearDropIndicators()
-}
-
-async function onDrop(event: DragEvent) {
-  event.preventDefault()
-  const targetIndex = getRowIndexFromEvent(event)
-  const sourceIndex = dragSourceIndex.value
-
-  onDragEnd()
-
-  if (targetIndex === null || sourceIndex === null || targetIndex === sourceIndex) return
-  await handleReorder(sourceIndex, targetIndex)
-}
-
-async function handleReorder(fromIndex: number, toIndex: number) {
-  if (!data.value?.results || isReordering.value) return
-
-  isReordering.value = true
-  const results = [...data.value.results]
-  const [moved] = results.splice(fromIndex, 1)
-  results.splice(toIndex, 0, moved!)
-
-  const page = data.value.pagination?.page ?? 1
-  const pageSize = data.value.pagination?.size ?? results.length
-  const offset = (page - 1) * pageSize
-
-  const items = results.map((row, index) => ({
-    lookup: row[spec.value.lookupColumnName],
-    sortOrder: offset + index,
-  }))
-
-  try {
-    await $fetch(`${apiPrefix}/reorder`, {
-      method: 'POST',
-      body: { modelKey, items },
-    })
-    await refresh()
-  }
-  catch (err: any) {
-    toast.add({
-      title: 'Error',
-      description: getErrorMessageFromError(err) || 'Failed to reorder',
-      color: 'error',
-    })
-    await refresh()
-  }
-  finally {
-    isReordering.value = false
-  }
-}
-
-function setupDragRows() {
-  if (!isDragEnabled.value || !tableWrapper.value) return
-  const tbody = tableWrapper.value.querySelector('tbody')
-  if (!tbody) return
-  Array.from(tbody.children).forEach((row) => {
-    ;(row as HTMLElement).draggable = true
-  })
-}
-
-watchEffect(() => {
-  if (data.value?.results && isDragEnabled.value) {
-    setupDragRows()
-  }
-}, { flush: 'post' })
 </script>
 
 <template>
@@ -653,96 +539,96 @@ watchEffect(() => {
           :ui="{ td: 'whitespace-normal py-1 px-4' }"
           @update:sorting="sort = $event ?? []"
         >
-        <!-- Dynamic cell templates for all columns except actions -->
-        <template
-          v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select', 'drag-handle'].includes(col.id ?? ''))"
-          :key="column.id"
-          #[`${column.id}-cell`]="{ cell: c }"
-        >
-          <template v-if="cellFunctions && 'accessorKey' in c.column.columnDef && cellFunctions[c.column.columnDef.accessorKey]">
-            <CellRenderer
-              :cell="c"
-              :cell-function="cellFunctions[c.column.columnDef.accessorKey]!"
-            />
-          </template>
-          <template v-else-if="'type' in c.column.columnDef">
-            <template v-if="c.column.columnDef.type === 'boolean'">
-              <span v-if="c.getValue()">Yes</span>
-              <span v-else>No</span>
+          <!-- Dynamic cell templates for all columns except actions -->
+          <template
+            v-for="column in computedColumns.filter((col: TableColumn<T>) => !['actions', 'select', 'drag-handle'].includes(col.id ?? ''))"
+            :key="column.id"
+            #[`${column.id}-cell`]="{ cell: c }"
+          >
+            <template v-if="cellFunctions && 'accessorKey' in c.column.columnDef && cellFunctions[c.column.columnDef.accessorKey]">
+              <CellRenderer
+                :cell="c"
+                :cell-function="cellFunctions[c.column.columnDef.accessorKey]!"
+              />
             </template>
-            <template v-else-if="c.column.columnDef.type === 'file' && c.getValue()">
-              <!-- Open file in new tab -->
-              <NuxtLink class="flex items-center underline" target="_blank" :to="c.getValue() as string">
-                <UIcon class="inline-block mr-1" name="i-lucide-file" />
-                <!-- Show file name -->
-                <span class="text-sm">{{ getFileNameFromUrl(c.getValue() as string) }}</span>
-              </NuxtLink>
-            </template>
-            <template v-else-if="c.column.columnDef.type === 'image' && c.getValue()">
-              <NuxtLink target="_blank" :to="c.getValue() as string">
-                <img class="w-10 h-10 rounded-md" :src="c.getValue() as string">
-              </NuxtLink>
-            </template>
+            <template v-else-if="'type' in c.column.columnDef">
+              <template v-if="c.column.columnDef.type === 'boolean'">
+                <span v-if="c.getValue()">Yes</span>
+                <span v-else>No</span>
+              </template>
+              <template v-else-if="c.column.columnDef.type === 'file' && c.getValue()">
+                <!-- Open file in new tab -->
+                <NuxtLink class="flex items-center underline" target="_blank" :to="c.getValue() as string">
+                  <UIcon class="inline-block mr-1" name="i-lucide-file" />
+                  <!-- Show file name -->
+                  <span class="text-sm">{{ getFileNameFromUrl(c.getValue() as string) }}</span>
+                </NuxtLink>
+              </template>
+              <template v-else-if="c.column.columnDef.type === 'image' && c.getValue()">
+                <NuxtLink target="_blank" :to="c.getValue() as string">
+                  <img class="w-10 h-10 rounded-md" :src="c.getValue() as string">
+                </NuxtLink>
+              </template>
 
-            <template v-else-if="c.column.columnDef.type === 'date'">
-              <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date, { includeTime: false }) }}</span>
-            </template>
-            <template v-else-if="c.column.columnDef.type === 'datetime-local'">
-              <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date) }}</span>
-            </template>
-            <template v-else-if="c.column.columnDef.type === 'rich-text'">
-              <!-- <div v-html="c.getValue().replace(/<[^>]*>?/g, ' ')" /> -->
-              <div :title="c.getValue() as string || ''" class="max-h-10 overflow-hidden line-clamp-2" v-html="c.getValue()" />
+              <template v-else-if="c.column.columnDef.type === 'date'">
+                <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date, { includeTime: false }) }}</span>
+              </template>
+              <template v-else-if="c.column.columnDef.type === 'datetime-local'">
+                <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date) }}</span>
+              </template>
+              <template v-else-if="c.column.columnDef.type === 'rich-text'">
+                <!-- <div v-html="c.getValue().replace(/<[^>]*>?/g, ' ')" /> -->
+                <div :title="c.getValue() as string || ''" class="max-h-10 overflow-hidden line-clamp-2" v-html="c.getValue()" />
+              </template>
+              <template v-else>
+                {{ c.getValue() }}
+              </template>
             </template>
             <template v-else>
               {{ c.getValue() }}
             </template>
           </template>
-          <template v-else>
-            {{ c.getValue() }}
-          </template>
-        </template>
 
-        <template #actions-cell="scope">
-          <div class="flex items-center gap-2">
-            <slot name="actions-cell-prepend" v-bind="scope ?? {}" />
-            <slot name="actions-cell" v-bind="scope ?? {}">
-              <NuxtLink
-                v-if="defaultActions?.includes('edit') && spec.updatePage"
-                :to="{
-                  ...spec.updatePage,
-                  params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] },
-                  query: route.fullPath === defaultListPath ? undefined : { returnTo: route.fullPath },
-                }"
-              >
-                <UButton
-                  aria-label="Edit"
-                  color="neutral"
-                  icon="i-lucide-square-pen"
-                  variant="ghost"
+          <template #actions-cell="scope">
+            <div class="flex items-center gap-2">
+              <slot name="actions-cell-prepend" v-bind="scope ?? {}" />
+              <slot name="actions-cell" v-bind="scope ?? {}">
+                <NuxtLink
+                  v-if="defaultActions?.includes('edit') && spec.updatePage"
+                  :to="{
+                    ...spec.updatePage,
+                    params: { ...spec.updatePage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] },
+                    query: route.fullPath === defaultListPath ? undefined : { returnTo: route.fullPath },
+                  }"
                 >
+                  <UButton
+                    aria-label="Edit"
+                    color="neutral"
+                    icon="i-lucide-square-pen"
+                    variant="ghost"
+                  >
                   <!-- Edit -->
-                </UButton>
-              </NuxtLink>
-              <UButton
-                v-if="defaultActions?.includes('delete') && spec.deleteEndpoint && spec.enableDelete"
-                aria-label="Delete"
-                color="error"
-                icon="i-lucide-trash"
-                variant="ghost"
-                @click="handleDelete(scope.row.original[spec.lookupColumnName])"
-              >
+                  </UButton>
+                </NuxtLink>
+                <UButton
+                  v-if="defaultActions?.includes('delete') && spec.deleteEndpoint && spec.enableDelete"
+                  aria-label="Delete"
+                  color="error"
+                  icon="i-lucide-trash"
+                  variant="ghost"
+                  @click="handleDelete(scope.row.original[spec.lookupColumnName])"
+                >
                 <!-- Delete -->
-              </UButton>
-            </slot>
-            <slot name="actions-cell-append" v-bind="scope ?? {}" />
-          </div>
-        </template>
-        <template v-if="isDragEnabled" #drag-handle-cell>
-          <div class="cursor-grab active:cursor-grabbing">
-            <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300" />
-          </div>
-        </template>
+                </UButton>
+              </slot>
+              <slot name="actions-cell-append" v-bind="scope ?? {}" />
+            </div>
+          </template>
+          <template v-if="isDragEnabled" #drag-handle-cell>
+            <div class="cursor-grab active:cursor-grabbing">
+              <UIcon name="i-lucide-grip-vertical" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300" />
+            </div>
+          </template>
 
         <!-- <template v-for="(_, name) in $slots" #[name]="scope">
             <slot :name="name" v-bind="scope ?? {}"></slot>
