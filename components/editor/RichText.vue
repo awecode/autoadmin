@@ -398,7 +398,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
       }),
     ]"
     :placeholder="editorAttrs?.placeholder || 'Write, type / for commands...'"
-    :ui="{ base: 'p-8 sm:px-16 py-13.5 prose dark:prose-invert' }"
+    :ui="{ base: 'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none' }"
     class="min-h-48"
   >
     <UEditorToolbar :editor="editor" :items="fixedToolbarItems" class="border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto">
