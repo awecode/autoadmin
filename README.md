@@ -271,6 +271,54 @@ The `type` property in `FieldSpec` determines which form input component is rend
 - `file`: A generic file uploader. Text with path to the file in object storage is saved to the database.
 - `blob`: A binary data uploader saved to the database.
 
+#### Rich Text Editor Configuration
+
+The `rich-text` field type renders a full-featured Tiptap editor. You can configure it through `inputAttrs`:
+
+```ts
+registry.register(posts, {
+  fields: [
+    {
+      name: 'content',
+      type: 'rich-text',
+      inputAttrs: {
+        placeholder: 'Start writing...',
+        disabledHeadingLevels: [1],
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
+        textAlignTypes: ['heading', 'paragraph', 'image'],
+        baseClass: 'p-4 prose dark:prose-invert max-w-none',
+        toolbarClass: 'border-b border-muted sticky top-0 px-4 py-2 z-50 bg-default',
+        extraFixedToolbarItems: [[{
+          kind: 'mark',
+          mark: 'highlight',
+          icon: 'i-lucide-highlighter',
+          tooltip: { text: 'Highlight' },
+        }]],
+        extraBubbleToolbarItems: [[{
+          kind: 'mark',
+          mark: 'highlight',
+          icon: 'i-lucide-highlighter',
+          tooltip: { text: 'Highlight' },
+        }]],
+        extensions: [Highlight],
+      },
+    },
+  ],
+})
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `placeholder` | `string` | `'Write, type / for commands...'` | Placeholder text shown when the editor is empty. |
+| `disabledHeadingLevels` | `number[]` | `[]` | Heading levels (1–4) to disable. |
+| `allowedMimeTypes` | `string[]` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']` | MIME types accepted for file drag-drop and paste. |
+| `textAlignTypes` | `string[]` | `['heading', 'paragraph']` | Node types that support text alignment. |
+| `baseClass` | `string` | `'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none'` | CSS class for the editor content area. |
+| `toolbarClass` | `string` | `'border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto'` | CSS class for the fixed toolbar. |
+| `extraFixedToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the fixed toolbar. |
+| `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the bubble (selection) toolbar. |
+| `extensions` | `Extension[]` | `[]` | Additional Tiptap extensions to load alongside the built-in ones. |
+
 #### File & Image Uploads (fileConfig)
 
 When using the `image` or `file` field type, you can optionally provide a `fileConfig` object to specify upload constraints.
