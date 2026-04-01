@@ -496,7 +496,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 </template>
 
 <style>
-@import '~/assets/css/media-text.css';
+@import '../../assets/css/media-text.css';
 
 /* Embed (iframe) */
 
