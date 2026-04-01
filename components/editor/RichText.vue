@@ -28,7 +28,23 @@ const uploadPrefix = props.uploadPrefix || 'content/'
 const value = ref(``)
 const supportedHeadingLevels = [1, 2, 3, 4] as const
 const attrs = props.attrs ?? {}
-const { disabledHeadingLevels: rawDisabledHeadingLevels, ...editorAttrs } = attrs
+const {
+  disabledHeadingLevels: rawDisabledHeadingLevels,
+  extraFixedToolbarItems: rawExtraFixedItems,
+  extraBubbleToolbarItems: rawExtraBubbleItems,
+  allowedMimeTypes: rawAllowedMimeTypes,
+  textAlignTypes: rawTextAlignTypes,
+  extensions: rawExtensions,
+  baseClass,
+  toolbarClass,
+  ...editorAttrs
+} = attrs
+
+const extraFixedItems = (rawExtraFixedItems ?? []) as EditorToolbarItem[][]
+const extraBubbleItems = (rawExtraBubbleItems ?? []) as EditorToolbarItem[][]
+const allowedMimeTypes = (rawAllowedMimeTypes ?? ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']) as string[]
+const textAlignTypes = (rawTextAlignTypes ?? ['heading', 'paragraph']) as string[]
+const extraExtensions = (rawExtensions ?? []) as any[]
 
 const disabledHeadingLevels = Array.isArray(rawDisabledHeadingLevels)
   ? rawDisabledHeadingLevels
@@ -213,7 +229,7 @@ const fixedToolbarItems: EditorToolbarItem[][] = [[{
   slot: 'table' as const,
   icon: 'i-lucide-table',
   tooltip: { text: 'Table' },
-}]]
+}], ...extraFixedItems]
 
 const bubbleToolbarItems: EditorToolbarItem[][] = [[{
   label: 'Turn into',
@@ -286,7 +302,7 @@ const bubbleToolbarItems: EditorToolbarItem[][] = [[{
 }], [{
   slot: 'link' as const,
   icon: 'i-lucide-link',
-}]]
+}], ...extraBubbleItems]
 
 const selectedNode = ref<{ node: JSONContent, pos: number }>()
 
@@ -378,7 +394,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
     :starter-kit="starterKitOptions"
     :extensions="[
       TableKit,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TextAlign.configure({ types: textAlignTypes }),
       Embed,
       AdvancedImage.configure({
         HTMLAttributes: {
@@ -388,7 +404,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
       Figure,
       MediaText,
       FileHandler.configure({
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'],
+        allowedMimeTypes,
         onDrop: (currentEditor, files, pos) => {
           return handleFiles(files, currentEditor as Editor, uploadPrefix, pos)
         },
@@ -396,12 +412,13 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
           return handleFiles(files, currentEditor as Editor, uploadPrefix)
         },
       }),
+      ...extraExtensions,
     ]"
     :placeholder="editorAttrs?.placeholder || 'Write, type / for commands...'"
-    :ui="{ base: 'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none' }"
+    :ui="{ base: baseClass ?? 'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none' }"
     class="min-h-48"
   >
-    <UEditorToolbar :editor="editor" :items="fixedToolbarItems" class="border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto">
+    <UEditorToolbar :editor="editor" :items="fixedToolbarItems" :class="toolbarClass ?? 'border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto'">
       <template #link>
         <EditorLinkPopover :editor="editor" auto-open />
       </template>
