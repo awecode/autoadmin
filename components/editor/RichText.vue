@@ -496,35 +496,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 </template>
 
 <style>
-/* Media text */
-.media-text-left,
-.media-text-right {
-  display: grid;
-  column-gap: 1.5rem;
-  row-gap: 0;
-  margin: 1.5rem 0;
-  align-items: start;
-}
-.media-text-left {
-  grid-template-columns: auto 1fr;
-}
-.media-text-right {
-  grid-template-columns: 1fr auto;
-}
-.media-text-left > *:first-child {
-  grid-column: 1;
-  grid-row: 1 / span 100;
-}
-.media-text-left > *:not(:first-child) {
-  grid-column: 2;
-}
-.media-text-right > *:first-child {
-  grid-column: 2;
-  grid-row: 1 / span 100;
-}
-.media-text-right > *:not(:first-child) {
-  grid-column: 1;
-}
+@import '~/assets/css/media-text.css';
 
 /* Embed (iframe) */
 
