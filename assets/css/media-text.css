@@ -24,7 +24,6 @@
 .media-text-right {
   display: grid;
   grid-template-columns: 1fr; /* Strictly ONE column */
-  gap: 1.5rem;
   margin: 1.5rem 0;
 }
 
@@ -44,6 +43,7 @@
     .media-text-left,
     .media-text-right {
       row-gap: 0;
+      column-gap: 1.5rem;
       align-items: start;
     }
   
@@ -75,3 +75,11 @@
       grid-column: 1;
     }
   }
+
+/* For small screens reduce margin on headings after image */
+
+@media (max-width: 768px) {
+  .media-text-left h1, .media-text-left h2, .media-text-left h3, .media-text-left h4, .media-text-left h5, .media-text-left h6 {
+    margin-top: 1rem;
+  }
+}
