@@ -488,6 +488,12 @@ export default defineNuxtPlugin(() => {
           icon: 'i-lucide-highlighter',
           tooltip: { text: 'Highlight' },
         }]],
+        extraBubbleToolbarItems: [[{
+          kind: 'mark',
+          mark: 'highlight',
+          icon: 'i-lucide-highlighter',
+          tooltip: { text: 'Highlight' },
+        }]],
       },
     },
   })
@@ -510,14 +516,10 @@ All options below work in both `inputAttrs` (server-side) and client-side config
 | `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the bubble (selection) toolbar. |
 | `extensions` | `Extension[]` | `[]` | Additional Tiptap extensions to load alongside the built-in ones. |
 
-Options like `extensions`, `extraFixedToolbarItems`, and `extraBubbleToolbarItems` are not serializable and should be configured via the client-side approach.
-
-### Merge order
-
-When the same option is set in multiple places, the merge order from lowest to highest priority is:
+Options like `extensions`, `extraFixedToolbarItems`, and `extraBubbleToolbarItems` are not serializable and should be configured via the client-side approach. When the same option is set in multiple places, the merge order from lowest to highest priority is:
 
 ```
-global (setGlobalRichText) -> per-field (register richText) -> server inputAttrs
+global (setGlobalRichText) -> per-field (client-side plugin) -> server inputAttrs
 ```
 
 ## Relationship Configuration
