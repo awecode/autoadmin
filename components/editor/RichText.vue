@@ -20,6 +20,7 @@ import { tableToolbarItems } from './TableToolbar'
 const props = defineProps<{
   // modelValue?: string
   attrs?: Record<string, any>
+  clientConfig?: Record<string, any>
   uploadPrefix?: string
 }>()
 
@@ -27,7 +28,27 @@ const uploadPrefix = props.uploadPrefix || 'content/'
 
 const value = ref(``)
 const supportedHeadingLevels = [1, 2, 3, 4] as const
-const attrs = props.attrs ?? {}
+
+// Merge: clientConfig (global + per-field) < attrs (server-side inputAttrs)
+// Arrays (extensions, toolbar items) are concatenated rather than replaced
+const clientCfg = props.clientConfig ?? {}
+const serverAttrs = props.attrs ?? {}
+
+const merged: Record<string, any> = { ...clientCfg }
+for (const [key, val] of Object.entries(serverAttrs)) {
+  if (val !== undefined) {
+    merged[key] = val
+  }
+}
+// Concatenate array-type options from both sources
+for (const arrayKey of ['extraFixedToolbarItems', 'extraBubbleToolbarItems', 'extensions'] as const) {
+  const client = (clientCfg as any)[arrayKey] as any[] | undefined
+  const server = (serverAttrs as any)[arrayKey] as any[] | undefined
+  if (client || server) {
+    merged[arrayKey] = [...(client ?? []), ...(server ?? [])]
+  }
+}
+
 const {
   disabledHeadingLevels: rawDisabledHeadingLevels,
   extraFixedToolbarItems: rawExtraFixedItems,
@@ -38,7 +59,7 @@ const {
   baseClass,
   toolbarClass,
   ...editorAttrs
-} = attrs
+} = merged
 
 const extraFixedItems = (rawExtraFixedItems ?? []) as EditorToolbarItem[][]
 const extraBubbleItems = (rawExtraBubbleItems ?? []) as EditorToolbarItem[][]

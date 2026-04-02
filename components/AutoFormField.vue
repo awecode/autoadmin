@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import { normalizeOptions, transformErrorMessage } from '#layers/autoadmin/utils/form'
+import { useAdminClient } from '../composables/adminClient'
 import AutoFormModal from './AutoFormModal.vue'
 
 const props = defineProps<{
@@ -12,6 +13,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: any]
 }>()
+
+const modelKey = (useRoute().params.modelKey as string | undefined)?.replace(/\/$/, '')
+const richTextClientConfig = computed(() => {
+  if (props.field.type !== 'rich-text' || !modelKey)
+    return undefined
+  return useAdminClient().getRichTextConfig(modelKey, props.field.name)
+})
 
 // Helper function to format Date to datetime-local string using local time
 function formatDateToLocal(date: Date): string {
@@ -321,6 +329,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           v-model="fieldValue"
           class="w-full border border-muted rounded-md p-1"
           :attrs="field.inputAttrs"
+          :client-config="richTextClientConfig"
         />
 
         <Uploader

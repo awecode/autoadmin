@@ -271,54 +271,6 @@ The `type` property in `FieldSpec` determines which form input component is rend
 - `file`: A generic file uploader. Text with path to the file in object storage is saved to the database.
 - `blob`: A binary data uploader saved to the database.
 
-#### Rich Text Editor Configuration
-
-The `rich-text` field type renders a full-featured Tiptap editor. You can configure it through `inputAttrs`:
-
-```ts
-registry.register(posts, {
-  fields: [
-    {
-      name: 'content',
-      type: 'rich-text',
-      inputAttrs: {
-        placeholder: 'Start writing...',
-        disabledHeadingLevels: [1],
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
-        textAlignTypes: ['heading', 'paragraph', 'image'],
-        baseClass: 'p-4 prose dark:prose-invert max-w-none',
-        toolbarClass: 'border-b border-muted sticky top-0 px-4 py-2 z-50 bg-default',
-        extraFixedToolbarItems: [[{
-          kind: 'mark',
-          mark: 'highlight',
-          icon: 'i-lucide-highlighter',
-          tooltip: { text: 'Highlight' },
-        }]],
-        extraBubbleToolbarItems: [[{
-          kind: 'mark',
-          mark: 'highlight',
-          icon: 'i-lucide-highlighter',
-          tooltip: { text: 'Highlight' },
-        }]],
-        extensions: [Highlight],
-      },
-    },
-  ],
-})
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `placeholder` | `string` | `'Write, type / for commands...'` | Placeholder text shown when the editor is empty. |
-| `disabledHeadingLevels` | `number[]` | `[]` | Heading levels (1–4) to disable. |
-| `allowedMimeTypes` | `string[]` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']` | MIME types accepted for file drag-drop and paste. |
-| `textAlignTypes` | `string[]` | `['heading', 'paragraph']` | Node types that support text alignment. |
-| `baseClass` | `string` | `'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none'` | CSS class for the editor content area. |
-| `toolbarClass` | `string` | `'border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto'` | CSS class for the fixed toolbar. |
-| `extraFixedToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the fixed toolbar. |
-| `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the bubble (selection) toolbar. |
-| `extensions` | `Extension[]` | `[]` | Additional Tiptap extensions to load alongside the built-in ones. |
-
 #### File & Image Uploads (fileConfig)
 
 When using the `image` or `file` field type, you can optionally provide a `fileConfig` object to specify upload constraints.
@@ -477,6 +429,95 @@ registry.register(posts, {
     slug: ['title', 'publishedOn'] // You can also use a single field like `'slug': ['title']`
   }
 })
+```
+
+## Rich Text Editor Configuration
+
+The `rich-text` field type renders a full-featured Tiptap editor. Configuration options can be provided in two ways:
+
+- **Server-side** via `inputAttrs` in the admin registry -- for serializable options like `placeholder` and `disabledHeadingLevels`.
+- **Client-side** via `useAdminClient` -- for non-serializable options like Tiptap extensions, toolbar items, and render functions.
+
+When both are provided, they are deep-merged. Server-side `inputAttrs` take priority for scalar values, while array options (`extensions`, `extraFixedToolbarItems`, `extraBubbleToolbarItems`) are concatenated from both sources.
+
+### Server-side configuration (inputAttrs)
+
+Use `inputAttrs` in the server-side admin registry for serializable options:
+
+```ts
+registry.register(posts, {
+  fields: [
+    {
+      name: 'content',
+      type: 'rich-text',
+      inputAttrs: {
+        placeholder: 'Start writing...',
+        disabledHeadingLevels: [1],
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
+      },
+    },
+  ],
+})
+```
+
+### Client-side configuration (useAdminClient)
+
+Use `useAdminClient` in a Nuxt client plugin for non-serializable options like Tiptap extensions. Configuration can be set globally (for all rich-text fields) or per-field (for a specific field on a specific model).
+
+```ts
+// plugins/admin-client.ts
+import { useAdminClient } from '#layers/autoadmin/composables/adminClient'
+import { Highlight } from '@tiptap/extension-highlight'
+
+export default defineNuxtPlugin(() => {
+  const { register, setGlobalRichText } = useAdminClient()
+
+  // Global: applies to ALL rich-text fields across all models
+  setGlobalRichText({
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
+  })
+
+  // Per-field: applies only to the 'content' field on the 'posts' model
+  register('posts', {
+    richText: {
+      content: {
+        extensions: [Highlight],
+        extraFixedToolbarItems: [[{
+          kind: 'mark',
+          mark: 'highlight',
+          icon: 'i-lucide-highlighter',
+          tooltip: { text: 'Highlight' },
+        }]],
+      },
+    },
+  })
+})
+```
+
+### Available options
+
+All options below work in both `inputAttrs` (server-side) and client-side configuration:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `placeholder` | `string` | `'Write, type / for commands...'` | Placeholder text shown when the editor is empty. |
+| `disabledHeadingLevels` | `number[]` | `[]` | Heading levels (1-4) to disable. |
+| `allowedMimeTypes` | `string[]` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']` | MIME types accepted for file drag-drop and paste. |
+| `textAlignTypes` | `string[]` | `['heading', 'paragraph']` | Node types that support text alignment. |
+| `baseClass` | `string` | `'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none'` | CSS class for the editor content area. |
+| `toolbarClass` | `string` | `'border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto'` | CSS class for the fixed toolbar. |
+| `extraFixedToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the fixed toolbar. |
+| `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the bubble (selection) toolbar. |
+| `extensions` | `Extension[]` | `[]` | Additional Tiptap extensions to load alongside the built-in ones. |
+
+Options like `extensions`, `extraFixedToolbarItems`, and `extraBubbleToolbarItems` are not serializable and should be configured via the client-side approach.
+
+### Merge order
+
+When the same option is set in multiple places, the merge order from lowest to highest priority is:
+
+```
+global (setGlobalRichText) -> per-field (register richText) -> server inputAttrs
 ```
 
 ## Relationship Configuration
