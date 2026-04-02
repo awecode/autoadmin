@@ -447,7 +447,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
         <EditorImagePopover :editor="editor" :upload-prefix="uploadPrefix" auto-open />
       </template>
       <template #embed>
-        <EditorEmbedPopover :editor="editor" auto-open />
+        <EditorEmbedPopover :editor="editor" :upload-prefix="uploadPrefix" auto-open />
       </template>
       <template #table>
         <EditorTablePopover :editor="editor" />

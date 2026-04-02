@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
+import { uploadFile } from './FileUpload'
 
 const props = defineProps<{
   editor: Editor
   autoOpen?: boolean
+  uploadPrefix?: string
 }>()
 
 type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf'
@@ -13,6 +15,7 @@ const embedType = ref<EmbedType>('youtube')
 const value = ref('')
 const width = ref('')
 const height = ref('')
+const isUploading = ref(false)
 
 const active = computed(() => props.editor.isActive('embed'))
 const isEditing = computed(() => props.editor.isActive('embed'))
@@ -188,6 +191,41 @@ function setEmbed() {
   height.value = ''
 }
 
+async function handlePdfUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  isUploading.value = true
+  try {
+    const url = await uploadFile(file, props.uploadPrefix || 'content/')
+    const attrs: Record<string, unknown> = {
+      embedType: 'pdf',
+      src: url,
+    }
+    const w = width.value.trim()
+    const h = height.value.trim() || '600px'
+    if (w) attrs.width = w
+    attrs.height = h
+
+    props.editor.chain().focus().insertContent({
+      type: 'embed',
+      attrs,
+    }).run()
+
+    open.value = false
+    value.value = ''
+    width.value = ''
+    height.value = ''
+  }
+  catch (error) {
+    console.error('PDF upload failed:', error)
+  }
+  finally {
+    isUploading.value = false
+    input.value = ''
+  }
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Enter') {
     event.preventDefault()
@@ -239,6 +277,31 @@ function handleKeyDown(event: KeyboardEvent) {
               @keydown="handleKeyDown"
             />
           </UFormField>
+
+          <template v-if="embedType === 'pdf'">
+            <div class="flex items-center gap-2 text-sm text-dimmed">
+              <div class="flex-1 border-t border-muted" />
+              or
+              <div class="flex-1 border-t border-muted" />
+            </div>
+            <UButton
+              color="neutral"
+              variant="soft"
+              size="sm"
+              icon="i-lucide-upload"
+              :loading="isUploading"
+              @click="($refs.pdfInput as HTMLInputElement)?.click()"
+            >
+              Upload PDF
+            </UButton>
+            <input
+              ref="pdfInput"
+              type="file"
+              accept=".pdf"
+              class="hidden"
+              @change="handlePdfUpload"
+            >
+          </template>
         </template>
 
         <div class="grid grid-cols-2 gap-2">
