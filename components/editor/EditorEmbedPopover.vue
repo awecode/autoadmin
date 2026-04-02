@@ -8,7 +8,13 @@ const props = defineProps<{
   uploadPrefix?: string
 }>()
 
-type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf'
+type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf' | 'video' | 'audio'
+
+const uploadableTypes: Record<string, { accept: string, label: string }> = {
+  pdf: { accept: '.pdf', label: 'Upload PDF' },
+  video: { accept: 'video/mp4,video/webm,video/ogg,.mp4,.webm,.ogv', label: 'Upload video' },
+  audio: { accept: 'audio/mpeg,audio/ogg,audio/wav,audio/mp4,.mp3,.ogg,.wav,.m4a', label: 'Upload audio' },
+}
 
 const open = ref(false)
 const embedType = ref<EmbedType>('youtube')
@@ -19,11 +25,8 @@ const isUploading = ref(false)
 
 const active = computed(() => props.editor.isActive('embed'))
 const isEditing = computed(() => props.editor.isActive('embed'))
-const disabled = computed(() => {
-  if (!props.editor.isEditable)
-    return true
-  return false
-})
+const disabled = computed(() => !props.editor.isEditable)
+const uploadInfo = computed(() => uploadableTypes[embedType.value])
 
 function isProbablyCode(input: string) {
   return input.includes('<') && input.includes('>')
@@ -74,7 +77,6 @@ function getYoutubeEmbedSrc(urlStr: string): string | null {
 function getFacebookEmbedSrc(urlStr: string): string | null {
   try {
     const url = new URL(urlStr)
-    // Basic check that it's a Facebook URL
     if (!/facebook\.com/.test(url.hostname))
       return null
     return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url.toString())}`
@@ -89,10 +91,8 @@ function getLinkedInEmbedSrc(urlStr: string): string | null {
     const url = new URL(urlStr)
     if (!/linkedin\.com/.test(url.hostname))
       return null
-    // If it's already an embed URL, keep as is.
     if (url.pathname.includes('/embed/'))
       return url.toString()
-    // Common feed URL: /feed/update/urn:li:activity:...
     url.pathname = url.pathname.replace('/feed/update/', '/embed/feed/update/')
     return url.toString()
   }
@@ -108,6 +108,13 @@ watch(open, (isOpen) => {
   width.value = attrs.width ?? ''
   height.value = attrs.height ?? ''
 })
+
+function resetFields() {
+  open.value = false
+  value.value = ''
+  width.value = ''
+  height.value = ''
+}
 
 function setEmbed() {
   if (isEditing.value) {
@@ -158,9 +165,6 @@ function setEmbed() {
     else if (kind === 'linkedin') {
       src = getLinkedInEmbedSrc(input)
     }
-    else if (kind === 'pdf') {
-      src = input
-    }
     else {
       src = input
     }
@@ -185,13 +189,10 @@ function setEmbed() {
     attrs,
   }).run()
 
-  open.value = false
-  value.value = ''
-  width.value = ''
-  height.value = ''
+  resetFields()
 }
 
-async function handlePdfUpload(event: Event) {
+async function handleFileUpload(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
@@ -199,26 +200,28 @@ async function handlePdfUpload(event: Event) {
   try {
     const url = await uploadFile(file, props.uploadPrefix || 'content/')
     const attrs: Record<string, unknown> = {
-      embedType: 'pdf',
+      embedType: embedType.value,
       src: url,
     }
     const w = width.value.trim()
-    const h = height.value.trim() || '600px'
+    const h = height.value.trim()
     if (w) attrs.width = w
-    attrs.height = h
+    if (embedType.value === 'pdf') {
+      attrs.height = h || '600px'
+    }
+    else if (h) {
+      attrs.height = h
+    }
 
     props.editor.chain().focus().insertContent({
       type: 'embed',
       attrs,
     }).run()
 
-    open.value = false
-    value.value = ''
-    width.value = ''
-    height.value = ''
+    resetFields()
   }
   catch (error) {
-    console.error('PDF upload failed:', error)
+    console.error('File upload failed:', error)
   }
   finally {
     isUploading.value = false
@@ -260,6 +263,8 @@ function handleKeyDown(event: KeyboardEvent) {
                 { label: 'Facebook post', value: 'facebook' },
                 { label: 'LinkedIn post', value: 'linkedin' },
                 { label: 'PDF', value: 'pdf' },
+                { label: 'Video', value: 'video' },
+                { label: 'Audio', value: 'audio' },
                 { label: 'Iframe', value: 'iframe' },
               ]"
               :ui="{ content: 'w-full' }"
@@ -278,7 +283,7 @@ function handleKeyDown(event: KeyboardEvent) {
             />
           </UFormField>
 
-          <template v-if="embedType === 'pdf'">
+          <template v-if="uploadInfo">
             <div class="flex items-center gap-2 text-sm text-dimmed">
               <div class="flex-1 border-t border-muted" />
               or
@@ -290,16 +295,16 @@ function handleKeyDown(event: KeyboardEvent) {
               size="sm"
               icon="i-lucide-upload"
               :loading="isUploading"
-              @click="($refs.pdfInput as HTMLInputElement)?.click()"
+              @click="($refs.fileInput as HTMLInputElement)?.click()"
             >
-              Upload PDF
+              {{ uploadInfo.label }}
             </UButton>
             <input
-              ref="pdfInput"
+              ref="fileInput"
               type="file"
-              accept=".pdf"
+              :accept="uploadInfo.accept"
               class="hidden"
-              @change="handlePdfUpload"
+              @change="handleFileUpload"
             >
           </template>
         </template>

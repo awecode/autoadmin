@@ -554,6 +554,14 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   left: 0;
 }
 
+.embed-node video {
+  width: 100%;
+  max-width: 100%;
+}
+.embed-node audio {
+  width: 100%;
+}
+
 .tiptap .embed-node.ProseMirror-selectednode {
   outline: 2px solid var(--ui-primary, #3b82f6);
   border-radius: 0.375rem;
