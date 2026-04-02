@@ -1,14 +1,31 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
+import type { EmbedType } from './Embed'
+
 import { uploadFile } from './FileUpload'
 
 const props = defineProps<{
   editor: Editor
   autoOpen?: boolean
   uploadPrefix?: string
+  enabledTypes?: EmbedType[]
 }>()
 
-type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf' | 'video' | 'audio'
+const allEmbedItems: { label: string, value: EmbedType }[] = [
+  { label: 'YouTube', value: 'youtube' },
+  { label: 'Facebook post', value: 'facebook' },
+  { label: 'LinkedIn post', value: 'linkedin' },
+  { label: 'PDF', value: 'pdf' },
+  { label: 'Video', value: 'video' },
+  { label: 'Audio', value: 'audio' },
+  { label: 'Iframe', value: 'iframe' },
+]
+
+const embedItems = computed(() => {
+  if (!props.enabledTypes?.length)
+    return allEmbedItems
+  return allEmbedItems.filter(item => props.enabledTypes!.includes(item.value))
+})
 
 const uploadableTypes: Record<string, { accept: string, label: string }> = {
   pdf: { accept: '.pdf', label: 'Upload PDF' },
@@ -17,7 +34,7 @@ const uploadableTypes: Record<string, { accept: string, label: string }> = {
 }
 
 const open = ref(false)
-const embedType = ref<EmbedType>('youtube')
+const embedType = ref<EmbedType>(embedItems.value[0]?.value ?? 'youtube')
 const value = ref('')
 const width = ref('')
 const height = ref('')
@@ -195,7 +212,8 @@ function setEmbed() {
 async function handleFileUpload(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
-  if (!file) return
+  if (!file)
+    return
   isUploading.value = true
   try {
     const url = await uploadFile(file, props.uploadPrefix || 'content/')
@@ -205,7 +223,8 @@ async function handleFileUpload(event: Event) {
     }
     const w = width.value.trim()
     const h = height.value.trim()
-    if (w) attrs.width = w
+    if (w)
+      attrs.width = w
     if (embedType.value === 'pdf') {
       attrs.height = h || '600px'
     }
@@ -258,15 +277,7 @@ function handleKeyDown(event: KeyboardEvent) {
           <UFormField label="Embed type">
             <USelect
               v-model="embedType"
-              :items="[
-                { label: 'YouTube', value: 'youtube' },
-                { label: 'Facebook post', value: 'facebook' },
-                { label: 'LinkedIn post', value: 'linkedin' },
-                { label: 'PDF', value: 'pdf' },
-                { label: 'Video', value: 'video' },
-                { label: 'Audio', value: 'audio' },
-                { label: 'Iframe', value: 'iframe' },
-              ]"
+              :items="embedItems"
               :ui="{ content: 'w-full' }"
             />
           </UFormField>

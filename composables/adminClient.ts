@@ -1,5 +1,7 @@
 import type { VNode } from 'vue'
 
+import type { EmbedType } from '../components/editor/Embed'
+
 export interface RichTextConfig {
   placeholder?: string
   disabledHeadingLevels?: number[]
@@ -10,6 +12,7 @@ export interface RichTextConfig {
   extraFixedToolbarItems?: any[][]
   extraBubbleToolbarItems?: any[][]
   extensions?: any[]
+  embedTypes?: EmbedType[]
 }
 
 interface AdminClientConfig {

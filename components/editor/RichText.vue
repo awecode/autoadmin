@@ -56,6 +56,7 @@ const {
   allowedMimeTypes: rawAllowedMimeTypes,
   textAlignTypes: rawTextAlignTypes,
   extensions: rawExtensions,
+  embedTypes: rawEmbedTypes,
   baseClass,
   toolbarClass,
   ...editorAttrs
@@ -66,6 +67,7 @@ const extraBubbleItems = (rawExtraBubbleItems ?? []) as EditorToolbarItem[][]
 const allowedMimeTypes = (rawAllowedMimeTypes ?? ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']) as string[]
 const textAlignTypes = (rawTextAlignTypes ?? ['heading', 'paragraph']) as string[]
 const extraExtensions = (rawExtensions ?? []) as any[]
+const embedTypes = rawEmbedTypes as any[] | undefined
 
 const disabledHeadingLevels = Array.isArray(rawDisabledHeadingLevels)
   ? rawDisabledHeadingLevels
@@ -447,7 +449,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
         <EditorImagePopover :editor="editor" :upload-prefix="uploadPrefix" auto-open />
       </template>
       <template #embed>
-        <EditorEmbedPopover :editor="editor" :upload-prefix="uploadPrefix" auto-open />
+        <EditorEmbedPopover :editor="editor" :upload-prefix="uploadPrefix" :enabled-types="embedTypes" auto-open />
       </template>
       <template #table>
         <EditorTablePopover :editor="editor" />

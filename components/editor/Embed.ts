@@ -1,7 +1,7 @@
 import { Node } from '@tiptap/core'
 import { NodeSelection } from '@tiptap/pm/state'
 
-type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf' | 'video' | 'audio'
+export type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf' | 'video' | 'audio'
 
 const MEDIA_TYPES = new Set<EmbedType>(['video', 'audio'])
 
