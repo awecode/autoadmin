@@ -66,9 +66,30 @@ export function processSchemaForForm<S extends ZodRawShape>(
   const pickKeys = Object.fromEntries(
     spec.fields
       .map(({ name }) => name)
-      .filter((name): name is Extract<keyof S, string> => name in shape) // ignore unknown field names
-      .map(name => [name, true] as const), // keep literal true
+      .filter((name): name is Extract<keyof S, string> => name in shape)
+      .map(name => [name, true] as const),
   ) as { [K in keyof S]?: true }
 
-  return schema.pick(pickKeys as any)
+  const picked = schema.pick(pickKeys as any)
+
+  const requiredFieldNames = spec.fields
+    .filter(f => f.required === true)
+    .map(f => f.name)
+    .filter(name => name in shape)
+
+  if (!requiredFieldNames.length)
+    return picked
+
+  return picked.superRefine((data, ctx) => {
+    for (const name of requiredFieldNames) {
+      const value = (data as Record<string, unknown>)[name]
+      if (value === null || value === undefined || value === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'This field is required',
+          path: [name],
+        })
+      }
+    }
+  })
 }
