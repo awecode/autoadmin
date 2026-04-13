@@ -36,6 +36,23 @@ export default defineEventHandler(async (event) => {
       .from(cfg.model)
       .where(inArray(cfg.lookupColumn, body.orderedLookups))
 
+    const requestedLookups = body.orderedLookups.map(lookup => String(lookup))
+    const requestedLookupSet = new Set(requestedLookups)
+    if (requestedLookupSet.size !== requestedLookups.length) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid reorder payload: duplicate lookup values are not allowed.',
+      })
+    }
+
+    const foundLookupSet = new Set(pageRows.map((row: any) => String(row.lookup)))
+    if (foundLookupSet.size !== requestedLookupSet.size || !requestedLookups.every(lookup => foundLookupSet.has(lookup))) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid reorder payload: one or more lookup values do not exist.',
+      })
+    }
+
     const pageValues = pageRows.map((r: any) => r.sortValue as number)
     const hasUniqueValues = new Set(pageValues).size === pageValues.length
 
@@ -77,6 +94,9 @@ export default defineEventHandler(async (event) => {
     }
   }
   catch (error) {
+    if ((error as any)?.statusCode) {
+      throw error
+    }
     throw createError(handleDrizzleError(error))
   }
 
