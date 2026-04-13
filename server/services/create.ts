@@ -3,6 +3,7 @@ import type { InferInsertModel, Table } from 'drizzle-orm'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
+import { ensureUniqueSlugs } from '../utils/slug'
 import { unwrapZodType } from '../utils/zod'
 
 export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, data: any): Promise<any> {
@@ -33,6 +34,8 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
   }
 
   const validatedData = schema.parse(preprocessed) as InferInsertModel<T>
+
+  await ensureUniqueSlugs(cfg, validatedData as Record<string, any>)
 
   let result
   try {

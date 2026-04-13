@@ -6,6 +6,9 @@ export default defineNuxtConfig({
     auth: {
       adminOnlyApiRoutes: '/api/autoadmin',
     },
+    autoadmin: {
+      autoUniqueSlugs: true,
+    },
     public: {
       autoadmin: {
         title: 'AutoAdmin',
