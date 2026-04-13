@@ -9,7 +9,7 @@ const modelKey = (route.params.modelKey as string).replace(/\/$/, '')
 const config = useRuntimeConfig()
 const apiPrefix = config.public.autoadmin.apiPrefix
 const returnTo = route.query.returnTo
-const redirectPath: RouteLocationRaw = typeof returnTo === 'string' && returnTo.startsWith('/')
+const redirectPath: RouteLocationRaw = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
   ? returnTo
   : { name: 'autoadmin-list', params: { modelKey } }
 const lookupValue = (route.params.lookupValue as string).replace(/\/$/, '')

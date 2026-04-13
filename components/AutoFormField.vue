@@ -99,21 +99,21 @@ const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
 }[]>(props.field.relationConfig?.choicesEndpoint ?? '', {
   immediate: false,
 })
+const staticOptions = props.field.options ?? []
+const hasStaticOptions = staticOptions.length > 0
 
 const selectMenuItems = computed(() =>
   selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
 )
 
-if (props.field.options) {
-  selectMenuItemsRaw.value = normalizeOptions(props.field.options)
+if (hasStaticOptions) {
+  selectMenuItemsRaw.value = normalizeOptions(staticOptions)
 }
 const selectFetched = ref(false)
 const isLoadingChoices = ref(false)
 
-// TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
-// Maybe use v-select until fix found for Nuxt UI/Reka UI
 async function onSelectMenuOpen(open: boolean) {
-  if (open && !selectFetched.value) {
+  if (open && !selectFetched.value && props.field.relationConfig?.choicesEndpoint && !hasStaticOptions) {
     isLoadingChoices.value = true
     try {
       await execute()

@@ -13,9 +13,11 @@ const emit = defineEmits<{
 }>()
 
 const internalValue = ref(props.modelValue)
+const staticOptions = props.filter.options ?? []
+const hasStaticOptions = staticOptions.length > 0
 
-// Only set up fetch if options don't exist but choicesEndpoint does
-const shouldFetch = !props.filter.options && props.filter.choicesEndpoint
+// Only set up fetch if non-empty static options don't exist but choicesEndpoint does
+const shouldFetch = !hasStaticOptions && props.filter.choicesEndpoint
 const { data: selectMenuItemsRaw, execute } = shouldFetch && props.filter.choicesEndpoint
   ? await useLazyFetch<Option[] | string[]>(props.filter.choicesEndpoint, {
       immediate: false,
@@ -23,25 +25,23 @@ const { data: selectMenuItemsRaw, execute } = shouldFetch && props.filter.choice
   : { data: ref(null), execute: () => {} }
 
 const selectMenuItems = computed(() => {
-  if (props.filter.options) {
-    return normalizeOptions(props.filter.options)
+  if (hasStaticOptions) {
+    return normalizeOptions(staticOptions)
   }
   return selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : []
 })
 
-if (props.filter.options) {
+if (hasStaticOptions) {
   // Handle the case where the modelValue is a string and the options are numbers
   // modelValue can be a string because it is extracted from the url query params
   // convert relation select menu value to number if options suggest it is a number
-  if (typeof props.modelValue === 'string' && props.modelValue !== '' && props.filter.options.length && typeof props.filter.options[0] === 'object' && typeof props.filter.options[0].value === 'number') {
+  if (typeof props.modelValue === 'string' && props.modelValue !== '' && typeof staticOptions[0] === 'object' && typeof staticOptions[0].value === 'number') {
     internalValue.value = Number(props.modelValue)
   }
 }
 const selectFetched = ref(false)
 const isLoadingChoices = ref(false)
 
-// TODO: Implement pagination of choices - https://github.com/nuxt/ui/issues/2744
-// Maybe use v-select until fix found for Nuxt UI/Reka UI
 async function onSelectMenuOpen(open: boolean) {
   if (open && !selectFetched.value && shouldFetch) {
     isLoadingChoices.value = true

@@ -73,7 +73,13 @@ const previewContent = ref('')
 const fileName = computed(() => {
   if (!fileUrl.value)
     return ''
-  return decodeURIComponent(fileUrl.value.split('/').pop() || '')
+  const rawFileName = fileUrl.value.split('/').pop() || ''
+  try {
+    return decodeURIComponent(rawFileName)
+  }
+  catch {
+    return rawFileName
+  }
 })
 
 const toast = useToast()
@@ -142,31 +148,33 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
     const formData = new FormData()
     formData.append('file', file)
     const fileType = encodeURIComponent(file.type)
-    const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
-      method: 'POST',
-      body: formData,
-      onResponseError: (error) => {
-        toast.add({
-          title: error.response._data?.message || error.response._data?.statusMessage || 'Upload failed!',
-          icon: 'i-lucide-triangle-alert',
-          color: 'error',
-        })
-        clearFile()
-        isFileUploading.value = false
-        if (fileRef.value) {
-          fileRef.value.value = ''
-        }
-      },
-    })
-    if (uploadedFileUrl) {
-      uploadedFile.value = uploadedFileUrl
-      fileUrl.value = uploadedFileUrl
-      emit('update:modelValue', uploadedFileUrl)
-      notifyFormFieldChanged()
+    try {
+      const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (uploadedFileUrl) {
+        uploadedFile.value = uploadedFileUrl
+        fileUrl.value = uploadedFileUrl
+        emit('update:modelValue', uploadedFileUrl)
+        notifyFormFieldChanged()
+      }
+    }
+    catch (error: any) {
+      toast.add({
+        title: error?.response?._data?.message || error?.response?._data?.statusMessage || 'Upload failed!',
+        icon: 'i-lucide-triangle-alert',
+        color: 'error',
+      })
+      clearFile()
+      if (fileRef.value) {
+        fileRef.value.value = ''
+      }
+    }
+    finally {
+      isFileUploading.value = false
     }
   }
-
-  isFileUploading.value = false
 }
 
 function onClick() {
