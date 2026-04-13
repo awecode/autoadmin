@@ -105,10 +105,15 @@ const filterQuery = useRouteQuery('filters', '', {
         return {}
       }
 
-      return Object.fromEntries(value.split(';').map(item => item.split(':'))) as Record<string, string>
+      return Object.fromEntries(value.split(';').map((item) => {
+        const idx = item.indexOf(':')
+        if (idx === -1)
+          return [item, '']
+        return [item.slice(0, idx), item.slice(idx + 1).replaceAll('%3B', ';')]
+      })) as Record<string, string>
     },
     set(value: Record<string, string>) {
-      return Object.entries(value).map(([key, val]) => `${key}:${val}`).join(';')
+      return Object.entries(value).map(([key, val]) => `${key}:${String(val).replaceAll(';', '%3B')}`).join(';')
     },
   },
 })
@@ -575,8 +580,9 @@ const CellRenderer = defineComponent({
                 <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date) }}</span>
               </template>
               <template v-else-if="c.column.columnDef.type === 'rich-text'">
-                <!-- <div v-html="c.getValue().replace(/<[^>]*>?/g, ' ')" /> -->
-                <div :title="c.getValue() as string || ''" class="max-h-10 overflow-hidden line-clamp-2" v-html="c.getValue()" />
+                <div :title="(c.getValue() as string || '').replace(/<[^>]*>/g, ' ')" class="max-h-10 overflow-hidden line-clamp-2">
+                  {{ (c.getValue() as string || '').replace(/<[^>]*>/g, ' ') }}
+                </div>
               </template>
               <template v-else>
                 {{ c.getValue() }}

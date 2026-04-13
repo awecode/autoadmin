@@ -22,10 +22,15 @@ const filterQuery = useRouteQuery('filters', '', {
       if (!value) {
         return {}
       }
-      return Object.fromEntries(value.split(';').map(item => item.split(':'))) as Record<string, string>
+      return Object.fromEntries(value.split(';').map((item) => {
+        const idx = item.indexOf(':')
+        if (idx === -1)
+          return [item, '']
+        return [item.slice(0, idx), item.slice(idx + 1).replaceAll('%3B', ';')]
+      })) as Record<string, string>
     },
     set(value: Record<string, string>) {
-      return Object.entries(value).map(([key, val]) => `${key}:${val}`).join(';')
+      return Object.entries(value).map(([key, val]) => `${key}:${String(val).replaceAll(';', '%3B')}`).join(';')
     },
   },
 })
