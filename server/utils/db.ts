@@ -29,7 +29,7 @@ export type AdminDbType = AdminDbTypeForDialect<ResolvedAdminDbDialect>
 let _db: DBType
 const logDb: boolean = false
 
-export function useAdminDb() {
+export function useAdminDb(): AdminDbType {
   if (!_db) {
     // const dbBinding = useEvent().context.cloudflare?.env?.DB
     const globalEnv = globalThis as typeof globalThis & {
@@ -66,7 +66,7 @@ export function useAdminDb() {
           },
           casing: 'snake_case',
           logger: logDb,
-        })
+        }) as unknown as AdminDbType
       }
       else if (config.databaseUrl) {
         const dialect = getConfiguredAdminDialect(config)
@@ -79,7 +79,7 @@ export function useAdminDb() {
             },
             casing: 'snake_case',
             logger: logDb,
-          })
+          }) as unknown as AdminDbType
         }
         else {
           _db = drizzleLibsql(config.databaseUrl as string, {
