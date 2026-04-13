@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   const m2mRelations = cfg.m2m ? parseM2mRelations(cfg.model, cfg.m2m) : []
   const specWithM2mRelations = await addM2mRelationsToFormSpec(specWithO2mRelations, cfg, m2mRelations)
 
-  if (cfg.update.formFields || cfg.fields) {
+  if (cfg.create.formFields || cfg.fields) {
     specWithM2mRelations.fields = useDefinedFields(specWithM2mRelations, cfg)
   }
 
@@ -46,9 +46,9 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig()
   const apiPrefix = config.public.autoadmin.apiPrefix
-  specWithMetadata.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}`
+  specWithMetadata.endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
   specWithMetadata.listTitle = cfg.list.title ?? cfg.label
-  specWithMetadata.schema = zerialize(cfg.update.schema)
+  specWithMetadata.schema = zerialize(cfg.create.schema)
   specWithMetadata.slugFields = cfg.slugFields
 
   return {
