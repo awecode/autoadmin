@@ -106,14 +106,15 @@ export function buildAggregateExpression(
   colName: string,
   key: string,
 ): SQL<number> {
+  const q = `"${colName}"`
+  const qk = `"${key}"`
   if (fn === 'count') {
-    // counts truthy values for the column
     return sql<number>`${sql.raw(
-      `CAST(SUM(CASE WHEN ${colName} IS NOT NULL AND CAST(${colName} AS TEXT) NOT IN ('', '0', 'false') THEN 1 ELSE 0 END) OVER () AS INTEGER) AS "${key}"`,
+      `CAST(SUM(CASE WHEN ${q} IS NOT NULL AND CAST(${q} AS TEXT) NOT IN ('', '0', 'false') THEN 1 ELSE 0 END) OVER () AS INTEGER) AS ${qk}`,
     )}`
   }
   if (['avg', 'sum', 'min', 'max'].includes(fn)) {
-    return sql<number>`${sql.raw(`CAST(${fn}(${colName}) OVER () AS REAL) AS "${key}"`)}`
+    return sql<number>`${sql.raw(`CAST(${fn}(${q}) OVER () AS REAL) AS ${qk}`)}`
   }
   throw new Error(`Invalid aggregate function: ${fn}`)
 }
