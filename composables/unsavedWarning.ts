@@ -55,11 +55,12 @@ export function useWarnOnUnsavedChanges(
   // Router navigation warning
   const router = useRouter()
 
+  let removeGuard: (() => void) | undefined
+
   onMounted(() => {
     window.addEventListener('beforeunload', handleBeforeUnload)
 
-    // Add router beforeEach guard for navigation warning
-    router.beforeEach((to, from, next) => {
+    removeGuard = router.beforeEach((to, from, next) => {
       if (enabled && hasUnsavedChanges.value) {
         // eslint-disable-next-line no-alert
         const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?')
@@ -79,6 +80,7 @@ export function useWarnOnUnsavedChanges(
 
   onUnmounted(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    removeGuard?.()
   })
 
   const updateOriginalState = (newState: Record<string, any>) => {
