@@ -258,6 +258,7 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
 
   // Handle ordering (after joins are applied)
   const ordering = query.ordering
+  let orderApplied = false
   if (enableSort && ordering && typeof ordering === 'string') {
     const [columnAccessorKey, direction] = ordering.split(':')
     const column = columns.find(column => column.accessorKey === columnAccessorKey)
@@ -289,24 +290,24 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
           // Apply ordering on foreign column
           if (foreignColumnName in foreignTableColumns) {
             baseQuery = baseQuery.orderBy(orderFn(foreignTableColumns[foreignColumnName]!))
+            orderApplied = true
           }
         }
       }
-      else {
-        // Direct column sorting
-        if (column.sortKey in tableColumns) {
-          baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]!))
-        }
+      else if (column.sortKey in tableColumns) {
+        baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]!))
+        orderApplied = true
       }
     }
   }
-  else if (cfg.sortField && cfg.sortField in tableColumns) {
-    baseQuery = baseQuery.orderBy(asc(tableColumns[cfg.sortField]!))
-  }
-  else {
-    // default ordering by primary key descending
-    const primaryKeyColumn = getPrimaryKeyColumn(model)
-    baseQuery = baseQuery.orderBy(desc(primaryKeyColumn))
+  if (!orderApplied) {
+    if (cfg.sortField && cfg.sortField in tableColumns) {
+      baseQuery = (baseQuery as any).orderBy(asc(tableColumns[cfg.sortField]!))
+    }
+    else {
+      const primaryKeyColumn = getPrimaryKeyColumn(model)
+      baseQuery = (baseQuery as any).orderBy(desc(primaryKeyColumn))
+    }
   }
 
   // Build count query with combined conditions
