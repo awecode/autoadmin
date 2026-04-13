@@ -55,6 +55,13 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
     }
   }
 
+  if (!result.length) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `${modelKey} with lookup value "${lookupValue}" not found.`,
+    })
+  }
+
   if (cfg.m2m) {
     const relations = parseM2mRelations(model, cfg.m2m)
     for (const relation of relations) {
