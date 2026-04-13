@@ -27,7 +27,7 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
     })
 
     if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`)
+      throw new Error(response.statusText)
     }
 
     const result = await response.text()

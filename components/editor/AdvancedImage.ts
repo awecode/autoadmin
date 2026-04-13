@@ -68,7 +68,7 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
           try {
             const response = await fetch(imageUrl)
             if (!response.ok)
-              throw new Error('Network response was not ok')
+              throw new Error(response.statusText || 'Failed to download image')
             const blob = await response.blob()
             const blobUrl = window.URL.createObjectURL(blob)
             const fileName = imageUrl.split('/').pop().split('?')[0] || 'downloaded-image'

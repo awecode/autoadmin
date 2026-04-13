@@ -10,23 +10,23 @@ export default defineEventHandler(async (event) => {
   }).parse)
 
   if (!contentType?.startsWith('multipart/form-data')) {
-    createError({
+    throw createError({
       statusCode: 400,
-      message: 'The request must be multipart/form-data',
+      statusMessage: 'The request must be multipart/form-data',
     })
   }
   const parts = await readMultipartFormData(event) || []
   if (parts.length !== 1) {
-    createError({
+    throw createError({
       statusCode: 400,
-      message: 'The request must contain exactly one file',
+      statusMessage: 'The request must contain exactly one file',
     })
   }
   const part = parts[0]!
-  if (part.name !== 'file' && !part.filename) {
-    createError({
+  if (!part.filename) {
+    throw createError({
       statusCode: 400,
-      message: 'The file must be named "file"',
+      statusMessage: 'Invalid file',
     })
   }
 
