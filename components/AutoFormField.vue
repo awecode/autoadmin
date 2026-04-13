@@ -75,7 +75,12 @@ const fieldValue = computed({
       emit('update:modelValue', new Date(value))
     }
     else if (props.field.type === 'json') {
-      emit('update:modelValue', JSON.parse(value))
+      try {
+        emit('update:modelValue', JSON.parse(value))
+      }
+      catch {
+        // Keep raw string while the user is still typing valid JSON
+      }
     }
     else {
       emit('update:modelValue', value)
