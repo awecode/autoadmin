@@ -32,7 +32,7 @@ export function isSlugUniqueViolation<T extends Table>(
   error: any,
 ): boolean {
   const config = useRuntimeConfig()
-  if ((config as any).autoadmin?.autoUniqueSlugs === false)
+  if (config.autoadmin?.autoUniqueSlugs === false)
     return false
   if (!cfg.slugFields)
     return false

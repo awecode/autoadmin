@@ -431,6 +431,33 @@ registry.register(posts, {
 })
 ```
 
+### Auto-Unique Slugs
+
+By default, AutoAdmin ensures slug uniqueness automatically. When a record is saved and the slug collides with an existing one, a numeric suffix is appended (`-1`, `-2`, etc.) until the value is unique. This uses an optimistic approach — no extra database query is made unless the insert/update actually fails with a unique constraint violation.
+
+For example, if `my-post` already exists, saving another record with the same slug produces `my-post-1`. If `my-post-1` also exists, it becomes `my-post-2`, and so on.
+
+This behavior is **enabled by default** and can be disabled via environment variable or Nuxt runtime config:
+
+```bash
+# .env
+NUXT_AUTOADMIN_AUTO_UNIQUE_SLUGS=false
+```
+
+Or in `nuxt.config.ts`:
+
+```ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    autoadmin: {
+      autoUniqueSlugs: false,
+    },
+  },
+})
+```
+
+When disabled, duplicate slugs will result in a standard unique constraint validation error returned to the user.
+
 ## Rich Text Editor Configuration
 
 The `rich-text` field type renders a full-featured Tiptap editor. Configuration options can be provided in two ways:
