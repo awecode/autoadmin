@@ -10,8 +10,17 @@ if (typeof globalThis.crypto === 'undefined') {
 }
 
 function normalizePath(path: string): string {
-  // remove leading and trailing slashes
-  return path.replace(/^\/+|\/+$/g, '')
+  const normalized = path
+    .replaceAll('\\', '/')
+    .replace(/^\/+|\/+$/g, '')
+  if (!normalized) {
+    return ''
+  }
+  const parts = normalized.split('/').filter(Boolean)
+  if (parts.some(part => part === '.' || part === '..')) {
+    throw new Error('Invalid storage path segment.')
+  }
+  return parts.join('/')
 }
 
 const USE_UUID_FILENAMES = false

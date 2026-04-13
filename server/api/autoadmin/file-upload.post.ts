@@ -30,12 +30,24 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const url = await uploadToObjectStorage(part.data, {
-    extension: part.filename?.split('.').pop() || 'bin',
-    filename: part.filename,
-    fileType: query.fileType,
-    prefix: query.prefix,
-  })
+  let url: string
+  try {
+    url = await uploadToObjectStorage(part.data, {
+      extension: part.filename?.split('.').pop() || 'bin',
+      filename: part.filename,
+      fileType: query.fileType,
+      prefix: query.prefix,
+    })
+  }
+  catch (error: any) {
+    if (error?.message?.includes('Invalid storage path segment')) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid file path',
+      })
+    }
+    throw error
+  }
 
   return url
 })
