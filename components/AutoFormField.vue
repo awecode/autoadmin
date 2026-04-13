@@ -74,6 +74,15 @@ const fieldValue = computed({
     if ((props.field.type === 'datetime-local' || props.field.type === 'date') && value) {
       emit('update:modelValue', new Date(value))
     }
+    else if (props.field.type === 'number') {
+      if (value === '' || value === null || value === undefined) {
+        emit('update:modelValue', props.field.required ? value : null)
+        return
+      }
+
+      const numericValue = typeof value === 'number' ? value : Number(value)
+      emit('update:modelValue', Number.isNaN(numericValue) ? value : numericValue)
+    }
     else if (props.field.type === 'json') {
       try {
         emit('update:modelValue', JSON.parse(value))

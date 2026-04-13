@@ -101,6 +101,7 @@ export async function useMetadataOnFormSpec(formSpec: FormSpec, metadata: TableM
 
   // remove _defined from fields
   fields = fields.map((field) => {
+    // TODO: Check for bug: mutation of shared fields object?
     delete field._defined
     return field
   })
