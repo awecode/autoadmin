@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
-import { ensureUniqueSlugs } from '../utils/slug'
+import { ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
 import { unwrapZodType } from '../utils/zod'
 
 export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string, data: any): Promise<any> {
@@ -36,14 +36,23 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
 
   const validatedData = schema.parse(preprocessed)
 
-  await ensureUniqueSlugs(cfg, validatedData as Record<string, any>, lookupValue)
-
   let result
   try {
     result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
   }
   catch (error) {
-    throw createError(handleDrizzleError(error))
+    if (isSlugUniqueViolation(cfg, error)) {
+      await ensureUniqueSlugs(cfg, validatedData as Record<string, any>, lookupValue)
+      try {
+        result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
+      }
+      catch (retryError) {
+        throw createError(handleDrizzleError(retryError))
+      }
+    }
+    else {
+      throw createError(handleDrizzleError(error))
+    }
   }
 
   if (cfg.m2m) {

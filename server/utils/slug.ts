@@ -4,6 +4,44 @@ import { and, eq, like, ne, or } from 'drizzle-orm'
 import { useAdminDb } from './db'
 
 /**
+ * Extracts the column name from a unique constraint DB error.
+ * Returns undefined if the error is not a unique constraint violation.
+ */
+export function getUniqueViolationColumn(error: any): string | undefined {
+  const cause = error.cause ?? error
+  const code = cause?.code ?? error.code
+  if (code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    const fullMessage = cause?.message ?? error.message ?? ''
+    return fullMessage.split(' ').at(-1)?.split('.')[1]
+  }
+  if (code === '23505') {
+    return cause?.column ?? cause?.detail?.match(/\(([^)]+)\)=/)?.[1]
+  }
+  if (code === 'ER_DUP_ENTRY') {
+    return cause?.column
+  }
+  return undefined
+}
+
+/**
+ * Returns true if the error is a unique constraint violation on a slug field
+ * and auto-unique slugs are enabled.
+ */
+export function isSlugUniqueViolation<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  error: any,
+): boolean {
+  const config = useRuntimeConfig()
+  if ((config as any).autoadmin?.autoUniqueSlugs === false)
+    return false
+  if (!cfg.slugFields)
+    return false
+
+  const column = getUniqueViolationColumn(error)
+  return !!column && column in cfg.slugFields
+}
+
+/**
  * For each slug field in cfg.slugFields, ensures the value in `data` is unique
  * by appending -1, -2, etc. if a collision exists.
  * When `excludeLookupValue` is provided (update mode), the current record is
@@ -14,10 +52,6 @@ export async function ensureUniqueSlugs<T extends Table>(
   data: Record<string, any>,
   excludeLookupValue?: string,
 ) {
-  const config = useRuntimeConfig()
-  if ((config as any).autoadmin?.autoUniqueSlugs === false)
-    return
-
   if (!cfg.slugFields)
     return
 
