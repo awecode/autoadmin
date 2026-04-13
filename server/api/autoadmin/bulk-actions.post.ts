@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
     action: z.string(),
     modelKey: z.string(),
     rowLookups: z.union([z.array(z.string()), z.array(z.number())]),
+    // rowLooups: z.array(z.union([z.string(), z.number()]))
   }).parse)
   const cfg = getModelConfig(body.modelKey)
   const action = cfg.list.bulkActions.find(action => action.label === body.action)

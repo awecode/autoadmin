@@ -195,6 +195,12 @@ export function useDefinedFields(spec: FormSpec, cfg: AdminModelConfig) {
     const pkColumnName = colKey(getPrimaryKeyColumn(cfg.model))
     if (!definedFieldSpecs.some(f => f.name === pkColumnName)) {
       const pkFieldSpec = spec.fields.find(f => f.name === pkColumnName)
+      // TODO: Check for bug:
+      //       useDefinedFields mutates shared spec.fields
+      // Lines:
+      //       spec.fields = definedFieldSpecs
+      // When cfg.o2m or cfg.m2m is set and the PK is missing from form fields, spec.fields is reassigned to the narrowed definedFieldSpecs. Any caller still holding a reference to spec sees a truncated field list. This can drop hidden/computed fields from the spec.
+      // Reproduce: Register a model with O2M/M2M relations and custom hidden form fields not in the defined field list; observe missing fields in the response.
       spec.fields = definedFieldSpecs
       if (pkFieldSpec) {
         definedFieldSpecs.push(pkFieldSpec)
