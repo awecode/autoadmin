@@ -99,7 +99,7 @@ export async function handleFiles(
   pos?: number,
   options?: HandleFilesOptions,
 ): Promise<number | undefined> {
-  if (!pos) {
+  if (pos === undefined) {
     pos = editor.state.selection.anchor
   }
   let firstImagePos: number | undefined

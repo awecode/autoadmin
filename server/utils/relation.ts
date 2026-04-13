@@ -364,11 +364,13 @@ export async function saveM2mRelation(db: AdminDbType, relation: M2MRelation, se
 
   const existingOtherIds = existing.map(row => row[colKey(relation.otherColumn)])
 
+  // Normalize to strings for comparison (DB may return numbers, client may send strings)
+  const newSet = new Set(newValues.map(String))
+  const existingSet = new Set(existingOtherIds.map(String))
   // Find records to delete (exist but not in new set)
-  const toDelete = existingOtherIds.filter(id => !newValues.includes(id))
-
+  const toDelete = existingOtherIds.filter(id => !newSet.has(String(id)))
   // Find records to insert (in new set but don't exist)
-  const toInsert = newValues.filter((id: any) => !existingOtherIds.includes(id))
+  const toInsert = newValues.filter((id: any) => !existingSet.has(String(id)))
 
   // Delete records that are no longer needed
   if (toDelete.length > 0) {

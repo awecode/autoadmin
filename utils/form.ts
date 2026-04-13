@@ -82,6 +82,9 @@ export function processSchemaForForm<S extends ZodRawShape>(
     for (const field of requiredFields) {
       const value = (data as Record<string, unknown>)[field.name]
       let isEmpty = value === null || value === undefined || value === ''
+      if (!isEmpty && Array.isArray(value)) {
+        isEmpty = value.length === 0
+      }
       if (!isEmpty && field.type === 'rich-text' && typeof value === 'string') {
         isEmpty = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim() === ''
       }

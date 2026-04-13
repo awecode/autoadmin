@@ -68,7 +68,7 @@ const defaultTopItems = [{
   type: 'link' as const,
 }]
 
-const items = [
+const items = computed(() => [
   appConfig.sidebar.topItems?.length
     ? appConfig.sidebar.topItems
     : defaultTopItems,
@@ -77,7 +77,7 @@ const items = [
     ...modelLinks.value ?? [],
   ],
   additionalItems.value,
-]
+])
 
 const colorMode = useColorMode()
 

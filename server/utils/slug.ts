@@ -66,10 +66,11 @@ export async function ensureUniqueSlugs<T extends Table>(
     if (!column)
       continue
 
+    const escapedSlug = slug.replace(/%/g, '\\%').replace(/_/g, '\\_')
     const conditions = [
       or(
         eq(column, slug),
-        like(column, `${slug}-%`),
+        like(column, `${escapedSlug}-%`),
       ),
     ]
 

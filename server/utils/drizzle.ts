@@ -19,8 +19,8 @@ const DEFAULT_PAGE_SIZE = 20
 const MAX_PAGE_SIZE = 200
 
 export const genericPaginationQuerySchema = z.object({
-  page: z.coerce.number().default(1),
-  size: z.coerce.number().positive(),
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().positive(),
 }).strip()
 
 interface PaginatedResponse<T> {

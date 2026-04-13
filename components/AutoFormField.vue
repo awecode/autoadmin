@@ -160,7 +160,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           fieldValue.value = value
         }
         // Clear any validation errors for this field after programmatic value change
-        props.form.setErrors([], props.field.name)
+        props.form?.setErrors([], props.field.name)
         modal.close()
       },
     },

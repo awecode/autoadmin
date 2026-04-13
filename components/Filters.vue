@@ -35,30 +35,36 @@ const filterQuery = useRouteQuery('filters', '', {
   },
 })
 
-// Create computed property for individual filter field
+// Memoized writable computed per filter field (avoids allocating a new ref on every render)
+const filterModels = new Map<string, WritableComputedRef<any>>()
 function getFilterModel(filter: { field: string, type?: string }) {
-  return computed({
-    get: () => {
-      if (filter.type === 'boolean') {
-        return filterQuery.value[filter.field] || undefined
-      }
-      else {
-        return filterQuery.value[filter.field] || ''
-      }
-    },
-    set: (value: string) => {
-      const current = { ...filterQuery.value }
+  let model = filterModels.get(filter.field)
+  if (!model) {
+    model = computed({
+      get: () => {
+        if (filter.type === 'boolean') {
+          return filterQuery.value[filter.field] || undefined
+        }
+        else {
+          return filterQuery.value[filter.field] || ''
+        }
+      },
+      set: (value: string) => {
+        const current = { ...filterQuery.value }
 
-      if (value === null || value === '' || value === undefined) {
-        delete current[filter.field]
-      }
-      else {
-        current[filter.field] = value
-      }
+        if (value === null || value === '' || value === undefined) {
+          delete current[filter.field]
+        }
+        else {
+          current[filter.field] = value
+        }
 
-      filterQuery.value = current
-    },
-  })
+        filterQuery.value = current
+      },
+    })
+    filterModels.set(filter.field, model)
+  }
+  return model
 }
 
 // Mobile drawer state
