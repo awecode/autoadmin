@@ -11,7 +11,10 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
   const segments = path.replace(/^\/+/, '').split('/').filter(Boolean)
 
   if (segments.length === 0) {
-    throw new Error('Invalid route: empty path')
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Invalid route: empty path',
+    })
   }
 
   const modelKey = segments[0]!
@@ -63,5 +66,8 @@ export function parseAutoadminRoute(path: string, method: string): ParsedRoute {
     }
   }
 
-  throw new Error(`Invalid route pattern: ${path} with method ${method}`)
+  throw createError({
+    statusCode: 404,
+    statusMessage: `Invalid route pattern: ${path} with method ${method}`,
+  })
 }

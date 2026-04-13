@@ -16,7 +16,13 @@ export async function deleteRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
   const db = useAdminDb()
   const lookupColumn = cfg.lookupColumn
   try {
-    await db.delete(model).where(eq(lookupColumn, lookupValue))
+    const deleted = await db.delete(model).where(eq(lookupColumn, lookupValue)).returning({ lookup: lookupColumn })
+    if (!deleted.length) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: `No instance found for model "${modelKey}" with lookup value "${lookupValue}".`,
+      })
+    }
   }
   catch (error) {
     throw createError(handleDrizzleError(error))

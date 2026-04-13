@@ -18,7 +18,6 @@ import { MediaText } from './MediaText'
 import { tableToolbarItems } from './TableToolbar'
 
 const props = defineProps<{
-  // modelValue?: string
   attrs?: Record<string, any>
   clientConfig?: Record<string, any>
   uploadPrefix?: string
@@ -26,7 +25,7 @@ const props = defineProps<{
 
 const uploadPrefix = props.uploadPrefix || 'content/'
 
-const value = ref(``)
+const value = defineModel<string>({ default: '' })
 const supportedHeadingLevels = [1, 2, 3, 4] as const
 
 // Merge: clientConfig (global + per-field) < attrs (server-side inputAttrs)

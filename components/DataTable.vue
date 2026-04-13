@@ -119,11 +119,11 @@ const filterQuery = useRouteQuery('filters', '', {
 })
 
 const query = computed(() => ({
+  ...((filters ? filterQuery.value : {}) as Record<string, string>),
   ordering: route.query.sort,
   page: route.query.page ?? 1,
   size: size.value,
   search: route.query.q === '' ? undefined : route.query.q,
-  ...((filters ? filterQuery.value : {}) as Record<string, string>),
 }))
 
 const endpoint = `${apiPrefix}/${modelKey}`
