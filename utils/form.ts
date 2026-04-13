@@ -72,22 +72,24 @@ export function processSchemaForForm<S extends ZodRawShape>(
 
   const picked = schema.pick(pickKeys as any)
 
-  const requiredFieldNames = spec.fields
-    .filter(f => f.required === true)
-    .map(f => f.name)
-    .filter(name => name in shape)
+  const requiredFields = spec.fields
+    .filter(f => f.required === true && f.name in shape)
 
-  if (!requiredFieldNames.length)
+  if (!requiredFields.length)
     return picked
 
   return picked.superRefine((data, ctx) => {
-    for (const name of requiredFieldNames) {
-      const value = (data as Record<string, unknown>)[name]
-      if (value === null || value === undefined || value === '') {
+    for (const field of requiredFields) {
+      const value = (data as Record<string, unknown>)[field.name]
+      let isEmpty = value === null || value === undefined || value === ''
+      if (!isEmpty && field.type === 'rich-text' && typeof value === 'string') {
+        isEmpty = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim() === ''
+      }
+      if (isEmpty) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'This field is required',
-          path: [name],
+          path: [field.name],
         })
       }
     }

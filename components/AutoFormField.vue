@@ -21,6 +21,19 @@ const richTextClientConfig = computed(() => {
   return useAdminClient().getRichTextConfig(modelKey, props.field.name)
 })
 
+// Rich-text editors use contenteditable which doesn't fire native DOM events
+// that UForm relies on for re-validation. Manually re-validate when the value
+// changes and there's an existing error for this field.
+if (props.field.type === 'rich-text') {
+  watch(() => props.modelValue, () => {
+    const errors = props.form?.errors
+    const errorList = (Array.isArray(errors) ? errors : errors?.value) as { name?: string }[] | undefined
+    if (errorList?.some(e => e.name === props.field.name)) {
+      nextTick(() => props.form?.validate({ name: props.field.name, silent: true }))
+    }
+  })
+}
+
 // Helper function to format Date to datetime-local string using local time
 function formatDateToLocal(date: Date): string {
   const year = date.getFullYear()
