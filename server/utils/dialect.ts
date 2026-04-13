@@ -91,10 +91,14 @@ export function getSQLiteTimestampDivisor(column: Column) {
 }
 
 export function buildTextSearchCondition(column: AnyColumn, value: string): SQL {
+  const pattern = `%${value}%`
   if (getColumnDialect(column) === 'postgresql') {
-    return ilike(column, `%${value}%`)
+    if ((column as Column).dataType === 'string') {
+      return ilike(column, pattern)
+    }
+    return sql`${column}::text ILIKE ${pattern}`
   }
-  return like(column, `%${value}%`)
+  return like(column, pattern)
 }
 
 export function buildAggregateExpression(
