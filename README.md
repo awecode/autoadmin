@@ -414,6 +414,8 @@ Both options share these properties:
 - **`enabled: boolean`** (Default: `true`) - Toggles the create/update functionality.
 - **`warnOnUnsavedChanges: boolean`** (Default: `false`) - Prompts the user before navigating away from a form with unsaved changes. Top-level `warnOnUnsavedChanges` configuration can be used instead of defining separately for `create` and `update`
 - **`formFields: (string | FieldSpec)[]`** - An array defining the specific fields for that form.
+- **`before?: async (db, ctx) => ctx.data | void`** - Runs on the server before validation and persistence. Return a replacement payload to modify what gets validated and written.
+- **`after?: async (db, ctx) => void`** - Runs on the server after the record and its configured relations have been saved successfully.
 
 The top-level `formFields` option is a convenient shortcut to apply the same field configuration to both create and update forms.
 
@@ -657,6 +659,10 @@ This will add a dropdown selection of posts on users form.
 
 The `delete` option controls the deletion functionality for a model's records. By default, deletion is enabled.
 
+Delete configuration also supports lifecycle hooks:
+- **`before?: async (db, ctx) => void`** - Runs on the server before the delete query.
+- **`after?: async (db, ctx) => void`** - Runs on the server after the row has been deleted successfully.
+
 To disable the delete action for a model, set the `enabled` property to `false`. This will remove delete functionality, including delete button on list row and bulk delete from list data table.
 
 ```ts
@@ -674,6 +680,64 @@ export default defineNuxtPlugin(() => {
   })
 })
 ```
+
+## CRUD Lifecycle Hooks
+
+AutoAdmin supports server-side lifecycle hooks for `create`, `update`, and `delete`. These are useful when a model needs more than simple CRUD, such as normalizing input, sending notifications, synchronizing external systems, or writing audit metadata.
+
+Hooks are defined inside the existing operation config objects:
+
+```ts
+registry.register(posts, {
+  create: {
+    before: async (db, ctx) => {
+      return {
+        ...ctx.data,
+        title: ctx.data.title?.trim(),
+      }
+    },
+    after: async (db, ctx) => {
+      console.log('Created post', ctx.record.id)
+    },
+  },
+  update: {
+    before: async (db, ctx) => {
+      return {
+        ...ctx.data,
+        updatedAt: new Date(),
+      }
+    },
+    after: async (db, ctx) => {
+      console.log(`Updated post ${ctx.lookupValue}`)
+    },
+  },
+  delete: {
+    before: async (_db, ctx) => {
+      console.log(`Deleting post ${ctx.lookupValue}`)
+    },
+    after: async (_db, ctx) => {
+      console.log('Deleted post row', ctx.record)
+    },
+  },
+})
+```
+
+### Hook Contexts
+
+- `create.before` receives `{ config, data }`
+- `create.after` receives `{ config, data, validatedData, record }`
+- `update.before` receives `{ config, lookupValue, data }`
+- `update.after` receives `{ config, lookupValue, data, validatedData, record }`
+- `delete.before` receives `{ config, lookupValue }`
+- `delete.after` receives `{ config, lookupValue, record }`
+
+### Hook Behavior Notes
+
+- Hooks are server-side only and must be defined in your server registration plugin.
+- `before` hooks can throw to stop the request.
+- `create.before` and `update.before` may return a replacement payload. That returned payload is then validated and persisted.
+- `after` hooks run only after the main write succeeds.
+- Hooks are not wrapped in an explicit transaction. If an `after` hook throws, the database write has already happened.
 
 ## List Sorting
 
@@ -1213,7 +1277,7 @@ You can also customize how cells are rendered on table list by defining a cell f
 - [x] Image Uploads in WYSIWYG Editor
 - [ ] Detail View
 - [ ] MySQL Dialect Support
-- [ ] Hooks/Signals
+- [x] Hooks/Signals
 - [ ] Audit Logs
 
 <!-- ## Known Issues
