@@ -73,12 +73,20 @@ if (props.mode === 'create' && props.spec.slugFields) {
     // Watch the source fields and update the slug field when they change
     watch(
       () => sourceFields?.map(field => state[field]).filter(Boolean),
-      (values) => {
+      async (values) => {
         if (values && values.length > 0) {
           // If any value is a Date, use toIsoDateString, else .toString()
           const slugSource = values.map(v => v instanceof Date && typeof v.toISOString === 'function' ? v.toISOString().split('T')[0] : v.toString()).join(' ')
-          state[slugField] = slugify(slugSource)
+          const nextSlug = slugify(slugSource)
+          if (state[slugField] !== nextSlug) {
+            state[slugField] = nextSlug
+          }
         }
+        else if (state[slugField]) {
+          state[slugField] = ''
+        }
+        // Re-validate the slug field if there is an error
+        await form.value?.validate({ name: slugField, silent: true })
       },
       { immediate: true },
     )
