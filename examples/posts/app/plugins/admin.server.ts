@@ -195,6 +195,15 @@ export default defineNuxtPlugin(() => {
         },
       },
     },
+    create: {
+      before: async (db, ctx) => {
+        // if no excerpt is provided, generate one from the content
+        if (!ctx.data.excerpt) {
+          ctx.data.excerpt = ctx.data.content.substring(0, 200)
+        }
+        return ctx.data
+      },
+    },
     m2m: {
       tags: postsToTags,
     },
