@@ -38,6 +38,11 @@ export default defineNuxtConfig({
   build: {
     transpile: ['vue'],
   },
+  nitro: {
+    rollupConfig: {
+      external: ['pg-native', 'cloudflare:sockets'],
+    },
+  },
   vite: {
     optimizeDeps: {
       include: [
