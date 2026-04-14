@@ -4,9 +4,29 @@ When developing locally, you can use autoadmin in your local project by adding t
 
 ```ts
 export default defineNuxtConfig({
-  extends: [
-    '../autoadmin/.playground',
-  ],
+  $development: {
+    extends: [
+      '../autoadmin/.playground',
+    ],
+    vite: (() => {
+      const pmPkgs = [
+        'prosemirror-gapcursor',
+        'prosemirror-model',
+        'prosemirror-state',
+        'prosemirror-tables',
+        'prosemirror-transform',
+        'prosemirror-view',
+      ]
+      return {
+        resolve: {
+          alias: Object.fromEntries(
+            pmPkgs.map(pkg => [pkg, resolve(resolve(__dirname, '../autoadmin/.playground/node_modules'), pkg)]),
+          ),
+          dedupe: pmPkgs,
+        },
+      }
+    })(),
+  },
 })
 ```
 
