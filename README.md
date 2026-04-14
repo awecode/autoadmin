@@ -529,6 +529,15 @@ export default defineNuxtPlugin(() => {
 })
 ```
 
+### Styling embeds and media text on the frontend
+
+If you use **Embed** and **Media text** in the rich text editor, the stored HTML may rely on styles that are not bundled in your public-facing app by default. Import these layer styles where you render that HTML (for example in a global CSS file or layout):
+
+```css
+@import '#layers/autoadmin/assets/css/rich-media-text.css';
+@import '#layers/autoadmin/assets/css/rich-embed.css';
+```
+
 ### Available options
 
 All options below work in both `inputAttrs` (server-side) and client-side configuration:
