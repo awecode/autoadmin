@@ -30,56 +30,59 @@
 /* THE FIX: Force ALL children into Column 1 on mobile */
 .media-text-left > *,
 .media-text-right > * {
-  grid-column: 1; 
-  grid-row: auto; 
+  grid-column: 1;
+  grid-row: auto;
 }
-
 
 /* =========================================
    2. DESKTOP (Side-by-Side Layout)
    ========================================= */
-   @media (min-width: 768px) {
-  
-    .media-text-left,
-    .media-text-right {
-      row-gap: 0;
-      column-gap: 1.5rem;
-      align-items: start;
-    }
-  
-    /* * fit-content(75%): Image takes its natural width (auto), but STOPS growing at 75%.
+@media (min-width: 768px) {
+  .media-text-left,
+  .media-text-right {
+    row-gap: 0;
+    column-gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* * fit-content(75%): Image takes its natural width (auto), but STOPS growing at 75%.
      * minmax(200px, 1fr): Text column is guaranteed at least 200px, but takes all remaining space.
      */
-    .media-text-left {
-      grid-template-columns: fit-content(75%) minmax(200px, 1fr); 
-    }
-    
-    .media-text-right {
-      grid-template-columns: minmax(200px, 1fr) fit-content(75%); 
-    }
-  
-    /* Keep your placement hacks below exactly the same */
-    .media-text-left > *:first-child {
-      grid-column: 1;
-      grid-row: 1 / span 100;
-    }
-    .media-text-left > *:not(:first-child) {
-      grid-column: 2;
-    }
-  
-    .media-text-right > *:first-child {
-      grid-column: 2;
-      grid-row: 1 / span 100;
-    }
-    .media-text-right > *:not(:first-child) {
-      grid-column: 1;
-    }
+  .media-text-left {
+    grid-template-columns: fit-content(75%) minmax(200px, 1fr);
   }
+
+  .media-text-right {
+    grid-template-columns: minmax(200px, 1fr) fit-content(75%);
+  }
+
+  /* Keep your placement hacks below exactly the same */
+  .media-text-left > *:first-child {
+    grid-column: 1;
+    grid-row: 1 / span 100;
+  }
+  .media-text-left > *:not(:first-child) {
+    grid-column: 2;
+  }
+
+  .media-text-right > *:first-child {
+    grid-column: 2;
+    grid-row: 1 / span 100;
+  }
+  .media-text-right > *:not(:first-child) {
+    grid-column: 1;
+  }
+}
 
 /* For small screens reduce margin on headings after image */
 
 @media (max-width: 768px) {
-  .media-text-left h1, .media-text-left h2, .media-text-left h3, .media-text-left h4, .media-text-left h5, .media-text-left h6 {
+  .media-text-left h1,
+  .media-text-left h2,
+  .media-text-left h3,
+  .media-text-left h4,
+  .media-text-left h5,
+  .media-text-left h6 {
     margin-top: 1rem;
   }
 }

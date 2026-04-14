@@ -535,33 +535,8 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 </template>
 
 <style>
-@import '../../assets/css/media-text.css';
-
-/* Embed (iframe) */
-
-.embed-node[data-embed-type="youtube"] {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%;
-}
-.embed-node iframe {
-  width: 100%;
-  height: 100%;
-}
-.embed-node[data-embed-type="youtube"] iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.embed-node video {
-  width: 100%;
-  max-width: 100%;
-}
-.embed-node audio {
-  width: 100%;
-}
+@import '../../assets/css/rich-media-text.css';
+@import '../../assets/css/rich-embed.css';
 
 .tiptap .embed-node.ProseMirror-selectednode {
   outline: 2px solid var(--ui-primary, #3b82f6);
