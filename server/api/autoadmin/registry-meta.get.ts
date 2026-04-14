@@ -8,7 +8,7 @@ export default defineEventHandler(async () => {
     icon: cfg.icon || getIconForLabel(cfg.label),
     to: { name: 'autoadmin-list', params: { modelKey: cfg.key } },
     type: 'link' as const,
-    createPath: cfg.create.enabled ? { name: 'autoadmin-create', params: { modelKey: cfg.key } } : undefined,
+    createPath: cfg.create.enabled ? cfg.create.route : undefined,
     searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
   }))
   return meta
