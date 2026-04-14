@@ -1,5 +1,5 @@
 import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
-import type { Table } from 'drizzle-orm'
+import type { InferSelectModel, Table } from 'drizzle-orm'
 import { eq } from 'drizzle-orm'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
@@ -17,13 +17,24 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
   }
   const model = cfg.model
   const db = useAdminDb()
+  let inputData = typeof data === 'object' && data !== null ? { ...data } : {}
+
+  const beforeData = await cfg.update.before?.(db, {
+    config: cfg,
+    lookupValue,
+    data: { ...inputData },
+  })
+
+  if (typeof beforeData !== 'undefined') {
+    inputData = beforeData
+  }
 
   const schema = cfg.update.schema
 
   const shape = schema.shape
 
   // Preprocess string values into Date for date fields
-  const preprocessed = { ...data }
+  const preprocessed = { ...inputData }
   for (const key in shape) {
     const fieldSchema = unwrapZodType(shape[key]!)
     if (fieldSchema.innerType.def.type === 'date' && typeof preprocessed[key] === 'string') {
@@ -74,6 +85,14 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
   }
 
   await saveO2mRelation(db, cfg, preprocessed, result)
+
+  await cfg.update.after?.(db, {
+    config: cfg,
+    lookupValue,
+    data: { ...inputData },
+    validatedData: { ...validatedData as Record<string, any> },
+    record: result[0]! as unknown as InferSelectModel<T>,
+  })
 
   return {
     success: true,

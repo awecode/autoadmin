@@ -59,6 +59,49 @@ const defaultLookupColumnName = 'id'
 
 export const aggregateFunctions = ['avg', 'sum', 'min', 'max', 'count'] as const
 
+export interface CreateBeforeHookContext<T extends Table = Table> {
+  config: AdminModelConfig<T>
+  data: Record<string, any>
+}
+
+export interface CreateAfterHookContext<T extends Table = Table> {
+  config: AdminModelConfig<T>
+  data: Record<string, any>
+  validatedData: Record<string, any>
+  record: InferSelectModel<T>
+}
+
+export interface UpdateBeforeHookContext<T extends Table = Table> {
+  config: AdminModelConfig<T>
+  lookupValue: string
+  data: Record<string, any>
+}
+
+export interface UpdateAfterHookContext<T extends Table = Table> {
+  config: AdminModelConfig<T>
+  lookupValue: string
+  data: Record<string, any>
+  validatedData: Record<string, any>
+  record: InferSelectModel<T>
+}
+
+export interface DeleteBeforeHookContext<T extends Table = Table> {
+  config: AdminModelConfig<T>
+  lookupValue: string
+}
+
+export interface DeleteAfterHookContext<T extends Table = Table> {
+  config: AdminModelConfig<T>
+  lookupValue: string
+  record: InferSelectModel<T>
+}
+
+export type CrudBeforeHook<TContext = unknown>
+  = (db: AdminDbType, ctx: TContext) => Promise<void | Record<string, any>> | void | Record<string, any>
+
+export type CrudAfterHook<TContext = unknown>
+  = (db: AdminDbType, ctx: TContext) => Promise<void> | void
+
 interface ListOptions<T extends Table = Table, C extends CustomSelections = CustomSelections> {
   showCreateButton: boolean
   enableSearch: boolean
@@ -80,7 +123,7 @@ interface ListOptions<T extends Table = Table, C extends CustomSelections = Cust
   // Do not allow both fields and columns to be set at the same time
 }
 
-interface CreateOptions<T extends Table = Table> {
+export interface CreateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
   route?: {
@@ -92,9 +135,11 @@ interface CreateOptions<T extends Table = Table> {
   schema: ZodObject<Record<string, ZodType>> // added by generateDefaultOptions
   warnOnUnsavedChanges: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
+  before?: CrudBeforeHook<CreateBeforeHookContext<T>>
+  after?: CrudAfterHook<CreateAfterHookContext<T>>
 }
 
-interface UpdateOptions<T extends Table = Table> {
+export interface UpdateOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
   // showDeleteButton: boolean
@@ -107,11 +152,15 @@ interface UpdateOptions<T extends Table = Table> {
   schema: ZodObject<Record<string, ZodType>> // added by generateDefaultOptions
   warnOnUnsavedChanges: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
+  before?: CrudBeforeHook<UpdateBeforeHookContext<T>>
+  after?: CrudAfterHook<UpdateAfterHookContext<T>>
 }
 
-interface DeleteOptions {
+export interface DeleteOptions<T extends Table = Table> {
   enabled: boolean // added by staticDefaultOptions
   endpoint?: string
+  before?: CrudBeforeHook<DeleteBeforeHookContext<T>>
+  after?: CrudAfterHook<DeleteAfterHookContext<T>>
 }
 
 /** AdminModelOptions is the options passed to the register function */
@@ -129,9 +178,9 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   sortField?: ColKey<T>
   // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T, C>>
-  create?: Partial<CreateOptions>
-  update?: Partial<UpdateOptions>
-  delete?: Partial<DeleteOptions>
+  create?: Partial<CreateOptions<T>>
+  update?: Partial<UpdateOptions<T>>
+  delete?: Partial<DeleteOptions<T>>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
   fields?: Omit<FieldSpec, 'type'>[] & { name: ColKey<T> | `___${string}___${string}Id`, type?: FieldType }[]
@@ -152,9 +201,9 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   lookupColumn: T['_']['columns'][ColKey<T>]
   sortField?: string
   list: ListOptions<T, C>
-  create: CreateOptions
-  update: UpdateOptions
-  delete: DeleteOptions
+  create: CreateOptions<T>
+  update: UpdateOptions<T>
+  delete: DeleteOptions<T>
   m2m?: Record<string, Table>
   o2m?: Record<string, Table>
   fields?: FieldSpec[] & { name: ColKey<T>, type: FieldType }[]
