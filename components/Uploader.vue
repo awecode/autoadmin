@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatBytes } from '#layers/autoadmin/utils/string'
-import { formBusInjectionKey } from '@nuxt/ui/composables/useFormField'
+import { formBusInjectionKey, useFormField } from '@nuxt/ui/composables/useFormField'
 
 const props = withDefaults(defineProps<{
   label: string
@@ -36,6 +36,17 @@ const placeholder = props.attrs?.placeholder || `Drop ${type} here or click to u
 
 const fileRef = useTemplateRef<HTMLInputElement>('fileRef')
 const formBus = inject(formBusInjectionKey, undefined)
+const { id, name, ariaAttrs } = useFormField({
+  id: props.attrs?.id,
+  name: props.name,
+})
+
+const inputAttrs = computed(() => ({
+  ...props.attrs,
+  ...ariaAttrs.value,
+  id: id.value,
+  name: name.value,
+}))
 
 function notifyFormFieldChanged() {
   if (formBus && props.name) {
@@ -291,7 +302,7 @@ function replaceFile() {
       class="hidden"
       type="file"
       :accept="allowedExtensionsString || undefined"
-      v-bind="attrs"
+      v-bind="inputAttrs"
       @change="handleFileChange"
     >
     <div v-if="isFileUploading">
