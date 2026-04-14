@@ -108,21 +108,19 @@ const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
 }[]>(props.field.relationConfig?.choicesEndpoint ?? '', {
   immediate: false,
 })
-const staticOptions = props.field.options ?? []
-const hasStaticOptions = staticOptions.length > 0
 
 const selectMenuItems = computed(() =>
   selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
 )
 
-if (hasStaticOptions) {
-  selectMenuItemsRaw.value = normalizeOptions(staticOptions)
+if (props.field.options) {
+  selectMenuItemsRaw.value = normalizeOptions(props.field.options)
 }
 const selectFetched = ref(false)
 const isLoadingChoices = ref(false)
 
 async function onSelectMenuOpen(open: boolean) {
-  if (open && !selectFetched.value && props.field.relationConfig?.choicesEndpoint && !hasStaticOptions) {
+  if (open && !selectFetched.value && props.field.relationConfig?.choicesEndpoint) {
     isLoadingChoices.value = true
     try {
       await execute()
