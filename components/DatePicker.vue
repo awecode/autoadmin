@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
+import { useFormField } from '@nuxt/ui/composables/useFormField'
 
-type DateDef = Date | string | undefined
+defineOptions({
+  inheritAttrs: false,
+})
 
 const props = defineProps<{
   modelValue?: DateDef
@@ -13,6 +16,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [DateDef]
 }>()
+
+type DateDef = Date | string | undefined
+
+const attrs = useAttrs()
+const { id, name, ariaAttrs } = useFormField()
 
 const defaultMode = 'string' as const
 
@@ -91,6 +99,17 @@ watch(() => props.modelValue, (newValue) => {
     isUpdatingFromParent = false
   })
 })
+
+const triggerAttrs = computed(() => {
+  const rawAttrs = { ...attrs }
+
+  return {
+    ...rawAttrs,
+    ...ariaAttrs.value,
+    id: rawAttrs.id ?? id.value,
+    name: (rawAttrs.name ?? name.value) as string | undefined,
+  }
+})
 </script>
 
 <template>
@@ -98,6 +117,7 @@ watch(() => props.modelValue, (newValue) => {
     <UButton
       color="neutral"
       trailing-icon="i-lucide-calendar"
+      v-bind="triggerAttrs"
       :ui="{
         trailingIcon: 'text-dimmed ml-1',
       }"
