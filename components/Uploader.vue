@@ -202,11 +202,21 @@ function onFileDrop(event: DragEvent) {
       handleFileChange(undefined, file)
     }
     else if (event.dataTransfer.items.length > 1) {
-      toast.add({
-        title: 'Upload Error',
-        description: 'Please upload a single file.',
-        color: 'error',
-      })
+      let count = 0
+      for (const item of event.dataTransfer.items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile() as File
+          handleFileChange(undefined, file)
+          count++
+        }
+      }
+      if (count > 1) {
+        toast.add({
+          title: 'Upload Error',
+          description: 'Please upload a single file.',
+          color: 'error',
+        })
+      }
     }
   }
 }
