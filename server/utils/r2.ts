@@ -90,7 +90,22 @@ export const r2Backend = {
     if (Object.keys(customMetadata).length > 0)
       options.customMetadata = customMetadata
 
+    /*
+    In Cloudflare Workers, we may not be able to upload large files directly without streaming
+    due to memory limits.
+
+    Not using FixedLengthStream results in the error:
+    "Provided readable stream must have a known length (request/response body or readable half of FixedLengthStream)"
+
+    FixedLengthStream is available in Cloudflare Workers, and we use it when possible.
+
+    In emulated environments where the R2 binding works but is not a real Worker runtime
+    (for example Nitro's emulation), we convert the stream to a buffer and upload it instead.
+    */
+
+    // @ts-expect-error - FixedLengthStream is not typed in Node environment
     if (headers['Content-Length'] && fileBody instanceof ReadableStream && typeof FixedLengthStream !== 'undefined') {
+      // @ts-expect-error - FixedLengthStream is not typed in Node environment
       const { readable, writable } = new FixedLengthStream(Number(headers['Content-Length']),
       )
       fileBody.pipeTo(writable)
@@ -100,6 +115,11 @@ export const r2Backend = {
       }
     }
     else {
+      if (fileBody instanceof ReadableStream) {
+        const response = new Response(fileBody)
+        const buffer = await response.arrayBuffer()
+        fileBody = buffer
+      }
       const result = await binding.put(path, fileBody, options)
       if (!result) {
         throw new Error('Error uploading file to R2.')
