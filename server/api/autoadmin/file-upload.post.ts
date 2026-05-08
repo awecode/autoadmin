@@ -2,7 +2,6 @@ import { z } from 'zod'
 import uploadToObjectStorage from '../../utils/objectStorage'
 
 export default defineEventHandler(async (event) => {
-  // 1. Grab the raw ReadableStream instead of buffering multipart data
   const stream = getRequestWebStream(event)
 
   if (!stream) {

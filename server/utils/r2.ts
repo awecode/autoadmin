@@ -90,10 +90,20 @@ export const r2Backend = {
     if (Object.keys(customMetadata).length > 0)
       options.customMetadata = customMetadata
 
-    const result = await binding.put(path, fileBody, options)
-
-    if (!result) {
-      throw new Error('Error uploading file to R2: Upload returned null')
+    if (headers['Content-Length'] && fileBody instanceof ReadableStream && typeof FixedLengthStream !== 'undefined') {
+      const { readable, writable } = new FixedLengthStream(Number(headers['Content-Length']),
+      )
+      fileBody.pipeTo(writable)
+      const result = await binding.put(path, readable, options)
+      if (!result) {
+        throw new Error('Error uploading file to R2.')
+      }
+    }
+    else {
+      const result = await binding.put(path, fileBody, options)
+      if (!result) {
+        throw new Error('Error uploading file to R2.')
+      }
     }
   },
 }
