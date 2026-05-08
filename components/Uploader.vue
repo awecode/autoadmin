@@ -156,13 +156,15 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   }
 
   if (file) {
-    const formData = new FormData()
-    formData.append('file', file)
-    const fileType = encodeURIComponent(file.type)
+    const params = new URLSearchParams({
+      prefix: props.config?.prefix || '',
+      fileType: encodeURIComponent(file.type),
+      fileName: encodeURIComponent(file.name),
+    })
     try {
-      const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?prefix=${props.config?.prefix || ''}&fileType=${fileType}`, {
+      const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?${params}`, {
         method: 'POST',
-        body: formData,
+        body: file,
       })
       if (uploadedFileUrl) {
         uploadedFile.value = uploadedFileUrl

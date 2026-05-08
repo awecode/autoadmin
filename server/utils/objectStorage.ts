@@ -1,4 +1,3 @@
-import type { Buffer as NodeBuffer } from 'node:buffer'
 import process from 'node:process'
 import { Crypto } from '@peculiar/webcrypto'
 import { v4 as uuid } from 'uuid'
@@ -28,11 +27,12 @@ const OVERWRITE_FILENAME = false
 
 const inlineTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml']
 
-export default async function uploadToObjectStorage(file: NodeBuffer | File, config?: {
+export default async function uploadToObjectStorage(file: ReadableStream | Blob | ArrayBuffer, config?: {
   extension?: string
   filename?: string
   fileType?: string
   prefix?: string
+  contentLength?: string
 }) {
   // @ts-expect-error - globalThis is not typed
   const binding = process.env.R2 || globalThis.__env__?.R2 || globalThis.R2
@@ -85,11 +85,15 @@ export default async function uploadToObjectStorage(file: NodeBuffer | File, con
     'X-Amz-Acl': 'public-read',
   }
 
+  if (config?.contentLength) {
+    headers['Content-Length'] = config.contentLength
+  }
+
   if (config?.fileType && inlineTypes.includes(config.fileType)) {
     headers['Content-Type'] = config.fileType
     headers['Content-Disposition'] = 'inline'
   }
 
-  await backend.put(client, fullFileName, file as unknown as BodyInit, headers)
+  await backend.put(client, fullFileName, file as BodyInit, headers)
   return `${backend.getPublicUrl()}${fullFileName}`
 }

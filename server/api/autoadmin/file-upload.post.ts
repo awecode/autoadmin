@@ -2,41 +2,32 @@ import { z } from 'zod'
 import uploadToObjectStorage from '../../utils/objectStorage'
 
 export default defineEventHandler(async (event) => {
-  const contentType = getRequestHeader(event, 'content-type')
+  // 1. Grab the raw ReadableStream instead of buffering multipart data
+  const stream = getRequestWebStream(event)
+
+  if (!stream) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'No file body provided in the request',
+    })
+  }
+
+  const contentLength = getRequestHeader(event, 'content-length')
 
   const query = await getValidatedQuery(event, z.object({
     prefix: z.string().optional(),
     fileType: z.string().optional(),
+    fileName: z.string().min(1, 'fileName is required in query params'),
   }).parse)
-
-  if (!contentType?.startsWith('multipart/form-data')) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'The request must be multipart/form-data',
-    })
-  }
-  const parts = await readMultipartFormData(event) || []
-  if (parts.length !== 1) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'The request must contain exactly one file',
-    })
-  }
-  const part = parts[0]!
-  if (!part.filename) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid file',
-    })
-  }
 
   let url: string
   try {
-    url = await uploadToObjectStorage(part.data, {
-      extension: part.filename?.split('.').pop() || 'bin',
-      filename: part.filename,
+    url = await uploadToObjectStorage(stream, {
+      extension: query.fileName.split('.').pop() || 'bin',
+      filename: query.fileName,
       fileType: query.fileType,
       prefix: query.prefix,
+      contentLength,
     })
   }
   catch (error: any) {

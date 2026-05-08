@@ -38,15 +38,20 @@ export const s3Backend = {
     return publicUrl
   },
 
-  put: async (client: AwsClient, path: string, body: BodyInit, headers: Record<string, string>) => {
+  put: async (client: AwsClient, path: string, body: BodyInit | ReadableStream, headers: Record<string, string>) => {
     const { s3 } = useRuntimeConfig()
     const url = `${s3.endpointUrl}/${s3.bucketName}`
+    const requestHeaders: Record<string, string> = { ...headers }
+    requestHeaders['x-amz-content-sha256'] = 'UNSIGNED-PAYLOAD'
     const request = await client.sign(`${url}/${path}`, {
       method: 'PUT',
       body,
-      headers,
+      headers: requestHeaders,
     })
-    const response = await fetch(request)
+    const response = await fetch(request, {
+      // @ts-expect-error - Probably required by Node.js 18+ native fetch when sending a ReadableStream body
+      duplex: 'half',
+    })
     if (!response.ok) {
       throw new Error(`Error uploading file to object storage: ${response.statusText}`)
     }

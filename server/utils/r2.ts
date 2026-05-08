@@ -38,10 +38,10 @@ export const r2Backend = {
     return publicUrl
   },
 
-  put: async (binding: R2Binding, path: string, body: BodyInit, headers: Record<string, string>) => {
+  put: async (binding: R2Binding, path: string, body: BodyInit | ReadableStream, headers: Record<string, string>) => {
     // Convert file to appropriate format for R2
     let fileBody: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob
-    if (body instanceof File) {
+    if (body instanceof ReadableStream || typeof body === 'string' || body instanceof Blob) {
       fileBody = body
     }
     else if (Buffer.isBuffer(body)) {
@@ -52,16 +52,45 @@ export const r2Backend = {
       fileBody = body as unknown as Blob
     }
 
-    const httpMetadata: Headers = new Headers()
-    if (Object.keys(headers).length > 0) {
+    const httpMetadata: Record<string, string> = {}
+    const customMetadata: Record<string, string> = {}
+
+    if (headers) {
       Object.entries(headers).forEach(([key, value]) => {
-        httpMetadata.set(key, value)
+        const lowerKey = key.toLowerCase()
+        // https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#http-metadata
+        if (lowerKey === 'content-type') {
+          httpMetadata.contentType = value
+        }
+        else if (lowerKey === 'content-disposition') {
+          httpMetadata.contentDisposition = value
+        }
+        else if (lowerKey === 'content-language') {
+          httpMetadata.contentLanguage = value
+        }
+        else if (lowerKey === 'content-encoding') {
+          httpMetadata.contentEncoding = value
+        }
+        else if (lowerKey === 'cache-control') {
+          httpMetadata.cacheControl = value
+        }
+        else if (lowerKey === 'cache-expiry') {
+          httpMetadata.cacheControl = value
+        }
+        else {
+          // Everything else (like X-Amz-Acl) goes to customMetadata
+          customMetadata[key] = value
+        }
       })
     }
 
-    const result = await binding.put(path, fileBody, {
-      httpMetadata: Object.keys(httpMetadata).length > 0 ? httpMetadata : undefined,
-    })
+    const options: any = {}
+    if (Object.keys(httpMetadata).length > 0)
+      options.httpMetadata = httpMetadata
+    if (Object.keys(customMetadata).length > 0)
+      options.customMetadata = customMetadata
+
+    const result = await binding.put(path, fileBody, options)
 
     if (!result) {
       throw new Error('Error uploading file to R2: Upload returned null')
