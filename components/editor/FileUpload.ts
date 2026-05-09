@@ -14,7 +14,7 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
   const apiPrefix = config.public.autoadmin.apiPrefix
 
   const params = new URLSearchParams({
-    prefix: encodeURIComponent(uploadPrefix  || '') ,
+    prefix: uploadPrefix || '',
     fileType: encodeURIComponent(file.type),
     fileName: encodeURIComponent(file.name),
   })

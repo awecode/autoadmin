@@ -98,6 +98,7 @@ export const r2Backend = {
     "Provided readable stream must have a known length (request/response body or readable half of FixedLengthStream)"
 
     FixedLengthStream is available in Cloudflare Workers, and we use it when possible.
+    https://github.com/cloudflare/workers-sdk/issues/6425
 
     In emulated environments where the R2 binding works but is not a real Worker runtime
     (for example Nitro's emulation), we convert the stream to a buffer and upload it instead.
