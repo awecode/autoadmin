@@ -12,18 +12,17 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
 export async function uploadFile(file: File, uploadPrefix?: string): Promise<string> {
   const config = useRuntimeConfig()
   const apiPrefix = config.public.autoadmin.apiPrefix
-  const formData = new FormData()
-  formData.append('file', file)
 
   const params = new URLSearchParams({
-    prefix: uploadPrefix || '',
-    fileType: file.type,
+    prefix: encodeURIComponent(uploadPrefix  || '') ,
+    fileType: encodeURIComponent(file.type),
+    fileName: encodeURIComponent(file.name),
   })
 
   try {
     const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
       method: 'POST',
-      body: formData,
+      body: file,
     })
 
     if (!response.ok) {
