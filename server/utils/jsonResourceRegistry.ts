@@ -7,18 +7,8 @@ import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStora
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 
-/** Lookup segment for GitHub JSON object (single-document) resources in URLs. */
 export const JSON_OBJECT_LOOKUP = '__root__'
-
 export type JsonResourceKind = 'object' | 'array'
-
-export interface JsonGithubTarget {
-  owner: string
-  repo: string
-  path?: string
-  ref: string
-}
-
 export interface JsonArrayListFieldDef {
   field: string
   label?: string
@@ -69,9 +59,7 @@ export interface RegisterJsonObjectResourceInput {
   label?: string
   icon?: string
   enableIndex?: boolean
-  /** Repo file or local file path (prefer top-level; dev: GitHub-without-token and lone-path use this on disk). */
   path?: string
-  github?: JsonGithubTarget
   storage?: JsonStorageRegisterDiscriminated
   githubToken?: string
   commitMessagePrefix?: string
@@ -89,7 +77,6 @@ export interface RegisterJsonArrayResourceInput {
   icon?: string
   enableIndex?: boolean
   path?: string
-  github?: JsonGithubTarget
   storage?: JsonStorageRegisterDiscriminated
   githubToken?: string
   commitMessagePrefix?: string
