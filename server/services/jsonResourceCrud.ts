@@ -4,6 +4,7 @@ import type { ZodObject, ZodType } from 'zod'
 import { genericPaginationQuerySchema } from '#layers/autoadmin/server/utils/drizzle'
 import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import { createJsonStorageRepository } from '#layers/autoadmin/server/utils/jsonStorage/factory'
+import { getZodObjectWithLenientJsonRead } from '#layers/autoadmin/server/utils/jsonZodLenientRead'
 import { zodToListSpec } from '#layers/autoadmin/server/utils/list'
 import { unwrapZodType } from '#layers/autoadmin/server/utils/zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
@@ -220,7 +221,8 @@ async function readValidatedArrayRows(cfg: JsonArrayResourceConfig): Promise<Rec
         statusMessage: 'JSON file must contain an array for this resource.',
       })
     }
-    const rows = z.array(cfg.elementSchema).parse(parsed) as Record<string, any>[]
+    const readSchema = z.array(getZodObjectWithLenientJsonRead(cfg.elementSchema))
+    const rows = readSchema.parse(parsed) as Record<string, any>[]
     const addedIds = ensureInternalRowIds(rows, cfg.idField)
     assertUniqueIds(rows, cfg.idField)
     if (!addedIds) {
@@ -377,7 +379,8 @@ async function writeArrayWithRetry(
           statusMessage: 'JSON root must be an array.',
         })
       }
-      const rows = z.array(cfg.elementSchema).parse(parsed) as Record<string, any>[]
+      const readSchema = z.array(getZodObjectWithLenientJsonRead(cfg.elementSchema))
+      const rows = readSchema.parse(parsed) as Record<string, any>[]
       ensureInternalRowIds(rows, cfg.idField)
       const next = mutator(rows)
       assertUniqueIds(next, cfg.idField)
@@ -506,7 +509,8 @@ async function readValidatedObject(cfg: JsonObjectResourceConfig) {
   }
   const raw = omitNullUndefinedShallow(parsed as Record<string, unknown>)
   const merged = mergeMissingJsonReadDefaults(cfg.schema, raw)
-  const data = parseObjectSchemaOr422(cfg.schema, merged, jsonStorageSourceHint(cfg.storage))
+  const readSchema = getZodObjectWithLenientJsonRead(cfg.schema)
+  const data = parseObjectSchemaOr422(readSchema, merged, jsonStorageSourceHint(cfg.storage))
   return { data, revision }
 }
 
