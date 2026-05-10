@@ -1,0 +1,19 @@
+import { buildJsonArrayCreateFormSpec } from '../../../../../utils/jsonFormSpec'
+import { useJsonResourceRegistry } from '../../../../../utils/jsonResourceRegistry'
+
+export default defineEventHandler(async (event) => {
+  const modelKey = getRouterParam(event, 'modelKey')
+  if (!modelKey) {
+    throw createError({ statusCode: 404, statusMessage: 'Resource key is required.' })
+  }
+  const reg = useJsonResourceRegistry()
+  const cfg = reg.get(modelKey)
+  if (!cfg || cfg.kind !== 'array') {
+    throw createError({ statusCode: 404, statusMessage: 'Resource not found or not an array.' })
+  }
+  if (!cfg.create.enabled) {
+    throw createError({ statusCode: 404, statusMessage: 'Create is disabled for this resource.' })
+  }
+  const spec = await buildJsonArrayCreateFormSpec(cfg, modelKey)
+  return { spec }
+})
