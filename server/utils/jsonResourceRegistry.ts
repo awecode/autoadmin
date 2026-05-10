@@ -3,8 +3,9 @@ import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStora
 import type { JsonStorageRegisterDiscriminated } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
+import { basename } from 'node:path'
 import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
-import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
+import { createNoSpaceString, slugify, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 
 export const JSON_OBJECT_LOOKUP = '__root__'
@@ -148,6 +149,18 @@ function getJsonRegistry(): Map<string, JsonResourceConfig> {
   return g.__autoadminJsonResources
 }
 
+/** Default registry key from `path`: basename without `.json`, slugified (e.g. `config/site.json` → `site`). */
+function defaultKeyFromPath(pathInput: string | undefined): string | undefined {
+  const raw = pathInput?.trim()
+  if (!raw) {
+    return undefined
+  }
+  const normalized = raw.replace(/\\/g, '/')
+  const base = basename(normalized).replace(/\.json$/i, '')
+  const key = slugify(base)
+  return key || undefined
+}
+
 function jsonApiPrefix(): string {
   const config = useRuntimeConfig()
   const pub = config.public as { jsonAdmin?: { apiPrefix?: string }, autoadmin?: { apiPrefix?: string } }
@@ -262,8 +275,10 @@ export function useJsonResourceRegistry() {
       return
     }
     const apiPrefix = jsonApiPrefix()
-    const key = input.key ? createNoSpaceString(input.key) : `resource-${registry.size + 1}`
-    const label = input.label ?? toTitleCase(key)
+    const key = input.key
+      ? createNoSpaceString(input.key)
+      : (defaultKeyFromPath(input.path) ?? `json-${registry.size + 1}`)
+    const label = input.label ?? toTitleCase(key.replace(/-/g, ' '))
 
     if (input.kind === 'object') {
       registry.set(key, defaultObjectConfig(key, label, apiPrefix, input))
