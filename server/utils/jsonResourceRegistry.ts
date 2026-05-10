@@ -272,10 +272,6 @@ export function useJsonResourceRegistry() {
     const key = input.key ? createNoSpaceString(input.key) : `resource-${registry.size + 1}`
     const label = input.label ?? toTitleCase(key)
 
-    if (registry.has(key)) {
-      throw new Error(`JSON admin resource key "${key}" is already registered.`)
-    }
-
     if (input.kind === 'object') {
       registry.set(key, defaultObjectConfig(key, label, apiPrefix, input))
     }
