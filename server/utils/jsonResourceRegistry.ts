@@ -1,6 +1,9 @@
 import type { FieldSpec } from '#layers/autoadmin/server/utils/form'
+import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/factory'
+import type { JsonStorageRegisterDiscriminated } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
+import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 
@@ -12,7 +15,7 @@ export type JsonResourceKind = 'object' | 'array'
 export interface JsonGithubTarget {
   owner: string
   repo: string
-  path: string
+  path?: string
   ref: string
 }
 
@@ -66,8 +69,10 @@ export interface RegisterJsonObjectResourceInput {
   label?: string
   icon?: string
   enableIndex?: boolean
-  github: JsonGithubTarget
-  /** Overrides `runtimeConfig.github.token` / `runtimeConfig.autoadmin.github.token`. */
+  /** Repo file or local file path (prefer top-level; dev: GitHub-without-token and lone-path use this on disk). */
+  path?: string
+  github?: JsonGithubTarget
+  storage?: JsonStorageRegisterDiscriminated
   githubToken?: string
   commitMessagePrefix?: string
   /** Zod object describing the root JSON document. */
@@ -83,7 +88,9 @@ export interface RegisterJsonArrayResourceInput {
   label?: string
   icon?: string
   enableIndex?: boolean
-  github: JsonGithubTarget
+  path?: string
+  github?: JsonGithubTarget
+  storage?: JsonStorageRegisterDiscriminated
   githubToken?: string
   commitMessagePrefix?: string
   /** Zod object describing one array element. */
@@ -106,8 +113,7 @@ export interface JsonObjectResourceConfig {
   label: string
   icon?: string
   enableIndex: boolean
-  github: JsonGithubTarget
-  githubToken?: string
+  storage: JsonStorageConfig
   commitMessagePrefix: string
   schema: ZodObject<Record<string, ZodType>>
   update: JsonUpdateOptions
@@ -122,8 +128,7 @@ export interface JsonArrayResourceConfig {
   label: string
   icon?: string
   enableIndex: boolean
-  github: JsonGithubTarget
-  githubToken?: string
+  storage: JsonStorageConfig
   commitMessagePrefix: string
   elementSchema: ZodObject<Record<string, ZodType>>
   idField: string
@@ -159,12 +164,13 @@ function getJsonRegistry(): Map<string, JsonResourceConfig> {
 function jsonApiPrefix(): string {
   const config = useRuntimeConfig()
   const pub = config.public as { jsonAdmin?: { apiPrefix?: string }, autoadmin?: { apiPrefix?: string } }
-  const explicit = pub.jsonAdmin?.apiPrefix
+  const explicit = String(pub.jsonAdmin?.apiPrefix ?? '').trim().replace(/\/+$/, '').replace(/\/+/g, '/')
   if (explicit) {
-    return explicit.replace(/\/$/, '')
+    return explicit.startsWith('/') ? explicit : `/${explicit}`
   }
-  const base = pub.autoadmin?.apiPrefix || '/api/autoadmin'
-  return `${base.replace(/\/$/, '')}/json`
+  const base = String(pub.autoadmin?.apiPrefix ?? '/api/autoadmin').trim().replace(/\/+$/, '').replace(/\/+/g, '/')
+  const baseAbs = base.startsWith('/') ? base : `/${base}`
+  return `${baseAbs}/json`
 }
 
 function defaultObjectConfig(
@@ -173,6 +179,7 @@ function defaultObjectConfig(
   apiPrefix: string,
   input: RegisterJsonObjectResourceInput,
 ): JsonObjectResourceConfig {
+  const storage = buildJsonStorageConfig(input, key)
   const update = defu(input.update ?? {}, {
     enabled: true,
     route: { name: 'jsonadmin-object-edit', params: { modelKey: key } },
@@ -187,8 +194,7 @@ function defaultObjectConfig(
     label,
     icon: input.icon,
     enableIndex: input.enableIndex ?? true,
-    github: input.github,
-    githubToken: input.githubToken,
+    storage,
     commitMessagePrefix: input.commitMessagePrefix ?? `[autoadmin-json:${key}] `,
     schema: input.schema,
     update,
@@ -204,6 +210,7 @@ function defaultArrayConfig(
   apiPrefix: string,
   input: RegisterJsonArrayResourceInput,
 ): JsonArrayResourceConfig {
+  const storage = buildJsonStorageConfig(input, key)
   const idField = input.idField
   const labelField = input.labelField ?? idField
   const list = defu(input.list ?? {}, {
@@ -245,8 +252,7 @@ function defaultArrayConfig(
     label,
     icon: input.icon,
     enableIndex: input.enableIndex ?? true,
-    github: input.github,
-    githubToken: input.githubToken,
+    storage,
     commitMessagePrefix: input.commitMessagePrefix ?? `[autoadmin-json:${key}] `,
     elementSchema: input.elementSchema,
     idField,
@@ -288,5 +294,5 @@ export function useJsonResourceRegistry() {
     return Array.from(registry.values())
   }
 
-  return { register, get, all, apiPrefix: jsonApiPrefix }
+  return { register, get, all, apiPrefix: jsonApiPrefix() }
 }
