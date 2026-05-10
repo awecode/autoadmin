@@ -2,7 +2,7 @@ import type { JsonArrayResourceConfig, JsonObjectResourceConfig, JsonResourceCon
 import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/factory'
 import type { ZodObject, ZodType } from 'zod'
 import { genericPaginationQuerySchema } from '#layers/autoadmin/server/utils/drizzle'
-import { JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
+import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import { createJsonStorageRepository } from '#layers/autoadmin/server/utils/jsonStorage/factory'
 import { zodToListSpec } from '#layers/autoadmin/server/utils/list'
 import { unwrapZodType } from '#layers/autoadmin/server/utils/zod'
@@ -197,16 +197,51 @@ function sortRows(rows: Record<string, any>[], ordering: string | undefined, ena
   return copy
 }
 
-async function readValidatedArrayRows(cfg: JsonArrayResourceConfig): Promise<Record<string, any>[]> {
-  const repo = createJsonStorageRepository(cfg.storage, cfg.kind)
-  const { parsed } = await repo.read()
-  if (!Array.isArray(parsed)) {
-    throw createError({
-      statusCode: 422,
-      statusMessage: 'JSON file must contain an array for this resource.',
-    })
+/** Assign UUID when `idKey` missing/empty; returns whether any row changed. */
+function ensureInternalRowIds(rows: Record<string, any>[], idKey: string): boolean {
+  let changed = false
+  for (const row of rows) {
+    const v = row[idKey]
+    if (v === undefined || v === null || v === '') {
+      row[idKey] = crypto.randomUUID()
+      changed = true
+    }
   }
-  return z.array(cfg.elementSchema).parse(parsed) as Record<string, any>[]
+  return changed
+}
+
+async function readValidatedArrayRows(cfg: JsonArrayResourceConfig): Promise<Record<string, any>[]> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const repo = createJsonStorageRepository(cfg.storage, cfg.kind)
+    const { parsed, revision } = await repo.read()
+    if (!Array.isArray(parsed)) {
+      throw createError({
+        statusCode: 422,
+        statusMessage: 'JSON file must contain an array for this resource.',
+      })
+    }
+    const rows = z.array(cfg.elementSchema).parse(parsed) as Record<string, any>[]
+    const addedIds = ensureInternalRowIds(rows, cfg.idField)
+    assertUniqueIds(rows, cfg.idField)
+    if (!addedIds) {
+      return rows
+    }
+    try {
+      await repo.write({
+        bodyUtf8: `${JSON.stringify(rows, null, 2)}\n`,
+        revision,
+        message: `${cfg.commitMessagePrefix}assign ${JSON_ARRAY_ROW_ID}`,
+      })
+      return rows
+    }
+    catch (e: any) {
+      if (e?.statusCode === 409 && attempt === 0) {
+        continue
+      }
+      throw e
+    }
+  }
+  throw createError({ statusCode: 409, statusMessage: 'Could not persist assigned row ids.' })
 }
 
 function assertUniqueIds(rows: Record<string, any>[], idField: string) {
@@ -225,29 +260,32 @@ function assertUniqueIds(rows: Record<string, any>[], idField: string) {
 }
 
 function buildArrayListColumns(cfg: JsonArrayResourceConfig) {
+  const idKey = cfg.idField
   const columnTypes = zodToListSpec(cfg.elementSchema as any)
   const shape = cfg.elementSchema.shape
-  const keys = Object.keys(shape)
+  const keys = Object.keys(shape).filter(k => k !== idKey)
   const fieldDefs = cfg.list.fields
   if (fieldDefs?.length) {
-    return fieldDefs.map((def) => {
-      if (typeof def === 'string') {
-        return {
-          id: def,
-          accessorKey: def,
-          header: cfg.fields?.find(f => f.name === def)?.label ?? toTitleCase(def),
-          type: columnTypes[def]?.type,
-          sortKey: cfg.list.enableSort ? def : undefined,
+    return fieldDefs
+      .map((def) => {
+        if (typeof def === 'string') {
+          return {
+            id: def,
+            accessorKey: def,
+            header: cfg.fields?.find(f => f.name === def)?.label ?? toTitleCase(def),
+            type: columnTypes[def]?.type,
+            sortKey: cfg.list.enableSort ? def : undefined,
+          }
         }
-      }
-      return {
-        id: def.field,
-        accessorKey: def.field,
-        header: def.label ?? toTitleCase(def.field),
-        type: def.type ?? columnTypes[def.field]?.type,
-        sortKey: cfg.list.enableSort ? (def.sortKey ?? def.field) : undefined,
-      }
-    })
+        return {
+          id: def.field,
+          accessorKey: def.field,
+          header: def.label ?? toTitleCase(def.field),
+          type: def.type ?? columnTypes[def.field]?.type,
+          sortKey: cfg.list.enableSort ? (def.sortKey ?? def.field) : undefined,
+        }
+      })
+      .filter(col => col.accessorKey !== idKey)
   }
   return keys.map(key => ({
     id: key,
@@ -260,7 +298,6 @@ function buildArrayListColumns(cfg: JsonArrayResourceConfig) {
 
 export async function listJsonArrayRecords(cfg: JsonArrayResourceConfig, query: Record<string, any> = {}) {
   const rows = await readValidatedArrayRows(cfg)
-  assertUniqueIds(rows, cfg.idField)
 
   let filtered = rows
   const search = query.search
@@ -341,6 +378,7 @@ async function writeArrayWithRetry(
         })
       }
       const rows = z.array(cfg.elementSchema).parse(parsed) as Record<string, any>[]
+      ensureInternalRowIds(rows, cfg.idField)
       const next = mutator(rows)
       assertUniqueIds(next, cfg.idField)
       z.array(cfg.elementSchema).parse(next)
@@ -368,16 +406,15 @@ export async function createJsonArrayRecord(cfg: JsonArrayResourceConfig, data: 
 
   await writeArrayWithRetry(cfg, (rows) => {
     const input = typeof data === 'object' && data !== null ? { ...data } : {}
+    delete input[cfg.idField]
     const preprocessed = preprocessDates(cfg.elementSchema, input)
     const validated = cfg.elementSchema.parse(preprocessed) as Record<string, any>
     const ids = new Set(rows.map(r => String(r[cfg.idField])))
-    if (validated[cfg.idField] === undefined || validated[cfg.idField] === null || validated[cfg.idField] === '') {
-      validated[cfg.idField] = crypto.randomUUID()
-    }
+    validated[cfg.idField] = crypto.randomUUID()
     if (ids.has(String(validated[cfg.idField]))) {
       throw createError({
         statusCode: 422,
-        statusMessage: `${cfg.idField} already exists.`,
+        statusMessage: `${cfg.idField} collision (retry).`,
       })
     }
     created = validated
@@ -407,6 +444,7 @@ export async function updateJsonArrayRecord(cfg: JsonArrayResourceConfig, lookup
       })
     }
     const input = typeof data === 'object' && data !== null ? { ...data } : {}
+    delete input[cfg.idField]
     const preprocessed = preprocessDates(cfg.elementSchema, input)
     const merged = { ...rows[idx], ...preprocessed }
     if (String(merged[cfg.idField]) !== decoded) {

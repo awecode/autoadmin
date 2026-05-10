@@ -7,8 +7,11 @@ import { basename } from 'node:path'
 import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import { createNoSpaceString, slugify, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
+import { z } from 'zod'
 
 export const JSON_OBJECT_LOOKUP = '__root__'
+/** Internal row key for JSON array resources; UUID assigned by server; not shown in list/form. */
+export const JSON_ARRAY_ROW_ID = '_id' as const
 export type JsonResourceKind = 'object' | 'array'
 export interface JsonArrayListFieldDef {
   field: string
@@ -81,9 +84,9 @@ export interface RegisterJsonArrayResourceInput {
   storage?: JsonStorageRegisterDiscriminated
   githubToken?: string
   commitMessagePrefix?: string
-  /** Zod object describing one array element. */
+  /** Zod object for one array element; `_id` is reserved (added internally). */
   elementSchema: ZodObject<Record<string, ZodType>>
-  idField: string
+  /** List/search label column; defaults to first `elementSchema` key (excluding `_id`). */
   labelField?: string
   list?: Partial<JsonArrayListOptions>
   create?: Partial<JsonCreateOptions>
@@ -150,6 +153,27 @@ function getJsonRegistry(): Map<string, JsonResourceConfig> {
 }
 
 /** Default registry key from `path`: basename without `.json`, slugified (e.g. `config/site.json` → `site`). */
+function inferJsonArrayLabelField(
+  resourceKey: string,
+  userSchema: ZodObject<Record<string, ZodType>>,
+  explicit?: string,
+): string {
+  if (explicit?.trim()) {
+    const lf = explicit.trim()
+    if (!(lf in userSchema.shape)) {
+      throw new Error(`JSON admin array "${resourceKey}": labelField "${lf}" is not on elementSchema.`)
+    }
+    return lf
+  }
+  const keys = Object.keys(userSchema.shape).filter(k => k !== JSON_ARRAY_ROW_ID)
+  if (!keys.length) {
+    throw new Error(
+      `JSON admin array "${resourceKey}": add \`labelField\` or at least one field in elementSchema (not "${JSON_ARRAY_ROW_ID}").`,
+    )
+  }
+  return keys[0]!
+}
+
 function defaultKeyFromPath(pathInput: string | undefined): string | undefined {
   const raw = pathInput?.trim()
   if (!raw) {
@@ -211,8 +235,14 @@ function defaultArrayConfig(
   input: RegisterJsonArrayResourceInput,
 ): JsonArrayResourceConfig {
   const storage = buildJsonStorageConfig(input, key)
-  const idField = input.idField
-  const labelField = input.labelField ?? idField
+  const userSchema = input.elementSchema
+  if (JSON_ARRAY_ROW_ID in userSchema.shape) {
+    throw new Error(`JSON admin array "${key}": "${JSON_ARRAY_ROW_ID}" is reserved — remove it from elementSchema.`)
+  }
+  const elementSchema = userSchema.extend({
+    _id: z.string().uuid().optional(),
+  })
+  const labelField = inferJsonArrayLabelField(key, userSchema, input.labelField)
   const list = defu(input.list ?? {}, {
     title: toTitleCase(label),
     endpoint: `${apiPrefix}/${key}`,
@@ -254,8 +284,8 @@ function defaultArrayConfig(
     enableIndex: input.enableIndex ?? true,
     storage,
     commitMessagePrefix: input.commitMessagePrefix ?? `[autoadmin-json:${key}] `,
-    elementSchema: input.elementSchema,
-    idField,
+    elementSchema,
+    idField: JSON_ARRAY_ROW_ID,
     labelField,
     list,
     create,

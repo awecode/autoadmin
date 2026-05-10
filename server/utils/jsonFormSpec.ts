@@ -2,7 +2,7 @@ import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import type { JsonArrayResourceConfig, JsonObjectResourceConfig } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import { getJsonArrayDetail, getJsonObjectDetail } from '#layers/autoadmin/server/services/jsonResourceCrud'
 import { useDefinedFieldsJson, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
-import { JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
+import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { zerialize } from 'zodex'
 
@@ -15,7 +15,7 @@ function jsonFormFieldSource(cfg: JsonArrayResourceConfig | JsonObjectResourceCo
 
 export async function buildJsonArrayCreateFormSpec(cfg: JsonArrayResourceConfig, modelKey: string): Promise<FormSpec> {
   const spec = zodToFormSpec(cfg.elementSchema)
-  spec.fields = useDefinedFieldsJson(spec, jsonFormFieldSource(cfg), 'create')
+  spec.fields = useDefinedFieldsJson(spec, jsonFormFieldSource(cfg), 'create').filter(f => f.name !== JSON_ARRAY_ROW_ID)
   spec.warnOnUnsavedChanges = cfg.create.warnOnUnsavedChanges
   const apiPrefix = cfg.apiPrefix
   spec.endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
@@ -28,7 +28,7 @@ export async function buildJsonArrayUpdateFormSpec(cfg: JsonArrayResourceConfig,
   const spec = zodToFormSpec(cfg.elementSchema)
   const values = await getJsonArrayDetail(cfg, lookupValue)
   spec.values = values
-  spec.fields = useDefinedFieldsJson(spec, jsonFormFieldSource(cfg), 'update')
+  spec.fields = useDefinedFieldsJson(spec, jsonFormFieldSource(cfg), 'update').filter(f => f.name !== JSON_ARRAY_ROW_ID)
   spec.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges
   const labelField = cfg.labelField
   if (spec.values && labelField in spec.values) {
@@ -38,7 +38,7 @@ export async function buildJsonArrayUpdateFormSpec(cfg: JsonArrayResourceConfig,
     }
   }
   spec.values = Object.fromEntries(
-    Object.entries(spec.values!).filter(([key]) => spec.fields.some(f => f.name === key)),
+    Object.entries(spec.values!).filter(([key]) => key !== JSON_ARRAY_ROW_ID && spec.fields.some(f => f.name === key)),
   )
   const apiPrefix = cfg.apiPrefix
   spec.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${encodeURIComponent(lookupValue)}`
