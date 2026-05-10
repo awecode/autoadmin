@@ -1,4 +1,4 @@
-import type { FieldType } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { Table } from 'drizzle-orm'
 import type { ZodObject, ZodType } from 'zod'
 import type { SzType } from 'zodex'
@@ -206,6 +206,54 @@ export function useDefinedFields(spec: FormSpec, cfg: AdminModelConfig) {
         definedFieldSpecs.push(pkFieldSpec)
       }
     }
+  }
+  return definedFieldSpecs
+}
+
+/** Field overrides for JSON admin. */
+export interface JsonFormFieldSource {
+  fields?: FieldSpec[]
+  create?: { formFields?: (string | FieldSpec)[] }
+  update?: { formFields?: (string | FieldSpec)[] }
+}
+
+export function useDefinedFieldsJson(spec: FormSpec, source: JsonFormFieldSource, mode: 'create' | 'update'): FieldSpec[] {
+  const formFields = mode === 'create'
+    ? source.create?.formFields
+    : source.update?.formFields
+
+  let definedFieldSpecs: FieldSpec[] = []
+  if (formFields?.length) {
+    definedFieldSpecs = formFields.map((field) => {
+      if (typeof field === 'string') {
+        const fieldSpec = spec.fields.find(f => f.name === field)
+        if (fieldSpec) {
+          return { ...fieldSpec, _defined: true }
+        }
+      }
+      else if (typeof field === 'object' && field !== null && 'name' in field) {
+        const fieldSpec = spec.fields.find(f => f.name === field.name)
+        if (fieldSpec) {
+          return { ...defu(field, fieldSpec), _defined: true }
+        }
+      }
+      throw createError({
+        statusCode: 500,
+        statusMessage: `Invalid JSON form field: ${typeof field === 'object' && field !== null && 'name' in field ? (field as FieldSpec).name : field}`,
+      })
+    })
+  }
+  else {
+    definedFieldSpecs = spec.fields
+  }
+  if (typeof source.fields !== 'undefined') {
+    definedFieldSpecs = definedFieldSpecs.map((field) => {
+      const fieldSpec = source.fields!.find(f => f.name === field.name)
+      if (fieldSpec) {
+        return { ...defu(fieldSpec, field), _defined: true }
+      }
+      return field
+    })
   }
   return definedFieldSpecs
 }
