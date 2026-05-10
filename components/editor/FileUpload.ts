@@ -15,8 +15,8 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
 
   const params = new URLSearchParams({
     prefix: uploadPrefix || '',
-    fileType: encodeURIComponent(file.type),
-    fileName: encodeURIComponent(file.name),
+    fileType: file.type,
+    fileName: file.name,
   })
 
   try {

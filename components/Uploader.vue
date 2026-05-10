@@ -158,8 +158,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
   if (file) {
     const params = new URLSearchParams({
       prefix: props.config?.prefix || '',
-      fileType: encodeURIComponent(file.type),
-      fileName: encodeURIComponent(file.name),
+      fileType: file.type,
+      fileName: file.name,
     })
     try {
       const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?${params}`, {
