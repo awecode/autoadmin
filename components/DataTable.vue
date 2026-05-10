@@ -13,6 +13,14 @@ import { h, resolveComponent } from 'vue'
 import { useAdminClient } from '../composables/adminClient'
 import { useReorder } from '../composables/useReorder'
 
+const props = withDefaults(defineProps<{
+  /** When set, list and bulk-delete use this base (e.g. `/api/autoadmin/json`) instead of `public.autoadmin.apiPrefix`. */
+  listApiBaseOverride?: string
+  /** Route name for this list (default `autoadmin-list`; use `jsonadmin-array-list` for GitHub JSON arrays). */
+  listRouteName?: string
+}>(), {
+  listRouteName: 'autoadmin-list',
+})
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
 
@@ -63,7 +71,9 @@ const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 
 const route = useRoute()
 const router = useRouter()
-const defaultListPath = router.resolve({ name: 'autoadmin-list', params: { modelKey } }).fullPath
+const listBase = (props.listApiBaseOverride || '').replace(/\/$/, '')
+const apiBase = (listBase || String(apiPrefix).replace(/\/$/, ''))
+const defaultListPath = router.resolve({ name: props.listRouteName, params: { modelKey } }).fullPath
 
 const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[]>('sort', '', {
   route,
@@ -126,10 +136,10 @@ const query = computed(() => ({
   search: route.query.q === '' ? undefined : route.query.q,
 }))
 
-const endpoint = `${apiPrefix}/${modelKey}`
+const endpoint = `${apiBase}/${modelKey}`
 
 const { data, status, error, refresh } = useFetch<ListApiResponse>(endpoint, {
-  key: `${modelKey}-list`,
+  key: `${apiBase}-${modelKey}-list`,
   query,
   transform: (response: ListApiResponse) => ({
     ...response,
@@ -173,7 +183,7 @@ async function refreshAfterDeletion() {
 
 async function bulkDelete({ rowLookups }: { rowLookups: string[] }) {
   try {
-    await $fetch(`${apiPrefix}/bulk-delete`, {
+    await $fetch(`${apiBase}/bulk-delete`, {
       method: 'POST',
       body: {
         modelKey,
@@ -289,7 +299,7 @@ const { isDragEnabled, isMoving, onDragStart, onDragOver, onDragEnter, onDragEnd
   currentPage: computed(() => data.value?.pagination?.page ?? 1),
   totalPages: computed(() => data.value?.pagination?.pages ?? 1),
   pageSize: computed(() => data.value?.pagination?.size ?? defaultSize),
-  apiPrefix,
+  apiPrefix: apiBase,
   modelKey,
   onReordered: () => refresh(),
 })
