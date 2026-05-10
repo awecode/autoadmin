@@ -8,8 +8,22 @@ export default defineNuxtConfig({
     },
     autoadmin: {
       autoUniqueSlugs: true,
+      github: {
+        token: process.env.NUXT_GITHUB_TOKEN || '',
+      },
+    },
+    github: {
+      token: process.env.NUXT_GITHUB_TOKEN || '',
+    },
+    jsonAdmin: {
+      /** Root for top-level `path` / local storage (relative paths) and GitHub dev mirror (`.data/json-admin` by default). */
+      localRoot: process.env.NUXT_JSON_ADMIN_LOCAL_ROOT || '',
     },
     public: {
+      jsonAdmin: {
+        /** Leave empty to use `{autoadmin.apiPrefix}/json`. */
+        apiPrefix: process.env.NUXT_PUBLIC_JSON_ADMIN_API_PREFIX || '',
+      },
       autoadmin: {
         title: 'AutoAdmin',
         apiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_API_PREFIX || '/api/autoadmin',
@@ -66,6 +80,33 @@ export default defineNuxtConfig({
       // These are executed at build time.
       // TODO Move this to a plugin to make it work for runtime.
       const adminPathPrefix = process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin'
+      const jsonBase = `${adminPathPrefix}/json`
+      pages.push({
+        name: 'jsonadmin-index',
+        path: jsonBase,
+        file: '#layers/autoadmin/pages/_jsonadmin/index.vue',
+      })
+      pages.push({
+        name: 'jsonadmin-object-edit',
+        path: `${jsonBase}/:modelKey/edit`,
+        file: '#layers/autoadmin/pages/_jsonadmin/object-edit.vue',
+      })
+      pages.push({
+        name: 'jsonadmin-array-create',
+        path: `${jsonBase}/:modelKey/create`,
+        file: '#layers/autoadmin/pages/_jsonadmin/array-create.vue',
+      })
+      pages.push({
+        name: 'jsonadmin-array-update',
+        path: `${jsonBase}/:modelKey/update/:lookupValue`,
+        file: '#layers/autoadmin/pages/_jsonadmin/array-update.vue',
+      })
+      pages.push({
+        name: 'jsonadmin-array-list',
+        path: `${jsonBase}/:modelKey`,
+        file: '#layers/autoadmin/pages/_jsonadmin/array-list.vue',
+      })
+
       pages.push({
         name: 'autoadmin-index',
         path: adminPathPrefix,
