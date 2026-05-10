@@ -18,8 +18,14 @@ const props = withDefaults(defineProps<{
   listApiBaseOverride?: string
   /** Route name for this list (default `autoadmin-list`; use `jsonadmin-array-list` for GitHub JSON arrays). */
   listRouteName?: string
+  /** Back path for this list (default `autoadmin-index`). */
+  backPath?: { name: string, params?: Record<string, string> }
+  /** Back text for this list (default `Home`). */
+  backText?: string
 }>(), {
   listRouteName: 'autoadmin-list',
+  backPath: () => ({ name: 'autoadmin-index' }),
+  backText: 'Back',
 })
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
@@ -473,9 +479,20 @@ const CellRenderer = defineComponent({
     <slot name="header">
       <div class="flex items-center justify-between">
         <slot name="title">
-          <h1 class="text-2xl font-semibold">
-            {{ title }}
-          </h1>
+          <div class="flex items-center gap-2">
+            <UTooltip v-if="backPath" :text="backText">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                :to="backPath"
+              >
+                <UIcon name="i-lucide-chevron-left" />
+              </UButton>
+            </UTooltip>
+            <h1 class="text-2xl font-bold">
+              {{ title }}
+            </h1>
+          </div>
         </slot>
         <slot name="actions">
           <div class="flex items-center gap-2">
