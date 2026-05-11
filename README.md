@@ -106,10 +106,10 @@ export const posts = pgTable('posts', {
 Register your Drizzle schemas in a Nuxt plugin.
 
 ```ts
-// plugins/admin.server.ts
+// server/plugins/admin.ts
 import { posts, users } from '~~/server/db/schema'
 
-export default defineNuxtPlugin(() => {
+export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
   registry.register(users)
   registry.register(posts)
@@ -123,10 +123,10 @@ Run the project and open `/admin` to access the admin interfaces for users and p
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.
 
 ```ts
-// plugins/admin.server.ts
+// server/plugins/admin.ts
 import { posts, users } from '~~/server/db/schema'
 
-export default defineNuxtPlugin(() => {
+export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
   registry.register(users)
 
@@ -608,10 +608,10 @@ export const postsToTags = sqliteTable('posts_to_tags', {
 When registering the `posts` model, use the `m2m` option to declare its relationship with `tags`.
 
 ```ts
-// plugins/admin.ts
+// server/plugins/admin.ts
 import { posts, postsToTags, tags } from '~~/server/db/schema'
 
-export default defineNuxtPlugin(() => {
+export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
   registry.register(tags)
   registry.register(posts, {
@@ -647,10 +647,10 @@ export const posts = sqliteTable('posts', {
 When registering the `users` model, use the `o2m` option to declare that a user can have many posts.
 
 ```ts
-// plugins/admin.ts
+// server/plugins/admin.ts
 import { posts, users } from '~~/server/db/schema'
 
-export default defineNuxtPlugin(() => {
+export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
   registry.register(users, {
     o2m: {
@@ -675,10 +675,10 @@ Delete configuration also supports lifecycle hooks:
 To disable the delete action for a model, set the `enabled` property to `false`. This will remove delete functionality, including delete button on list row and bulk delete from list data table.
 
 ```ts
-// plugins/admin.ts
+// server/plugins/admin.ts
 import { users } from '~~/server/db/schema'
 
-export default defineNuxtPlugin(() => {
+export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
 
   // Disable the delete action for the 'users' model.
@@ -1272,7 +1272,7 @@ SQLite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/se
 
 PostgreSQL Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/postgres.ts
 
-Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts
+Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/plugins/admin.ts
 
 You can also use list, create, update, delete service in your own API routes by passing the model config to the service. See [Example API Routes](https://github.com/awecode/autoadmin/tree/main/examples/posts/server/api) for more details.
 

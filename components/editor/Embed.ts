@@ -68,6 +68,51 @@ export const Embed = Node.create({
           }
         },
       },
+      {
+        tag: 'iframe',
+        getAttrs: (element) => {
+          const el = element as HTMLIFrameElement
+          const src = el.getAttribute('src')
+          let embedType: EmbedType = 'iframe'
+
+          if (src?.includes('youtube.com') || src?.includes('youtu.be')) {
+            embedType = 'youtube'
+          } else if (src?.includes('facebook.com')) {
+            embedType = 'facebook'
+          }
+
+          return {
+            embedType,
+            src,
+            width: el.getAttribute('width') ?? null,
+            height: el.getAttribute('height') ?? null,
+          }
+        },
+      },
+      {
+        tag: 'video',
+        getAttrs: (element) => {
+          const el = element as HTMLVideoElement
+          return {
+            embedType: 'video',
+            src: el.getAttribute('src') ?? null,
+            width: el.getAttribute('width') ?? null,
+            height: el.getAttribute('height') ?? null,
+          }
+        },
+      },
+      {
+        tag: 'audio',
+        getAttrs: (element) => {
+          const el = element as HTMLAudioElement
+          return {
+            embedType: 'audio',
+            src: el.getAttribute('src') ?? null,
+            width: null,
+            height: null,
+          }
+        },
+      },
     ]
   },
 
