@@ -10,6 +10,11 @@ export interface JsonStorageFromRegister {
   /** Repo-relative path for GitHub, or filesystem path (under `jsonAdmin.localRoot` / absolute) for local. */
   path?: string
   storage?: JsonStorageRegisterDiscriminated
+  /**
+   * Optional override for the GitHub token when using `storage.kind: 'github'`.
+   * Prefer the **global** server env token and omit this. If you need an override,
+   * read it from environment (or a secret manager) at startup — do not hardcode.
+   */
   githubToken?: string
 }
 
@@ -23,6 +28,11 @@ export type JsonStorageRegisterDiscriminated
     owner: string
     repo: string
     ref: string
+    /**
+     * Per-resource GitHub token. Prefer the **global** env-based token and omit this.
+     * Use only when this resource needs a different credential; load from environment
+     * or server-side secrets at runtime — never hardcode in server source.
+     */
     token?: string
   }
   | { kind: 'local' }

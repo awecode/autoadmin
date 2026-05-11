@@ -11,6 +11,14 @@ export type JsonStorageConfig
     repo: string
     path: string
     ref: string
+    /**
+     * GitHub API bearer token. Prefer the **global** token from server environment
+     * (e.g. `NUXT_GITHUB_TOKEN` / `runtimeConfig.github.token`) and omit this field so
+     * nothing is hardcoded in source. Set a **storage-specific** token only when this
+     * repo truly needs a different credential, and still supply it from environment
+     * (or another server-side secret store) at runtime — never commit tokens or pass
+     * them from untrusted clients.
+     */
     token?: string
   }
   | {
@@ -37,6 +45,10 @@ export function resolveLocalJsonAdminPath(pathInput: string): string {
   return resolve(join(jsonAdminLocalRoot(), pathInput))
 }
 
+/**
+ * Resolves the GitHub API token: explicit `token` first, else global runtime config / env.
+ * Callers should pass `token` only when it was read from environment or secrets — not literals.
+ */
 export function resolveGithubTokenForStorage(token?: string): string | undefined {
   const t = (token || '').trim()
   if (t) {
