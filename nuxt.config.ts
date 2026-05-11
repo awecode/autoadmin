@@ -15,10 +15,8 @@ export default defineNuxtConfig({
         repo: process.env.NUXT_AUTOADMIN_GITHUB_REPO || '',
         ref: process.env.NUXT_AUTOADMIN_GITHUB_REF || '',
       },
-    },
-    jsonAdmin: {
-      /** Root for top-level `path` / local storage (relative paths) and GitHub dev mirror (`.data/json-admin` by default). */
-      localRoot: process.env.NUXT_JSON_ADMIN_LOCAL_ROOT || '',
+      /** JSON-admin local storage root */
+      jsonLocalRoot: process.env.NUXT_AUTOADMIN_JSON_LOCAL_ROOT || '',
     },
     public: {
       jsonAdmin: {

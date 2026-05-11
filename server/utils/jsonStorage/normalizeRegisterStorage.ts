@@ -8,7 +8,7 @@ import {
 
 /** Subset of `register()` input used to build `JsonStorageConfig`. */
 export interface JsonStorageFromRegister {
-  /** Repo-relative path for GitHub, or filesystem path (under `jsonAdmin.localRoot` / absolute) for local. */
+  /** Repo-relative path for GitHub, or filesystem path (under `runtimeConfig.autoadmin.jsonLocalRoot` / absolute) for local. */
   path?: string
   storage?: JsonStorageRegisterDiscriminated
   /**

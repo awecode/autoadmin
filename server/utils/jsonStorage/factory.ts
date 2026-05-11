@@ -26,14 +26,12 @@ export type JsonStorageConfig
   }
 
 function jsonAdminLocalRoot(): string {
-  const config = useRuntimeConfig() as {
-    jsonAdmin?: { localRoot?: string }
-  }
-  const fromCfg = config.jsonAdmin?.localRoot
+  const config = useRuntimeConfig()
+  const fromCfg = config.autoadmin?.jsonLocalRoot
   if (fromCfg) {
     return resolve(fromCfg)
   }
-  return resolve(process.cwd(), 'data')
+  return resolve(process.cwd())
 }
 
 function trimString(value: unknown): string | undefined {
@@ -59,7 +57,7 @@ export function resolveGithubTokenForStorage(explicit?: string | null): string |
   return getAutoadminGithubRuntime().token
 }
 
-// Resolve a path relative to `jsonAdmin.localRoot`, or an absolute filesystem path.
+// Resolve a path relative to `runtimeConfig.autoadmin.jsonLocalRoot`, or an absolute filesystem path.
 export function resolveLocalJsonAdminPath(pathInput: string): string {
   if (pathInput.startsWith('/') || /^[A-Z]:[\\/]/i.test(pathInput)) {
     return resolve(pathInput)
