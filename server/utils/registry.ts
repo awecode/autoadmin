@@ -1,4 +1,3 @@
-import type { AutoadminRolesConfig } from '#autoadmin/roleAccess'
 import type { InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { VNode } from 'vue'
 import type { ZodObject, ZodType } from 'zod'
@@ -6,13 +5,14 @@ import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
 import type { FieldSpec, Option } from './form'
 import type { TableMetadata } from './metadata'
-import { normalizeAutoadminRolesInput } from '#autoadmin/roleAccess'
+import type { AutoadminRolesConfig } from './roleAccess'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 import { getTableMetadata } from './metadata'
+import { normalizeAutoadminRolesInput } from './roleHelpers'
 
 // Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>

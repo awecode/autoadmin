@@ -72,7 +72,7 @@ export default defineNuxtConfig({
   alias: {
     '#layers/autoadmin': fileURLToPath(new URL('.', import.meta.url)),
     /** Override in consuming app to customize `getUserRoleFromEvent` / `assertRoleAccessAllowed`. */
-    '#autoadmin/roleAccess': fileURLToPath(new URL('./server/utils/autoadmin/roleAccess.ts', import.meta.url)),
+    '#autoadmin/roleAccess': fileURLToPath(new URL('./server/utils/roleAccess.ts', import.meta.url)),
   },
   hooks: {
     'pages:extend': function (pages) {
