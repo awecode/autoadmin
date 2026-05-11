@@ -1,3 +1,4 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/server/utils/relation'
@@ -18,6 +19,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   const cfg = getModelConfig(modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'list')
   const relations = getTableForeignKeysByColumn(cfg.model, columnName)
   if (relations.length === 0) {
     throw createError({

@@ -1,4 +1,5 @@
 import type { Table } from 'drizzle-orm'
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metadata'
@@ -48,6 +49,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   const cfg = getModelConfig(modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'update')
   if (!cfg.update.enabled) {
     throw createError({
       statusCode: 404,

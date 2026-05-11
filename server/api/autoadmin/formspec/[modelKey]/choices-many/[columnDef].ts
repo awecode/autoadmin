@@ -1,3 +1,4 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
@@ -18,6 +19,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   const cfg = getModelConfig(modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'list')
   if (!cfg.m2m) {
     throw createError({
       statusCode: 404,

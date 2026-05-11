@@ -1,3 +1,4 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metadata'
@@ -14,6 +15,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   const cfg = getModelConfig(modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'create')
   if (!cfg.create.enabled) {
     throw createError({
       statusCode: 404,
