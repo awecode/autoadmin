@@ -1,3 +1,4 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
@@ -12,6 +13,7 @@ export default defineEventHandler(async (event) => {
   }).parse)
 
   const cfg = getModelConfig(body.modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'update')
 
   if (!cfg.sortField) {
     throw createError({

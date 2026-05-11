@@ -1,5 +1,7 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { z } from 'zod'
 import { bulkDelete } from '../../services/delete'
+import { getModelConfig } from '../../utils/autoadmin'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({
@@ -7,5 +9,7 @@ export default defineEventHandler(async (event) => {
     rowLookups: z.array(z.union([z.string(), z.number()])),
   }).parse)
 
+  const cfg = getModelConfig(body.modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'delete')
   return await bulkDelete(body.modelKey, body.rowLookups)
 })

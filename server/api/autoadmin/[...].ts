@@ -1,3 +1,4 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { createRecord } from '../../services/create'
 import { deleteRecord } from '../../services/delete'
 import { getRecordDetail } from '../../services/detail'
@@ -30,6 +31,7 @@ export default defineEventHandler(async (event) => {
   const body = method !== 'GET' ? await readBody(event) : undefined
 
   const cfg = getModelConfig(parsedRoute.modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, parsedRoute.routeType)
 
   switch (parsedRoute.routeType) {
     case 'list':

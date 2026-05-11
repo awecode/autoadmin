@@ -1,3 +1,4 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
 import { useAdminDb } from '../../utils/db'
@@ -10,6 +11,7 @@ export default defineEventHandler(async (event) => {
     // rowLooups: z.array(z.union([z.string(), z.number()]))
   }).parse)
   const cfg = getModelConfig(body.modelKey)
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'update')
   const action = cfg.list.bulkActions.find(action => action.label === body.action)
   if (!action) {
     throw createError({
