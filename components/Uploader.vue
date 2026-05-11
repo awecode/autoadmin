@@ -6,6 +6,8 @@ const props = withDefaults(defineProps<{
   label: string
   name: string
   modelValue?: string | number | undefined | null
+  /** When set, file upload checks this model's `roles` for update access. */
+  modelKey?: string
   config?: {
     accept?: string[]
     prefix?: string
@@ -161,6 +163,8 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       fileType: file.type,
       fileName: file.name,
     })
+    if (props.modelKey)
+      params.set('modelKey', props.modelKey)
     try {
       const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?${params}`, {
         method: 'POST',

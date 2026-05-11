@@ -1,4 +1,6 @@
+import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { z } from 'zod'
+import { getModelConfig } from '../../utils/autoadmin'
 import uploadToObjectStorage from '../../utils/objectStorage'
 
 export default defineEventHandler(async (event) => {
@@ -17,7 +19,14 @@ export default defineEventHandler(async (event) => {
     prefix: z.string().optional(),
     fileType: z.string().optional(),
     fileName: z.string().min(1, 'fileName is required in query params'),
+    /** When set, enforces this model's `roles` for `update` access (same as mutating that resource). */
+    modelKey: z.string().optional(),
   }).parse)
+
+  if (query.modelKey) {
+    const cfg = getModelConfig(query.modelKey)
+    assertRoleAccessAllowed(event, { roles: cfg.roles }, 'update')
+  }
 
   let url: string
   try {

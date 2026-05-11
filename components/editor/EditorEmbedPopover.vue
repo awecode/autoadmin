@@ -8,6 +8,8 @@ const props = defineProps<{
   editor: Editor
   autoOpen?: boolean
   uploadPrefix?: string
+  /** Current admin model; forwarded for upload role checks when `roles` is set on the model. */
+  modelKey?: string
   enabledTypes?: EmbedType[]
 }>()
 
@@ -216,7 +218,7 @@ async function handleFileUpload(event: Event) {
     return
   isUploading.value = true
   try {
-    const url = await uploadFile(file, props.uploadPrefix || 'content/')
+    const url = await uploadFile(file, props.uploadPrefix || 'content/', props.modelKey)
     const attrs: Record<string, unknown> = {
       embedType: embedType.value,
       src: url,

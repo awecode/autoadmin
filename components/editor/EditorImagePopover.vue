@@ -6,6 +6,7 @@ const props = defineProps<{
   editor: Editor
   autoOpen?: boolean
   uploadPrefix?: string
+  modelKey?: string
 }>()
 
 function getImageDimensions(src: string): Promise<{ width: number, height: number } | null> {
@@ -176,6 +177,7 @@ watch(file, async (newFile) => {
   const imagePos = await handleFiles([newFile], props.editor, props.uploadPrefix, undefined, {
     alt: pendingAlt,
     caption: pendingCaption,
+    modelKey: props.modelKey,
   })
   isUploading.value = false
   file.value = null

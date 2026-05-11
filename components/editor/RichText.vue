@@ -25,6 +25,13 @@ const props = defineProps<{
 
 const uploadPrefix = props.uploadPrefix || 'content/'
 
+const route = useRoute()
+const adminModelKey = computed(() => {
+  const raw = route.params.modelKey
+  const s = Array.isArray(raw) ? raw[0] : raw
+  return typeof s === 'string' ? s.replace(/\/$/, '') : undefined
+})
+
 const value = defineModel<string>({ default: '' })
 const supportedHeadingLevels = [1, 2, 3, 4] as const
 
@@ -428,10 +435,10 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
       FileHandler.configure({
         allowedMimeTypes,
         onDrop: (currentEditor, files, pos) => {
-          return handleFiles(files, currentEditor as Editor, uploadPrefix, pos)
+          return handleFiles(files, currentEditor as Editor, uploadPrefix, pos, { modelKey: adminModelKey.value })
         },
         onPaste: (currentEditor, files) => {
-          return handleFiles(files, currentEditor as Editor, uploadPrefix)
+          return handleFiles(files, currentEditor as Editor, uploadPrefix, undefined, { modelKey: adminModelKey.value })
         },
       }),
       ...extraExtensions,
@@ -445,10 +452,10 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
         <EditorLinkPopover :editor="editor" auto-open />
       </template>
       <template #image>
-        <EditorImagePopover :editor="editor" :upload-prefix="uploadPrefix" auto-open />
+        <EditorImagePopover :editor="editor" :upload-prefix="uploadPrefix" :model-key="adminModelKey" auto-open />
       </template>
       <template #embed>
-        <EditorEmbedPopover :editor="editor" :upload-prefix="uploadPrefix" :enabled-types="embedTypes" auto-open />
+        <EditorEmbedPopover :editor="editor" :upload-prefix="uploadPrefix" :model-key="adminModelKey" :enabled-types="embedTypes" auto-open />
       </template>
       <template #table>
         <EditorTablePopover :editor="editor" />

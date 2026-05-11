@@ -9,7 +9,7 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
   })
 }
 
-export async function uploadFile(file: File, uploadPrefix?: string): Promise<string> {
+export async function uploadFile(file: File, uploadPrefix?: string, modelKey?: string): Promise<string> {
   const config = useRuntimeConfig()
   const apiPrefix = config.public.autoadmin.apiPrefix
 
@@ -18,6 +18,8 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
     fileType: file.type,
     fileName: file.name,
   })
+  if (modelKey)
+    params.set('modelKey', modelKey)
 
   try {
     const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
@@ -42,6 +44,8 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
 export interface HandleFilesOptions {
   alt?: string | null
   caption?: string | null
+  /** When set, upload checks this model's `roles` for update access. */
+  modelKey?: string
 }
 
 /** Simple check: does the filename/path segment look like a word or phrase (not a hash, UUID, or only numbers)? */
@@ -98,6 +102,7 @@ export async function handleFiles(
   pos?: number,
   options?: HandleFilesOptions,
 ): Promise<number | undefined> {
+  const modelKey = options?.modelKey
   if (pos === undefined) {
     pos = editor.state.selection.anchor
   }
@@ -105,7 +110,7 @@ export async function handleFiles(
   const caption = options?.caption?.trim() || undefined
   for (const file of files) {
     try {
-      const uploadedUrl = await uploadFile(file, uploadPrefix)
+      const uploadedUrl = await uploadFile(file, uploadPrefix, modelKey)
       if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
         if (firstImagePos === undefined)
           firstImagePos = pos

@@ -365,6 +365,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           :config="field.fileConfig"
           :label="field.label ?? ''"
           :name="field.name"
+          :model-key="modelKey"
         />
 
         <Uploader
@@ -375,6 +376,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           :config="field.fileConfig"
           :label="field.label ?? ''"
           :name="field.name"
+          :model-key="modelKey"
         />
 
         <UInput
