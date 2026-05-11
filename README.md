@@ -154,6 +154,8 @@ export default defineNitroPlugin(() => {
 
 This is the main configuration object passed to `registry.register(model, options)`. All options are optional.
 
+Role-based access for registered models is configured with the **`roles`** option. See the [role access guide](docs/autoadmin-roles.md).
+
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `label` | `string` | Table name | Display name for the model (e.g., in the sidebar). |
@@ -172,6 +174,7 @@ This is the main configuration object passed to `registry.register(model, option
 | `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
 | `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
 | `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
+| `roles` | `string[]` or object | `undefined` | Optional per-model role allowlists (`string[]` = full access for those roles). [Guide ↗](../docs/autoadmin-roles.md) |
 
 ## Overriding Field Behavior with `fields`
 
