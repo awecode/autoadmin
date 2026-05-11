@@ -76,8 +76,15 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
     const ref = firstNonemptyString(s.ref, rt.ref)
     if (!filePath) {
       throw new Error(
-        `JSON admin "${resourceKey}": GitHub storage requires top-level \`path\` (repo-relative JSON file).`,
+        `JSON admin "${resourceKey}": Storage requires top-level \`path\` (repo-relative JSON file).`,
       )
+    }
+    const resolvedToken = resolveGithubTokenForStorage(s.token ?? input.githubToken)
+    if (!resolvedToken) {
+      return {
+        kind: 'local',
+        absolutePath: resolveLocalJsonAdminPath(filePath),
+      }
     }
     if (!owner) {
       throw new Error(
@@ -93,13 +100,6 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
       throw new Error(
         `JSON admin "${resourceKey}": GitHub \`ref\` missing — set storage.ref or NUXT_AUTOADMIN_GITHUB_REF / runtimeConfig.autoadmin.github.ref.`,
       )
-    }
-    const resolvedToken = resolveGithubTokenForStorage(s.token ?? input.githubToken)
-    if (!resolvedToken && isJsonAdminDevStorageFallback()) {
-      return {
-        kind: 'local',
-        absolutePath: resolveLocalJsonAdminPath(filePath),
-      }
     }
     return {
       kind: 'github',

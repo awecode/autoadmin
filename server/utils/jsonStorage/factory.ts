@@ -65,7 +65,7 @@ export function resolveLocalJsonAdminPath(pathInput: string): string {
   return resolve(join(jsonAdminLocalRoot(), pathInput))
 }
 
-// When GitHub token is missing, allow a local path for dev
+// Dev-only helpers (e.g. register with lone `path` and no `storage`).
 export function isJsonAdminDevStorageFallback(): boolean {
   if (import.meta.dev) {
     return true
@@ -73,16 +73,11 @@ export function isJsonAdminDevStorageFallback(): boolean {
   return process.env.NODE_ENV !== 'production'
 }
 
-function githubDevMirrorAbsolutePath(g: Extract<JsonStorageConfig, { kind: 'github' }>): string {
-  const segments = g.path.replace(/^\/+/, '').split('/').filter(Boolean)
-  return resolve(join(jsonAdminLocalRoot(), '_github_dev', g.owner, g.repo, ...segments))
-}
-
 function defaultParsedForKind(resourceKind: 'object' | 'array'): unknown {
   return resourceKind === 'array' ? [] : {}
 }
 
-// GitHub Contents when a token exists; otherwise local path in dev or 500 in production.
+// GitHub Contents when a token exists; otherwise same `path` on local disk (no token).
 export function createJsonStorageRepository(
   storage: JsonStorageConfig,
   resourceKind: 'object' | 'array',
@@ -106,17 +101,8 @@ export function createJsonStorageRepository(
     })
   }
 
-  if (!isJsonAdminDevStorageFallback()) {
-    throw createError({
-      statusCode: 500,
-      statusMessage:
-        'GitHub token missing for this JSON resource (production). Set NUXT_AUTOADMIN_GITHUB_TOKEN / runtimeConfig.autoadmin.github.token, or use local storage.',
-    })
-  }
-
-  const mirrorPath = githubDevMirrorAbsolutePath(storage)
   return new LocalJsonRepository({
-    absolutePath: mirrorPath,
+    absolutePath: resolveLocalJsonAdminPath(storage.path),
     defaultIfMissing: defaultParsedForKind(resourceKind),
   })
 }
