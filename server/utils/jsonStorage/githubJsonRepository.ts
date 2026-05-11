@@ -9,6 +9,8 @@ export interface GithubJsonRepositoryOptions {
   repo: string
   path: string
   ref: string
+  /** When the path has no file yet (404), `read` returns this as `parsed` and revision `'0'` (same as local). */
+  defaultIfMissing: unknown
 }
 
 export class GithubJsonRepository implements JsonStorageRepository {
@@ -17,14 +19,25 @@ export class GithubJsonRepository implements JsonStorageRepository {
   constructor(private readonly opts: GithubJsonRepositoryOptions) {}
 
   async read(): Promise<JsonStorageReadResult> {
-    const { parsed, sha } = await getGithubJsonFile(
-      this.opts.token,
-      this.opts.owner,
-      this.opts.repo,
-      this.opts.path,
-      this.opts.ref,
-    )
-    return { parsed, revision: sha }
+    try {
+      const { parsed, sha } = await getGithubJsonFile(
+        this.opts.token,
+        this.opts.owner,
+        this.opts.repo,
+        this.opts.path,
+        this.opts.ref,
+      )
+      return { parsed, revision: sha }
+    }
+    catch (e: any) {
+      if (e?.statusCode === 404) {
+        return {
+          parsed: structuredClone(this.opts.defaultIfMissing),
+          revision: '0',
+        }
+      }
+      throw e
+    }
   }
 
   async write(input: JsonStorageWriteInput): Promise<void> {

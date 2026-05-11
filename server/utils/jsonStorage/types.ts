@@ -9,7 +9,7 @@ export interface JsonStorageReadResult {
 export interface JsonStorageWriteInput {
   /** UTF-8 JSON text to persist (including trailing newline if desired). */
   bodyUtf8: string
-  /** Revision from last read; use `'0'` when creating a new local file. */
+  /** Revision from last read; use `'0'` when the file did not exist yet (local ENOENT or GitHub 404). */
   revision: JsonStorageRevision
   /** Optional commit message (GitHub only). */
   message?: string

@@ -104,6 +104,7 @@ export function createJsonStorageRepository(
       repo: storage.repo,
       path: storage.path,
       ref: storage.ref,
+      defaultIfMissing: defaultParsedForKind(resourceKind),
     })
   }
 
