@@ -45,3 +45,17 @@ export function normalizeAutoadminRolesInput(
   }
   return Object.keys(out).length > 0 ? out : undefined
 }
+
+/**
+ * Runtime allowlists (e.g. `fileUploadRoles`): trim, unique, drop empty.
+ * `undefined`, missing, or all-empty after trim → **no restriction** (caller treats as allow all).
+ */
+export function normalizeRuntimeRoleAllowlist(
+  input: string[] | undefined,
+): string[] | undefined {
+  if (input === undefined || input.length === 0) {
+    return undefined
+  }
+  const out = trimRoleArray(input)
+  return out.length > 0 ? out : undefined
+}

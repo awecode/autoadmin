@@ -17,6 +17,7 @@ export default defineNuxtConfig({
       },
       /** JSON-admin local storage root */
       jsonLocalRoot: process.env.NUXT_AUTOADMIN_JSON_LOCAL_ROOT || '',
+      fileUploadRoles: process.env.NUXT_AUTOADMIN_FILE_UPLOAD_ROLES?.split(',') ?? [],
     },
     public: {
       autoadmin: {

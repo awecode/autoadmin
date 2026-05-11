@@ -1,5 +1,7 @@
+import { getUserRoleFromEvent } from '#autoadmin/roleAccess'
 import { z } from 'zod'
 import uploadToObjectStorage from '../../utils/objectStorage'
+import { normalizeRuntimeRoleAllowlist } from '../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const stream = getRequestWebStream(event)
@@ -9,6 +11,18 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: 'No file body provided in the request',
     })
+  }
+
+  const rc = useRuntimeConfig()
+  const fileUploadRoles = normalizeRuntimeRoleAllowlist(rc.autoadmin?.fileUploadRoles)
+  if (fileUploadRoles?.length) {
+    const userRole = getUserRoleFromEvent(event)
+    if (!userRole || !fileUploadRoles.includes(userRole)) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Forbidden',
+      })
+    }
   }
 
   const contentLength = getRequestHeader(event, 'content-length')

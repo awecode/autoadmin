@@ -64,3 +64,7 @@ The autoadmin layer aliases **`#autoadmin/roleAccess`** to the default role chec
 - **`assertRoleAccessAllowed(event, policy, access)`** — performs access check for the role.
 
 See [server/utils/roleAccess.ts](https://github.com/awecode/autoadmin/blob/main/server/utils/roleAccess.ts) for the existing logic.
+
+## Global file upload roles
+
+File uploads (`POST …/file-upload`) can be restricted with by providing a list of role name strings in **`runtimeConfig.autoadmin.fileUploadRoles`**, or by setting **`NUXT_AUTOADMIN_FILE_UPLOAD_ROLES`** to a comma-separated list (e.g. `admin,editor`).
