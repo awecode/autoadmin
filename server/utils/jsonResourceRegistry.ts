@@ -5,6 +5,7 @@ import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
 import { basename } from 'node:path'
 import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
+import { resolveJsonAdminApiPrefix } from '#layers/autoadmin/utils/jsonAdminApiPrefix'
 import { createNoSpaceString, slugify, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { z } from 'zod'
@@ -186,15 +187,7 @@ function defaultKeyFromPath(pathInput: string | undefined): string | undefined {
 }
 
 function jsonApiPrefix(): string {
-  const config = useRuntimeConfig()
-  const pub = config.public as { jsonAdmin?: { apiPrefix?: string }, autoadmin?: { apiPrefix?: string } }
-  const explicit = String(pub.jsonAdmin?.apiPrefix ?? '').trim().replace(/\/+$/, '').replace(/\/+/g, '/')
-  if (explicit) {
-    return explicit.startsWith('/') ? explicit : `/${explicit}`
-  }
-  const base = String(pub.autoadmin?.apiPrefix ?? '/api/autoadmin').trim().replace(/\/+$/, '').replace(/\/+/g, '/')
-  const baseAbs = base.startsWith('/') ? base : `/${base}`
-  return `${baseAbs}/json`
+  return resolveJsonAdminApiPrefix(useRuntimeConfig().public)
 }
 
 function defaultObjectConfig(

@@ -13,20 +13,18 @@ export default defineNuxtConfig({
         token: process.env.NUXT_AUTOADMIN_GITHUB_TOKEN || '',
         owner: process.env.NUXT_AUTOADMIN_GITHUB_OWNER || '',
         repo: process.env.NUXT_AUTOADMIN_GITHUB_REPO || '',
-        ref: process.env.NUXT_AUTOADMIN_GITHUB_REF || '',
+        ref: process.env.NUXT_AUTOADMIN_GITHUB_REF || '', // default branch of the repo is used when not specified
       },
       /** JSON-admin local storage root */
       jsonLocalRoot: process.env.NUXT_AUTOADMIN_JSON_LOCAL_ROOT || '',
     },
     public: {
-      jsonAdmin: {
-        /** Leave empty to use `{autoadmin.apiPrefix}/json`. */
-        apiPrefix: process.env.NUXT_PUBLIC_JSON_ADMIN_API_PREFIX || '',
-      },
       autoadmin: {
         title: 'AutoAdmin',
         apiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_API_PREFIX || '/api/autoadmin',
         pathPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin',
+        // Override JSON-admin API base (no trailing slash). Empty → `{apiPrefix}/json`
+        jsonApiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_JSON_API_PREFIX || '',
       },
       pagination: {
         defaultSize: 20,
