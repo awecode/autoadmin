@@ -13,11 +13,10 @@ export type JsonStorageConfig
     ref: string
     /**
      * GitHub API bearer token. Prefer the **global** token from server environment
-     * (e.g. `NUXT_GITHUB_TOKEN` / `runtimeConfig.github.token`) and omit this field so
-     * nothing is hardcoded in source. Set a **storage-specific** token only when this
-     * repo truly needs a different credential, and still supply it from environment
-     * (or another server-side secret store) at runtime — never commit tokens or pass
-     * them from untrusted clients.
+     * (`NUXT_AUTOADMIN_GITHUB_TOKEN` / `runtimeConfig.autoadmin.github.token`) and omit
+     * this field. Use a **storage-specific** token only when this repo needs a different
+     * credential; load it from environment or a server-side secret store at runtime —
+     * never commit tokens or pass them from untrusted clients.
      */
     token?: string
   }
@@ -34,10 +33,24 @@ function jsonAdminLocalRoot(): string {
   if (fromCfg) {
     return resolve(fromCfg)
   }
-  return resolve(process.cwd(), '.data', 'json-admin')
+  return resolve(process.cwd(), 'data')
 }
 
-/** Resolve a path relative to `jsonAdmin.localRoot`, or an absolute filesystem path. */
+function trimString(value: unknown): string | undefined {
+  return value == null ? undefined : (String(value).trim() || undefined)
+}
+
+export function getAutoadminGithubRuntime() {
+  const g = useRuntimeConfig().autoadmin?.github ?? {}
+  return {
+    token: trimString(g.token),
+    owner: trimString(g.owner),
+    repo: trimString(g.repo),
+    ref: trimString(g.ref),
+  }
+}
+
+// Resolve a path relative to `jsonAdmin.localRoot`, or an absolute filesystem path.
 export function resolveLocalJsonAdminPath(pathInput: string): string {
   if (pathInput.startsWith('/') || /^[A-Z]:[\\/]/i.test(pathInput)) {
     return resolve(pathInput)
@@ -45,27 +58,7 @@ export function resolveLocalJsonAdminPath(pathInput: string): string {
   return resolve(join(jsonAdminLocalRoot(), pathInput))
 }
 
-/**
- * Resolves the GitHub API token: explicit `token` first, else global runtime config / env.
- * Callers should pass `token` only when it was read from environment or secrets — not literals.
- */
-export function resolveGithubTokenForStorage(token?: string): string | undefined {
-  const t = (token || '').trim()
-  if (t) {
-    return t
-  }
-  const config = useRuntimeConfig() as {
-    github?: { token?: string }
-    autoadmin?: { github?: { token?: string } }
-  }
-  const fromEnv = (config.github?.token || config.autoadmin?.github?.token || '').trim()
-  return fromEnv || undefined
-}
-
-/**
- * When GitHub token is missing, allow a local mirror only outside production builds.
- * Uses `import.meta.dev` (Nuxt) and `NODE_ENV !== 'production'`.
- */
+// When GitHub token is missing, allow a local path for dev
 export function isJsonAdminDevStorageFallback(): boolean {
   if (import.meta.dev) {
     return true
@@ -82,7 +75,7 @@ function defaultParsedForKind(resourceKind: 'object' | 'array'): unknown {
   return resourceKind === 'array' ? [] : {}
 }
 
-/** GitHub Contents when a token exists; otherwise local mirror under `_github_dev/...` in dev or 500 in production. */
+// GitHub Contents when a token exists; otherwise local path in dev or 500 in production.
 export function createJsonStorageRepository(
   storage: JsonStorageConfig,
   resourceKind: 'object' | 'array',
@@ -94,7 +87,7 @@ export function createJsonStorageRepository(
     })
   }
 
-  const token = resolveGithubTokenForStorage(storage.token)
+  const token = (storage.token || '').trim() || getAutoadminGithubRuntime().token
   if (token) {
     return new GithubJsonRepository({
       token,
@@ -109,7 +102,7 @@ export function createJsonStorageRepository(
     throw createError({
       statusCode: 500,
       statusMessage:
-        'GitHub token missing for this JSON resource (production). Set NUXT_GITHUB_TOKEN / runtimeConfig.github.token, or use local storage.',
+        'GitHub token missing for this JSON resource (production). Set NUXT_AUTOADMIN_GITHUB_TOKEN / runtimeConfig.autoadmin.github.token, or use local storage.',
     })
   }
 

@@ -8,12 +8,13 @@ export default defineNuxtConfig({
     },
     autoadmin: {
       autoUniqueSlugs: true,
+      /** JSON-admin GitHub storage defaults */
       github: {
-        token: process.env.NUXT_GITHUB_TOKEN || '',
+        token: process.env.NUXT_AUTOADMIN_GITHUB_TOKEN || '',
+        owner: process.env.NUXT_AUTOADMIN_GITHUB_OWNER || '',
+        repo: process.env.NUXT_AUTOADMIN_GITHUB_REPO || '',
+        ref: process.env.NUXT_AUTOADMIN_GITHUB_REF || '',
       },
-    },
-    github: {
-      token: process.env.NUXT_GITHUB_TOKEN || '',
     },
     jsonAdmin: {
       /** Root for top-level `path` / local storage (relative paths) and GitHub dev mirror (`.data/json-admin` by default). */
