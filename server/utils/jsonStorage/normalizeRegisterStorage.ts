@@ -81,10 +81,15 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
     }
     const resolvedToken = resolveGithubTokenForStorage(s.token ?? input.githubToken)
     if (!resolvedToken) {
-      return {
-        kind: 'local',
-        absolutePath: resolveLocalJsonAdminPath(filePath),
+      if (isJsonAdminDevStorageFallback()) {
+        return {
+          kind: 'local',
+          absolutePath: resolveLocalJsonAdminPath(filePath),
+        }
       }
+      throw new Error(
+        `JSON admin "${resourceKey}": GitHub storage requires a token in production — set NUXT_AUTOADMIN_GITHUB_TOKEN / runtimeConfig.autoadmin.github.token, or storage.token / register githubToken (from env, not hardcoded).`,
+      )
     }
     if (!owner) {
       throw new Error(
@@ -113,7 +118,7 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
 
   if (filePath && input.storage == null) {
     if (!isJsonAdminDevStorageFallback()) {
-      throw new Error(`JSON admin "${resourceKey}": lone \`path\` is dev-only; set \`storage\`.`)
+      throw new Error(`JSON admin needs storage configured for non-dev environment.`)
     }
     return {
       kind: 'local',

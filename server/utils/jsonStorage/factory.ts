@@ -65,7 +65,7 @@ export function resolveLocalJsonAdminPath(pathInput: string): string {
   return resolve(join(jsonAdminLocalRoot(), pathInput))
 }
 
-// Dev-only helpers (e.g. register with lone `path` and no `storage`).
+// Dev-only
 export function isJsonAdminDevStorageFallback(): boolean {
   if (import.meta.dev) {
     return true
@@ -77,7 +77,7 @@ function defaultParsedForKind(resourceKind: 'object' | 'array'): unknown {
   return resourceKind === 'array' ? [] : {}
 }
 
-// GitHub Contents when a token exists; otherwise same `path` on local disk (no token).
+// GitHub Contents when a token exists; in dev only, missing token falls back to local `path`.
 export function createJsonStorageRepository(
   storage: JsonStorageConfig,
   resourceKind: 'object' | 'array',
@@ -98,6 +98,14 @@ export function createJsonStorageRepository(
       path: storage.path,
       ref: storage.ref,
       defaultIfMissing: defaultParsedForKind(resourceKind),
+    })
+  }
+
+  if (!isJsonAdminDevStorageFallback()) {
+    throw createError({
+      statusCode: 500,
+      statusMessage:
+        'GitHub token missing for this JSON resource in non-dev environment. Set NUXT_AUTOADMIN_GITHUB_TOKEN / runtimeConfig.autoadmin.github.token, or use local storage.',
     })
   }
 
