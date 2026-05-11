@@ -2,6 +2,7 @@ import type { JsonStorageConfig } from './factory'
 import {
   getAutoadminGithubRuntime,
   isJsonAdminDevStorageFallback,
+  resolveGithubTokenForStorage,
   resolveLocalJsonAdminPath,
 } from './factory'
 
@@ -93,8 +94,8 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
         `JSON admin "${resourceKey}": GitHub \`ref\` missing — set storage.ref or NUXT_AUTOADMIN_GITHUB_REF / runtimeConfig.autoadmin.github.ref.`,
       )
     }
-    const token = (s.token || '').trim() || input.githubToken
-    if (!token && isJsonAdminDevStorageFallback()) {
+    const resolvedToken = resolveGithubTokenForStorage(s.token ?? input.githubToken)
+    if (!resolvedToken && isJsonAdminDevStorageFallback()) {
       return {
         kind: 'local',
         absolutePath: resolveLocalJsonAdminPath(filePath),

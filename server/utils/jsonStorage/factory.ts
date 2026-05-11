@@ -50,6 +50,15 @@ export function getAutoadminGithubRuntime() {
   }
 }
 
+/** Per-resource override first, then `runtimeConfig.autoadmin.github` / `NUXT_AUTOADMIN_GITHUB_TOKEN`. */
+export function resolveGithubTokenForStorage(explicit?: string | null): string | undefined {
+  const t = explicit == null ? '' : String(explicit).trim()
+  if (t) {
+    return t
+  }
+  return getAutoadminGithubRuntime().token
+}
+
 // Resolve a path relative to `jsonAdmin.localRoot`, or an absolute filesystem path.
 export function resolveLocalJsonAdminPath(pathInput: string): string {
   if (pathInput.startsWith('/') || /^[A-Z]:[\\/]/i.test(pathInput)) {
@@ -87,7 +96,7 @@ export function createJsonStorageRepository(
     })
   }
 
-  const token = (storage.token || '').trim() || getAutoadminGithubRuntime().token
+  const token = resolveGithubTokenForStorage(storage.token)
   if (token) {
     return new GithubJsonRepository({
       token,
