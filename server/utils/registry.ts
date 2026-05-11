@@ -1,3 +1,4 @@
+import type { AutoadminRolesConfig } from '#autoadmin/roleAccess'
 import type { InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { VNode } from 'vue'
 import type { ZodObject, ZodType } from 'zod'
@@ -5,6 +6,7 @@ import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
 import type { FieldSpec, Option } from './form'
 import type { TableMetadata } from './metadata'
+import { normalizeAutoadminRolesInput } from '#autoadmin/roleAccess'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
@@ -186,6 +188,10 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   fields?: Omit<FieldSpec, 'type'>[] & { name: ColKey<T> | `___${string}___${string}Id`, type?: FieldType }[]
   warnOnUnsavedChanges?: boolean
   formFields?: (ColKey<T> | FieldSpec)[]
+  /**
+   * Role allowlists: `string[]` or `{ full?: string[], list?: string[], view?: string[], create?: string[], update?: string[], delete?: string[] }`.
+   */
+  roles?: string[] | AutoadminRolesConfig
 }
 
 // AdminModelConfig is the config available in the registry after processing AdminModelOptions
@@ -213,6 +219,8 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   metadata: TableMetadata
   apiPrefix: string
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
+  /** Normalized from `AdminModelOptions.roles` (array → `{ full }`). */
+  roles?: AutoadminRolesConfig
 }
 
 function getStaticDefaultOptions() {
@@ -340,6 +348,7 @@ export function useAdminRegistry() {
     }
 
     cfg.metadata = getTableMetadata(cfg.columns)
+    cfg.roles = normalizeAutoadminRolesInput(opts.roles)
     return cfg
   }
 
