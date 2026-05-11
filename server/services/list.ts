@@ -1,3 +1,4 @@
+import type { AutoadminAllowedActions } from '#autoadmin/roleAccess'
 import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
 import type { SQL, Table } from 'drizzle-orm'
 import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
@@ -10,7 +11,13 @@ import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
-export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, query: Record<string, any> = {}, returnSpec: boolean = true) {
+export async function listRecords<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  query: Record<string, any> = {},
+  returnSpec: boolean = true,
+  /** Missing entries default to `true` (no restriction). See `#autoadmin/roleAccess.getAllowedActions`. */
+  allowedActions: Partial<AutoadminAllowedActions> = {},
+) {
   const model = cfg.model
   const tableColumns = cfg.columns
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
@@ -363,12 +370,13 @@ export async function listRecords<T extends Table>(cfg: AdminModelConfig<T>, que
   }
 
   if (returnSpec) {
+    const canDelete = allowedActions.delete !== false
     const spec = {
       endpoint: cfg.list.endpoint,
       updatePage: cfg.update.enabled ? cfg.update.route : undefined,
       createPage: cfg.create.enabled ? cfg.create.route : undefined,
-      deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
-      enableDelete: cfg.delete.enabled,
+      deleteEndpoint: (cfg.delete.enabled && canDelete) ? cfg.delete.endpoint : undefined,
+      enableDelete: cfg.delete.enabled && canDelete,
       bulkActions: cfg.list.bulkActions.map(action => ({
         label: action.label,
         icon: action.icon,

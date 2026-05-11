@@ -13,6 +13,9 @@ export interface AutoadminRolePolicy {
   roles?: AutoadminRolesConfig
 }
 
+/** Map of `AutoadminAccess` → whether the current user may perform that action. */
+export type AutoadminAllowedActions = Record<AutoadminAccess, boolean>
+
 function hasAnyRoleEntry(roles: AutoadminRolesConfig): boolean {
   return ROLE_KEYS.some((k) => {
     const v = roles[k]
@@ -27,6 +30,35 @@ function userMatchesList(userRole: string | undefined, allowed: string[] | undef
   return allowed.includes(userRole)
 }
 
+/**
+ * No policy → allow; `full` short-circuit; then per `access`; fail-closed when
+ * a policy exists but `access` is not permitted.
+ */
+function isAccessAllowed(
+  userRole: string | undefined,
+  roles: AutoadminRolesConfig | undefined,
+  access: AutoadminAccess,
+): boolean {
+  if (!roles || !hasAnyRoleEntry(roles)) {
+    return true
+  }
+  if (userMatchesList(userRole, roles.full)) {
+    return true
+  }
+  switch (access) {
+    case 'list':
+      return userMatchesList(userRole, roles.list) || userMatchesList(userRole, roles.view)
+    case 'detail':
+      return userMatchesList(userRole, roles.view)
+    case 'create':
+      return userMatchesList(userRole, roles.create)
+    case 'update':
+      return userMatchesList(userRole, roles.update)
+    case 'delete':
+      return userMatchesList(userRole, roles.delete)
+  }
+}
+
 export function getUserRoleFromEvent(event: H3Event): string | undefined {
   const auth = event.context.auth as { user?: { role?: string } } | undefined
   const r = auth?.user?.role
@@ -38,48 +70,36 @@ export function getUserRoleFromEvent(event: H3Event): string | undefined {
 }
 
 /**
+ * Resolve which actions the current user may perform on a resource. Use to
+ * shape responses (e.g. hide row action icons) without raising 403s. Servers
+ * still call `assertRoleAccessAllowed` independently to enforce access.
+ */
+export function getAllowedActions(
+  event: H3Event,
+  policy: AutoadminRolePolicy,
+): AutoadminAllowedActions {
+  const userRole = getUserRoleFromEvent(event)
+  const roles = policy.roles
+  return {
+    list: isAccessAllowed(userRole, roles, 'list'),
+    detail: isAccessAllowed(userRole, roles, 'detail'),
+    create: isAccessAllowed(userRole, roles, 'create'),
+    update: isAccessAllowed(userRole, roles, 'update'),
+    delete: isAccessAllowed(userRole, roles, 'delete'),
+  }
+}
+
+/**
  * Enforces `policy.roles` when present. Missing/denied → 403.
- * Order: `full` short-circuit; then per `access`; fail closed if policy exists but access not allowed.
  */
 export function assertRoleAccessAllowed(
   event: H3Event,
   policy: AutoadminRolePolicy,
   access: AutoadminAccess,
 ): void {
-  const roles = policy.roles
-  if (!roles || !hasAnyRoleEntry(roles)) {
+  if (isAccessAllowed(getUserRoleFromEvent(event), policy.roles, access)) {
     return
   }
-
-  const userRole = getUserRoleFromEvent(event)
-
-  if (userMatchesList(userRole, roles.full)) {
-    return
-  }
-
-  let allowed = false
-  switch (access) {
-    case 'list':
-      allowed = userMatchesList(userRole, roles.list) || userMatchesList(userRole, roles.view)
-      break
-    case 'detail':
-      allowed = userMatchesList(userRole, roles.view)
-      break
-    case 'create':
-      allowed = userMatchesList(userRole, roles.create)
-      break
-    case 'update':
-      allowed = userMatchesList(userRole, roles.update)
-      break
-    case 'delete':
-      allowed = userMatchesList(userRole, roles.delete)
-      break
-  }
-
-  if (allowed) {
-    return
-  }
-
   throw createError({
     statusCode: 403,
     statusMessage: 'Forbidden',

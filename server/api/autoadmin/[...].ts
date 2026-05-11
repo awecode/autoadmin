@@ -1,4 +1,4 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
+import { assertRoleAccessAllowed, getAllowedActions } from '#autoadmin/roleAccess'
 import { createRecord } from '../../services/create'
 import { deleteRecord } from '../../services/delete'
 import { getRecordDetail } from '../../services/detail'
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
   switch (parsedRoute.routeType) {
     case 'list':
-      return await listRecords(cfg, query)
+      return await listRecords(cfg, query, true, getAllowedActions(event, { roles: cfg.roles }))
 
     case 'create':
       if (!body) {

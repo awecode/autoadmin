@@ -58,10 +58,11 @@ registry.register(posts, {
 
 ## Override for custom role logic: `#autoadmin/roleAccess`
 
-The autoadmin layer aliases **`#autoadmin/roleAccess`** to the default role check util. In your app, point the alias at your own file which should export `getUserRoleFromEvent` and `assertRoleAccessAllowed`:
+The autoadmin layer aliases **`#autoadmin/roleAccess`** to the default role check util. In your app, point the alias at your own file which should export `getUserRoleFromEvent`, `assertRoleAccessAllowed`, and `getAllowedActions`:
 
-- **`getUserRoleFromEvent(event)`** — gets the current user’s role string from session/event, takes H3/nitro event function parameter; returns role string or `undefined`
-- **`assertRoleAccessAllowed(event, policy, access)`** — performs access check for the role.
+- **`getUserRoleFromEvent(event)`** — gets the current user’s role string from session/event, takes an H3/nitro event; returns role string or `undefined`.
+- **`assertRoleAccessAllowed(event, policy, access)`** — throws 403 if access is denied.
+- **`getAllowedActions(event, policy)`** — returns `{ list, detail, create, update, delete }` booleans; pass into services (e.g. `listRecords`) to mask response UI affordances without raising 403s.
 
 See [server/utils/roleAccess.ts](https://github.com/awecode/autoadmin/blob/main/server/utils/roleAccess.ts) for the existing logic.
 
