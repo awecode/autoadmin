@@ -1,5 +1,49 @@
-import type { AutoadminRoleKey, AutoadminRolesConfig } from './roleAccess'
-import { ROLE_KEYS } from './roleAccess'
+import type { AutoadminAction, AutoadminRoleKey, AutoadminRolesConfig } from '#autoadmin/roleAccess'
+import type { H3Event } from 'h3'
+import { getUserRoleFromEvent, isAccessAllowed, ROLE_KEYS } from '#autoadmin/roleAccess'
+import { createError } from 'h3'
+
+export interface AutoadminRolePolicy {
+  roles?: AutoadminRolesConfig
+}
+
+/** Map of `AutoadminAction` → whether the current user may perform that action. */
+export type AutoadminAllowedActions = Record<AutoadminAction, boolean>
+
+/**
+ * Resolve which actions the current user may perform on a resource. Use to
+ * shape responses (e.g. hide row action icons) without raising 403s. Servers
+ * still call `assertRoleAccessAllowed` independently to enforce access.
+ */
+export function getAllowedActions(
+  event: H3Event,
+  policy: AutoadminRolePolicy,
+): AutoadminAllowedActions {
+  const userRole = getUserRoleFromEvent(event)
+  const roles = policy.roles
+  return {
+    list: isAccessAllowed(userRole, roles, 'list'),
+    detail: isAccessAllowed(userRole, roles, 'detail'),
+    create: isAccessAllowed(userRole, roles, 'create'),
+    update: isAccessAllowed(userRole, roles, 'update'),
+    delete: isAccessAllowed(userRole, roles, 'delete'),
+  }
+}
+
+/** Enforces `policy.roles` when present. Missing/denied → 403. */
+export function assertRoleAccessAllowed(
+  event: H3Event,
+  policy: AutoadminRolePolicy,
+  action: AutoadminAction,
+): void {
+  if (isAccessAllowed(getUserRoleFromEvent(event), policy.roles, action)) {
+    return
+  }
+  throw createError({
+    statusCode: 403,
+    statusMessage: 'Forbidden',
+  })
+}
 
 function trimRoleArray(arr: string[]): string[] {
   const out = [...new Set(arr.map(s => String(s).trim()).filter(Boolean))]

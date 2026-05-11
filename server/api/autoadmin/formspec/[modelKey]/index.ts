@@ -1,8 +1,8 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metadata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
+import { assertRoleAccessAllowed } from '#layers/autoadmin/server/utils/roleHelpers'
 import { createInsertSchema } from 'drizzle-zod'
 import { zerialize } from 'zodex'
 

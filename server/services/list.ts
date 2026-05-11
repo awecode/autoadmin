@@ -1,5 +1,5 @@
-import type { AutoadminAllowedActions } from '#autoadmin/roleAccess'
 import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
+import type { AutoadminAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
 import type { SQL, Table } from 'drizzle-orm'
 import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'

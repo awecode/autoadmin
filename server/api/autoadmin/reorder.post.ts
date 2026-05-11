@@ -1,10 +1,10 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
 import { useAdminDb } from '../../utils/db'
 import { handleDrizzleError } from '../../utils/drizzle'
 import { batchUpdate, fetchSortedRows, resequenceAndUpdate } from '../../utils/reorder'
+import { assertRoleAccessAllowed } from '../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({

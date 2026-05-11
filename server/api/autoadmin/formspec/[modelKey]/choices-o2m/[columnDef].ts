@@ -1,5 +1,5 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
+import { assertRoleAccessAllowed } from '#layers/autoadmin/server/utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')

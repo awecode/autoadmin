@@ -1,10 +1,10 @@
-import { assertRoleAccessAllowed, getAllowedActions } from '#autoadmin/roleAccess'
 import { createRecord } from '../../services/create'
 import { deleteRecord } from '../../services/delete'
 import { getRecordDetail } from '../../services/detail'
 import { listRecords } from '../../services/list'
 import { updateRecord } from '../../services/update'
 import { getModelConfig } from '../../utils/autoadmin'
+import { assertRoleAccessAllowed, getAllowedActions } from '../../utils/roleHelpers'
 import { parseAutoadminRoute } from '../../utils/router'
 
 export default defineEventHandler(async (event) => {

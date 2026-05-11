@@ -1,9 +1,9 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
 import { useAdminDb } from '../../utils/db'
 import { handleDrizzleError } from '../../utils/drizzle'
 import { fetchSortedRows, resequenceAndUpdate } from '../../utils/reorder'
+import { assertRoleAccessAllowed } from '../../utils/roleHelpers'
 
 const moveActions = ['first', 'page-up', 'page-down', 'last'] as const
 

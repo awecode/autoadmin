@@ -1,7 +1,7 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
 import { colKey } from '#layers/autoadmin/server/utils/drizzle'
 import { getTableForeignKeysByColumn } from '#layers/autoadmin/server/utils/relation'
+import { assertRoleAccessAllowed } from '#layers/autoadmin/server/utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')

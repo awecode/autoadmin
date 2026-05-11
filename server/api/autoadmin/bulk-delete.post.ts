@@ -1,7 +1,7 @@
-import { assertRoleAccessAllowed } from '#autoadmin/roleAccess'
 import { z } from 'zod'
 import { bulkDelete } from '../../services/delete'
 import { getModelConfig } from '../../utils/autoadmin'
+import { assertRoleAccessAllowed } from '../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({
