@@ -370,11 +370,13 @@ export async function listRecords<T extends Table>(
   }
 
   if (returnSpec) {
+    const canCreate = allowedActions.create !== false
+    const canUpdate = allowedActions.update !== false
     const canDelete = allowedActions.delete !== false
     const spec = {
       endpoint: cfg.list.endpoint,
-      updatePage: cfg.update.enabled ? cfg.update.route : undefined,
-      createPage: cfg.create.enabled ? cfg.create.route : undefined,
+      updatePage: (cfg.update.enabled && canUpdate) ? cfg.update.route : undefined,
+      createPage: (cfg.create.enabled && canCreate) ? cfg.create.route : undefined,
       deleteEndpoint: (cfg.delete.enabled && canDelete) ? cfg.delete.endpoint : undefined,
       enableDelete: cfg.delete.enabled && canDelete,
       bulkActions: cfg.list.bulkActions.map(action => ({
@@ -382,7 +384,7 @@ export async function listRecords<T extends Table>(
         icon: action.icon,
       })),
       title: cfg.list.title,
-      showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
+      showCreateButton: cfg.create.enabled && cfg.list.showCreateButton && canCreate,
       enableSort: cfg.sortField ? false : cfg.list.enableSort,
       enableSearch: cfg.list.enableSearch,
       searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
