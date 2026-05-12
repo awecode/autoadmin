@@ -5,12 +5,16 @@ export default defineEventHandler(async (event) => {
   const registry = useAdminRegistry()
   const allCfg = registry.all()
   const meta = allCfg.flatMap((cfg) => {
-    if (!cfg.enableIndex) { return [] }
+    if (!cfg.enableIndex) {
+      return []
+    }
     const allowed = getAllowedActions(event, { roles: cfg.roles })
     const canList = allowed.list
     const canCreate = cfg.create.enabled && allowed.create
     // Drop entries with no usable nav target.
-    if (!canList && !canCreate) { return [] }
+    if (!canList && !canCreate) {
+      return []
+    }
     // Primary target falls back to the create page for create-only roles.
     const to = canList
       ? { name: 'autoadmin-list' as const, params: { modelKey: cfg.key } }
