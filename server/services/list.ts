@@ -381,10 +381,13 @@ export async function listRecords<T extends Table>(
       createPage: (cfg.create.enabled && canCreate) ? cfg.create.route : undefined,
       deleteEndpoint: (cfg.delete.enabled && canDelete) ? cfg.delete.endpoint : undefined,
       enableDelete: cfg.delete.enabled && canDelete,
-      bulkActions: cfg.list.bulkActions.map(action => ({
-        label: action.label,
-        icon: action.icon,
-      })),
+      // Custom bulk actions run as `update` server-side; hide when the user lacks that.
+      bulkActions: canUpdate
+        ? cfg.list.bulkActions.map(action => ({
+            label: action.label,
+            icon: action.icon,
+          }))
+        : [],
       title: cfg.list.title,
       showCreateButton: cfg.create.enabled && cfg.list.showCreateButton && canCreate,
       enableSort: effectiveSortField ? false : cfg.list.enableSort,
