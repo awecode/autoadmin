@@ -373,6 +373,8 @@ export async function listRecords<T extends Table>(
     const canCreate = allowedActions.create !== false
     const canUpdate = allowedActions.update !== false
     const canDelete = allowedActions.delete !== false
+    // Drag-drop reorder requires update access; fall back to column-header sort when masked.
+    const effectiveSortField = (cfg.sortField && canUpdate) ? cfg.sortField : undefined
     const spec = {
       endpoint: cfg.list.endpoint,
       updatePage: (cfg.update.enabled && canUpdate) ? cfg.update.route : undefined,
@@ -385,13 +387,13 @@ export async function listRecords<T extends Table>(
       })),
       title: cfg.list.title,
       showCreateButton: cfg.create.enabled && cfg.list.showCreateButton && canCreate,
-      enableSort: cfg.sortField ? false : cfg.list.enableSort,
+      enableSort: effectiveSortField ? false : cfg.list.enableSort,
       enableSearch: cfg.list.enableSearch,
       searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,
       searchFields: cfg.list.enableSearch ? cfg.list.searchFields : undefined,
       columns,
       lookupColumnName: cfg.lookupColumnName,
-      sortField: cfg.sortField,
+      sortField: effectiveSortField,
     }
     return {
       ...response,
