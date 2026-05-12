@@ -1,5 +1,6 @@
 import type { JsonArrayResourceConfig, JsonObjectResourceConfig, JsonResourceConfig } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/factory'
+import type { AutoadminAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
 import type { ZodObject, ZodType } from 'zod'
 import { genericPaginationQuerySchema } from '#layers/autoadmin/server/utils/drizzle'
 import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
@@ -298,7 +299,12 @@ function buildArrayListColumns(cfg: JsonArrayResourceConfig) {
   }))
 }
 
-export async function listJsonArrayRecords(cfg: JsonArrayResourceConfig, query: Record<string, any> = {}) {
+export async function listJsonArrayRecords(
+  cfg: JsonArrayResourceConfig,
+  query: Record<string, any> = {},
+  /** Missing entries default to `true` (no restriction). See `#autoadmin/roleAccess.getAllowedActions`. */
+  allowedActions: Partial<AutoadminAllowedActions> = {},
+) {
   const rows = await readValidatedArrayRows(cfg)
 
   let filtered = rows
@@ -311,15 +317,19 @@ export async function listJsonArrayRecords(cfg: JsonArrayResourceConfig, query: 
 
   const pageSlice = paginateArray(filtered, query)
 
+  const canCreate = allowedActions.create !== false
+  const canUpdate = allowedActions.update !== false
+  const canDelete = allowedActions.delete !== false
+
   const spec = {
     endpoint: cfg.list.endpoint,
-    updatePage: cfg.update.enabled ? cfg.update.route : undefined,
-    createPage: cfg.create.enabled ? cfg.create.route : undefined,
-    deleteEndpoint: cfg.delete.enabled ? cfg.delete.endpoint : undefined,
-    enableDelete: cfg.delete.enabled,
+    updatePage: (cfg.update.enabled && canUpdate) ? cfg.update.route : undefined,
+    createPage: (cfg.create.enabled && canCreate) ? cfg.create.route : undefined,
+    deleteEndpoint: (cfg.delete.enabled && canDelete) ? cfg.delete.endpoint : undefined,
+    enableDelete: cfg.delete.enabled && canDelete,
     bulkActions: [] as { label: string, icon?: string }[],
     title: cfg.list.title,
-    showCreateButton: cfg.create.enabled && cfg.list.showCreateButton,
+    showCreateButton: cfg.create.enabled && cfg.list.showCreateButton && canCreate,
     enableSort: cfg.list.enableSort,
     enableSearch: cfg.list.enableSearch,
     searchPlaceholder: cfg.list.enableSearch ? cfg.list.searchPlaceholder : undefined,

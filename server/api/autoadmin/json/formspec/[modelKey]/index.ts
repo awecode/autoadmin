@@ -1,5 +1,6 @@
 import { buildJsonArrayCreateFormSpec } from '../../../../../utils/jsonFormSpec'
 import { useJsonResourceRegistry } from '../../../../../utils/jsonResourceRegistry'
+import { assertRoleAccessAllowed } from '../../../../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')
@@ -11,6 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!cfg || cfg.kind !== 'array') {
     throw createError({ statusCode: 404, statusMessage: 'Resource not found or not an array.' })
   }
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'create')
   if (!cfg.create.enabled) {
     throw createError({ statusCode: 404, statusMessage: 'Create is disabled for this resource.' })
   }

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { bulkDeleteJsonArrayRecords } from '../../../services/jsonResourceCrud'
 import { useJsonResourceRegistry } from '../../../utils/jsonResourceRegistry'
+import { assertRoleAccessAllowed } from '../../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, z.object({
@@ -16,5 +17,6 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Array JSON resource not found.',
     })
   }
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'delete')
   return await bulkDeleteJsonArrayRecords(cfg, body.rowLookups)
 })

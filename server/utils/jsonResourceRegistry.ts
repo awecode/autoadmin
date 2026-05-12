@@ -3,12 +3,14 @@ import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStora
 import type { JsonStorageRegisterDiscriminated } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
+import type { AutoadminRolesConfig } from './roleAccess'
 import { basename } from 'node:path'
 import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import { resolveJsonAdminApiPrefix } from '#layers/autoadmin/utils/jsonAdminApiPrefix'
 import { createNoSpaceString, slugify, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { z } from 'zod'
+import { normalizeAutoadminRolesInput } from './roleHelpers'
 
 export const JSON_OBJECT_LOOKUP = '__root__'
 /** Internal row key for JSON array resources; UUID assigned by server; not shown in list/form. */
@@ -73,6 +75,10 @@ export interface RegisterJsonObjectResourceInput {
   update?: Partial<JsonUpdateOptions>
   fields?: FieldSpec[]
   warnOnUnsavedChanges?: boolean
+  /**
+   * Role allowlists: `string[]` or an object for per-action roles.
+   */
+  roles?: string[] | AutoadminRolesConfig
 }
 
 export interface RegisterJsonArrayResourceInput {
@@ -95,6 +101,10 @@ export interface RegisterJsonArrayResourceInput {
   delete?: Partial<JsonDeleteOptions>
   fields?: FieldSpec[]
   warnOnUnsavedChanges?: boolean
+  /**
+   * Role allowlists: `string[]` or an object for per-action roles.
+   */
+  roles?: string[] | AutoadminRolesConfig
 }
 
 export type RegisterJsonResourceInput = RegisterJsonObjectResourceInput | RegisterJsonArrayResourceInput
@@ -112,6 +122,8 @@ export interface JsonObjectResourceConfig {
   fields?: FieldSpec[]
   warnOnUnsavedChanges: boolean
   apiPrefix: string
+  /** Normalized from `RegisterJsonObjectResourceInput.roles` (array → `{ full }`). */
+  roles?: AutoadminRolesConfig
 }
 
 export interface JsonArrayResourceConfig {
@@ -141,6 +153,8 @@ export interface JsonArrayResourceConfig {
   fields?: FieldSpec[]
   warnOnUnsavedChanges: boolean
   apiPrefix: string
+  /** Normalized from `RegisterJsonArrayResourceInput.roles` (array → `{ full }`). */
+  roles?: AutoadminRolesConfig
 }
 
 export type JsonResourceConfig = JsonObjectResourceConfig | JsonArrayResourceConfig
@@ -218,6 +232,7 @@ function defaultObjectConfig(
     fields: input.fields,
     warnOnUnsavedChanges: input.warnOnUnsavedChanges ?? false,
     apiPrefix,
+    roles: normalizeAutoadminRolesInput(input.roles),
   }
 }
 
@@ -287,6 +302,7 @@ function defaultArrayConfig(
     fields: input.fields,
     warnOnUnsavedChanges: input.warnOnUnsavedChanges ?? false,
     apiPrefix,
+    roles: normalizeAutoadminRolesInput(input.roles),
   }
 }
 

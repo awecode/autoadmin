@@ -9,6 +9,7 @@ import {
 } from '../../../services/jsonResourceCrud'
 import { JSON_OBJECT_LOOKUP, useJsonResourceRegistry } from '../../../utils/jsonResourceRegistry'
 import { parseJsonResourceRoute, pathAfterJsonApiPrefix } from '../../../utils/jsonResourceRouter'
+import { assertRoleAccessAllowed, getAllowedActions } from '../../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
@@ -27,6 +28,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `JSON admin resource "${parsed.resourceKey}" is not registered.`,
     })
   }
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, parsed.routeType)
 
   if (cfg.kind === 'object') {
     if (parsed.routeType === 'list' || parsed.routeType === 'create') {
@@ -50,7 +52,7 @@ export default defineEventHandler(async (event) => {
       if (cfg.kind !== 'array') {
         throw createError({ statusCode: 400, statusMessage: 'Not an array resource.' })
       }
-      return await listJsonArrayRecords(cfg, query)
+      return await listJsonArrayRecords(cfg, query, getAllowedActions(event, { roles: cfg.roles }))
     }
     case 'create': {
       if (cfg.kind !== 'array') {

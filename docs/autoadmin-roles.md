@@ -1,6 +1,6 @@
 # AutoAdmin: registration roles
 
-Optional per-model **`roles`** on `registry.register(model, options)` restrict who may call the CRUD API and related endpoints. When `roles` is omitted, **no role check** runs.
+Optional per-model **`roles`** on `registry.register(model, options)` (Drizzle) and `useJsonResourceRegistry().register({ ... })` (JSON admin) restrict who may call the CRUD API and related endpoints. When `roles` is omitted, **no role check** runs.
 
 The default checker reads **`event.context.auth.user.role`** as a string. Missing or insufficient role for a protected request returns **403 Forbidden**.
 
@@ -48,6 +48,31 @@ registry.register(posts, {
   label: 'Posts',
 })
 ```
+
+## 4. JSON admin
+
+The same `roles` shape works for `useJsonResourceRegistry().register(...)` on both array and object resources.
+
+```ts
+useJsonResourceRegistry().register({
+  kind: 'array',
+  key: 'site-banners',
+  elementSchema,
+  roles: ['admin', 'editor'],
+})
+
+useJsonResourceRegistry().register({
+  kind: 'object',
+  key: 'site-settings',
+  schema,
+  roles: {
+    update: ['admin'],
+    view: ['admin', 'support'],
+  },
+})
+```
+
+Object resources only support `detail`/`update` over HTTP (their UI is an editor); `list` / `create` / `delete` keys are ignored for them but still validate as part of the shape.
 
 ## Evaluation order
 

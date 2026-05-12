@@ -1,5 +1,6 @@
 import { buildJsonArrayUpdateFormSpec, buildJsonObjectUpdateFormSpec } from '../../../../../../utils/jsonFormSpec'
 import { JSON_OBJECT_LOOKUP, useJsonResourceRegistry } from '../../../../../../utils/jsonResourceRegistry'
+import { assertRoleAccessAllowed } from '../../../../../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')
@@ -12,6 +13,7 @@ export default defineEventHandler(async (event) => {
   if (!cfg) {
     throw createError({ statusCode: 404, statusMessage: 'Resource not found.' })
   }
+  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'update')
   if (cfg.kind === 'array') {
     if (!cfg.update.enabled) {
       throw createError({ statusCode: 404, statusMessage: 'Update is disabled for this resource.' })
