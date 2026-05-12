@@ -1,10 +1,20 @@
+import type { JsonCrudRoute } from '../../../utils/jsonResourceRegistry'
 import { getIconForLabel } from '#layers/autoadmin/utils/string'
 import { useJsonResourceRegistry } from '../../../utils/jsonResourceRegistry'
 import { getAllowedActions } from '../../../utils/roleHelpers'
 
+interface JsonRegistryLink {
+  label: string
+  icon: string
+  kind: 'object' | 'array'
+  to: { name: string, params: { modelKey: string } }
+  createPath?: JsonCrudRoute
+  searchPlaceholder?: string
+}
+
 export default defineEventHandler(async (event) => {
   const reg = useJsonResourceRegistry()
-  const meta = reg.all().flatMap((cfg) => {
+  const meta = reg.all().flatMap<JsonRegistryLink>((cfg) => {
     if (!cfg.enableIndex) {
       return []
     }
@@ -17,10 +27,8 @@ export default defineEventHandler(async (event) => {
       return [{
         label: cfg.label,
         icon: cfg.icon || getIconForLabel(cfg.label),
-        kind: 'object' as const,
-        to: { name: 'jsonadmin-object-edit' as const, params: { modelKey: cfg.key } },
-        createPath: undefined,
-        searchPlaceholder: undefined,
+        kind: 'object',
+        to: { name: 'jsonadmin-object-edit', params: { modelKey: cfg.key } },
       }]
     }
     const canList = allowed.list
@@ -29,12 +37,12 @@ export default defineEventHandler(async (event) => {
       return []
     }
     const to = canList
-      ? { name: 'jsonadmin-array-list' as const, params: { modelKey: cfg.key } }
-      : { name: 'jsonadmin-array-create' as const, params: { modelKey: cfg.key } }
+      ? { name: 'jsonadmin-array-list', params: { modelKey: cfg.key } }
+      : { name: 'jsonadmin-array-create', params: { modelKey: cfg.key } }
     return [{
       label: cfg.label,
       icon: cfg.icon || getIconForLabel(cfg.label),
-      kind: 'array' as const,
+      kind: 'array',
       to,
       createPath: (canList && canCreate) ? cfg.create.route : undefined,
       searchPlaceholder: (canList && cfg.list.enableSearch) ? cfg.list.searchPlaceholder : undefined,
