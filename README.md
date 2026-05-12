@@ -1241,7 +1241,7 @@ AutoAdmin can be configured using environment variables:
 | `NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX` | The URL/path prefix for the admin interface. Required to be set during build. | `/admin` |
 | `NUXT_PUBLIC_PAGINATION_DEFAULT_SIZE` | The default page size for the list view | `20` |
 | `NUXT_PUBLIC_PAGINATION_MAX_SIZE` | The maximum page size for the list view | `200` |
-| `NUXT_AUTOADMIN_FILE_UPLOAD_ROLES` | Comma-separated role strings allowed to upload files. Omit or empty → no global restriction on uploads. | _(empty)_ |
+| `NUXT_AUTOADMIN_FILE_UPLOAD_ROLES` | Array of role strings (example: `["admin","editor"]`) allowed to upload files. Omit or empty → no global restriction on uploads. | _(empty)_ |
 
 ### Object Storage Configuration
 

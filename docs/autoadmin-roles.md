@@ -67,4 +67,7 @@ See [server/utils/roleAccess.ts](https://github.com/awecode/autoadmin/blob/main/
 
 ## Global file upload roles
 
-File uploads (`POST …/file-upload`) can be restricted with by providing a list of role name strings in **`runtimeConfig.autoadmin.fileUploadRoles`**, or by setting **`NUXT_AUTOADMIN_FILE_UPLOAD_ROLES`** to a comma-separated list (e.g. `admin,editor`).
+File uploads (`POST …/file-upload`) can be restricted with by providing a list of role name strings in **`runtimeConfig.autoadmin.fileUploadRoles`**, or by setting **`NUXT_AUTOADMIN_FILE_UPLOAD_ROLES`** to a comma-separated list as shown in the example below:
+```
+NUXT_AUTOADMIN_FILE_UPLOAD_ROLES=["admin","editor"]
+```
