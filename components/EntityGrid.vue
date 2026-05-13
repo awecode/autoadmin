@@ -30,11 +30,7 @@ const {
 const adminTitle = getAdminTitle()
 
 useHead({
-  title: computed(() =>
-    takeoverActive.value
-      ? `${linkLabel.value} | ${adminTitle}`
-      : `Dashboard | ${adminTitle}`,
-  ),
+  title: computed(() => `Dashboard | ${adminTitle}`),
 })
 
 function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
@@ -53,7 +49,6 @@ function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   <JsonAdminRegistryGrid
     v-if="takeoverActive"
     :links="jsonLinks ?? []"
-    :page-title="linkLabel"
   />
   <div
     v-else

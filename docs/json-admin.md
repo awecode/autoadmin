@@ -50,7 +50,7 @@ export default defineNitroPlugin(() => {
     storage: { kind: 'local' },
     elementSchema: z.object({
       headline: z.string(),
-      href: z.string().url().optional(),
+      href: z.url().optional(),
     }),
   })
 })
