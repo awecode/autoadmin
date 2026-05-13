@@ -66,6 +66,7 @@ export interface FormSpec<T extends Table = Table> {
   labelString?: string
   endpoint?: string
   listTitle?: string
+  canList?: boolean
   schema?: SzType
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
 }

@@ -8,6 +8,7 @@ import { dezerialize } from 'zodex'
 const modelKey = (useRoute().params.modelKey as string).replace(/\/$/, '')
 const jsonApi = useJsonAdminApiPrefix()
 const listPath = { name: 'jsonadmin-array-list', params: { modelKey } } as const
+const indexPath = { name: 'jsonadmin-index' } as const
 
 const { data, error } = await useFetch<{ spec: FormSpec }>(`${jsonApi}/formspec/${modelKey}`, {
   key: `json-formspec-create-${modelKey}`,
@@ -41,17 +42,20 @@ if (!endpoint) {
 useHead({
   title: `${formSpec.listTitle} > Create | Configuration | ${getAdminTitle()}`,
 })
+
+const backPath = formSpec.canList ? listPath : indexPath
+const backText = formSpec.canList ? `Back to ${formSpec.listTitle}` : 'Back to Configuration'
 </script>
 
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${formSpec.listTitle}`">
+      <UTooltip :text="backText">
         <UButton
           class="mr-1"
           color="neutral"
           variant="ghost"
-          :to="listPath"
+          :to="backPath"
         >
           <UIcon name="i-lucide-chevron-left" />
         </UButton>
@@ -66,7 +70,7 @@ useHead({
       class="space-y-4"
       mode="create"
       :endpoint="endpoint"
-      :redirect-path="listPath"
+      :redirect-path="backPath"
       :schema="schema"
       :spec="formSpec"
     />

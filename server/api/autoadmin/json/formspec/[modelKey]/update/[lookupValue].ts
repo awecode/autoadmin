@@ -1,6 +1,6 @@
 import { buildJsonArrayUpdateFormSpec, buildJsonObjectUpdateFormSpec } from '../../../../../../utils/jsonFormSpec'
 import { JSON_OBJECT_LOOKUP, useJsonResourceRegistry } from '../../../../../../utils/jsonResourceRegistry'
-import { assertRoleAccessAllowed } from '../../../../../../utils/roleHelpers'
+import { assertRoleAccessAllowed, getAllowedActions } from '../../../../../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')
@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: 'Update is disabled for this resource.' })
     }
     const spec = await buildJsonArrayUpdateFormSpec(cfg, modelKey, lookupValue)
+    spec.canList = getAllowedActions(event, { roles: cfg.roles }).list
     return { spec }
   }
   if (lookupValue !== JSON_OBJECT_LOOKUP) {

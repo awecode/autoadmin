@@ -9,6 +9,7 @@ const config = useRuntimeConfig()
 const apiPrefix = config.public.autoadmin.apiPrefix
 
 const listPath = { name: 'autoadmin-list', params: { modelKey } }
+const indexPath = { name: 'autoadmin-index' } as const
 
 const { data, error } = await useFetch<{ spec: FormSpec }>(`${apiPrefix}/formspec/${modelKey}`, {
   key: `formspec-${modelKey}`,
@@ -39,6 +40,8 @@ if (!endpoint) {
 }
 
 const listTitle = formSpec.listTitle || toTitleCase(modelKey)
+const backPath = formSpec.canList ? listPath : indexPath
+const backText = formSpec.canList ? `Back to ${listTitle}` : 'Back to Dashboard'
 
 useHead({
   title: `${listTitle} > Create | ${getAdminTitle()}`,
@@ -48,12 +51,12 @@ useHead({
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${listTitle}`">
+      <UTooltip :text="backText">
         <UButton
           class="mr-1"
           color="neutral"
           variant="ghost"
-          :to="listPath"
+          :to="backPath"
         >
           <UIcon name="i-lucide-chevron-left" />
         </UButton>
@@ -68,7 +71,7 @@ useHead({
       class="space-y-4"
       mode="create"
       :endpoint="endpoint"
-      :redirect-path="listPath"
+      :redirect-path="backPath"
       :schema="schema"
       :spec="formSpec"
     />

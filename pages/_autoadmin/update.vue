@@ -9,9 +9,6 @@ const modelKey = (route.params.modelKey as string).replace(/\/$/, '')
 const config = useRuntimeConfig()
 const apiPrefix = config.public.autoadmin.apiPrefix
 const returnTo = route.query.returnTo
-const redirectPath: RouteLocationRaw = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
-  ? returnTo
-  : { name: 'autoadmin-list', params: { modelKey } }
 const lookupValue = (route.params.lookupValue as string).replace(/\/$/, '')
 
 const { data, error } = await useFetch<{ spec: FormSpec, values?: Record<string, any> }>(`${apiPrefix}/formspec/${modelKey}/update/${lookupValue}`, {
@@ -45,12 +42,20 @@ if (!endpoint) {
 useHead({
   title: `${formSpec.listTitle} > Update ${formSpec.labelString ?? lookupValue} | ${getAdminTitle()}`,
 })
+
+const listPath = { name: 'autoadmin-list', params: { modelKey } } as const
+const indexPath = { name: 'autoadmin-index' } as const
+const hasSafeReturnTo = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
+const redirectPath: RouteLocationRaw = formSpec.canList
+  ? hasSafeReturnTo ? returnTo : listPath
+  : indexPath
+const backText = formSpec.canList ? `Back to ${formSpec.listTitle}` : 'Back to Dashboard'
 </script>
 
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${formSpec.listTitle}`">
+      <UTooltip :text="backText">
         <UButton
           class="mr-1"
           color="neutral"

@@ -1,6 +1,6 @@
 import { buildJsonArrayCreateFormSpec } from '../../../../../utils/jsonFormSpec'
 import { useJsonResourceRegistry } from '../../../../../utils/jsonResourceRegistry'
-import { assertRoleAccessAllowed } from '../../../../../utils/roleHelpers'
+import { assertRoleAccessAllowed, getAllowedActions } from '../../../../../utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')
@@ -17,5 +17,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Create is disabled for this resource.' })
   }
   const spec = await buildJsonArrayCreateFormSpec(cfg, modelKey)
+  spec.canList = getAllowedActions(event, { roles: cfg.roles }).list
   return { spec }
 })

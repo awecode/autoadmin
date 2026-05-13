@@ -10,9 +10,6 @@ const route = useRoute()
 const modelKey = (route.params.modelKey as string).replace(/\/$/, '')
 const jsonApi = useJsonAdminApiPrefix()
 const returnTo = route.query.returnTo
-const redirectPath: RouteLocationRaw = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
-  ? returnTo
-  : { name: 'jsonadmin-array-list', params: { modelKey } }
 const lookupValue = (route.params.lookupValue as string).replace(/\/$/, '')
 
 const { data, error } = await useFetch<{ spec: FormSpec }>(`${jsonApi}/formspec/${modelKey}/update/${encodeURIComponent(lookupValue)}`, {
@@ -47,12 +44,20 @@ if (!endpoint) {
 useHead({
   title: `${formSpec.listTitle} > Update ${formSpec.labelString ?? lookupValue} | Configuration | ${getAdminTitle()}`,
 })
+
+const listPath = { name: 'jsonadmin-array-list', params: { modelKey } } as const
+const indexPath = { name: 'jsonadmin-index' } as const
+const hasSafeReturnTo = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
+const redirectPath: RouteLocationRaw = formSpec.canList
+  ? hasSafeReturnTo ? returnTo : listPath
+  : indexPath
+const backText = formSpec.canList ? `Back to ${formSpec.listTitle}` : 'Back to Configuration'
 </script>
 
 <template>
   <AutoAdmin>
     <div class="flex items-center mb-6">
-      <UTooltip :text="`Back to ${formSpec.listTitle}`">
+      <UTooltip :text="backText">
         <UButton
           class="mr-1"
           color="neutral"
