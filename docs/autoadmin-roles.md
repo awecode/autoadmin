@@ -58,21 +58,21 @@ useJsonResourceRegistry().register({
   kind: 'array',
   key: 'site-banners',
   elementSchema,
-  roles: ['admin', 'editor'],
+  roles: {
+    update: ['admin'],
+    view: ['admin', 'support'],
+  },
 })
 
 useJsonResourceRegistry().register({
   kind: 'object',
   key: 'site-settings',
   schema,
-  roles: {
-    update: ['admin'],
-    view: ['admin', 'support'],
-  },
+  roles: ['admin', 'editor'],
 })
 ```
 
-Object kind resources only support `detail` or `view` and `update` ; `list` / `create` / `delete` keys are ignored for them but still validate as part of the shape.
+Object kind resources only support `update` ; other actions are ignored.
 
 ## Evaluation order
 
