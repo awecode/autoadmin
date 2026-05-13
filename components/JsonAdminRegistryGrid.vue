@@ -6,8 +6,6 @@ withDefaults(defineProps<{
   links: JsonAdminRegistryLink[] | null | undefined
   /** When set, shows an `<h1>` above the grid (e.g. Configuration index). */
   pageTitle?: string
-  /** Copy for the empty-state alert when `links` is empty. */
-  emptyDescription: string
 }>(), {
   pageTitle: undefined,
 })
@@ -50,7 +48,7 @@ withDefaults(defineProps<{
       class="mt-8"
       color="neutral"
       title="No JSON resources registered"
-      :description="emptyDescription"
+      description="Register resources in a Nitro plugin with useJsonResourceRegistry().register(...). See docs/json-admin.md in the AutoAdmin package."
     />
   </div>
 </template>

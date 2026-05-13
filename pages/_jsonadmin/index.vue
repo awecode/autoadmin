@@ -22,8 +22,6 @@ const linkLabel = computed(() => {
 
 const adminTitle = getAdminTitle()
 
-const JSON_ADMIN_EMPTY_DOC = 'Register resources in a Nitro plugin with useJsonResourceRegistry().register(...). See docs/json-admin.md in the AutoAdmin package.'
-
 useHead({
   title: computed(() => `${linkLabel.value} | ${adminTitle}`),
 })
@@ -34,7 +32,6 @@ useHead({
     <JsonAdminRegistryGrid
       :links="links"
       :page-title="linkLabel"
-      :empty-description="JSON_ADMIN_EMPTY_DOC"
     />
   </AutoAdmin>
 </template>

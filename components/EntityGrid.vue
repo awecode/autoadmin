@@ -45,8 +45,6 @@ useHead({
   ),
 })
 
-const JSON_ADMIN_EMPTY_DOC = 'Register resources in a Nitro plugin with useJsonResourceRegistry().register(...). See docs/json-admin.md in the AutoAdmin package.'
-
 function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   if (link.searchPlaceholder) {
     searchModal.open({
@@ -64,7 +62,6 @@ function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
     v-if="takeoverActive"
     :links="jsonLinks ?? []"
     :page-title="linkLabel"
-    :empty-description="JSON_ADMIN_EMPTY_DOC"
   />
   <div
     v-else
