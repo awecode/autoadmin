@@ -24,9 +24,9 @@ export default defineNuxtConfig({
         title: 'AutoAdmin',
         apiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_API_PREFIX || '/api/autoadmin',
         pathPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin',
-        // Override JSON-admin API base (no trailing slash). Empty → `{apiPrefix}/json`
-        jsonApiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_JSON_API_PREFIX || '',
         jsonadmin: {
+          /** Override JSON-admin API base (no trailing slash). Empty → `{apiPrefix}/json` */
+          jsonApiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_JSON_API_PREFIX || '',
           linkLabel: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_LABEL || 'Configuration',
           linkIcon: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_ICON || 'i-lucide-settings-2',
           injectSidebar: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR !== 'false',

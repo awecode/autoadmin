@@ -26,7 +26,7 @@ Object resources open an editor; array resources get list/create/update flows. S
 ## Routes and API
 
 - **Pages**: `{pathPrefix}/json` (index grid), plus per-resource routes registered in Nuxt `pages:extend` (object edit, array list, create, update). `pathPrefix` defaults to `/admin` via `runtimeConfig.public.autoadmin.pathPrefix`.
-- **JSON API base** (no trailing slash): `runtimeConfig.public.autoadmin.jsonApiPrefix` when set; otherwise `{apiPrefix}/json` where `apiPrefix` defaults to `/api/autoadmin`. Client composable: `useJsonAdminApiPrefix()`.
+- **JSON API base** (no trailing slash): `runtimeConfig.public.autoadmin.jsonadmin.jsonApiPrefix` when set; otherwise `{apiPrefix}/json` where `apiPrefix` defaults to `/api/autoadmin`. Client composable: `useJsonAdminApiPrefix()` (uses `resolveJsonAdminApiPrefix` in [`utils/jsonAdmin.ts`](../utils/jsonAdmin.ts)).
 
 ## Navigation and dashboard (`public.autoadmin.jsonadmin`)
 
@@ -34,6 +34,7 @@ The runtime key under `public.autoadmin` must be spelled exactly **`jsonadmin`**
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
+| `jsonApiPrefix` | `string` | `''` | JSON-admin API base (no trailing slash). When empty, `{apiPrefix}/json` is used. |
 | `linkLabel` | `string` | `'Configuration'` | Label for the sidebar link and trailing dashboard card (non-takeover), and for the JSON index page title. |
 | `linkIcon` | `string` | `'i-lucide-settings-2'` | Nuxt UI icon for that link/card. |
 | `injectSidebar` | `boolean` | `true` | When rules apply, prepend this link to the **additional** sidebar group (above GitHub/Help, sign-out stays last). |
@@ -58,6 +59,7 @@ Overrides map to `runtimeConfig.public.autoadmin.jsonadmin` (Nuxt public env nam
 
 | Variable | Maps to |
 |----------|---------|
+| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_JSON_API_PREFIX` | `jsonApiPrefix` |
 | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_LABEL` | `linkLabel` |
 | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_ICON` | `linkIcon` |
 | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR` | Set to `false` to disable injection |
@@ -68,4 +70,4 @@ Overrides map to `runtimeConfig.public.autoadmin.jsonadmin` (Nuxt public env nam
 
 - [`utils/jsonAdmin.ts`](../utils/jsonAdmin.ts) — `resolveJsonAdminApiPrefix`, `JsonAdminPublicRuntime` / UI config types, and `JsonAdminRegistryLink`.
 - [`components/JsonAdminRegistryGrid.vue`](../components/JsonAdminRegistryGrid.vue) — shared grid + empty alert.
-- [`composables/useAutoadminJsonAdminUi.ts`](../composables/useAutoadminJsonAdminUi.ts) — takeover and injection flags from runtime config + registry meta lengths.
+- [`composables/useJsonAdminUi.ts`](../composables/useJsonAdminUi.ts) — takeover and injection flags from runtime config + registry meta lengths.

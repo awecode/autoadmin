@@ -38,7 +38,7 @@ const {
   shouldInjectSidebarLink,
   takeoverMiddleItems,
   configurationNavItem,
-} = useAutoadminJsonAdminUi(modelLinks, jsonLinks)
+} = useJsonAdminUi(modelLinks, jsonLinks)
 
 let auth
 

@@ -1,35 +1,27 @@
-import type { AutoadminJsonAdminTakeoverMode, JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
+import type { JsonAdminPublicConfig, JsonAdminRegistryLink, JsonAdminTakeoverMode } from '#layers/autoadmin/utils/jsonAdmin'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import type { MaybeRefOrGetter } from 'vue'
 import { getIconForLabel } from '#layers/autoadmin/utils/string'
 import { computed, toValue } from 'vue'
 
-interface PublicAutoadminJsonadmin {
-  linkLabel?: string
-  linkIcon?: string
-  injectSidebar?: boolean
-  showDashboardCard?: boolean
-  takeoverMode?: AutoadminJsonAdminTakeoverMode
-}
-
 /**
  * JSON-admin nav and dashboard policy (sidebar injection, dashboard card, takeover).
  * Pass the same `useFetch` results as elsewhere (`model-links`, `json-admin-registry-meta`) for deduplication.
  */
-export function useAutoadminJsonAdminUi(
+export function useJsonAdminUi(
   drizzleLinks: MaybeRefOrGetter<Array<{ label: string }> | null | undefined>,
   jsonLinks: MaybeRefOrGetter<JsonAdminRegistryLink[] | null | undefined>,
 ) {
   const runtimeConfig = useRuntimeConfig()
   const ui = computed(() => {
-    const pub = runtimeConfig.public as { autoadmin?: { jsonadmin?: PublicAutoadminJsonadmin } }
+    const pub = runtimeConfig.public as { autoadmin?: { jsonadmin?: JsonAdminPublicConfig } }
     const c = pub.autoadmin?.jsonadmin ?? {}
     return {
       linkLabel: c.linkLabel ?? 'Configuration',
       linkIcon: c.linkIcon ?? 'i-lucide-settings-2',
       injectSidebar: c.injectSidebar !== false,
       showDashboardCard: c.showDashboardCard !== false,
-      takeoverMode: (c.takeoverMode ?? 'auto') as AutoadminJsonAdminTakeoverMode,
+      takeoverMode: (c.takeoverMode ?? 'auto') as JsonAdminTakeoverMode,
     }
   })
 

@@ -2,7 +2,7 @@
 import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
 import JsonAdminRegistryGrid from '#layers/autoadmin/components/JsonAdminRegistryGrid.vue'
 import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
-import { useAutoadminJsonAdminUi } from '#layers/autoadmin/composables/useAutoadminJsonAdminUi'
+import { useJsonAdminUi } from '#layers/autoadmin/composables/useJsonAdminUi'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const searchModal = useOverlay().create(SearchModal)
@@ -33,7 +33,7 @@ const {
   shouldShowDashboardCard,
   linkLabel,
   linkIcon,
-} = useAutoadminJsonAdminUi(modelLinks, jsonLinks)
+} = useJsonAdminUi(modelLinks, jsonLinks)
 
 const adminTitle = getAdminTitle()
 
