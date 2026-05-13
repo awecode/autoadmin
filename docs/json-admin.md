@@ -1,6 +1,20 @@
 # JSON admin
 
-JSON admin is an admin surface for **JSON files** (one object or an array of objects) with list/create/update UIs. It is ideal for site settings, feature flags, CMS-ish lists stored in Git, or local dev fixtures. You can use it to update source code directly in your repository for things that need less frequent update and you don't want to keep in the database.
+JSON Admin provides a simple admin interface for managing **JSON files** in your codebase. It supports both single-object files and collections of objects, with built-in list, create, update, and delete interfaces.
+
+It is designed for data that changes occasionally but still benefits from a user-friendly editing UI without requiring a database or a full CMS. Changes are written directly to your repository, making it a good fit for Git-based workflows and configuration-driven applications.
+
+Common use cases include:
+
+- Site settings and application configuration
+- Feature flags and rollout controls
+- Navigation menus and footer links
+- CMS-style content lists such as team members, FAQs, testimonials, or partner logos
+- Static reference data and lookup tables
+- Local development fixtures and seed content
+- Structured content stored alongside source code
+
+JSON Admin is especially useful when you want non-developers or operators to safely manage structured content that lives in version control.
 
 ---
 
