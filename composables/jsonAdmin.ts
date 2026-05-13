@@ -1,4 +1,4 @@
-import { resolveJsonAdminApiPrefix } from '#layers/autoadmin/utils/jsonAdminApiPrefix'
+import { resolveJsonAdminApiPrefix } from '#layers/autoadmin/utils/jsonAdmin'
 
 /** Path segment for object JSON resources in API and formspec URLs (must match server constant). */
 export const JSON_ADMIN_OBJECT_LOOKUP = '__root__' as const

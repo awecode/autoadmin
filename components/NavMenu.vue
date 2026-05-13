@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 

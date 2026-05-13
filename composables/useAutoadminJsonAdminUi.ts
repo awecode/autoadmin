@@ -1,5 +1,4 @@
-import type { AutoadminJsonAdminTakeoverMode } from '#layers/autoadmin/utils/jsonAdminApiPrefix'
-import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
+import type { AutoadminJsonAdminTakeoverMode, JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import type { MaybeRefOrGetter } from 'vue'
 import { getIconForLabel } from '#layers/autoadmin/utils/string'

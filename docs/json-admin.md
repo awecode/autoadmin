@@ -66,5 +66,6 @@ Overrides map to `runtimeConfig.public.autoadmin.jsonadmin` (Nuxt public env nam
 
 ## UI building blocks
 
+- [`utils/jsonAdmin.ts`](../utils/jsonAdmin.ts) — `resolveJsonAdminApiPrefix`, `JsonAdminPublicRuntime` / UI config types, and `JsonAdminRegistryLink`.
 - [`components/JsonAdminRegistryGrid.vue`](../components/JsonAdminRegistryGrid.vue) — shared grid + empty alert.
 - [`composables/useAutoadminJsonAdminUi.ts`](../composables/useAutoadminJsonAdminUi.ts) — takeover and injection flags from runtime config + registry meta lengths.

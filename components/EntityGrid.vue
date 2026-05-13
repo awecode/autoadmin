@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
 import JsonAdminRegistryGrid from '#layers/autoadmin/components/JsonAdminRegistryGrid.vue'
 import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
 import { useAutoadminJsonAdminUi } from '#layers/autoadmin/composables/useAutoadminJsonAdminUi'
