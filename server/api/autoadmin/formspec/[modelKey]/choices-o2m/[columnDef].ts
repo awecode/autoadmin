@@ -1,5 +1,5 @@
 import { getLabelColumnFromModel, getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
-import { assertRoleAccessAllowed } from '#layers/autoadmin/server/utils/roleHelpers'
+import { assertAnyRoleAccessAllowed } from '#layers/autoadmin/server/utils/roleHelpers'
 
 export default defineEventHandler(async (event) => {
   const modelKey = getRouterParam(event, 'modelKey')
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   const cfg = getModelConfig(modelKey)
-  assertRoleAccessAllowed(event, { roles: cfg.roles }, 'list')
+  assertAnyRoleAccessAllowed(event, { roles: cfg.roles }, ['list', 'create', 'update'])
   if (!cfg.o2m) {
     throw createError({
       statusCode: 404,

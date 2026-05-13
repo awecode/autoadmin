@@ -45,6 +45,22 @@ export function assertRoleAccessAllowed(
   })
 }
 
+/** Enforces that at least one of the supplied actions is allowed. */
+export function assertAnyRoleAccessAllowed(
+  event: H3Event,
+  policy: AutoadminRolePolicy,
+  actions: AutoadminAction[],
+): void {
+  const userRole = getUserRoleFromEvent(event)
+  if (actions.some(action => isAccessAllowed(userRole, policy.roles, action))) {
+    return
+  }
+  throw createError({
+    statusCode: 403,
+    statusMessage: 'Forbidden',
+  })
+}
+
 function trimRoleArray(arr: string[]): string[] {
   const out = [...new Set(arr.map(s => String(s).trim()).filter(Boolean))]
   return out
