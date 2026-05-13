@@ -18,16 +18,6 @@ export interface JsonAdminPublicRuntime {
   }
 }
 
-/** Client shape aligned with `/api/autoadmin/json/registry-meta`. */
-export interface JsonAdminRegistryLink {
-  label: string
-  icon?: string
-  kind: 'object' | 'array'
-  to: { name: string, params: { modelKey: string } }
-  createPath?: { name: string, params: { modelKey: string } }
-  searchPlaceholder?: string
-}
-
 /**
  * JSON-admin API base (no trailing slash): `public.autoadmin.jsonadmin.jsonApiPrefix` when set,
  * otherwise `{public.autoadmin.apiPrefix}/json` (default apiPrefix `/api/autoadmin`).

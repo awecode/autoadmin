@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/registryMeta'
 import { getIconForLabel } from '#layers/autoadmin/utils/string'
 
 withDefaults(defineProps<{

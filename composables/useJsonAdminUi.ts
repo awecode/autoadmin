@@ -1,4 +1,5 @@
-import type { JsonAdminPublicConfig, JsonAdminRegistryLink, JsonAdminTakeoverMode } from '#layers/autoadmin/utils/jsonAdmin'
+import type { JsonAdminPublicConfig, JsonAdminTakeoverMode } from '#layers/autoadmin/utils/jsonAdmin'
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/registryMeta'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import type { MaybeRefOrGetter } from 'vue'
 import { getIconForLabel } from '#layers/autoadmin/utils/string'
@@ -6,7 +7,7 @@ import { computed, toValue } from 'vue'
 
 /**
  * JSON-admin nav and dashboard policy (sidebar injection, dashboard card, takeover).
- * Pass the same `useFetch` results as elsewhere (`model-links`, `json-admin-registry-meta`) for deduplication.
+ * The shared shell passes arrays derived from `/api/autoadmin/meta`; JSON-only pages can still pass JSON meta directly.
  */
 export function useJsonAdminUi(
   drizzleLinks: MaybeRefOrGetter<Array<{ label: string }> | null | undefined>,

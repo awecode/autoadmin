@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdmin'
+import type { AutoAdminMetaResponse } from '#layers/autoadmin/utils/registryMeta'
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { useJsonAdminUi } from '#layers/autoadmin/composables/useJsonAdminUi'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const appConfig = useAppConfig()
@@ -11,15 +12,8 @@ const collapsed = useCookie<boolean>('sidebar-collapsed', {
   httpOnly: false,
 })
 
-const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta', {
-  key: 'model-links',
-  headers: {
-    referer: useRequestURL().pathname,
-  },
-})
-
-const { data: jsonLinks, error: jsonLinksError } = await useFetch<JsonAdminRegistryLink[]>('/api/autoadmin/json/registry-meta', {
-  key: 'json-admin-registry-meta',
+const { data: meta, error } = await useFetch<AutoAdminMetaResponse>('/api/autoadmin/meta', {
+  key: 'autoadmin-meta',
   headers: {
     referer: useRequestURL().pathname,
   },
@@ -29,9 +23,8 @@ if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
 }
 
-if (jsonLinksError.value?.data?.data?.redirect) {
-  navigateTo(jsonLinksError.value.data.data.redirect)
-}
+const modelLinks = computed(() => meta.value?.drizzle ?? [])
+const jsonLinks = computed(() => meta.value?.json ?? [])
 
 const {
   takeoverActive,
