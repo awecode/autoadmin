@@ -21,7 +21,7 @@ export interface JsonStorageFromRegister {
 
 /**
  * `local` — JSON file at top-level `path`.
- * `github` — repo-relative file path is **only** the register top-level `path`; **`ref`** is the branch or tag for the Contents API (`?ref=`). **`owner` / `repo` / `ref`** may be omitted when set globally (`NUXT_AUTOADMIN_GITHUB_OWNER`, `NUXT_AUTOADMIN_GITHUB_REPO`, `NUXT_AUTOADMIN_GITHUB_REF`).
+ * `github` — repo-relative file path top-level `path`; optional **`ref`** is the branch or tag for the Contents API (`?ref=`). When omitted, GitHub uses the repository default branch. **`owner` / `repo` / `ref`** may be set globally (`NUXT_AUTOADMIN_GITHUB_OWNER`, `NUXT_AUTOADMIN_GITHUB_REPO`, `NUXT_AUTOADMIN_GITHUB_REF`).
  */
 export type JsonStorageRegisterDiscriminated
   = | {
@@ -101,17 +101,12 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
         `JSON admin "${resourceKey}": GitHub \`repo\` missing — set storage.repo or NUXT_AUTOADMIN_GITHUB_REPO / runtimeConfig.autoadmin.github.repo.`,
       )
     }
-    if (!ref) {
-      throw new Error(
-        `JSON admin "${resourceKey}": GitHub \`ref\` missing — set storage.ref or NUXT_AUTOADMIN_GITHUB_REF / runtimeConfig.autoadmin.github.ref.`,
-      )
-    }
     return {
       kind: 'github',
       owner,
       repo,
       path: filePath,
-      ref,
+      ref: ref || undefined,
       token: s.token ?? input.githubToken,
     }
   }

@@ -2,7 +2,7 @@ export interface GithubFilePayload {
   message: string
   content: string
   sha?: string
-  branch: string
+  branch?: string
 }
 
 export interface GetGithubFileResult<T = unknown> {
@@ -24,10 +24,12 @@ export async function getGithubJsonFile<T = unknown>(
   owner: string,
   repo: string,
   path: string,
-  ref: string,
+  ref?: string,
 ): Promise<GetGithubFileResult<T>> {
   const url = new URL(`https://api.github.com/repos/${owner}/${repo}/contents/${path.replace(/^\//, '')}`)
-  url.searchParams.set('ref', ref)
+  if (ref) {
+    url.searchParams.set('ref', ref)
+  }
   const res = await fetch(url, { headers: authHeaders(token) })
   const text = await res.text()
   let body: any

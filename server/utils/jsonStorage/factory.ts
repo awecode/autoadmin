@@ -10,7 +10,7 @@ export type JsonStorageConfig
     owner: string
     repo: string
     path: string
-    ref: string
+    ref?: string
     /**
      * GitHub API bearer token. Prefer the **global** token from server environment
      * (`NUXT_AUTOADMIN_GITHUB_TOKEN` / `runtimeConfig.autoadmin.github.token`) and omit

@@ -8,7 +8,7 @@ export interface GithubJsonRepositoryOptions {
   owner: string
   repo: string
   path: string
-  ref: string
+  ref?: string
   /** When the path has no file yet (404), `read` returns this as `parsed` and revision `'0'` (same as local). */
   defaultIfMissing: unknown
 }
@@ -45,7 +45,9 @@ export class GithubJsonRepository implements JsonStorageRepository {
     const payload: GithubFilePayload = {
       message: input.message || 'Update JSON',
       content,
-      branch: this.opts.ref,
+    }
+    if (this.opts.ref) {
+      payload.branch = this.opts.ref
     }
     if (input.revision && input.revision !== '0') {
       payload.sha = input.revision
