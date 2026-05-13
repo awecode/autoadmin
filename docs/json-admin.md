@@ -1,74 +1,132 @@
 # JSON admin
 
-JSON admin is an admin surface backed by **JSON documents** (single objects or arrays) instead of Drizzle tables. Resources are registered on the server with `useJsonResourceRegistry().register(...)`. The UI lives under `{pathPrefix}/json` (`/admin/json` by default).
+JSON admin is an admin surface for **JSON files** (one object or an array of objects) with list/create/update UIs. It is ideal for site settings, feature flags, CMS-ish lists stored in Git, or local dev fixtures. You can use it to update source code directly in your repository for things that need less frequent update and you don't want to keep in the database.
 
-For **role restrictions** on JSON resources, see [autoadmin-roles.md](./autoadmin-roles.md) (section "JSON admin").
+---
 
-## Registration
+## Register resources
 
-Register from a Nitro plugin (same pattern as Drizzle `useAdminRegistry()`):
+Use a **`server/plugins/*.ts`** file with `defineNitroPlugin` (same lifecycle style as `useAdminRegistry()` for Drizzle).
 
 ```ts
-// e.g. server/plugins/json-admin.ts
+// server/plugins/json-admin.ts
+import { useJsonResourceRegistry } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
+import { z } from 'zod'
+
 export default defineNitroPlugin(() => {
-  useJsonResourceRegistry().register({
+  const { register } = useJsonResourceRegistry()
+
+  register({
     kind: 'object',
     key: 'site-settings',
     label: 'Site settings',
-    path: 'data/site-settings.json',
-    schema: siteSettingsSchema,
-    // storage, path, roles, ...
+    path: 'config/site-settings.json',
+    storage: { kind: 'github', owner: 'myorg', repo: 'configs', ref: 'main' },
+    schema: z.object({
+      title: z.string(),
+      maintenanceMode: z.boolean().optional(),
+    }),
+  })
+
+  register({
+    kind: 'array',
+    key: 'banners',
+    label: 'Home banners',
+    path: 'content/banners.json',
+    storage: { kind: 'local' },
+    elementSchema: z.object({
+      headline: z.string(),
+      href: z.string().url().optional(),
+    }),
   })
 })
 ```
+---
 
-Object resources open an editor; array resources get list/create/update flows. See existing playground plugins and [`server/utils/jsonResourceRegistry.ts`](../server/utils/jsonResourceRegistry.ts) for the full `register` input shape (storage, `enableIndex`, list options, etc.).
+## Objects vs arrays
 
-## Routes and API
+| | **Object (`kind: 'object'`)** | **Array (`kind: 'array'`)** |
+|--|-------------------------------|------------------------------|
+| **JSON file** | Single root object | JSON array of row objects |
+| **Admin** | One edit screen | List, create, update (and delete when enabled) |
 
-- **Pages**: `{pathPrefix}/json` (index grid), plus per-resource routes registered in Nuxt `pages:extend` (object edit, array list, create, update). `pathPrefix` defaults to `/admin` via `runtimeConfig.public.autoadmin.pathPrefix`.
-- **JSON API base** (no trailing slash): `runtimeConfig.public.autoadmin.jsonadmin.jsonApiPrefix` when set; otherwise `{apiPrefix}/json` where `apiPrefix` defaults to `/api/autoadmin`. Client composable: `useJsonAdminApiPrefix()` (uses `resolveJsonAdminApiPrefix` in [`utils/jsonAdmin.ts`](../utils/jsonAdmin.ts)).
+---
 
-## Navigation and dashboard (`public.autoadmin.jsonadmin`)
+## Storage
 
-The runtime key under `public.autoadmin` must be spelled exactly **`jsonadmin`** (all lowercase, not `jsonAdmin`). Nested options use **camelCase**.
+Persistence is built from your **`path`** plus **`storage`**.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `jsonApiPrefix` | `string` | `''` | JSON-admin API base (no trailing slash). When empty, `{apiPrefix}/json` is used. |
-| `linkLabel` | `string` | `'Configuration'` | Label for the sidebar link and trailing dashboard card (non-takeover), and for the JSON index page title. |
-| `linkIcon` | `string` | `'i-lucide-settings-2'` | Nuxt UI icon for that link/card. |
-| `injectSidebar` | `boolean` | `true` | When rules apply, prepend this link to the **additional** sidebar group (above GitHub/Help, sign-out stays last). |
-| `showDashboardCard` | `boolean` | `true` | When rules apply, append a card on the Drizzle dashboard as the **last** tile (non-takeover only). |
-| `takeoverMode` | `'auto' \| 'always' \| 'never'` | `'auto'` | Controls JSON-first “takeover” of the admin home and primary sidebar block. |
+| Mode | When it applies | Notes |
+|------|-----------------|--------|
+| **GitHub** | `storage: { kind: 'github', owner?, repo?, ref? }` and a **non-empty token** (see [Server environment](#server-environment)) | Contents API; optimistic concurrency via blob `sha`. `path` is **repo-relative** to the JSON file. `owner` / `repo` / `ref` can be omitted if set globally on `runtimeConfig.autoadmin.github` or via `NUXT_AUTOADMIN_GITHUB_*`. |
+| **Local** | `storage: { kind: 'local' }` or as a fallback in dev environment when GitHub token is not configured | File at `path`, resolved under `runtimeConfig.autoadmin.jsonLocalRoot` when `path` is relative, or as an absolute path. Uses file `mtime` for concurrency. |
 
-### Takeover behavior
+---
 
-- **`never`**: Never use JSON-first layout. If JSON resources exist and Drizzle nav is empty, you still get sidebar injection + dashboard card (when those flags are true), not takeover.
-- **`always`**: Always use JSON-first layout: the middle sidebar group lists **only** JSON resources (Drizzle links are omitted from the sidebar). The dashboard route at `pathPrefix` renders the **same** JSON registry grid as `/json` (no extra “Configuration” link in additional items). If no JSON links are visible for the user (empty registry or roles), the middle nav shows only a label and the home grid shows the empty-state alert.
-- **`auto`**: Takeover when **Drizzle** `registry-meta` is empty for the user **and** JSON `registry-meta` has at least one link. Same sidebar and home behavior as `always` in that case.
+## Configuration
 
-“Empty Drizzle nav” means no list/create targets after `enableIndex` and role checks—the same rules as the existing registry meta API.
+| Variable | Role |
+|----------|------|
+| `NUXT_AUTOADMIN_GITHUB_TOKEN` | Default GitHub PAT for JSON admin (and related) when `storage.kind === 'github'`. Same as `runtimeConfig.autoadmin.github.token`. |
+| `NUXT_AUTOADMIN_GITHUB_OWNER` | Default GitHub org or user (`runtimeConfig.autoadmin.github.owner`). |
+| `NUXT_AUTOADMIN_GITHUB_REPO` | Default repo name (`runtimeConfig.autoadmin.github.repo`). |
+| `NUXT_AUTOADMIN_GITHUB_REF` | Branch or tag for Contents API (`runtimeConfig.autoadmin.github.ref`). |
+| `NUXT_AUTOADMIN_JSON_LOCAL_ROOT` | Base directory for **relative** local JSON paths (`runtimeConfig.autoadmin.jsonLocalRoot`). If unset, relative paths resolve from **`process.cwd()`** (project root) |
 
-### Non-takeover injection
+Per-resource **`githubToken`** / `storage.token` overrides the global token when a repo needs a different credential. Prefer loading token from env or a secret manager instead of hardcoding.
 
-When takeover is **inactive** and JSON registry-meta returns at least one link: if `injectSidebar` is true, a link to the JSON index (`jsonadmin-index`) is prepended to additional sidebar items. If `showDashboardCard` is true, a matching card is appended as the **last** item on the Drizzle dashboard grid.
+---
 
-## Environment variables
+## UI options (`public.autoadmin.jsonadmin`)
 
-Overrides map to `runtimeConfig.public.autoadmin.jsonadmin` (Nuxt public env naming):
+These can be configured in your project's `nuxt.config.ts` or via respective environment variables.
+
+| Property | Default | Purpose |
+|----------|---------|---------|
+| `jsonApiPrefix` | `{apiPrefix}/json` | JSON admin API base URL. |
+| `linkLabel` | `Configuration` | Label for the optional sidebar link, dashboard tile, and JSON index heading. |
+| `linkIcon` | `i-lucide-settings-2` | Nuxt UI icon name for that link/tile. |
+| `injectSidebar` | `true` | When allowed, prepend the JSON index link to the **additional** sidebar group. |
+| `showDashboardCard` | `true` | When allowed, append a tile on the Drizzle dashboard (last position). |
+| `takeoverMode` | `auto` | `auto` \| `always` \| `never` — JSON-first shell when Drizzle nav is empty and JSON has links (`auto`), always, or never. |
+
+### Takeover and injection
+
+- **`takeoverMode: 'auto'`:** If the current user sees **no** Drizzle models in but **does** see JSON resources, the home route and primary sidebar block show **JSON admin**.
+- **`always` / `never`:** Force that layout on or off regardless of availability of Drizzle model admins.
+- When takeover is **off** and JSON resources exist, **`injectSidebar`** / **`showDashboardCard`** control the extra link and tile.
+
+### Public env → `jsonadmin`
 
 | Variable | Maps to |
 |----------|---------|
 | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_JSON_API_PREFIX` | `jsonApiPrefix` |
 | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_LABEL` | `linkLabel` |
 | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_ICON` | `linkIcon` |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR` | Set to `false` to disable injection |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_SHOW_DASHBOARD_CARD` | Set to `false` to hide the dashboard card |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_TAKEOVER_MODE` | `auto`, `always`, or `never` (case-insensitive; invalid values fall back to `auto`) |
+| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR` | Set to `false` to disable sidebar injection |
+| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_SHOW_DASHBOARD_CARD` | Set to `false` to hide the dashboard tile |
+| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_TAKEOVER_MODE` | `auto`, `always`, or `never` (invalid values should be avoided; defaults to `auto` if unset) |
 
-## UI building blocks
+---
 
-- [`utils/jsonAdmin.ts`](../utils/jsonAdmin.ts) — `resolveJsonAdminApiPrefix`, `JsonAdminPublicRuntime` / UI config types, and `JsonAdminRegistryLink`.
-- [`components/JsonAdminRegistryGrid.vue`](../components/JsonAdminRegistryGrid.vue) — shared grid + empty alert.
-- [`composables/useJsonAdminUi.ts`](../composables/useJsonAdminUi.ts) — takeover and injection flags from runtime config + registry meta lengths.
+## Other notes
+
+- **Auth:** Optional per-resource `roles` — same as Drizzle admin; see [autoadmin-roles.md](./autoadmin-roles.md).
+- **`labelField`** (optional) chooses the column used for list titles / default search; otherwise the first schema field (other than `_id`) is used.
+- Each row for `array` kind gets an internal **`_id`** (UUID): stored in the JSON file, used in URLs, **not** part of your `elementSchema`. **Do not** declare `_id` on `elementSchema` (it is reserved).
+- Each save is **read → merge → write**; conflicts return **409** and the server may retry once (GitHub `sha` / local `mtime`).
+- Opening a **list** may write missing `_id` values once (migration-style). If older data used another key (e.g. `id`), copy values into `_id` or re-save from the UI.
+- On **read**, top-level `null` / `undefined` keys are stripped so Zod **defaults** can apply; **missing** keys are filled from schema defaults when present, otherwise simple sentinels (`''`, `false`, `0`, `{}`, `[]`, first enum value) so an empty file still opens the form. On **save**, the real document is written.
+
+<!--
+## Source map
+
+| Area | File |
+|------|------|
+| Registration API | [`server/utils/jsonResourceRegistry.ts`](../server/utils/jsonResourceRegistry.ts) |
+| HTTP handlers | [`server/api/autoadmin/json/`](../server/api/autoadmin/json/) |
+| CRUD + object read merge | [`server/services/jsonResourceCrud.ts`](../server/services/jsonResourceCrud.ts) |
+| Storage resolution | [`server/utils/jsonStorage/normalizeRegisterStorage.ts`](../server/utils/jsonStorage/normalizeRegisterStorage.ts), [`server/utils/jsonStorage/factory.ts`](../server/utils/jsonStorage/factory.ts) |
+| Prefix + types | [`utils/jsonAdmin.ts`](../utils/jsonAdmin.ts) |
+| Sidebar / dashboard policy | [`composables/useJsonAdminUi.ts`](../composables/useJsonAdminUi.ts) |
+| Index grid UI | [`components/JsonAdminRegistryGrid.vue`](../components/JsonAdminRegistryGrid.vue) | -->

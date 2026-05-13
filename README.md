@@ -120,7 +120,7 @@ Run the project and open `/admin` to access the admin interfaces for users and p
 
 ## JSON admin
 
-JSON admin provides CRUD UIs backed by JSON files (local or GitHub) alongside Drizzle entities. For setup, API prefixes, sidebar and dashboard behavior, and `runtimeConfig.public.autoadmin.jsonadmin`, see **[docs/json-admin.md](./docs/json-admin.md)**.
+JSON-backed settings and lists (GitHub or local files), separate from Drizzle tables. **Start here:** [docs/json-admin.md](./docs/json-admin.md) — quick start, registration, storage, env vars, and UI options.
 
 ## Specifying Custom Field Types
 
