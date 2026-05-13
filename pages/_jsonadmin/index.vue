@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
 import JsonAdminRegistryGrid from '#layers/autoadmin/components/JsonAdminRegistryGrid.vue'
-import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const config = useRuntimeConfig()
 
@@ -16,14 +15,17 @@ if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
 }
 
-const linkLabel = computed(() =>
-  config.public.autoadmin?.jsonadmin?.linkLabel ?? 'Configuration',
-)
+const linkLabel = computed(() => {
+  const a = config.public.autoadmin as { jsonadmin?: { linkLabel?: string } } | undefined
+  return a?.jsonadmin?.linkLabel ?? 'Configuration'
+})
+
+const adminTitle = getAdminTitle()
 
 const JSON_ADMIN_EMPTY_DOC = 'Register resources in a Nitro plugin with useJsonResourceRegistry().register(...). See docs/json-admin.md in the AutoAdmin package.'
 
 useHead({
-  title: computed(() => `${linkLabel.value} | ${getAdminTitle()}`),
+  title: computed(() => `${linkLabel.value} | ${adminTitle}`),
 })
 </script>
 

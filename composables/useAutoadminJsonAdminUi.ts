@@ -1,27 +1,16 @@
-import type { NavigationMenuItem } from '@nuxt/ui'
 import type { AutoadminJsonAdminTakeoverMode } from '#layers/autoadmin/utils/jsonAdminApiPrefix'
 import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
+import type { NavigationMenuItem } from '@nuxt/ui'
+import type { MaybeRefOrGetter } from 'vue'
 import { getIconForLabel } from '#layers/autoadmin/utils/string'
-import { computed, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, toValue } from 'vue'
 
-function useJsonAdminUiRuntime() {
-  return computed(() => {
-    const pub = useRuntimeConfig().public as { autoadmin?: { jsonadmin?: {
-      linkLabel?: string
-      linkIcon?: string
-      injectSidebar?: boolean
-      showDashboardCard?: boolean
-      takeoverMode?: AutoadminJsonAdminTakeoverMode
-    } } }
-    const c = pub.autoadmin?.jsonadmin ?? {}
-    return {
-      linkLabel: c.linkLabel ?? 'Configuration',
-      linkIcon: c.linkIcon ?? 'i-lucide-settings-2',
-      injectSidebar: c.injectSidebar !== false,
-      showDashboardCard: c.showDashboardCard !== false,
-      takeoverMode: (c.takeoverMode ?? 'auto') as AutoadminJsonAdminTakeoverMode,
-    }
-  })
+interface PublicAutoadminJsonadmin {
+  linkLabel?: string
+  linkIcon?: string
+  injectSidebar?: boolean
+  showDashboardCard?: boolean
+  takeoverMode?: AutoadminJsonAdminTakeoverMode
 }
 
 /**
@@ -32,7 +21,18 @@ export function useAutoadminJsonAdminUi(
   drizzleLinks: MaybeRefOrGetter<Array<{ label: string }> | null | undefined>,
   jsonLinks: MaybeRefOrGetter<JsonAdminRegistryLink[] | null | undefined>,
 ) {
-  const ui = useJsonAdminUiRuntime()
+  const runtimeConfig = useRuntimeConfig()
+  const ui = computed(() => {
+    const pub = runtimeConfig.public as { autoadmin?: { jsonadmin?: PublicAutoadminJsonadmin } }
+    const c = pub.autoadmin?.jsonadmin ?? {}
+    return {
+      linkLabel: c.linkLabel ?? 'Configuration',
+      linkIcon: c.linkIcon ?? 'i-lucide-settings-2',
+      injectSidebar: c.injectSidebar !== false,
+      showDashboardCard: c.showDashboardCard !== false,
+      takeoverMode: (c.takeoverMode ?? 'auto') as AutoadminJsonAdminTakeoverMode,
+    }
+  })
 
   const linkLabel = computed(() => ui.value.linkLabel)
   const linkIcon = computed(() => ui.value.linkIcon)
