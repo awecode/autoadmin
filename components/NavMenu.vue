@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
@@ -17,9 +18,27 @@ const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta
   },
 })
 
+const { data: jsonLinks, error: jsonLinksError } = await useFetch<JsonAdminRegistryLink[]>('/api/autoadmin/json/registry-meta', {
+  key: 'json-admin-registry-meta',
+  headers: {
+    referer: useRequestURL().pathname,
+  },
+})
+
 if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
 }
+
+if (jsonLinksError.value?.data?.data?.redirect) {
+  navigateTo(jsonLinksError.value.data.data.redirect)
+}
+
+const {
+  takeoverActive,
+  shouldInjectSidebarLink,
+  takeoverMiddleItems,
+  configurationNavItem,
+} = useAutoadminJsonAdminUi(modelLinks, jsonLinks)
 
 let auth
 
@@ -48,6 +67,9 @@ const defaultAdditionalItems = [
 
 const additionalItems = computed(() => {
   const items: NavigationMenuItem[] = [...appConfig.sidebar.additionalItems?.length ? appConfig.sidebar.additionalItems : defaultAdditionalItems]
+  if (shouldInjectSidebarLink.value) {
+    items.unshift(configurationNavItem.value)
+  }
   if (auth && auth.signOut && typeof auth.signOut === 'function') {
     items.push({
       label: 'Sign Out',
@@ -68,14 +90,21 @@ const defaultTopItems = [{
   type: 'link' as const,
 }]
 
+const middleNavItems = computed(() => {
+  if (takeoverActive.value) {
+    return takeoverMiddleItems.value
+  }
+  return [
+    appConfig.sidebar.modelLabel,
+    ...modelLinks.value ?? [],
+  ]
+})
+
 const items = computed(() => [
   appConfig.sidebar.topItems?.length
     ? appConfig.sidebar.topItems
     : defaultTopItems,
-  [
-    appConfig.sidebar.modelLabel,
-    ...modelLinks.value ?? [],
-  ],
+  middleNavItems.value,
   additionalItems.value,
 ])
 

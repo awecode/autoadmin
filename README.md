@@ -118,6 +118,10 @@ export default defineNitroPlugin(() => {
 
 Run the project and open `/admin` to access the admin interfaces for users and posts tables.
 
+## JSON admin
+
+JSON admin provides CRUD UIs backed by JSON files (local or GitHub) alongside Drizzle entities. For setup, API prefixes, sidebar and dashboard behavior, and `runtimeConfig.public.autoadmin.jsonadmin`, see **[docs/json-admin.md](./docs/json-admin.md)**.
+
 ## Specifying Custom Field Types
 
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.

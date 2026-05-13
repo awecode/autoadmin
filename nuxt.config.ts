@@ -26,6 +26,13 @@ export default defineNuxtConfig({
         pathPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX || '/admin',
         // Override JSON-admin API base (no trailing slash). Empty → `{apiPrefix}/json`
         jsonApiPrefix: process.env.NUXT_PUBLIC_AUTOADMIN_JSON_API_PREFIX || '',
+        jsonadmin: {
+          linkLabel: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_LABEL || 'Configuration',
+          linkIcon: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_ICON || 'i-lucide-settings-2',
+          injectSidebar: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR !== 'false',
+          showDashboardCard: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_SHOW_DASHBOARD_CARD !== 'false',
+          takeoverMode: process.env.NUXT_PUBLIC_AUTOADMIN_JSONADMIN_TAKEOVER_MODE || 'auto',
+        },
       },
       pagination: {
         defaultSize: 20,

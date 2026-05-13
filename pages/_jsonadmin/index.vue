@@ -1,17 +1,11 @@
 <script setup lang="ts">
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
+import JsonAdminRegistryGrid from '#layers/autoadmin/components/JsonAdminRegistryGrid.vue'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
-import { getIconForLabel } from '#layers/autoadmin/utils/string'
 
-interface JsonRegistryLink {
-  label: string
-  icon?: string
-  kind: 'object' | 'array'
-  to: { name: string, params: { modelKey: string } }
-  createPath?: { name: string, params: { modelKey: string } }
-  searchPlaceholder?: string
-}
+const config = useRuntimeConfig()
 
-const { data: links, error } = await useFetch<JsonRegistryLink[]>('/api/autoadmin/json/registry-meta', {
+const { data: links, error } = await useFetch<JsonAdminRegistryLink[]>('/api/autoadmin/json/registry-meta', {
   key: 'json-admin-registry-meta',
   headers: {
     referer: useRequestURL().pathname,
@@ -22,49 +16,23 @@ if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
 }
 
+const linkLabel = computed(() =>
+  config.public.autoadmin?.jsonadmin?.linkLabel ?? 'Configuration',
+)
+
+const JSON_ADMIN_EMPTY_DOC = 'Register resources in a Nitro plugin with useJsonResourceRegistry().register(...). See docs/json-admin.md in the AutoAdmin package.'
+
 useHead({
-  title: `Configuration | ${getAdminTitle()}`,
+  title: computed(() => `${linkLabel.value} | ${getAdminTitle()}`),
 })
 </script>
 
 <template>
   <AutoAdmin>
-    <div class="mb-8">
-      <h1 class="text-2xl font-semibold">
-        Configuration
-      </h1>
-    </div>
-
-    <div class="grid grid-cols-2! md:grid-cols-3! lg:grid-cols-4! gap-4">
-      <NuxtLink
-        v-for="link in links"
-        :key="link.label + link.kind"
-        class="block"
-        :to="link.to"
-      >
-        <UCard class="hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200 cursor-pointer h-full">
-          <div class="flex flex-col items-center text-center space-y-3 p-2">
-            <UIcon
-              class="w-8 h-8 text-neutral-600 dark:text-neutral-400"
-              :name="link.icon || getIconForLabel(link.label)"
-            />
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ link.label }}
-            </span>
-            <!-- <UBadge color="neutral" variant="subtle" size="sm">
-              {{ link.kind === 'object' ? 'Object' : 'Array' }}
-            </UBadge> -->
-          </div>
-        </UCard>
-      </NuxtLink>
-    </div>
-
-    <UAlert
-      v-if="links && links.length === 0"
-      class="mt-8"
-      color="neutral"
-      title="No JSON resources registered"
-      description="Add a server plugin that calls useJsonResourceRegistry().register(...). See README (JSON admin section)."
+    <JsonAdminRegistryGrid
+      :links="links"
+      :page-title="linkLabel"
+      :empty-description="JSON_ADMIN_EMPTY_DOC"
     />
   </AutoAdmin>
 </template>

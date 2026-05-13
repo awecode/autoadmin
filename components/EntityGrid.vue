@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import type { JsonAdminRegistryLink } from '#layers/autoadmin/utils/jsonAdminRegistryMeta'
+import JsonAdminRegistryGrid from '#layers/autoadmin/components/JsonAdminRegistryGrid.vue'
 import SearchModal from '#layers/autoadmin/components/SearchModal.vue'
+import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
 
 const searchModal = useOverlay().create(SearchModal)
 const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta', {
@@ -9,9 +12,37 @@ const { data: modelLinks, error } = await useFetch('/api/autoadmin/registry-meta
   },
 })
 
+const { data: jsonLinks, error: jsonLinksError } = await useFetch<JsonAdminRegistryLink[]>('/api/autoadmin/json/registry-meta', {
+  key: 'json-admin-registry-meta',
+  headers: {
+    referer: useRequestURL().pathname,
+  },
+})
+
 if (error.value?.data?.data?.redirect) {
   navigateTo(error.value.data.data.redirect)
 }
+
+if (jsonLinksError.value?.data?.data?.redirect) {
+  navigateTo(jsonLinksError.value.data.data.redirect)
+}
+
+const {
+  takeoverActive,
+  shouldShowDashboardCard,
+  linkLabel,
+  linkIcon,
+} = useAutoadminJsonAdminUi(modelLinks, jsonLinks)
+
+useHead({
+  title: computed(() =>
+    takeoverActive.value
+      ? `${linkLabel.value} | ${getAdminTitle()}`
+      : `Dashboard | ${getAdminTitle()}`,
+  ),
+})
+
+const JSON_ADMIN_EMPTY_DOC = 'Register resources in a Nitro plugin with useJsonResourceRegistry().register(...). See docs/json-admin.md in the AutoAdmin package.'
 
 function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
   if (link.searchPlaceholder) {
@@ -26,7 +57,16 @@ function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
 </script>
 
 <template>
-  <div class="grid grid-cols-2! md:grid-cols-3! lg:grid-cols-4! xl:grid-cols-6! gap-4">
+  <JsonAdminRegistryGrid
+    v-if="takeoverActive"
+    :links="jsonLinks ?? []"
+    :page-title="linkLabel"
+    :empty-description="JSON_ADMIN_EMPTY_DOC"
+  />
+  <div
+    v-else
+    class="grid grid-cols-2! md:grid-cols-3! lg:grid-cols-4! xl:grid-cols-6! gap-4"
+  >
     <div
       v-for="link in modelLinks"
       :key="link.label"
@@ -80,5 +120,23 @@ function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
         </UTooltip>
       </div>
     </div>
+
+    <NuxtLink
+      v-if="shouldShowDashboardCard"
+      class="group relative"
+      :to="{ name: 'jsonadmin-index' }"
+    >
+      <UCard class="hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200 cursor-pointer h-full">
+        <div class="flex flex-col items-center text-center space-y-3 p-2">
+          <UIcon
+            class="w-8 h-8 text-neutral-600 dark:text-neutral-400 transition-colors duration-200"
+            :name="linkIcon"
+          />
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {{ linkLabel }}
+          </span>
+        </div>
+      </UCard>
+    </NuxtLink>
   </div>
 </template>

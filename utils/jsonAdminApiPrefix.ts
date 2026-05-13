@@ -1,8 +1,19 @@
-/** Subset of `runtimeConfig.public` needed to resolve JSON admin API base URL. */
+export type AutoadminJsonAdminTakeoverMode = 'auto' | 'always' | 'never'
+
+export interface AutoadminJsonAdminPublicConfig {
+  linkLabel?: string
+  linkIcon?: string
+  injectSidebar?: boolean
+  showDashboardCard?: boolean
+  takeoverMode?: AutoadminJsonAdminTakeoverMode
+}
+
+/** Subset of `runtimeConfig.public` needed to resolve JSON admin API base URL and UI options. */
 export interface JsonAdminPublicRuntime {
   autoadmin?: {
     apiPrefix?: string
     jsonApiPrefix?: string
+    jsonadmin?: AutoadminJsonAdminPublicConfig
   }
 }
 

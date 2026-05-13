@@ -51,7 +51,7 @@ registry.register(posts, {
 
 ## 4. JSON admin
 
-The same `roles` shape works for `useJsonResourceRegistry().register(...)` on both array and object resources.
+The same `roles` shape works for `useJsonResourceRegistry().register(...)` on both array and object resources. For JSON admin storage, routes, and UI options (`public.autoadmin.jsonadmin`), see [json-admin.md](./json-admin.md).
 
 ```ts
 useJsonResourceRegistry().register({
@@ -72,7 +72,7 @@ useJsonResourceRegistry().register({
 })
 ```
 
-Object resources only support `detail`/`update` over HTTP (their UI is an editor); `list` / `create` / `delete` keys are ignored for them but still validate as part of the shape.
+Object kind resources only support `detail` or `view` and `update` ; `list` / `create` / `delete` keys are ignored for them but still validate as part of the shape.
 
 ## Evaluation order
 
