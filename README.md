@@ -178,7 +178,7 @@ Role-based access for registered models is configured with the **`roles`** optio
 | `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
 | `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
 | `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
-| `roles` | `string[]` or object | `undefined` | Optional per-model role allowlists (`string[]` = full access for those roles). [Guide ↗](../docs/autoadmin-roles.md) |
+| `roles` | `string[]` or object | `undefined` | Optional per-model role allowlists (`string[]` = full access for those roles). [Guide ↗](docs/autoadmin-roles.md) |
 
 ## Overriding Field Behavior with `fields`
 

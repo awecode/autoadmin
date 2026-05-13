@@ -1,8 +1,8 @@
 # JSON admin
 
-JSON admin is a parallel admin surface backed by **JSON documents** (single objects or arrays) instead of Drizzle tables. Resources are registered on the server with `useJsonResourceRegistry().register(...)`. The UI lives under `{pathPrefix}/json` (for example `/admin/json`), and JSON CRUD is served under the JSON admin API prefix (see below).
+JSON admin is an admin surface backed by **JSON documents** (single objects or arrays) instead of Drizzle tables. Resources are registered on the server with `useJsonResourceRegistry().register(...)`. The UI lives under `{pathPrefix}/json` (`/admin/json` by default).
 
-For **role restrictions** on JSON resources, see [autoadmin-roles.md](./autoadmin-roles.md) (section “JSON admin”).
+For **role restrictions** on JSON resources, see [autoadmin-roles.md](./autoadmin-roles.md) (section "JSON admin").
 
 ## Registration
 
@@ -15,6 +15,7 @@ export default defineNitroPlugin(() => {
     kind: 'object',
     key: 'site-settings',
     label: 'Site settings',
+    path: 'data/site-settings.json',
     schema: siteSettingsSchema,
     // storage, path, roles, ...
   })
