@@ -58,54 +58,36 @@ Persistence is built from your **`path`** plus **`storage`**.
 
 | Mode | When it applies | Notes |
 |------|-----------------|--------|
-| **GitHub** | `storage: { kind: 'github', owner?, repo?, ref? }` and a **non-empty token** (see [Server environment](#server-environment)) | Contents API; optimistic concurrency via blob `sha`. `path` is **repo-relative** to the JSON file. `owner` / `repo` / `ref` can be omitted if set globally on `runtimeConfig.autoadmin.github` or via `NUXT_AUTOADMIN_GITHUB_*`. |
+| **GitHub** | `storage: { kind: 'github', owner?, repo?, ref? }` and a **non-empty token** | Contents API; optimistic concurrency via blob `sha`. `path` is **repo-relative** to the JSON file. `owner` / `repo` / `ref` can be omitted if set globally on `runtimeConfig.autoadmin.github` or via `NUXT_AUTOADMIN_GITHUB_*`. |
 | **Local** | `storage: { kind: 'local' }` or as a fallback in dev environment when GitHub token is not configured | File at `path`, resolved under `runtimeConfig.autoadmin.jsonLocalRoot` when `path` is relative, or as an absolute path. Uses file `mtime` for concurrency. |
 
 ---
 
 ## Configuration
 
-| Variable | Role |
-|----------|------|
-| `NUXT_AUTOADMIN_GITHUB_TOKEN` | Default GitHub PAT for JSON admin (and related) when `storage.kind === 'github'`. Same as `runtimeConfig.autoadmin.github.token`. |
-| `NUXT_AUTOADMIN_GITHUB_OWNER` | Default GitHub org or user (`runtimeConfig.autoadmin.github.owner`). |
-| `NUXT_AUTOADMIN_GITHUB_REPO` | Default repo name (`runtimeConfig.autoadmin.github.repo`). |
-| `NUXT_AUTOADMIN_GITHUB_REF` | Branch or tag for Contents API (`runtimeConfig.autoadmin.github.ref`). |
-| `NUXT_AUTOADMIN_JSON_LOCAL_ROOT` | Base directory for **relative** local JSON paths (`runtimeConfig.autoadmin.jsonLocalRoot`). If unset, relative paths resolve from **`process.cwd()`** (project root) |
+Configure these in your project's `nuxt.config.ts` runtime config, or via the matching environment variable. Server values are private; `public.autoadmin.jsonadmin` values are available to the client UI.
+
+| Runtime key | Env var | Default | Purpose |
+|-------------|---------|---------|---------|
+| `autoadmin.github.token` | `NUXT_AUTOADMIN_GITHUB_TOKEN` | empty | Default GitHub PAT for JSON admin when `storage.kind === 'github'`. |
+| `autoadmin.github.owner` | `NUXT_AUTOADMIN_GITHUB_OWNER` | empty | Default GitHub org or user. |
+| `autoadmin.github.repo` | `NUXT_AUTOADMIN_GITHUB_REPO` | empty | Default repo name. |
+| `autoadmin.github.ref` | `NUXT_AUTOADMIN_GITHUB_REF` | empty | Branch or tag for the GitHub Contents API. |
+| `autoadmin.jsonLocalRoot` | `NUXT_AUTOADMIN_JSON_LOCAL_ROOT` | Project root (`process.cwd()`) | Base directory for **relative** local JSON paths. |
+| `public.autoadmin.jsonadmin.jsonApiPrefix` | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_JSON_API_PREFIX` | `{apiPrefix}/json` | JSON admin API base URL. |
+| `public.autoadmin.jsonadmin.linkLabel` | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_LABEL` | `Configuration` | Label for the optional sidebar link, dashboard tile, and JSON index heading. |
+| `public.autoadmin.jsonadmin.linkIcon` | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_ICON` | `i-lucide-settings-2` | Nuxt UI icon name for that link/tile. |
+| `public.autoadmin.jsonadmin.injectSidebar` | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR` | `true` | Set to `false` to stop prepending the JSON index link to the **additional** sidebar group. |
+| `public.autoadmin.jsonadmin.showDashboardCard` | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_SHOW_DASHBOARD_CARD` | `true` | Set to `false` to hide the Drizzle dashboard tile. |
+| `public.autoadmin.jsonadmin.takeoverMode` | `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_TAKEOVER_MODE` | `auto` | `auto` \| `always` \| `never` — JSON-first shell when Drizzle nav is empty and JSON has links (`auto`), always, or never. |
 
 Per-resource **`githubToken`** / `storage.token` overrides the global token when a repo needs a different credential. Prefer loading token from env or a secret manager instead of hardcoding.
 
----
-
-## UI options (`public.autoadmin.jsonadmin`)
-
-These can be configured in your project's `nuxt.config.ts` or via respective environment variables.
-
-| Property | Default | Purpose |
-|----------|---------|---------|
-| `jsonApiPrefix` | `{apiPrefix}/json` | JSON admin API base URL. |
-| `linkLabel` | `Configuration` | Label for the optional sidebar link, dashboard tile, and JSON index heading. |
-| `linkIcon` | `i-lucide-settings-2` | Nuxt UI icon name for that link/tile. |
-| `injectSidebar` | `true` | When allowed, prepend the JSON index link to the **additional** sidebar group. |
-| `showDashboardCard` | `true` | When allowed, append a tile on the Drizzle dashboard (last position). |
-| `takeoverMode` | `auto` | `auto` \| `always` \| `never` — JSON-first shell when Drizzle nav is empty and JSON has links (`auto`), always, or never. |
-
 ### Takeover and injection
 
-- **`takeoverMode: 'auto'`:** If the current user sees **no** Drizzle models in but **does** see JSON resources, the home route and primary sidebar block show **JSON admin**.
+- **`takeoverMode: 'auto'`:** If the current user sees **no** Drizzle models but **does** see JSON resources, the home route and primary sidebar block show **JSON admin**.
 - **`always` / `never`:** Force that layout on or off regardless of availability of Drizzle model admins.
 - When takeover is **off** and JSON resources exist, **`injectSidebar`** / **`showDashboardCard`** control the extra link and tile.
-
-### Public env → `jsonadmin`
-
-| Variable | Maps to |
-|----------|---------|
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_JSON_API_PREFIX` | `jsonApiPrefix` |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_LABEL` | `linkLabel` |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_LINK_ICON` | `linkIcon` |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_INJECT_SIDEBAR` | Set to `false` to disable sidebar injection |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_SHOW_DASHBOARD_CARD` | Set to `false` to hide the dashboard tile |
-| `NUXT_PUBLIC_AUTOADMIN_JSONADMIN_TAKEOVER_MODE` | `auto`, `always`, or `never` (invalid values should be avoided; defaults to `auto` if unset) |
 
 ---
 
