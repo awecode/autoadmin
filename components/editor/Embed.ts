@@ -13,10 +13,10 @@ declare module '@tiptap/core' {
   }
 }
 
-function normalizeDim(value: string | null) {
+function normalizeDim(value: string | number | null) {
   if (!value)
     return null
-  const trimmed = value.trim()
+  const trimmed = value.toString().trim()
   if (!trimmed)
     return null
   if (/^\d+(?:\.\d+)?$/.test(trimmed) && !trimmed.endsWith('%'))
@@ -77,7 +77,8 @@ export const Embed = Node.create({
 
           if (src?.includes('youtube.com') || src?.includes('youtu.be')) {
             embedType = 'youtube'
-          } else if (src?.includes('facebook.com')) {
+          }
+          else if (src?.includes('facebook.com')) {
             embedType = 'facebook'
           }
 
