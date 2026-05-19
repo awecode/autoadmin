@@ -8,6 +8,11 @@ if (typeof globalThis.crypto === 'undefined') {
   globalThis.crypto = new Crypto()
 }
 
+/** Percent-encode each path segment for HTTP URLs; preserves `/`. Not for R2 binding keys. */
+export function encodeObjectKeyForUrl(key: string): string {
+  return key.split('/').map(segment => encodeURIComponent(segment)).join('/')
+}
+
 function normalizePath(path: string): string {
   const normalized = path
     .replaceAll('\\', '/')

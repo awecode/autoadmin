@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
+import { encodeObjectKeyForUrl } from './objectStorage'
 
 export interface R2Binding {
   put: (key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob, options?: {
@@ -36,7 +37,7 @@ export const r2Backend = {
       publicUrl = `${publicUrl}/`
     }
     if (path) {
-      publicUrl = `${publicUrl}${encodeURIComponent(path)}`
+      publicUrl = `${publicUrl}${encodeObjectKeyForUrl(path)}`
     }
     return publicUrl
   },

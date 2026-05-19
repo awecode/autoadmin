@@ -1,13 +1,10 @@
 import { AwsClient } from 'aws4fetch'
-
-function encodeStorageObjectKey(key: string): string {
-  return key.split('/').map(segment => encodeURIComponent(segment)).join('/')
-}
+import { encodeObjectKeyForUrl } from './objectStorage'
 
 function objectStorageRequestUrl(objectKey: string): string {
   const { s3 } = useRuntimeConfig()
   const base = `${s3.endpointUrl}/${s3.bucketName}`
-  const encodedKey = encodeStorageObjectKey(objectKey)
+  const encodedKey = encodeObjectKeyForUrl(objectKey)
   return encodedKey ? `${base}/${encodedKey}` : base
 }
 
@@ -45,7 +42,7 @@ export const s3Backend = {
       publicUrl = `${publicUrl}/`
     }
     if (path) {
-      publicUrl = `${publicUrl}${encodeStorageObjectKey(path)}`
+      publicUrl = `${publicUrl}${encodeObjectKeyForUrl(path)}`
     }
     return publicUrl
   },
