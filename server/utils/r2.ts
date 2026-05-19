@@ -29,11 +29,14 @@ export const r2Backend = {
     return object !== null
   },
 
-  getPublicUrl: () => {
+  getPublicUrl: (path?: string) => {
     const config = useRuntimeConfig()
     let publicUrl = (config.r2PublicUrl as string) || config.s3?.publicUrl || ''
     if (!publicUrl.endsWith('/')) {
       publicUrl = `${publicUrl}/`
+    }
+    if (path) {
+      publicUrl = `${publicUrl}${encodeURIComponent(path)}`
     }
     return publicUrl
   },

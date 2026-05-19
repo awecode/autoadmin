@@ -95,5 +95,5 @@ export default async function uploadToObjectStorage(file: ReadableStream | Blob 
   }
 
   await backend.put(client, fullFileName, file as BodyInit, headers)
-  return `${backend.getPublicUrl()}${fullFileName}`
+  return backend.getPublicUrl(fullFileName)
 }

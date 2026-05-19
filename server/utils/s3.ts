@@ -29,11 +29,14 @@ export const s3Backend = {
     return response.ok
   },
 
-  getPublicUrl: () => {
+  getPublicUrl: (path?: string) => {
     const { s3 } = useRuntimeConfig()
     let publicUrl = s3.publicUrl || ''
     if (!publicUrl.endsWith('/')) {
       publicUrl = `${publicUrl}/`
+    }
+    if (path) {
+      publicUrl = `${publicUrl}${path}`
     }
     return publicUrl
   },
