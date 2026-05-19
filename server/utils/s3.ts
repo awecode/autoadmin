@@ -1,5 +1,16 @@
 import { AwsClient } from 'aws4fetch'
 
+function encodeStorageObjectKey(key: string): string {
+  return key.split('/').map(segment => encodeURIComponent(segment)).join('/')
+}
+
+function objectStorageRequestUrl(objectKey: string): string {
+  const { s3 } = useRuntimeConfig()
+  const base = `${s3.endpointUrl}/${s3.bucketName}`
+  const encodedKey = encodeStorageObjectKey(objectKey)
+  return encodedKey ? `${base}/${encodedKey}` : base
+}
+
 export const s3Backend = {
   name: 's3',
   getClient: () => {
@@ -17,9 +28,7 @@ export const s3Backend = {
   },
 
   checkIfFileExists: async (client: AwsClient, path: string) => {
-    const { s3 } = useRuntimeConfig()
-    const url = `${s3.endpointUrl}/${s3.bucketName}`
-    const request = await client.sign(`${url}/${path}`, {
+    const request = await client.sign(objectStorageRequestUrl(path), {
       method: 'GET',
     })
     const response = await fetch(request)
@@ -36,17 +45,15 @@ export const s3Backend = {
       publicUrl = `${publicUrl}/`
     }
     if (path) {
-      publicUrl = `${publicUrl}${path}`
+      publicUrl = `${publicUrl}${encodeStorageObjectKey(path)}`
     }
     return publicUrl
   },
 
   put: async (client: AwsClient, path: string, body: BodyInit | ReadableStream, headers: Record<string, string>) => {
-    const { s3 } = useRuntimeConfig()
-    const url = `${s3.endpointUrl}/${s3.bucketName}`
     const requestHeaders: Record<string, string> = { ...headers }
     requestHeaders['x-amz-content-sha256'] = 'UNSIGNED-PAYLOAD'
-    const request = await client.sign(`${url}/${path}`, {
+    const request = await client.sign(objectStorageRequestUrl(path), {
       method: 'PUT',
       body,
       headers: requestHeaders,

@@ -24,6 +24,7 @@ function normalizePath(path: string): string {
 
 const USE_UUID_FILENAMES = false
 const OVERWRITE_FILENAME = false
+const MAX_FILENAME_COLLISION_ATTEMPTS = 1000
 
 const inlineTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml']
 
@@ -55,6 +56,11 @@ export default async function uploadToObjectStorage(file: ReadableStream | Blob 
       let fileExists = await backend.checkIfFileExists(client, testFileName)
 
       while (fileExists) {
+        if (counter >= MAX_FILENAME_COLLISION_ATTEMPTS) {
+          throw new Error(
+            `Could not find an available filename after ${MAX_FILENAME_COLLISION_ATTEMPTS} attempts.`,
+          )
+        }
         counter++
 
         // Split filename and extension
