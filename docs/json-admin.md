@@ -105,6 +105,14 @@ Per-resource **`githubToken`** / `storage.token` overrides the global token when
 
 ---
 
+## Related docs
+
+- **[storage-limits.md](./storage-limits.md)** — GitHub 1 MB / 100 MB limits, sizing table, when to move off single-file `array` storage.
+- **[deploying-cloudflare-pages.md](./deploying-cloudflare-pages.md)** — per-request token-injection middleware for Cloudflare Pages / serverless runtimes where `runtimeConfig` is frozen.
+- **[error-reference.md](./error-reference.md)** — every error the storage layer can throw, with cause and remediation.
+
+---
+
 ## Other notes
 
 - **Auth:** Optional per-resource `roles` — same as Drizzle admin; see [autoadmin-roles.md](./autoadmin-roles.md).

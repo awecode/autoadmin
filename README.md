@@ -122,6 +122,12 @@ Run the project and open `/admin` to access the admin interfaces for users and p
 
 JSON-backed settings and lists (GitHub or local files), separate from Drizzle tables. **Start here:** [docs/json-admin.md](./docs/json-admin.md) — quick start, registration, storage, env vars, and UI options.
 
+Operating JSON admin in production:
+
+- [docs/storage-limits.md](./docs/storage-limits.md) — GitHub 1 MB / 100 MB limits and sizing guidance.
+- [docs/deploying-cloudflare-pages.md](./docs/deploying-cloudflare-pages.md) — per-request token-injection middleware for Cloudflare Pages and other serverless runtimes.
+- [docs/error-reference.md](./docs/error-reference.md) — every storage-layer error, with cause and remediation.
+
 ## Specifying Custom Field Types
 
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.
