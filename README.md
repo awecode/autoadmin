@@ -777,8 +777,6 @@ registry.register(posts, {
 
 Without `defaultOrdering`, the list falls back to primary key descending (or to `sortField` ascending when drag-drop ordering is enabled). `defaultOrdering` cannot be combined with `sortField`.
 
-Default ordering is applied on the server only; the URL and column sort indicator stay unset until the user clicks a column header (or you link to the list with an explicit `?sort=`).
-
 ```ts
 async function displayTitle(db: AdminDbType, obj: typeof posts.$inferSelect) {
   return `-> ${obj.title}`
