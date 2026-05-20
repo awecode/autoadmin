@@ -19,6 +19,16 @@ export type JsonStorageConfig
      * never commit tokens or pass them from untrusted clients.
      */
     token?: string
+    /**
+     * Throw 413 when the file size exceeds this many bytes (read or write).
+     * Use as a hard ceiling to prevent runaway growth. See docs/storage-limits.md.
+     */
+    maxBytes?: number
+    /**
+     * Emit a console.warn once per path when content crosses this many bytes.
+     * Useful as an early-warning threshold (e.g. 1 MB to flag the Blobs-API fallback boundary).
+     */
+    warnAtBytes?: number
   }
   | {
     kind: 'local'
@@ -98,6 +108,8 @@ export function createJsonStorageRepository(
       path: storage.path,
       ref: storage.ref,
       defaultIfMissing: defaultParsedForKind(resourceKind),
+      maxBytes: storage.maxBytes,
+      warnAtBytes: storage.warnAtBytes,
     })
   }
 

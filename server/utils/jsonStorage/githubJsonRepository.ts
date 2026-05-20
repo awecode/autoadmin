@@ -11,6 +11,10 @@ export interface GithubJsonRepositoryOptions {
   ref?: string
   /** When the path has no file yet (404), `read` returns this as `parsed` and revision `'0'` (same as local). */
   defaultIfMissing: unknown
+  /** Throw 413 when read or written content exceeds this many bytes. */
+  maxBytes?: number
+  /** Emit a console.warn once when content exceeds this many bytes (soft limit). */
+  warnAtBytes?: number
 }
 
 export class GithubJsonRepository implements JsonStorageRepository {
@@ -26,6 +30,7 @@ export class GithubJsonRepository implements JsonStorageRepository {
         this.opts.repo,
         this.opts.path,
         this.opts.ref,
+        { maxBytes: this.opts.maxBytes, warnAtBytes: this.opts.warnAtBytes },
       )
       return { parsed, revision: sha }
     }
@@ -58,6 +63,7 @@ export class GithubJsonRepository implements JsonStorageRepository {
       this.opts.repo,
       this.opts.path,
       payload,
+      { maxBytes: this.opts.maxBytes, warnAtBytes: this.opts.warnAtBytes },
     )
   }
 }
