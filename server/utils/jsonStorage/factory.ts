@@ -19,6 +19,25 @@ export type JsonStorageConfig
      * never commit tokens or pass them from untrusted clients.
      */
     token?: string
+    /**
+     * Throw 413 when the file size exceeds this many bytes (read or write).
+     * Use as a hard ceiling to prevent runaway growth. See docs/storage-limits.md.
+     */
+    maxBytes?: number
+    /**
+     * Emit a console.warn once per path when content crosses this many bytes.
+     * Useful as an early-warning threshold (e.g. 1 MB to flag the Blobs-API fallback boundary).
+     */
+    warnAtBytes?: number
+    /**
+     * Opt-in: cache reads in-process by ETag and send `If-None-Match` on subsequent
+     * requests. **Disabled by default.** When `undefined`, falls back to the global
+     * `runtimeConfig.autoadmin.github.cacheReads` flag, which also defaults to
+     * `false`. Enable only when you control writes (so the cache is reliably
+     * invalidated) and your runtime keeps the module in memory long enough for
+     * the cache to pay for itself.
+     */
+    cacheReads?: boolean
   }
   | {
     kind: 'local'
@@ -45,6 +64,7 @@ export function getAutoadminGithubRuntime() {
     owner: trimString(g.owner),
     repo: trimString(g.repo),
     ref: trimString(g.ref),
+    cacheReads: g.cacheReads === true,
   }
 }
 
@@ -98,6 +118,10 @@ export function createJsonStorageRepository(
       path: storage.path,
       ref: storage.ref,
       defaultIfMissing: defaultParsedForKind(resourceKind),
+      maxBytes: storage.maxBytes,
+      warnAtBytes: storage.warnAtBytes,
+      // Per-resource override beats the global runtimeConfig default.
+      cacheReads: storage.cacheReads ?? getAutoadminGithubRuntime().cacheReads,
     })
   }
 
