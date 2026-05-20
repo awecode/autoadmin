@@ -10,6 +10,7 @@ import { zodToListSpec } from '#layers/autoadmin/server/utils/list'
 import { unwrapZodType } from '#layers/autoadmin/server/utils/zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { z } from 'zod'
+import { resolveListOrdering } from '../utils/listOrdering'
 
 function paginateArray<T>(rows: T[], query: Record<string, any>) {
   const paginationConfig = useRuntimeConfig().public.pagination
@@ -313,7 +314,11 @@ export async function listJsonArrayRecords(
     filtered = filtered.filter(r => rowMatchesSearch(r, String(search), cfg.list.searchFields!))
   }
 
-  filtered = sortRows(filtered, query.ordering, cfg.list.enableSort)
+  const ordering = resolveListOrdering(query.ordering, cfg.list.defaultOrdering, {
+    enableSort: cfg.list.enableSort,
+    hasSortField: false,
+  })
+  filtered = sortRows(filtered, ordering, cfg.list.enableSort)
 
   const pageSlice = paginateArray(filtered, query)
 

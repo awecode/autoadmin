@@ -10,6 +10,7 @@ import { resolveJsonAdminApiPrefix } from '#layers/autoadmin/utils/jsonAdmin'
 import { createNoSpaceString, slugify, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { z } from 'zod'
+import { assertValidListOrdering } from './listOrdering'
 import { normalizeAutoadminRolesInput } from './roleHelpers'
 
 export const JSON_OBJECT_LOOKUP = '__root__'
@@ -32,6 +33,8 @@ export interface JsonArrayListOptions {
   searchPlaceholder?: string
   searchFields?: string[]
   fields?: Array<JsonArrayListFieldDef | string>
+  /** Default ordering by field (format: `field:asc` or `field:desc`). */
+  defaultOrdering?: string
 }
 
 export interface JsonCrudRoute {
@@ -282,6 +285,10 @@ function defaultArrayConfig(
   }) as JsonDeleteOptions
   if (!deleteOpts.endpoint) {
     deleteOpts.endpoint = `${apiPrefix}/${key}`
+  }
+
+  if (list.defaultOrdering) {
+    assertValidListOrdering(list.defaultOrdering, `list.defaultOrdering for JSON array "${key}"`)
   }
 
   return {

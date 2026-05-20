@@ -9,6 +9,7 @@ import { buildAggregateExpression, buildTextSearchCondition } from '../utils/dia
 import { colKey, getPaginatedResults } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
+import { resolveListOrdering } from '../utils/listOrdering'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
 export async function listRecords<T extends Table>(
@@ -264,9 +265,12 @@ export async function listRecords<T extends Table>(
   }
 
   // Handle ordering (after joins are applied)
-  const ordering = query.ordering
+  const ordering = resolveListOrdering(query.ordering, cfg.list.defaultOrdering, {
+    enableSort,
+    hasSortField: !!cfg.sortField,
+  })
   let orderApplied = false
-  if (enableSort && ordering && typeof ordering === 'string') {
+  if (enableSort && ordering) {
     const [columnAccessorKey, direction] = ordering.split(':')
     const column = columns.find(column => column.accessorKey === columnAccessorKey)
 

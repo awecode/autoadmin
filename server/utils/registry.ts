@@ -11,6 +11,7 @@ import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
+import { assertValidListOrdering } from './listOrdering'
 import { getTableMetadata } from './metadata'
 import { normalizeAutoadminRolesInput } from './roleHelpers'
 
@@ -122,6 +123,8 @@ interface ListOptions<T extends Table = Table, C extends CustomSelections = Cust
   endpoint?: string
   filterFields?: FilterFieldDef<T>[]
   fields?: Array<ListFieldDef<T, C>>
+  /** Default ordering by column (format: `columnName:asc` or `columnName:desc`). */
+  defaultOrdering?: string
   // Do not allow both fields and columns to be set at the same time
 }
 
@@ -345,6 +348,15 @@ export function useAdminRegistry() {
           `Invalid sortField "${cfg.sortField}" provided for model "${label}". Field does not exist on the table. Available columns: ${Object.keys(cfg.columns).join(', ')}`,
         )
       }
+    }
+
+    if (cfg.list.defaultOrdering) {
+      if (cfg.sortField) {
+        throw new Error(
+          `Model "${label}": list.defaultOrdering cannot be used together with sortField (drag-drop ordering).`,
+        )
+      }
+      assertValidListOrdering(cfg.list.defaultOrdering, `list.defaultOrdering for model "${label}"`)
     }
 
     cfg.metadata = getTableMetadata(cfg.columns)

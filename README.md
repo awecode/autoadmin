@@ -387,6 +387,9 @@ Toggles search functionality.
 **`enableSort: boolean`** (Default: `true`) -
 Toggles sorting functionality. See [List Sorting](#list-sorting) for more details.
 
+**`defaultOrdering: string`** (Default: `undefined`) -
+Initial sort when the URL has no `?sort=` (e.g. `'publishedAt:desc'`). See [Default ordering](#default-ordering-listdefaultordering).
+
 **`searchFields: string[]`** (Default: `[labelColumnName]`) -
 An array of column names (including relational fields in dot-notation) to search against.
 
@@ -758,6 +761,23 @@ registry.register(posts, {
 ## List Sorting
 
 Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
+
+### Default ordering (`list.defaultOrdering`)
+
+When the list URL has no `?sort=` parameter, you can set an initial sort with `list.defaultOrdering`. Use the same format as the URL: `accessorKey:asc` or `accessorKey:desc` (the list column’s `accessorKey`, not necessarily the DB column name — use `sortKey` when they differ).
+
+```ts
+registry.register(posts, {
+  list: {
+    defaultOrdering: 'publishedAt:desc',
+    fields: ['title', 'publishedAt', 'status'],
+  },
+})
+```
+
+Without `defaultOrdering`, the list falls back to primary key descending (or to `sortField` ascending when drag-drop ordering is enabled). `defaultOrdering` cannot be combined with `sortField`.
+
+Default ordering is applied on the server only; the URL and column sort indicator stay unset until the user clicks a column header (or you link to the list with an explicit `?sort=`).
 
 ```ts
 async function displayTitle(db: AdminDbType, obj: typeof posts.$inferSelect) {

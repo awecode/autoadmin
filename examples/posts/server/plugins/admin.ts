@@ -102,6 +102,7 @@ export default defineNitroPlugin(() => {
       },
     ],
     list: {
+      defaultOrdering: 'publishedAt:desc',
       fields: [
         'title',
         {
