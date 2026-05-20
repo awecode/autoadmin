@@ -46,13 +46,41 @@ export async function getGithubJsonFile<T = unknown>(
       statusMessage: body?.message || `GitHub API error (${res.status})`,
     })
   }
-  if (body.type !== 'file' || !body.content || !body.sha) {
+  if (body.type !== 'file' || !body.sha) {
     throw createError({
       statusCode: 500,
       statusMessage: 'GitHub response is not a single file with content.',
     })
   }
-  const decoded = Buffer.from(body.content.replace(/\n/g, ''), 'base64').toString('utf8')
+  // The Contents API omits `content` for files >1MB (returns encoding "none").
+  // Fall back to the Git Blobs API, which streams base64 content up to 100MB.
+  let base64Content: string | undefined = body.content
+  if (!base64Content || body.encoding === 'none') {
+    const blobUrl = `https://api.github.com/repos/${owner}/${repo}/git/blobs/${body.sha}`
+    const blobRes = await fetch(blobUrl, { headers: authHeaders(token) })
+    const blobText = await blobRes.text()
+    let blobBody: any
+    try {
+      blobBody = JSON.parse(blobText)
+    }
+    catch {
+      blobBody = { message: blobText }
+    }
+    if (!blobRes.ok) {
+      throw createError({
+        statusCode: blobRes.status >= 500 ? 502 : 400,
+        statusMessage: blobBody?.message || `GitHub Blobs API error (${blobRes.status})`,
+      })
+    }
+    if (blobBody.encoding !== 'base64' || typeof blobBody.content !== 'string') {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'GitHub Blobs API response is missing base64 content.',
+      })
+    }
+    base64Content = blobBody.content
+  }
+  const decoded = Buffer.from(base64Content!.replace(/\n/g, ''), 'base64').toString('utf8')
   let parsed: T
   try {
     parsed = JSON.parse(decoded) as T
