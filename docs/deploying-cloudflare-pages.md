@@ -1,6 +1,6 @@
 # Deploying to Cloudflare Pages (and other serverless runtimes)
 
-JSON admin's GitHub storage adapter needs `NUXT_AUTOADMIN_GITHUB_TOKEN` at **request time**. On long-running Node servers this is automatic — `useRuntimeConfig()` is populated from `process.env` at boot. On **Cloudflare Pages / Workers** and other V8-isolate runtimes, the story is different and the naïve setup fails in production with a 500.
+JSON admin's GitHub storage adapter needs `NUXT_AUTOADMIN_GITHUB_TOKEN` at **request time**. On long-running Node servers this is automatic — `useRuntimeConfig()` is populated from `process.env` at boot. On **Cloudflare Pages / Workers** and other V8-isolate runtimes, the story is different and the default setup fails in production with a 500.
 
 This page documents the failure mode and the per-request token-injection pattern that fixes it.
 
