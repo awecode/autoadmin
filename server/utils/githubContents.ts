@@ -16,6 +16,14 @@ export interface GithubReadOptions {
   maxBytes?: number
   /** Emit a console.warn (once per path) when the file exceeds this size. */
   warnAtBytes?: number
+  /**
+   * Opt-in: cache responses by ETag in-process and send `If-None-Match` on
+   * subsequent reads. GitHub returns 304 without spending rate-limit budget when
+   * unchanged. Disabled by default because the cache lives at module scope,
+   * which is undesirable for some deployment topologies (e.g. multi-tenant
+   * shared isolates, or anywhere a stale read could hide a manual repo edit).
+   */
+  cacheReads?: boolean
 }
 
 export interface GithubWriteOptions {
@@ -28,6 +36,50 @@ export interface GithubWriteOptions {
 // Tracks paths that have already triggered a `warnAtBytes` warning, so the same
 // soft-limit warning isn't logged on every request.
 const sizeWarned = new Set<string>()
+
+interface CacheEntry {
+  etag: string
+  sha: string
+  encoding: string
+  // Parsed JSON is `unknown` in the cache; callers re-assert their generic.
+  parsed: unknown
+}
+
+// Module-level LRU cache for read responses. ETag-conditional requests against
+// GitHub return 304 without counting toward the rate limit, so caching the
+// parsed value alongside the etag is a meaningful latency + quota win on
+// repeated reads of the same resource (e.g. admin list re-renders). Gated by
+// the per-call `cacheReads` flag; when disabled (the default), the cache is
+// never populated. Writes always invalidate the entry regardless.
+const READ_CACHE_MAX = 64
+const readCache = new Map<string, CacheEntry>()
+
+function cacheKey(owner: string, repo: string, path: string, ref?: string): string {
+  return `${owner}/${repo}@${ref ?? '*'}:${path}`
+}
+
+function cacheTouch(key: string, entry: CacheEntry): void {
+  if (readCache.has(key)) {
+    readCache.delete(key)
+  }
+  else if (readCache.size >= READ_CACHE_MAX) {
+    const oldest = readCache.keys().next().value
+    if (oldest !== undefined) {
+      readCache.delete(oldest)
+    }
+  }
+  readCache.set(key, entry)
+}
+
+function cacheGet(key: string): CacheEntry | undefined {
+  const entry = readCache.get(key)
+  if (entry) {
+    // Refresh LRU position.
+    readCache.delete(key)
+    readCache.set(key, entry)
+  }
+  return entry
+}
 
 function authHeaders(token: string): HeadersInit {
   return {
@@ -80,7 +132,20 @@ export async function getGithubJsonFile<T = unknown>(
     url.searchParams.set('ref', ref)
   }
   const where = locator(owner, repo, path, ref)
-  const res = await fetch(url, { headers: authHeaders(token) })
+  const cacheEnabled = opts?.cacheReads === true
+  const key = cacheEnabled ? cacheKey(owner, repo, path, ref) : ''
+  const cached = cacheEnabled ? cacheGet(key) : undefined
+  const headers: Record<string, string> = { ...(authHeaders(token) as Record<string, string>) }
+  if (cached) {
+    headers['If-None-Match'] = cached.etag
+  }
+  const res = await fetch(url, { headers })
+
+  // 304 Not Modified: return cached parsed value without spending rate-limit budget.
+  if (cacheEnabled && res.status === 304 && cached) {
+    return { parsed: cached.parsed as T, sha: cached.sha, encoding: cached.encoding }
+  }
+
   const text = await res.text()
   let body: any
   try {
@@ -165,6 +230,13 @@ export async function getGithubJsonFile<T = unknown>(
     })
   }
 
+  if (cacheEnabled) {
+    const etag = res.headers.get('etag')
+    if (etag) {
+      cacheTouch(key, { etag, sha: body.sha, encoding: body.encoding, parsed })
+    }
+  }
+
   return { parsed, sha: body.sha, encoding: body.encoding }
 }
 
@@ -199,7 +271,12 @@ export async function putGithubJsonFile(
   catch {
     body = { message: text }
   }
+  // Defensive: drop any cached read for this path on every PUT (success or
+  // conflict). Cache invalidation runs unconditionally so it stays correct
+  // regardless of whether reads opted in to caching.
+  const cKey = cacheKey(owner, repo, path, payload.branch)
   if (res.status === 409) {
+    readCache.delete(cKey)
     throw createError({
       statusCode: 409,
       statusMessage: body?.message
@@ -215,5 +292,11 @@ export async function putGithubJsonFile(
         : `GitHub API error (${res.status}) for ${where}`,
     })
   }
+  readCache.delete(cKey)
   return { commitSha: body?.commit?.sha }
+}
+
+/** Test/diagnostic helper: clear the in-memory ETag cache. */
+export function clearGithubReadCache(): void {
+  readCache.clear()
 }

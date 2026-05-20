@@ -15,6 +15,11 @@ export interface GithubJsonRepositoryOptions {
   maxBytes?: number
   /** Emit a console.warn once when content exceeds this many bytes (soft limit). */
   warnAtBytes?: number
+  /**
+   * Opt-in: enable in-process ETag caching for reads. Disabled by default.
+   * See `GithubReadOptions.cacheReads` in `../githubContents.ts`.
+   */
+  cacheReads?: boolean
 }
 
 export class GithubJsonRepository implements JsonStorageRepository {
@@ -30,7 +35,7 @@ export class GithubJsonRepository implements JsonStorageRepository {
         this.opts.repo,
         this.opts.path,
         this.opts.ref,
-        { maxBytes: this.opts.maxBytes, warnAtBytes: this.opts.warnAtBytes },
+        { maxBytes: this.opts.maxBytes, warnAtBytes: this.opts.warnAtBytes, cacheReads: this.opts.cacheReads },
       )
       return { parsed, revision: sha }
     }

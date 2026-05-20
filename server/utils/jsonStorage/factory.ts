@@ -29,6 +29,15 @@ export type JsonStorageConfig
      * Useful as an early-warning threshold (e.g. 1 MB to flag the Blobs-API fallback boundary).
      */
     warnAtBytes?: number
+    /**
+     * Opt-in: cache reads in-process by ETag and send `If-None-Match` on subsequent
+     * requests. **Disabled by default.** When `undefined`, falls back to the global
+     * `runtimeConfig.autoadmin.github.cacheReads` flag, which also defaults to
+     * `false`. Enable only when you control writes (so the cache is reliably
+     * invalidated) and your runtime keeps the module in memory long enough for
+     * the cache to pay for itself.
+     */
+    cacheReads?: boolean
   }
   | {
     kind: 'local'
@@ -55,6 +64,7 @@ export function getAutoadminGithubRuntime() {
     owner: trimString(g.owner),
     repo: trimString(g.repo),
     ref: trimString(g.ref),
+    cacheReads: g.cacheReads === true,
   }
 }
 
@@ -110,6 +120,8 @@ export function createJsonStorageRepository(
       defaultIfMissing: defaultParsedForKind(resourceKind),
       maxBytes: storage.maxBytes,
       warnAtBytes: storage.warnAtBytes,
+      // Per-resource override beats the global runtimeConfig default.
+      cacheReads: storage.cacheReads ?? getAutoadminGithubRuntime().cacheReads,
     })
   }
 
