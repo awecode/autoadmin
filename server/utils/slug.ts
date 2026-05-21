@@ -95,3 +95,134 @@ export async function ensureUniqueSlugs<T extends Table>(
     data[slugFieldName] = `${slug}-${suffix}`
   }
 }
+
+/**
+ * For each slug field, checks whether the value in `data` already exists in the
+ * table. If any do, throws a 422 validation error keyed by the slug field name
+ * so the client surfaces it on the field. Used when `slugCollision: 'reject'`.
+ * When `excludeLookupValue` is provided (update mode), the current record is
+ * excluded from the uniqueness check.
+ */
+export async function assertUniqueSlugs<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  data: Record<string, any>,
+  excludeLookupValue?: string,
+): Promise<void> {
+  if (!cfg.slugFields)
+    return
+
+  const db = useAdminDb()
+  const errors: { name: string, message: string }[] = []
+
+  for (const slugFieldName of Object.keys(cfg.slugFields)) {
+    const slug = data[slugFieldName]
+    if (typeof slug !== 'string' || slug === '')
+      continue
+
+    const column = cfg.columns[slugFieldName] as Column | undefined
+    if (!column)
+      continue
+
+    const conditions = [eq(column, slug)]
+    if (excludeLookupValue) {
+      conditions.push(ne(cfg.lookupColumn, excludeLookupValue))
+    }
+
+    const rows = await (db as any)
+      .select({ val: column })
+      .from(cfg.model)
+      .where(and(...conditions))
+      .limit(1)
+
+    if (rows.length > 0) {
+      errors.push({
+        name: slugFieldName,
+        message: `"${slug}" is already in use. Edit the slug or change the source field.`,
+      })
+    }
+  }
+
+  if (errors.length > 0) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Slug already in use',
+      data: { errors },
+    })
+  }
+}
+
+/**
+ * In-memory equivalent of `ensureUniqueSlugs` for JSON array resources.
+ * For each slug field, mutates `data` to append `-1`, `-2`, etc. if the value
+ * collides with another row. When `excludeId` is provided (update mode), the
+ * row with that id is skipped.
+ */
+export function ensureUniqueSlugsInRows(
+  slugFields: Partial<Record<string, string[]>> | undefined,
+  data: Record<string, any>,
+  rows: Record<string, any>[],
+  idField: string,
+  excludeId?: string,
+): void {
+  if (!slugFields)
+    return
+  for (const slugFieldName of Object.keys(slugFields)) {
+    const slug = data[slugFieldName]
+    if (typeof slug !== 'string' || slug === '')
+      continue
+    const existing = new Set<string>()
+    for (const r of rows) {
+      if (excludeId && String(r[idField]) === excludeId)
+        continue
+      const v = r[slugFieldName]
+      if (typeof v === 'string')
+        existing.add(v)
+    }
+    if (!existing.has(slug))
+      continue
+    let suffix = 1
+    while (existing.has(`${slug}-${suffix}`)) {
+      suffix++
+    }
+    data[slugFieldName] = `${slug}-${suffix}`
+  }
+}
+
+/**
+ * In-memory equivalent of `assertUniqueSlugs` for JSON array resources.
+ * Throws a 422 validation error keyed by the slug field if any value collides.
+ */
+export function assertUniqueSlugsInRows(
+  slugFields: Partial<Record<string, string[]>> | undefined,
+  data: Record<string, any>,
+  rows: Record<string, any>[],
+  idField: string,
+  excludeId?: string,
+): void {
+  if (!slugFields)
+    return
+  const errors: { name: string, message: string }[] = []
+  for (const slugFieldName of Object.keys(slugFields)) {
+    const slug = data[slugFieldName]
+    if (typeof slug !== 'string' || slug === '')
+      continue
+    const collided = rows.some((r) => {
+      if (excludeId && String(r[idField]) === excludeId)
+        return false
+      return r[slugFieldName] === slug
+    })
+    if (collided) {
+      errors.push({
+        name: slugFieldName,
+        message: `"${slug}" is already in use. Edit the slug or change the source field.`,
+      })
+    }
+  }
+  if (errors.length > 0) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Slug already in use',
+      data: { errors },
+    })
+  }
+}

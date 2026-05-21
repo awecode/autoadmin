@@ -53,6 +53,7 @@ export default defineEventHandler(async (event) => {
   specWithMetadata.canList = getAllowedActions(event, { roles: cfg.roles }).list
   specWithMetadata.schema = zerialize(cfg.create.schema)
   specWithMetadata.slugFields = cfg.slugFields
+  specWithMetadata.slugLockedByDefault = cfg.slugLockedByDefault
 
   return {
     spec: specWithMetadata,

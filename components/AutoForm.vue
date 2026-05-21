@@ -67,28 +67,55 @@ const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), prop
   enabled: props.spec.warnOnUnsavedChanges ?? false,
 })
 
-// Auto-generate slugs based on slugFields configuration
-if (props.mode === 'create' && props.spec.slugFields) {
+// Per-slug-field lock state. When locked, the field is readonly and
+// auto-syncs from the source fields. The starting value comes from
+// `spec.slugLockedByDefault` (defaults to `true`). Clicking the lock icon
+// in AutoFormField toggles it per-field.
+const slugLocks = reactive<Record<string, boolean>>({})
+const slugLockedByDefault = props.spec.slugLockedByDefault ?? true
+if (props.spec.slugFields) {
+  for (const slugField of Object.keys(props.spec.slugFields)) {
+    slugLocks[slugField] = slugLockedByDefault
+  }
+}
+
+function toggleSlugLock(slugField: string) {
+  if (slugField in slugLocks) {
+    slugLocks[slugField] = !slugLocks[slugField]
+  }
+}
+
+// Expose lock state to AutoFormField via inject.
+provide('slugLocks', slugLocks)
+provide('toggleSlugLock', toggleSlugLock)
+
+// Auto-generate slugs based on slugFields configuration. Runs in both create
+// and update modes, but only while the slug field is locked.
+if (props.spec.slugFields) {
   for (const [slugField, sourceFields] of Object.entries(props.spec.slugFields)) {
-    // Watch the source fields and update the slug field when they change
     watch(
-      () => sourceFields?.map(field => state[field]).filter(Boolean),
-      async (values) => {
-        if (values && values.length > 0) {
-          // If any value is a Date, use toIsoDateString, else .toString()
-          const slugSource = values.map(v => v instanceof Date && typeof v.toISOString === 'function' ? v.toISOString().split('T')[0] : v.toString()).join(' ')
+      () => ({
+        locked: slugLocks[slugField],
+        sources: sourceFields?.map(field => state[field]).filter(Boolean),
+      }),
+      async ({ locked, sources }) => {
+        if (!locked)
+          return
+        if (sources && sources.length > 0) {
+          const slugSource = sources.map(v => v instanceof Date && typeof v.toISOString === 'function' ? v.toISOString().split('T')[0] : v.toString()).join(' ')
           const nextSlug = slugify(slugSource)
           if (state[slugField] !== nextSlug) {
             state[slugField] = nextSlug
           }
         }
-        else if (state[slugField]) {
+        else if (state[slugField] && props.mode === 'create') {
+          // Only clear in create mode — never destroy an existing slug on update
+          // just because the editor briefly emptied the source field.
           state[slugField] = ''
         }
-        // Re-validate the slug field if there is an error
         await form.value?.validate({ name: slugField, silent: true })
       },
-      { immediate: true },
+      { immediate: props.mode === 'create' },
     )
   }
 }

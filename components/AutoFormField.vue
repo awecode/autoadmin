@@ -21,6 +21,14 @@ const richTextClientConfig = computed(() => {
   return useAdminClient().getRichTextConfig(modelKey, props.field.name)
 })
 
+// Slug lock state — provided by AutoForm.vue when this field is declared in
+// `slugFields`. When locked, the field renders as readonly and auto-syncs from
+// the source field. Clicking the lock unlocks it for manual editing.
+const slugLocks = inject<Record<string, boolean> | null>('slugLocks', null)
+const toggleSlugLock = inject<((name: string) => void) | null>('toggleSlugLock', null)
+const isSlugField = computed(() => slugLocks !== null && props.field.name in slugLocks)
+const isSlugLocked = computed(() => isSlugField.value && slugLocks![props.field.name])
+
 // Rich-text editors use contenteditable which doesn't fire native DOM events
 // that UForm relies on for re-validation. Manually re-validate when the value
 // changes and there's an existing error for this field.
@@ -338,7 +346,19 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           class="w-full"
           color="neutral"
           type="text"
-        />
+          :readonly="isSlugLocked"
+        >
+          <template v-if="isSlugField" #trailing>
+            <UButton
+              :aria-label="isSlugLocked ? 'Unlock slug for manual editing' : 'Lock slug to auto-sync from source field'"
+              :icon="isSlugLocked ? 'i-lucide-lock' : 'i-lucide-lock-open'"
+              color="neutral"
+              size="xs"
+              variant="ghost"
+              @click.prevent="toggleSlugLock?.(field.name)"
+            />
+          </template>
+        </UInput>
 
         <!-- Textarea input with nullable modifier -->
         <UTextarea

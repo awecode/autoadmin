@@ -69,6 +69,7 @@ export interface FormSpec<T extends Table = Table> {
   canList?: boolean
   schema?: SzType
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
+  slugLockedByDefault?: boolean
 }
 
 export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormSpec {

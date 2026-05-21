@@ -173,6 +173,18 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   icon?: string
   /** Example: { slug: ["title", "date"] } */
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
+  /**
+   * How to handle slug collisions on create/update.
+   * - `'suffix'` (default): silently append `-1`, `-2`, etc. to make the slug unique.
+   * - `'reject'`: return a validation error on the slug field so the editor can change it.
+   */
+  slugCollision?: 'suffix' | 'reject'
+  /**
+   * Whether slug fields are locked (readonly, auto-synced from source fields)
+   * by default in the form. Editors can still toggle the lock per-field.
+   * Defaults to `true`.
+   */
+  slugLockedByDefault?: boolean
   enableIndex?: boolean
   labelColumnName?: ColKey<T>
   lookupColumnName?: ColKey<T>
@@ -219,6 +231,8 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   metadata: TableMetadata
   apiPrefix: string
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
+  slugCollision?: 'suffix' | 'reject'
+  slugLockedByDefault?: boolean
   /** Normalized from `AdminModelOptions.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
 }
