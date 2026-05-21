@@ -7,6 +7,7 @@ import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/
 import { createJsonStorageRepository } from '#layers/autoadmin/server/utils/jsonStorage/factory'
 import { getZodObjectWithLenientJsonRead } from '#layers/autoadmin/server/utils/jsonZodLenientRead'
 import { zodToListSpec } from '#layers/autoadmin/server/utils/list'
+import { assertUniqueSlugsInRows, ensureUniqueSlugsInRows } from '#layers/autoadmin/server/utils/slug'
 import { unwrapZodType } from '#layers/autoadmin/server/utils/zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { z } from 'zod'
@@ -422,6 +423,14 @@ export async function createJsonArrayRecord(cfg: JsonArrayResourceConfig, data: 
     delete input[cfg.idField]
     const preprocessed = preprocessDates(cfg.elementSchema, input)
     const validated = cfg.elementSchema.parse(preprocessed) as Record<string, any>
+    if (cfg.slugFields) {
+      if (cfg.slugCollision === 'reject') {
+        assertUniqueSlugsInRows(cfg.slugFields, validated, rows, cfg.idField)
+      }
+      else {
+        ensureUniqueSlugsInRows(cfg.slugFields, validated, rows, cfg.idField)
+      }
+    }
     const ids = new Set(rows.map(r => String(r[cfg.idField])))
     validated[cfg.idField] = crypto.randomUUID()
     if (ids.has(String(validated[cfg.idField]))) {
@@ -467,6 +476,14 @@ export async function updateJsonArrayRecord(cfg: JsonArrayResourceConfig, lookup
       })
     }
     const validated = cfg.elementSchema.parse(merged) as Record<string, any>
+    if (cfg.slugFields) {
+      if (cfg.slugCollision === 'reject') {
+        assertUniqueSlugsInRows(cfg.slugFields, validated, rows, cfg.idField, decoded)
+      }
+      else {
+        ensureUniqueSlugsInRows(cfg.slugFields, validated, rows, cfg.idField, decoded)
+      }
+    }
     updated = validated
     const next = [...rows]
     next[idx] = validated

@@ -101,6 +101,16 @@ export interface RegisterJsonArrayResourceInput {
   delete?: Partial<JsonDeleteOptions>
   fields?: FieldSpec[]
   warnOnUnsavedChanges?: boolean
+  /** Example: `{ slug: ['title'] }` — same shape as the DB registry. */
+  slugFields?: Partial<Record<string, string[]>>
+  /**
+   * How to handle slug collisions on create/update.
+   * - `'suffix'` (default): silently append `-1`, `-2`, etc.
+   * - `'reject'`: return a validation error on the slug field.
+   */
+  slugCollision?: 'suffix' | 'reject'
+  /** Whether slug fields are locked (readonly, auto-synced) by default. Defaults to `true`. */
+  slugLockedByDefault?: boolean
   /**
    * Role allowlists: `string[]` or an object for per-action roles.
    */
@@ -153,6 +163,9 @@ export interface JsonArrayResourceConfig {
   fields?: FieldSpec[]
   warnOnUnsavedChanges: boolean
   apiPrefix: string
+  slugFields?: Partial<Record<string, string[]>>
+  slugCollision?: 'suffix' | 'reject'
+  slugLockedByDefault?: boolean
   /** Normalized from `RegisterJsonArrayResourceInput.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
 }
@@ -302,6 +315,9 @@ function defaultArrayConfig(
     fields: input.fields,
     warnOnUnsavedChanges: input.warnOnUnsavedChanges ?? false,
     apiPrefix,
+    slugFields: input.slugFields,
+    slugCollision: input.slugCollision,
+    slugLockedByDefault: input.slugLockedByDefault,
     roles: normalizeAutoadminRolesInput(input.roles),
   }
 }

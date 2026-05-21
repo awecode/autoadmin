@@ -21,6 +21,8 @@ export async function buildJsonArrayCreateFormSpec(cfg: JsonArrayResourceConfig,
   spec.endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
   spec.listTitle = cfg.list.title ?? cfg.label
   spec.schema = zerialize(cfg.elementSchema)
+  spec.slugFields = cfg.slugFields
+  spec.slugLockedByDefault = cfg.slugLockedByDefault
   return spec
 }
 
@@ -44,6 +46,8 @@ export async function buildJsonArrayUpdateFormSpec(cfg: JsonArrayResourceConfig,
   spec.endpoint = cfg.update.endpoint ?? `${apiPrefix}/${modelKey}/${encodeURIComponent(lookupValue)}`
   spec.listTitle = cfg.list.title ?? cfg.label
   spec.schema = zerialize(cfg.elementSchema)
+  spec.slugFields = cfg.slugFields
+  spec.slugLockedByDefault = cfg.slugLockedByDefault
   return spec
 }
 

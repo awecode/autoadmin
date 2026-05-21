@@ -150,3 +150,79 @@ export async function assertUniqueSlugs<T extends Table>(
     })
   }
 }
+
+/**
+ * In-memory equivalent of `ensureUniqueSlugs` for JSON array resources.
+ * For each slug field, mutates `data` to append `-1`, `-2`, etc. if the value
+ * collides with another row. When `excludeId` is provided (update mode), the
+ * row with that id is skipped.
+ */
+export function ensureUniqueSlugsInRows(
+  slugFields: Partial<Record<string, string[]>> | undefined,
+  data: Record<string, any>,
+  rows: Record<string, any>[],
+  idField: string,
+  excludeId?: string,
+): void {
+  if (!slugFields)
+    return
+  for (const slugFieldName of Object.keys(slugFields)) {
+    const slug = data[slugFieldName]
+    if (typeof slug !== 'string' || slug === '')
+      continue
+    const existing = new Set<string>()
+    for (const r of rows) {
+      if (excludeId && String(r[idField]) === excludeId)
+        continue
+      const v = r[slugFieldName]
+      if (typeof v === 'string')
+        existing.add(v)
+    }
+    if (!existing.has(slug))
+      continue
+    let suffix = 1
+    while (existing.has(`${slug}-${suffix}`)) {
+      suffix++
+    }
+    data[slugFieldName] = `${slug}-${suffix}`
+  }
+}
+
+/**
+ * In-memory equivalent of `assertUniqueSlugs` for JSON array resources.
+ * Throws a 422 validation error keyed by the slug field if any value collides.
+ */
+export function assertUniqueSlugsInRows(
+  slugFields: Partial<Record<string, string[]>> | undefined,
+  data: Record<string, any>,
+  rows: Record<string, any>[],
+  idField: string,
+  excludeId?: string,
+): void {
+  if (!slugFields)
+    return
+  const errors: { name: string, message: string }[] = []
+  for (const slugFieldName of Object.keys(slugFields)) {
+    const slug = data[slugFieldName]
+    if (typeof slug !== 'string' || slug === '')
+      continue
+    const collided = rows.some((r) => {
+      if (excludeId && String(r[idField]) === excludeId)
+        return false
+      return r[slugFieldName] === slug
+    })
+    if (collided) {
+      errors.push({
+        name: slugFieldName,
+        message: `"${slug}" is already in use. Edit the slug or change the source field.`,
+      })
+    }
+  }
+  if (errors.length > 0) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Slug already in use',
+      data: { errors },
+    })
+  }
+}
