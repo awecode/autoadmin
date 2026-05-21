@@ -67,13 +67,15 @@ const { updateOriginalState } = useWarnOnUnsavedChanges(toRef(() => state), prop
   enabled: props.spec.warnOnUnsavedChanges ?? false,
 })
 
-// Per-slug-field lock state. Slug fields are locked (readonly, auto-synced
-// from the source fields) by default. Clicking the lock icon in
-// AutoFormField unlocks the field for manual editing and stops auto-sync.
+// Per-slug-field lock state. When locked, the field is readonly and
+// auto-syncs from the source fields. The starting value comes from
+// `spec.slugLockedByDefault` (defaults to `true`). Clicking the lock icon
+// in AutoFormField toggles it per-field.
 const slugLocks = reactive<Record<string, boolean>>({})
+const slugLockedByDefault = props.spec.slugLockedByDefault ?? true
 if (props.spec.slugFields) {
   for (const slugField of Object.keys(props.spec.slugFields)) {
-    slugLocks[slugField] = true
+    slugLocks[slugField] = slugLockedByDefault
   }
 }
 
