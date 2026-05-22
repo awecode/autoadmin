@@ -105,6 +105,35 @@ Per-resource **`githubToken`** / `storage.token` overrides the global token when
 
 ---
 
+## Record filter (`baseWhere`) — arrays only
+
+For `kind: 'array'`, `baseWhere` filters rows (in memory) after the file is read.
+
+```ts
+register({
+  kind: 'array',
+  key: 'banners',
+  path: 'content/banners.json',
+  storage: { kind: 'local' },
+  elementSchema: z.object({
+    headline: z.string(),
+    active: z.boolean().optional(),
+  }),
+  baseWhere: (rows, ctx) => {
+    if (ctx.event?.context.auth?.user?.role === 'admin') {
+      return rows
+    }
+    return rows.filter(r => r.active !== false)
+  },
+})
+```
+
+`ctx.action` is `list`, `detail`, `update`, `delete`, or `bulkDelete`. On `list`, `ctx.query` has the request query string. For lookups, `ctx.lookupValue` or `ctx.lookupValues` is set. Use `ctx.event` for auth (see [autoadmin-roles.md](./autoadmin-roles.md)).
+
+Out-of-scope rows return **404** on detail/update/delete.
+
+---
+
 ## Other notes
 
 - **Auth:** Optional per-resource `roles` — same as Drizzle admin; see [autoadmin-roles.md](./autoadmin-roles.md).
