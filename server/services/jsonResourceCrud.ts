@@ -1,8 +1,10 @@
 import type { JsonArrayResourceConfig, JsonObjectResourceConfig, JsonResourceConfig } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/factory'
+import type { AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { AutoadminAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
 import type { ZodObject, ZodType } from 'zod'
 import { genericPaginationQuerySchema } from '#layers/autoadmin/server/utils/drizzle'
+import { applyJsonArrayBaseWhere, assertJsonLookupsInBaseWhere, buildJsonArrayBaseWhereContext } from '#layers/autoadmin/server/utils/jsonBaseWhere'
 import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import { createJsonStorageRepository } from '#layers/autoadmin/server/utils/jsonStorage/factory'
 import { getZodObjectWithLenientJsonRead } from '#layers/autoadmin/server/utils/jsonZodLenientRead'
@@ -305,10 +307,14 @@ export async function listJsonArrayRecords(
   query: Record<string, any> = {},
   /** Missing entries default to `true` (no restriction). See `#autoadmin/roleAccess.getAllowedActions`. */
   allowedActions: Partial<AutoadminAllowedActions> = {},
+  requestCtx?: AutoadminRequestContext,
 ) {
   const rows = await readValidatedArrayRows(cfg)
-
-  let filtered = rows
+  let filtered = await applyJsonArrayBaseWhere(
+    rows,
+    cfg,
+    buildJsonArrayBaseWhereContext(cfg, 'list', requestCtx, { query }),
+  )
   const search = query.search
   if (cfg.list.enableSearch && search && cfg.list.searchFields?.length) {
     filtered = filtered.filter(r => rowMatchesSearch(r, String(search), cfg.list.searchFields!))
@@ -351,10 +357,19 @@ export async function listJsonArrayRecords(
   }
 }
 
-export async function getJsonArrayDetail(cfg: JsonArrayResourceConfig, lookupValue: string) {
+export async function getJsonArrayDetail(
+  cfg: JsonArrayResourceConfig,
+  lookupValue: string,
+  requestCtx?: AutoadminRequestContext,
+) {
   const decoded = decodeURIComponent(lookupValue)
   const rows = await readValidatedArrayRows(cfg)
-  const row = rows.find(r => String(r[cfg.idField]) === decoded)
+  const scoped = await applyJsonArrayBaseWhere(
+    rows,
+    cfg,
+    buildJsonArrayBaseWhereContext(cfg, 'detail', requestCtx, { lookupValue: decoded }),
+  )
+  const row = scoped.find(r => String(r[cfg.idField]) === decoded)
   if (!row) {
     throw createError({
       statusCode: 404,
@@ -446,11 +461,23 @@ export async function createJsonArrayRecord(cfg: JsonArrayResourceConfig, data: 
   }
 }
 
-export async function updateJsonArrayRecord(cfg: JsonArrayResourceConfig, lookupValue: string, data: any) {
+export async function updateJsonArrayRecord(
+  cfg: JsonArrayResourceConfig,
+  lookupValue: string,
+  data: any,
+  requestCtx?: AutoadminRequestContext,
+) {
   if (!cfg.update.enabled) {
     throw createError({ statusCode: 404, statusMessage: 'Update is disabled for this resource.' })
   }
   const decoded = decodeURIComponent(lookupValue)
+  const allRows = await readValidatedArrayRows(cfg)
+  await assertJsonLookupsInBaseWhere(
+    allRows,
+    cfg,
+    buildJsonArrayBaseWhereContext(cfg, 'update', requestCtx, { lookupValue: decoded }),
+    [decoded],
+  )
   let updated: Record<string, any> | undefined
 
   await writeArrayWithRetry(cfg, (rows) => {
@@ -485,11 +512,22 @@ export async function updateJsonArrayRecord(cfg: JsonArrayResourceConfig, lookup
   }
 }
 
-export async function deleteJsonArrayRecord(cfg: JsonArrayResourceConfig, lookupValue: string) {
+export async function deleteJsonArrayRecord(
+  cfg: JsonArrayResourceConfig,
+  lookupValue: string,
+  requestCtx?: AutoadminRequestContext,
+) {
   if (!cfg.delete.enabled) {
     throw createError({ statusCode: 404, statusMessage: 'Delete is disabled for this resource.' })
   }
   const decoded = decodeURIComponent(lookupValue)
+  const allRows = await readValidatedArrayRows(cfg)
+  await assertJsonLookupsInBaseWhere(
+    allRows,
+    cfg,
+    buildJsonArrayBaseWhereContext(cfg, 'delete', requestCtx, { lookupValue: decoded }),
+    [decoded],
+  )
 
   await writeArrayWithRetry(cfg, rows => rows.filter(r => String(r[cfg.idField]) !== decoded), `delete ${decoded}`)
 
@@ -499,10 +537,21 @@ export async function deleteJsonArrayRecord(cfg: JsonArrayResourceConfig, lookup
   }
 }
 
-export async function bulkDeleteJsonArrayRecords(cfg: JsonArrayResourceConfig, rowLookups: (string | number)[]) {
+export async function bulkDeleteJsonArrayRecords(
+  cfg: JsonArrayResourceConfig,
+  rowLookups: (string | number)[],
+  requestCtx?: AutoadminRequestContext,
+) {
   if (!cfg.delete.enabled) {
     throw createError({ statusCode: 404, statusMessage: 'Delete is disabled for this resource.' })
   }
+  const allRows = await readValidatedArrayRows(cfg)
+  await assertJsonLookupsInBaseWhere(
+    allRows,
+    cfg,
+    buildJsonArrayBaseWhereContext(cfg, 'bulkDelete', requestCtx, { lookupValues: rowLookups }),
+    rowLookups,
+  )
   const remove = new Set(rowLookups.map(v => String(v)))
 
   await writeArrayWithRetry(cfg, rows => rows.filter(r => !remove.has(String(r[cfg.idField]))), `bulk delete (${rowLookups.length})`)

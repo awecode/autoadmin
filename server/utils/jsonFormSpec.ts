@@ -1,5 +1,6 @@
 import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import type { JsonArrayResourceConfig, JsonObjectResourceConfig } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
+import type { AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import { getJsonArrayDetail, getJsonObjectDetail } from '#layers/autoadmin/server/services/jsonResourceCrud'
 import { useDefinedFieldsJson, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
@@ -24,9 +25,14 @@ export async function buildJsonArrayCreateFormSpec(cfg: JsonArrayResourceConfig,
   return spec
 }
 
-export async function buildJsonArrayUpdateFormSpec(cfg: JsonArrayResourceConfig, modelKey: string, lookupValue: string): Promise<FormSpec> {
+export async function buildJsonArrayUpdateFormSpec(
+  cfg: JsonArrayResourceConfig,
+  modelKey: string,
+  lookupValue: string,
+  requestCtx?: AutoadminRequestContext,
+): Promise<FormSpec> {
   const spec = zodToFormSpec(cfg.elementSchema)
-  const values = await getJsonArrayDetail(cfg, lookupValue)
+  const values = await getJsonArrayDetail(cfg, lookupValue, requestCtx)
   spec.values = values
   spec.fields = useDefinedFieldsJson(spec, jsonFormFieldSource(cfg), 'update').filter(f => f.name !== JSON_ARRAY_ROW_ID)
   spec.warnOnUnsavedChanges = cfg.update.warnOnUnsavedChanges

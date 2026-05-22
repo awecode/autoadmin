@@ -3,6 +3,7 @@ import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStora
 import type { JsonStorageRegisterDiscriminated } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
+import type { JsonArrayBaseWhereFn } from './jsonBaseWhere'
 import type { AutoadminRolesConfig } from './roleAccess'
 import { basename } from 'node:path'
 import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
@@ -108,6 +109,11 @@ export interface RegisterJsonArrayResourceInput {
    * Role allowlists: `string[]` or an object for per-action roles.
    */
   roles?: string[] | AutoadminRolesConfig
+  /**
+   * In-memory row filter for list/detail/update/delete (not create).
+   * Receives all rows from the file; return the subset visible for `ctx.action`.
+   */
+  baseWhere?: JsonArrayBaseWhereFn
 }
 
 export type RegisterJsonResourceInput = RegisterJsonObjectResourceInput | RegisterJsonArrayResourceInput
@@ -158,6 +164,7 @@ export interface JsonArrayResourceConfig {
   apiPrefix: string
   /** Normalized from `RegisterJsonArrayResourceInput.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
+  baseWhere?: JsonArrayBaseWhereFn
 }
 
 export type JsonResourceConfig = JsonObjectResourceConfig | JsonArrayResourceConfig
@@ -310,6 +317,7 @@ function defaultArrayConfig(
     warnOnUnsavedChanges: input.warnOnUnsavedChanges ?? false,
     apiPrefix,
     roles: normalizeAutoadminRolesInput(input.roles),
+    baseWhere: input.baseWhere,
   }
 }
 
