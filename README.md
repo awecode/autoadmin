@@ -175,6 +175,7 @@ Role-based access for registered models is configured with the **`roles`** optio
 | `delete` | `Partial<DeleteOptions>` | `{}` | Configuration for the delete action. [Reference ↗](#delete-configuration-delete) |
 | `fields` | `FieldSpec[]` | `undefined` | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields) |
 | `sortField` | `string` | `undefined` | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield) |
+| `baseWhere` | `function` | `undefined` | Persistent row filter (Drizzle `SQL`) on list/detail/update/delete. [Reference ↗](#record-filter-basewhere) |
 | `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
 | `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
 | `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
@@ -776,6 +777,28 @@ registry.register(posts, {
 ```
 
 Without `defaultOrdering`, the list falls back to primary key descending (or to `sortField` ascending when drag-drop ordering is enabled). `defaultOrdering` cannot be combined with `sortField`.
+
+## Record filter (`baseWhere`)
+
+This enables exposing a subset of records for admin interfaces and actions. `baseWhere` adds **persistent `WHERE` conditions** on list queries (and matching count), detail, update, delete, bulk delete, bulk actions (lookup checks), filter option queries, and reorder. Example use-cases: tenant scoping, soft-delete exclusions, or “hide archived rows” rules, showing "Draft" posts in a different list.
+
+```ts
+import { ne } from 'drizzle-orm'
+
+registry.register(posts, {
+  baseWhere: async (_db, ctx) => {
+    if (ctx.event?.context.auth?.user?.role === 'admin') {
+      return undefined
+    }
+    return [ne(posts.status, 'archived')]
+  },
+  list: { fields: ['title', 'status'] },
+})
+```
+
+Return `undefined` or `[]` for no extra filter. Return one `SQL` fragment or an array of fragments (combined with `AND`).
+
+`ctx.action` is one of: `list`, `detail`, `update`, `delete`, `bulkDelete`, `reorder`. On `list`, `ctx.query` has the request query string params. For lookup operations, `ctx.lookupValue` or `ctx.lookupValues` is set. Use `ctx.event` for auth/session (see [roles guide](docs/autoadmin-roles.md)).
 
 ```ts
 async function displayTitle(db: AdminDbType, obj: typeof posts.$inferSelect) {
