@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
   switch (parsedRoute.routeType) {
     case 'list':
-      return await listRecords(cfg, query, true, getAllowedActions(event, { roles: cfg.roles }))
+      return await listRecords(cfg, query, true, getAllowedActions(event, { roles: cfg.roles }), { event })
 
     case 'create':
       if (!body) {
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for detail operation',
         })
       }
-      return await getRecordDetail(cfg, parsedRoute.lookupValue)
+      return await getRecordDetail(cfg, parsedRoute.lookupValue, { event })
 
     case 'update':
       if (!parsedRoute.lookupValue) {
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Request body is required for update operation',
         })
       }
-      return await updateRecord(cfg, parsedRoute.lookupValue, body)
+      return await updateRecord(cfg, parsedRoute.lookupValue, body, { event })
 
     case 'delete':
       if (!parsedRoute.lookupValue) {
@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for delete operation',
         })
       }
-      return await deleteRecord(cfg, parsedRoute.lookupValue)
+      return await deleteRecord(cfg, parsedRoute.lookupValue, { event })
 
     default:
       throw createError({

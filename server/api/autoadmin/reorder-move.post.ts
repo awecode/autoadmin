@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
+import { assertLookupsInBaseWhere, buildBaseWhereContext } from '../../utils/baseWhere'
 import { useAdminDb } from '../../utils/db'
 import { handleDrizzleError } from '../../utils/drizzle'
 import { fetchSortedRows, resequenceAndUpdate } from '../../utils/reorder'
@@ -33,9 +34,16 @@ export default defineEventHandler(async (event) => {
   }
 
   const db = useAdminDb()
+  const requestCtx = { event }
 
   try {
-    const { allLookups, oldValues } = await fetchSortedRows(db, cfg)
+    await assertLookupsInBaseWhere(
+      db,
+      cfg,
+      buildBaseWhereContext(cfg, 'reorder', requestCtx, { lookupValue: body.lookup }),
+      [body.lookup],
+    )
+    const { allLookups, oldValues } = await fetchSortedRows(db, cfg, requestCtx)
 
     const currentIndex = allLookups.findIndex(l => String(l) === String(body.lookup))
     if (currentIndex === -1) {

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
+import { assertLookupsInBaseWhere, buildBaseWhereContext } from '../../utils/baseWhere'
 import { useAdminDb } from '../../utils/db'
 import { assertRoleAccessAllowed } from '../../utils/roleHelpers'
 
@@ -20,6 +21,12 @@ export default defineEventHandler(async (event) => {
     })
   }
   const db = useAdminDb()
+  await assertLookupsInBaseWhere(
+    db,
+    cfg,
+    buildBaseWhereContext(cfg, 'bulkDelete', { event }, { lookupValues: body.rowLookups }),
+    body.rowLookups,
+  )
   const result = await action.action(db, body.rowLookups)
   return result
 })

@@ -1,4 +1,4 @@
-import type { AdminModelConfig, FilterFieldDef } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, AutoadminRequestContext, FilterFieldDef } from '#layers/autoadmin/server/utils/registry'
 import type { SQL, Table } from 'drizzle-orm'
 import type { AdminDbType } from './db'
 import type { Option } from './form'
@@ -7,6 +7,7 @@ import type { TableMetadata } from './metadata'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { count, eq } from 'drizzle-orm'
 import { getLabelColumnFromModel } from './autoadmin'
+import { buildBaseWhereContext, getBaseWhereClause } from './baseWhere'
 import { colKey } from './drizzle'
 import { getTableForeignKeysByColumn } from './relation'
 
@@ -33,7 +34,17 @@ async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db
   }
 }
 
-async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, columnTypes: ColTypes, field: string, label?: string, definedType?: string, options?: Option[], query: Record<string, any> = {}) {
+async function prepareFilter<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  db: AdminDbType,
+  columnTypes: ColTypes,
+  field: string,
+  label?: string,
+  definedType?: string,
+  options?: Option[],
+  query: Record<string, any> = {},
+  requestCtx?: AutoadminRequestContext,
+) {
   let type = definedType || columnTypes[field]?.type
   // check if relation
   const relations = getTableForeignKeysByColumn(cfg.model, field)
@@ -59,7 +70,12 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
     if (!column) {
       throw new Error(`Invalid column: ${JSON.stringify(field)}`)
     }
-    const filterOptions = options ?? await db.select({ value: column, count: count() }).from(cfg.model).groupBy(column)
+    const baseWhere = await getBaseWhereClause(cfg, buildBaseWhereContext(cfg, 'list', requestCtx, { query }))
+    let optionQuery = db.select({ value: column, count: count() }).from(cfg.model)
+    if (baseWhere) {
+      optionQuery = optionQuery.where(baseWhere) as unknown as typeof optionQuery
+    }
+    const filterOptions = options ?? await optionQuery.groupBy(column)
     return {
       field,
       label: label || toTitleCase(field),
@@ -104,16 +120,24 @@ async function prepareFilter<T extends Table>(cfg: AdminModelConfig<T>, db: Admi
   throw new Error(`Invalid filter: ${JSON.stringify(field)}`)
 }
 
-async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, filters: FilterFieldDef<Table>[], columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
+async function prepareFilters<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  db: AdminDbType,
+  filters: FilterFieldDef<Table>[],
+  columnTypes: ColTypes,
+  metadata: TableMetadata,
+  query: Record<string, any>,
+  requestCtx?: AutoadminRequestContext,
+) {
   const parsedFilters = await Promise.all(filters.map(async (filter) => {
     if (typeof filter === 'string') {
-      return await prepareFilter(cfg, db, columnTypes, filter, undefined, undefined, undefined, query)
+      return await prepareFilter(cfg, db, columnTypes, filter, undefined, undefined, undefined, query, requestCtx)
     }
     else if (typeof filter === 'object') {
       if ('parameterName' in filter && 'label' in filter) {
         return await prepareCustomFilter(cfg, db, columnTypes, filter as unknown as CustomFilter, query)
       }
-      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, filter.options, query)
+      return await prepareFilter(cfg, db, columnTypes, filter.field, filter.label, filter.type, filter.options, query, requestCtx)
     }
     throw new Error(`Invalid filter: ${JSON.stringify(filter)}`)
   }))
@@ -128,15 +152,22 @@ async function prepareFilters<T extends Table>(cfg: AdminModelConfig<T>, db: Adm
   return parsedFiltersWithOriginalType
 }
 
-export async function getFilters<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, columnTypes: ColTypes, metadata: TableMetadata, query: Record<string, any>) {
+export async function getFilters<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  db: AdminDbType,
+  columnTypes: ColTypes,
+  metadata: TableMetadata,
+  query: Record<string, any>,
+  requestCtx?: AutoadminRequestContext,
+) {
   const filters = cfg.list?.filterFields
   if (filters) {
-    return await prepareFilters(cfg, db, filters, columnTypes, metadata, query)
+    return await prepareFilters(cfg, db, filters, columnTypes, metadata, query, requestCtx)
   }
   // get boolean, enum, date
   const booleanColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column]?.type === 'boolean')
   const enumColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column]?.type === 'select')
   const dateColumnNames = Object.keys(columnTypes).filter(column => columnTypes[column]?.type === 'date')
   const defaultFilterColumns = [...booleanColumnNames, ...enumColumnNames, ...dateColumnNames]
-  return prepareFilters(cfg, db, defaultFilterColumns, columnTypes, metadata, {})
+  return prepareFilters(cfg, db, defaultFilterColumns, columnTypes, metadata, {}, requestCtx)
 }
