@@ -7,6 +7,7 @@ import { genericPaginationQuerySchema } from '#layers/autoadmin/server/utils/dri
 import { applyJsonArrayBaseWhere, assertJsonLookupsInBaseWhere, buildJsonArrayBaseWhereContext } from '#layers/autoadmin/server/utils/jsonBaseWhere'
 import { JSON_ARRAY_ROW_ID, JSON_OBJECT_LOOKUP } from '#layers/autoadmin/server/utils/jsonResourceRegistry'
 import { createJsonStorageRepository } from '#layers/autoadmin/server/utils/jsonStorage/factory'
+import { formatJsonFileBody, writeJsonStorageWithRetry } from '#layers/autoadmin/server/utils/jsonStorage/writeWithRetry'
 import { getZodObjectWithLenientJsonRead } from '#layers/autoadmin/server/utils/jsonZodLenientRead'
 import { zodToListSpec } from '#layers/autoadmin/server/utils/list'
 import { unwrapZodType } from '#layers/autoadmin/server/utils/zod'
@@ -399,10 +400,9 @@ async function writeArrayWithRetry(
   mutator: (rows: Record<string, any>[]) => Record<string, any>[],
   messageSuffix: string,
 ) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const repo = createJsonStorageRepository(cfg.storage, cfg.kind)
-      const { parsed, revision } = await repo.read()
+  const repo = createJsonStorageRepository(cfg.storage, cfg.kind)
+  await writeJsonStorageWithRetry(repo, {
+    mutator: (parsed) => {
       if (!Array.isArray(parsed)) {
         throw createError({
           statusCode: 422,
@@ -415,20 +415,11 @@ async function writeArrayWithRetry(
       const next = mutator(rows)
       assertUniqueIds(next, cfg.idField)
       z.array(cfg.elementSchema).parse(next)
-      await repo.write({
-        bodyUtf8: `${JSON.stringify(next, null, 2)}\n`,
-        revision,
-        message: `${cfg.commitMessagePrefix}${messageSuffix}`,
-      })
-      return
-    }
-    catch (e: any) {
-      if (e?.statusCode === 409 && attempt === 0) {
-        continue
-      }
-      throw e
-    }
-  }
+      return next
+    },
+    bodyUtf8: formatJsonFileBody,
+    message: `${cfg.commitMessagePrefix}${messageSuffix}`,
+  })
 }
 
 export async function createJsonArrayRecord(cfg: JsonArrayResourceConfig, data: any) {
@@ -596,35 +587,23 @@ export async function updateJsonObjectRecord(cfg: JsonObjectResourceConfig, look
   if (lookupValue !== JSON_OBJECT_LOOKUP) {
     throw createError({ statusCode: 404, statusMessage: 'Invalid object resource path.' })
   }
-  let result: Record<string, any> | undefined
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const repo = createJsonStorageRepository(cfg.storage, cfg.kind)
-      const { revision } = await repo.read()
-      const input = typeof data === 'object' && data !== null
-        ? omitNullUndefinedShallow({ ...data } as Record<string, unknown>)
-        : {}
-      const preprocessed = preprocessDates(cfg.schema, input)
-      const validated = parseObjectSchemaOr422(
-        cfg.schema,
-        preprocessed as Record<string, unknown>,
-        jsonStorageSourceHint(cfg.storage),
-      )
-      result = validated
-      await repo.write({
-        bodyUtf8: `${JSON.stringify(validated, null, 2)}\n`,
-        revision,
-        message: `${cfg.commitMessagePrefix}update object`,
-      })
-      break
-    }
-    catch (e: any) {
-      if (e?.statusCode === 409 && attempt === 0) {
-        continue
-      }
-      throw e
-    }
-  }
+  // let result: Record<string, any> | undefined
+  const repo = createJsonStorageRepository(cfg.storage, cfg.kind)
+  const input = typeof data === 'object' && data !== null
+    ? omitNullUndefinedShallow({ ...data } as Record<string, unknown>)
+    : {}
+  const preprocessed = preprocessDates(cfg.schema, input)
+  const validated = parseObjectSchemaOr422(
+    cfg.schema,
+    preprocessed as Record<string, unknown>,
+    jsonStorageSourceHint(cfg.storage),
+  )
+  const result = validated
+  await writeJsonStorageWithRetry(repo, {
+    mutator: () => validated,
+    bodyUtf8: formatJsonFileBody,
+    message: `${cfg.commitMessagePrefix}update object`,
+  })
   return {
     success: true,
     message: `${cfg.key} updated`,
