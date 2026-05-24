@@ -134,6 +134,27 @@ Out-of-scope rows return **404** on detail/update/delete.
 
 ---
 
+## Programmatic access
+
+You can also reuse the existing json file editing routine for programatically editing a json file. It is exposed with `pathJsonKey` service.
+
+```ts
+import { patchJsonKey } from '#layers/autoadmin/server/services/jsonFileService'
+
+await patchJsonKey(
+  {
+    path: 'config/site-settings.json',
+    storage: { kind: 'github' },
+  },
+  'maintenanceMode',
+  true,
+)
+```
+
+Optional `commitMessage` on the target object; if omitted, GitHub uses **Update JSON**. Credentials: `NUXT_AUTOADMIN_GITHUB_*` / `runtimeConfig.autoadmin.github` (see [Configuration](#configuration)).
+
+---
+
 ## Other notes
 
 - **Auth:** Optional per-resource `roles` — same as Drizzle admin; see [autoadmin-roles.md](./autoadmin-roles.md).
