@@ -209,7 +209,10 @@ watch(file, async (newFile) => {
 </script>
 
 <template>
-  <UPopover v-model:open="open" :ui="{ content: 'p-0.5' }">
+  <UPopover
+    v-model:open="open"
+    :ui="{ content: 'p-0.5' }"
+  >
     <UTooltip text="Image">
       <UButton
         icon="i-lucide-image"
@@ -224,8 +227,14 @@ watch(file, async (newFile) => {
     </UTooltip>
 
     <template #content>
-      <div v-if="isUploading" class="flex flex-col items-center justify-center gap-4 h-36">
-        <UIcon name="i-lucide-loader-circle" class="animate-spin" />
+      <div
+        v-if="isUploading"
+        class="flex flex-col items-center justify-center gap-4 h-36"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="animate-spin"
+        />
         <div class="text-sm font-medium">
           Uploading...
         </div>
@@ -238,47 +247,52 @@ watch(file, async (newFile) => {
         v-model="file"
         icon="i-lucide-image"
         accept="image/*"
-        label="Upload an image"
+        class="cursor-pointer"
+        label="Click to upload an image or drag and drop here"
         :preview="false"
       />
       <div class="flex flex-col gap-2 p-2 min-w-64">
         <template v-if="!active">
-          <UInput
-            v-model="url"
-            autofocus
-            name="url"
-            type="url"
-            variant="none"
-            placeholder="Or paste image URL..."
-            @keydown="handleKeyDown"
-          >
-            <div class="flex items-center mr-0.5">
-              <UButton
-                icon="i-lucide-corner-down-left"
-                variant="ghost"
-                size="sm"
-                :disabled="!url"
-                title="Insert image"
-                @click="setImageFromUrl"
-              />
+          <UFormField>
+            <UInput
+              v-model="url"
+              class="w-full"
+              name="url"
+              type="url"
+              placeholder="Or paste image URL..."
+              @keydown="handleKeyDown"
+            >
+              <div class="flex items-center mr-0.5">
+                <UButton
+                  icon="i-lucide-corner-down-left"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="!url"
+                  title="Insert image"
+                  @click="setImageFromUrl"
+                />
 
-              <USeparator orientation="vertical" class="h-6 mx-1" />
+                <USeparator
+                  orientation="vertical"
+                  class="h-6 mx-1"
+                />
 
-              <UButton
-                icon="i-lucide-external-link"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="!url"
-                title="Open in new window"
-                @click="openLink"
-              />
-            </div>
-          </UInput>
+                <UButton
+                  icon="i-lucide-external-link"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="!url"
+                  title="Open in new window"
+                  @click="openLink"
+                />
+              </div>
+            </UInput>
+          </UFormField>
         </template>
         <div class="flex flex-col gap-2">
           <span class="text-xs font-medium text-dimmed">Optional fields</span>
-          <UFormField label="Alt text">
+          <UFormField label="Description (Alt text)">
             <UInput
               v-model="alt"
               name="alt"

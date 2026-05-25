@@ -136,7 +136,7 @@ Out-of-scope rows return **404** on detail/update/delete.
 
 ## Programmatic access
 
-You can also reuse the existing json file editing routine for programatically editing a json file. It is exposed with `pathJsonKey` service.
+You can also reuse the existing json file editing routine for programatically editing a json file. It is exposed with `patchJsonKey` service.
 
 ```ts
 import { patchJsonKey } from '#layers/autoadmin/server/services/jsonFileService'
