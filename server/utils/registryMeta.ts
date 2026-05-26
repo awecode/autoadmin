@@ -7,7 +7,8 @@ import { getAllowedActions } from './roleHelpers'
 
 export function buildDrizzleRegistryMeta(event: H3Event): AutoAdminRegistryLink[] {
   const registry = useAdminRegistry()
-  return registry.all().flatMap<AutoAdminRegistryLink>((cfg) => {
+  const ordered = [...registry.all()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  return ordered.flatMap<AutoAdminRegistryLink>((cfg) => {
     if (!cfg.enableIndex) {
       return []
     }

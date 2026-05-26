@@ -187,6 +187,12 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   lookupColumnName?: ColKey<T>
   /** An integer column used for drag-and-drop ordering. When set, the list view enables drag-drop reordering and defaults to sorting by this field ascending. */
   sortField?: ColKey<T>
+  /**
+   * Display order in the sidebar and dashboard index. Lower numbers come first.
+   * Models without an explicit `order` are treated as `0`; use a negative number to
+   * float to the top or a positive one to push down. Ties preserve registration order.
+   */
+  order?: number
   // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T, C>>
   create?: Partial<CreateOptions<T>>
@@ -220,6 +226,7 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
   sortField?: string
+  order: number
   list: ListOptions<T, C>
   create: CreateOptions<T>
   update: UpdateOptions<T>
@@ -374,6 +381,7 @@ export function useAdminRegistry() {
     cfg.metadata = getTableMetadata(cfg.columns)
     cfg.roles = normalizeAutoadminRolesInput(opts.roles)
     cfg.baseWhere = opts.baseWhere
+    cfg.order = opts.order ?? 0
     return cfg
   }
 
