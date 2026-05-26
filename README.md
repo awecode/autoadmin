@@ -165,6 +165,7 @@ Role-based access for registered models is configured with the **`roles`** optio
 | `label` | `string` | Table name | Display name for the model (e.g., in the sidebar). |
 | `key` | `string` | tableName | Unique identifier for the model. Used in URLs and API endpoints. Pass if you have two models with the same table name. |
 | `icon` | `string` | `undefined` | Iconify icon name. Auto-detected for common names. |
+| `order` | `number` | `0` | Display order in the sidebar and dashboard index. Lower numbers come first; negatives float to the top, positives push down. Ties preserve registration order. |
 | `labelColumnName` | `string` | `name`, `title`, etc. | Column used for display labels in relationships and select options. |
 | `lookupColumnName` | `string` | `id` | The primary or unique key used to fetch single records. |
 | `slugFields` | `Record<string, string[]>` | `undefined` | Auto-generate URL-friendly slugs from other fields. [Reference ↗](#automatic-slug-generation-slugfields) |
