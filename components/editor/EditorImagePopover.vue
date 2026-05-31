@@ -17,6 +17,25 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
   })
 }
 
+/** Fill missing width/height from natural size; scale the other axis when only one is set. */
+function resolveImageSize(
+  widthInput: number | null,
+  heightInput: number | null,
+  natural: { width: number, height: number },
+): { width: number | null, height: number | null } {
+  const hasWidth = widthInput != null && !Number.isNaN(widthInput)
+  const hasHeight = heightInput != null && !Number.isNaN(heightInput)
+  if (!hasWidth && !hasHeight)
+    return { width: natural.width, height: natural.height }
+  if (natural.width <= 0 || natural.height <= 0)
+    return { width: hasWidth ? widthInput : natural.width, height: hasHeight ? heightInput : natural.height }
+  if (hasWidth && !hasHeight)
+    return { width: widthInput, height: Math.round(widthInput * natural.height / natural.width) }
+  if (!hasWidth && hasHeight)
+    return { width: Math.round(heightInput * natural.width / natural.height), height: heightInput }
+  return { width: widthInput, height: heightInput }
+}
+
 const open = ref(false)
 const url = ref('')
 const alt = ref('')
@@ -109,10 +128,13 @@ async function setImageFromUrl() {
   if (needDims && url.value) {
     const dims = await getImageDimensions(url.value)
     if (dims) {
-      if (widthVal == null || Number.isNaN(widthVal))
-        widthVal = dims.width
-      if (heightVal == null || Number.isNaN(heightVal))
-        heightVal = dims.height
+      const resolved = resolveImageSize(
+        widthVal == null || Number.isNaN(widthVal) ? null : widthVal,
+        heightVal == null || Number.isNaN(heightVal) ? null : heightVal,
+        dims,
+      )
+      widthVal = resolved.width
+      heightVal = resolved.height
     }
   }
   const sizeAttrs = {
@@ -193,13 +215,20 @@ watch(file, async (newFile) => {
     if (src && (attrs.width == null || attrs.height == null)) {
       const dims = await getImageDimensions(src)
       if (dims) {
+        const w = attrs.width != null ? Number(attrs.width) : null
+        const h = attrs.height != null ? Number(attrs.height) : null
+        const resolved = resolveImageSize(
+          w == null || Number.isNaN(w) ? null : w,
+          h == null || Number.isNaN(h) ? null : h,
+          dims,
+        )
         const nodeType = isFig ? 'figure' : 'image'
         props.editor.chain().focus().updateAttributes(nodeType, {
-          width: attrs.width ?? dims.width,
-          height: attrs.height ?? dims.height,
+          width: resolved.width,
+          height: resolved.height,
         }).run()
-        width.value = String(attrs.width ?? dims.width)
-        height.value = String(attrs.height ?? dims.height)
+        width.value = resolved.width != null ? String(resolved.width) : ''
+        height.value = resolved.height != null ? String(resolved.height) : ''
       }
     }
   }
