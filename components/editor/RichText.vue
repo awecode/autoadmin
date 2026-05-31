@@ -564,7 +564,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   display: inline-block;
   flex-direction: column;
   gap: 0.5rem;
-  margin: 1rem 0;
+  margin: 0;
   width: fit-content;
   max-width: 100%;
 }
