@@ -1,5 +1,10 @@
 /* Pattern 1: float with text wrap (editor + frontend) */
 
+/* Contain floats so they don't bleed into following blocks */
+.prose {
+  display: flow-root;
+}
+
 .tiptap .content-image-float-left,
 .tiptap figure.content-image-float-left,
 .content-image-float-left,
