@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormSpec } from '#layers/autoadmin/server/utils/form'
-import { normalizeOptions, transformErrorMessage } from '#layers/autoadmin/utils/form'
+import { normalizeOptions, sortOptionsWithSelectedFirst, transformErrorMessage } from '#layers/autoadmin/utils/form'
 import { useAdminClient } from '../composables/adminClient'
 import AutoFormModal from './AutoFormModal.vue'
 
@@ -109,9 +109,12 @@ const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
   immediate: false,
 })
 
-const selectMenuItems = computed(() =>
-  selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
-)
+const selectMenuItems = computed(() => {
+  const items = selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : []
+  if (props.field.type === 'relation-many')
+    return sortOptionsWithSelectedFirst(items, props.modelValue)
+  return items
+})
 
 if (props.field.options) {
   selectMenuItemsRaw.value = normalizeOptions(props.field.options)
