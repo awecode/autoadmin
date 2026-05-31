@@ -82,7 +82,7 @@ export function mediaTextToolbarItems(editor: Editor): EditorToolbarItem[][] {
     tooltip: { text: 'Swap side' },
     onClick: () => {
       const currentLayout = editor.getAttributes('mediaText').layout
-      const newLayout = currentLayout === 'image-left' ? 'image-right' : 'image-left'
+      const newLayout = currentLayout === 'left' ? 'right' : 'left'
       editor.chain().focus().updateAttributes('mediaText', { layout: newLayout }).run()
     },
   }, {
