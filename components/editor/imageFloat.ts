@@ -26,15 +26,6 @@ export function applyFloatClass(element: HTMLElement, float: ImageFloat | null |
     element.classList.add(cls)
 }
 
-export function isInsideMediaText(editor: { state: { selection: { $from: { depth: number, node: (depth: number) => { type: { name: string } } } } } }): boolean {
-  const { $from } = editor.state.selection
-  for (let depth = $from.depth; depth > 0; depth--) {
-    if ($from.node(depth).type.name === 'mediaText')
-      return true
-  }
-  return false
-}
-
 export const imageFloatAttribute = {
   default: 'none' as ImageFloat,
   parseHTML: (element: HTMLElement) => parseFloatAttribute(element),

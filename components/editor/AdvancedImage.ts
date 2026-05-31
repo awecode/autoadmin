@@ -2,9 +2,8 @@ import type { EditorToolbarItem } from '@nuxt/ui'
 import type { Editor } from '@tiptap/core'
 import type { ImageFloat } from './imageFloat'
 import Image from '@tiptap/extension-image'
-import { imageFloatAttribute, isInsideMediaText } from './imageFloat'
-
-export { isInsideMediaText }
+import { imageFloatAttribute } from './imageFloat'
+import { isInsideMediaText } from './MediaText'
 
 export const AdvancedImage = Image.extend({
   addAttributes() {

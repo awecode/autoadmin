@@ -14,8 +14,7 @@ import EditorTablePopover from './EditorTablePopover.vue'
 import { Embed } from './Embed'
 import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
-import { isInsideMediaText } from './imageFloat'
-import { MediaText, mediaTextToolbarItems } from './MediaText'
+import { isInsideMediaText, MediaText, mediaTextToolbarItems } from './MediaText'
 import { tableToolbarItems } from './TableToolbar'
 
 const props = defineProps<{
