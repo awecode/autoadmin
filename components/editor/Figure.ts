@@ -13,6 +13,29 @@ function findNodesInRange(doc: import('@tiptap/pm/model').Node, from: number, to
   return result
 }
 
+function applyFigureImgAttributes(
+  img: HTMLImageElement,
+  attrs: { src?: string | null, alt?: string | null, title?: string | null, width?: string | number | null, height?: string | number | null },
+) {
+  if (attrs.src)
+    img.setAttribute('src', attrs.src)
+  else
+    img.removeAttribute('src')
+  img.setAttribute('alt', attrs.alt ?? '')
+  if (attrs.title)
+    img.setAttribute('title', attrs.title)
+  else
+    img.removeAttribute('title')
+  if (attrs.width != null)
+    img.setAttribute('width', String(attrs.width))
+  else
+    img.removeAttribute('width')
+  if (attrs.height != null)
+    img.setAttribute('height', String(attrs.height))
+  else
+    img.removeAttribute('height')
+}
+
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     figure: {
@@ -119,15 +142,7 @@ export const Figure = Node.create({
       const img = document.createElement('img')
       img.setAttribute('draggable', 'false')
       img.setAttribute('contenteditable', 'false')
-      if (node.attrs.src)
-        img.setAttribute('src', node.attrs.src)
-      img.setAttribute('alt', node.attrs.alt ?? '')
-      if (node.attrs.title)
-        img.setAttribute('title', node.attrs.title)
-      if (node.attrs.width != null)
-        img.setAttribute('width', String(node.attrs.width))
-      if (node.attrs.height != null)
-        img.setAttribute('height', String(node.attrs.height))
+      applyFigureImgAttributes(img, node.attrs)
       const figcaption = document.createElement('figcaption')
       applyFloatClass(figure, node.attrs.float as ImageFloat)
       figure.appendChild(img)
@@ -147,6 +162,7 @@ export const Figure = Node.create({
           if (updatedNode.type.name !== 'figure')
             return false
           applyFloatClass(figure, updatedNode.attrs.float as ImageFloat)
+          applyFigureImgAttributes(img, updatedNode.attrs)
           return true
         },
       }
