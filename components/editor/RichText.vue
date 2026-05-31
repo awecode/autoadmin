@@ -557,14 +557,14 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   border-radius: 0.375rem;
 }
 
-.tiptap img{
+.tiptap img:not(.content-image-float-left):not(.content-image-float-right) {
   /* display: inline-block; */
   height: auto;
   max-width: 100%;
 }
 
-/* Figure (image with caption) */
-.tiptap figure {
+/* Figure (image with caption) — skip floated figures; shared rules in rich-image-float.css */
+.tiptap figure:not(.content-image-float-left):not(.content-image-float-right) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -572,7 +572,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   width: fit-content;
   max-width: 100%;
 }
-.tiptap figure > img {
+.tiptap figure:not(.content-image-float-left):not(.content-image-float-right) > img {
   display: block;
   height: auto;
   max-width: 100%;
