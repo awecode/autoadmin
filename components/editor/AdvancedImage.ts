@@ -1,6 +1,10 @@
 import type { EditorToolbarItem } from '@nuxt/ui'
-import type { Editor } from '@tiptap/vue-3'
+import type { Editor } from '@tiptap/core'
+import type { ImageFloat } from './imageFloat'
 import Image from '@tiptap/extension-image'
+import { imageFloatAttribute, isInsideMediaText } from './imageFloat'
+
+export { isInsideMediaText }
 
 export const AdvancedImage = Image.extend({
   addAttributes() {
@@ -29,6 +33,7 @@ export const AdvancedImage = Image.extend({
           return { height: String(attributes.height) }
         },
       },
+      float: imageFloatAttribute,
     }
   },
 })
@@ -41,11 +46,50 @@ function getSelectedImageOrFigure(editor: Editor) {
   return null
 }
 
+function getFloatFromSelection(editor: Editor): ImageFloat {
+  const sel = getSelectedImageOrFigure(editor)
+  if (!sel)
+    return 'none'
+  return (sel.node.attrs.float as ImageFloat | undefined) ?? 'none'
+}
+
+function setFloatOnSelection(editor: Editor, float: ImageFloat) {
+  const sel = getSelectedImageOrFigure(editor)
+  if (!sel)
+    return
+  const type = sel.node.type.name
+  editor.chain().focus().updateAttributes(type, { float }).run()
+}
+
+function wrapInMediaText(editor: Editor, layout: 'left' | 'right') {
+  const { state } = editor
+  const pos = state.selection.from
+  const node = state.doc.nodeAt(pos)
+  if (!node || (node.type.name !== 'image' && node.type.name !== 'figure'))
+    return
+
+  const attrs = { ...node.attrs, float: 'none' }
+  const firstChild = node.type.name === 'image'
+    ? { type: 'image' as const, attrs }
+    : { type: 'figure' as const, attrs, content: node.content.toJSON() }
+
+  editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
+    type: 'mediaText',
+    attrs: { layout },
+    content: [
+      firstChild,
+      { type: 'paragraph' },
+    ],
+  }).run()
+}
+
 export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
   const selected = getSelectedImageOrFigure(editor)
   const isFigure = selected?.node.type.name === 'figure'
+  const insideMediaText = isInsideMediaText(editor)
+  const currentFloat = getFloatFromSelection(editor)
 
-  return [[
+  const actionItems: EditorToolbarItem[] = [
     ...(selected
       ? [{
           icon: isFigure ? 'i-lucide-captions-off' : 'i-lucide-captions',
@@ -71,7 +115,7 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
               throw new Error(response.statusText || 'Failed to download image')
             const blob = await response.blob()
             const blobUrl = window.URL.createObjectURL(blob)
-            const fileName = imageUrl.split('/').pop().split('?')[0] || 'downloaded-image'
+            const fileName = imageUrl.split('/').pop()?.split('?')[0] || 'downloaded-image'
             const link = document.createElement('a')
             link.href = blobUrl
             link.download = fileName
@@ -87,7 +131,9 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
         }
       },
     },
-  ], [{
+  ]
+
+  const deleteItems: EditorToolbarItem[] = [{
     icon: 'i-lucide-trash',
     tooltip: { text: 'Delete' },
     onClick: () => {
@@ -95,89 +141,38 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
       if (sel)
         editor.chain().focus().deleteRange({ from: sel.pos, to: sel.pos + sel.node.nodeSize }).run()
     },
-  }], [{
-    icon: 'i-lucide-panel-left',
-    tooltip: { text: 'Image Left, Text Right' },
-    active: editor.isActive('mediaText', { layout: 'left' }),
-    onClick: () => {
-      const { state } = editor
-      const pos = state.selection.from
+  }]
 
-      if (editor.isActive('mediaText')) {
-        // If already in a MediaText block, just update the direction
-        editor.chain().focus().updateAttributes('mediaText', { layout: 'left' }).run()
-      }
-      else {
-        // Wrap selected image or figure in a new MediaText block
-        const node = state.doc.nodeAt(pos)
-        if (node && (node.type.name === 'image' || node.type.name === 'figure')) {
-          const firstChild = node.type.name === 'image'
-            ? { type: 'image' as const, attrs: node.attrs }
-            : { type: 'figure' as const, attrs: node.attrs, content: node.content.toJSON() }
-          editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
-            type: 'mediaText',
-            attrs: { layout: 'left' },
-            content: [
-              firstChild,
-              { type: 'paragraph' },
-            ],
-          }).run()
-        }
-      }
-    },
+  if (insideMediaText) {
+    return [actionItems, deleteItems]
+  }
+
+  const floatItems: EditorToolbarItem[] = [{
+    icon: 'i-lucide-align-left',
+    tooltip: { text: 'Float left' },
+    active: currentFloat === 'left',
+    onClick: () => setFloatOnSelection(editor, 'left'),
   }, {
-    icon: 'i-lucide-panel-top',
-    tooltip: { text: 'Standard Image (Unwrap)' },
-    active: !editor.isActive('mediaText'),
-    onClick: () => {
-      if (editor.isActive('mediaText')) {
-        const { state } = editor
-        const $from = state.selection.$from
-        let blockNode = null
-        let blockPos = -1
+    icon: 'i-lucide-wrap-text',
+    tooltip: { text: 'Block image' },
+    active: currentFloat === 'none',
+    onClick: () => setFloatOnSelection(editor, 'none'),
+  }, {
+    icon: 'i-lucide-align-right',
+    tooltip: { text: 'Float right' },
+    active: currentFloat === 'right',
+    onClick: () => setFloatOnSelection(editor, 'right'),
+  }]
 
-        // Find the parent MediaText boundary
-        for (let depth = $from.depth; depth > 0; depth--) {
-          if ($from.node(depth).type.name === 'mediaText') {
-            blockNode = $from.node(depth)
-            blockPos = $from.before(depth)
-            break
-          }
-        }
-
-        if (blockNode) {
-          // Extract the true image and text, delete the wrapper block, and drop them back
-          editor.chain().focus().deleteRange({ from: blockPos, to: blockPos + blockNode.nodeSize }).insertContentAt(blockPos, blockNode.content.toJSON()).run()
-        }
-      }
-    },
+  const mediaBlockItems: EditorToolbarItem[] = [{
+    icon: 'i-lucide-panel-left',
+    tooltip: { text: 'Side by side (media left)' },
+    onClick: () => wrapInMediaText(editor, 'left'),
   }, {
     icon: 'i-lucide-panel-right',
-    tooltip: { text: 'Image Right, Text Left' },
-    active: editor.isActive('mediaText', { layout: 'right' }),
-    onClick: () => {
-      const { state } = editor
-      const pos = state.selection.from
+    tooltip: { text: 'Side by side (media right)' },
+    onClick: () => wrapInMediaText(editor, 'right'),
+  }]
 
-      if (editor.isActive('mediaText')) {
-        editor.chain().focus().updateAttributes('mediaText', { layout: 'right' }).run()
-      }
-      else {
-        const node = state.doc.nodeAt(pos)
-        if (node && (node.type.name === 'image' || node.type.name === 'figure')) {
-          const firstChild = node.type.name === 'image'
-            ? { type: 'image' as const, attrs: node.attrs }
-            : { type: 'figure' as const, attrs: node.attrs, content: node.content.toJSON() }
-          editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).insertContentAt(pos, {
-            type: 'mediaText',
-            attrs: { layout: 'right' },
-            content: [
-              firstChild,
-              { type: 'paragraph' },
-            ],
-          }).run()
-        }
-      }
-    },
-  }]]
+  return [actionItems, deleteItems, floatItems, mediaBlockItems]
 }

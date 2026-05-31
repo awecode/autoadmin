@@ -14,7 +14,8 @@ import EditorTablePopover from './EditorTablePopover.vue'
 import { Embed } from './Embed'
 import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
-import { MediaText } from './MediaText'
+import { isInsideMediaText } from './imageFloat'
+import { MediaText, mediaTextToolbarItems } from './MediaText'
 import { tableToolbarItems } from './TableToolbar'
 
 const props = defineProps<{
@@ -479,6 +480,8 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
       :should-show="({ editor, view, state }) => {
         if (!view.hasFocus())
           return false
+        if (isInsideMediaText(editor))
+          return false
         if (editor.isActive('image') && !editor.isActive('figure'))
           return true
         const sel = state.selection as { node?: { type?: { name?: string } } }
@@ -486,6 +489,13 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
           return true
         return false
       }"
+    />
+
+    <UEditorToolbar
+      :editor="editor"
+      :items="mediaTextToolbarItems(editor)"
+      layout="bubble"
+      :should-show="({ editor, view }) => view.hasFocus() && editor.isActive('mediaText')"
     />
 
     <UEditorToolbar
@@ -536,7 +546,12 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 
 <style>
 @import '../../assets/css/rich-media-text.css';
+@import '../../assets/css/rich-image-float.css';
 @import '../../assets/css/rich-embed.css';
+
+.tiptap {
+  display: flow-root;
+}
 
 .tiptap .embed-node.ProseMirror-selectednode {
   outline: 2px solid var(--ui-primary, #3b82f6);

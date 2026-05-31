@@ -70,7 +70,7 @@ export const MediaText = Node.create({
 export function mediaTextToolbarItems(editor: Editor): EditorToolbarItem[][] {
   return [[{
     icon: 'i-lucide-arrow-left-right',
-    tooltip: { text: 'Swap Layout' },
+    tooltip: { text: 'Swap side' },
     onClick: () => {
       const currentLayout = editor.getAttributes('mediaText').layout
       const newLayout = currentLayout === 'image-left' ? 'image-right' : 'image-left'
@@ -80,7 +80,7 @@ export function mediaTextToolbarItems(editor: Editor): EditorToolbarItem[][] {
     // This allows the user to break the block back into a normal image and text,
     // so they can use your standard image replacement/upload tools!
     icon: 'i-lucide-ungroup',
-    tooltip: { text: 'Revert to Standard Image' },
+    tooltip: { text: 'Break media block' },
     onClick: () => {
       const { state } = editor
       const $from = state.selection.$from
