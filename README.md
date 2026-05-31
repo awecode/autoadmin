@@ -636,6 +636,18 @@ export default defineNitroPlugin(() => {
 
 This will render a multi-select component on the `posts` form, allowing you to associate multiple tags with a post.
 
+For long labels or many selections, enable a per-line selected list with `fieldAttrs.selectedList` on the relation field (field name is `___<relationName>___<columnName>`, e.g. `___tags___tagId`):
+
+```ts
+registry.register(posts, {
+  m2m: { tags: postsToTags },
+  fields: [{
+    name: '___tags___tagId',
+    fieldAttrs: { selectedList: true },
+  }],
+})
+```
+
 ### One-to-Many (`o2m`)
 
 While this is not usually required, autoadmin allows rendering one to many relation in a form, a reverse relation of foreign keys.
