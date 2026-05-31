@@ -3,20 +3,13 @@
   display: flow-root;
 }
 
-.tiptap .content-image-float-left,
-.tiptap figure.content-image-float-left,
-img.content-image-float-left,
-figure.content-image-float-left {
+.content-image-float-left {
   float: left;
   margin: 0 1.5rem 1rem 0;
   /* max-width: min(50%, 28rem); */
   max-width: 50%;
 }
-
-.tiptap .content-image-float-right,
-.tiptap figure.content-image-float-right,
-.content-image-float-right,
-figure.content-image-float-right {
+.content-image-float-right {
   float: right;
   margin: 0 0 1rem 1.5rem;
   /* max-width: min(50%, 28rem); */
@@ -25,9 +18,8 @@ figure.content-image-float-right {
 
 @media (max-width: 767px) {
   .content-image-float-left,
-  .content-image-float-right,
-  figure.content-image-float-left,
-  figure.content-image-float-right {
+  .content-image-float-right
+ {
     float: none;
     max-width: 100%;
     width: 100%;
