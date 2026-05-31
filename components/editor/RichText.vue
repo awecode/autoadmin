@@ -561,7 +561,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 
 /* Figure (image with caption) — skip floated figures; shared rules in rich-image-float.css */
 .tiptap figure:not(.content-image-float-left):not(.content-image-float-right) {
-  display: flex;
+  display: inline-block;
   flex-direction: column;
   gap: 0.5rem;
   margin: 1rem 0;
