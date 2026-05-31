@@ -1,8 +1,8 @@
+import type { ImageFloat } from './imageFloat'
 import { mergeAttributes, Node } from '@tiptap/core'
 import { Fragment, DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model'
 import { NodeSelection } from '@tiptap/pm/state'
-import type { ImageFloat } from './imageFloat'
-import { applyFloatClass, imageFloatAttribute } from './imageFloat'
+import { applyFloatClass, parseFloatAttribute } from './imageFloat'
 
 function findNodesInRange(doc: import('@tiptap/pm/model').Node, from: number, to: number, predicate: (node: import('@tiptap/pm/model').Node) => boolean): { node: import('@tiptap/pm/model').Node, pos: number }[] {
   const result: { node: import('@tiptap/pm/model').Node, pos: number }[] = []
@@ -64,7 +64,11 @@ export const Figure = Node.create({
         default: null,
         parseHTML: element => element.querySelector('img')?.getAttribute('height'),
       },
-      float: imageFloatAttribute,
+      float: {
+        default: 'none' as ImageFloat,
+        parseHTML: element => parseFloatAttribute(element as HTMLElement),
+        renderHTML: () => ({}),
+      },
     }
   },
 
@@ -83,16 +87,28 @@ export const Figure = Node.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes, node }) {
+  renderHTML({ node }) {
     const floatClass = node.attrs.float === 'left'
       ? 'content-image-float-left'
       : node.attrs.float === 'right'
         ? 'content-image-float-right'
         : undefined
+    const { src, alt, title, width, height } = node.attrs
+    const imgAttrs: Record<string, string> = {}
+    if (src)
+      imgAttrs.src = src
+    if (alt != null)
+      imgAttrs.alt = alt
+    if (title)
+      imgAttrs.title = title
+    if (width != null)
+      imgAttrs.width = String(width)
+    if (height != null)
+      imgAttrs.height = String(height)
     return [
       'figure',
       mergeAttributes(this.options.HTMLAttributes, floatClass ? { class: floatClass } : {}),
-      ['img', mergeAttributes(HTMLAttributes, { draggable: false, contenteditable: false })],
+      ['img', mergeAttributes(imgAttrs, { draggable: false, contenteditable: false })],
       ['figcaption', 0],
     ]
   },

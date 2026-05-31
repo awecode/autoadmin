@@ -548,10 +548,6 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 @import '../../assets/css/rich-image-float.css';
 @import '../../assets/css/rich-embed.css';
 
-.tiptap {
-  display: flow-root;
-}
-
 .tiptap .embed-node.ProseMirror-selectednode {
   outline: 2px solid var(--ui-primary, #3b82f6);
   border-radius: 0.375rem;
@@ -581,6 +577,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 .tiptap figure figcaption {
   color: var(--ui-text-dimmed, #6b7280);
 }
+
 .tiptap figure.ProseMirror-selectednode,
 .tiptap figure:has(figcaption:focus) {
   outline: 2px solid var(--ui-primary, #3b82f6);
