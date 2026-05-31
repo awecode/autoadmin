@@ -1,42 +1,65 @@
-/* =========================================
-   1. MOBILE FIRST (Default Stacked Layout)
-   ========================================= */
+/* Rich text — shared styles for editor output and frontend prose */
 
-/* Strip default figure spacing and allow shrinking */
+/* --- Image float (text wrap) --- */
+
+.prose {
+  display: flow-root;
+}
+
+.content-image-float-left {
+  float: left;
+  margin: 0 1.5rem 1rem 0;
+  max-width: min(50%, 28rem);
+}
+
+.content-image-float-right {
+  float: right;
+  margin: 0 0 1rem 1.5rem;
+  max-width: min(50%, 28rem);
+}
+
+@media (max-width: 767px) {
+  .content-image-float-left,
+  .content-image-float-right {
+    float: none;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0;
+  }
+}
+
+/* --- Media text (side-by-side) --- */
+
+/* Mobile first: stacked layout */
 .media-text-left figure,
 .media-text-right figure {
   margin: 0;
   min-width: 0;
-  width: 100%; /* Guarantee figure takes full width on mobile */
+  width: 100%;
 }
 
-/* Make images fluid */
 .media-text-left img,
 .media-text-right img {
   max-width: 100%;
   height: auto;
   display: block;
-  width: 100%; /* Force image to fill the figure */
+  width: 100%;
 }
 
-/* Set the single-column grid */
 .media-text-left,
 .media-text-right {
   display: grid;
-  grid-template-columns: 1fr; /* Strictly ONE column */
+  grid-template-columns: 1fr;
   margin: 1.5rem 0;
 }
 
-/* THE FIX: Force ALL children into Column 1 on mobile */
 .media-text-left > *,
 .media-text-right > * {
   grid-column: 1;
   grid-row: auto;
 }
 
-/* =========================================
-   2. DESKTOP (Side-by-Side Layout)
-   ========================================= */
 @media (min-width: 768px) {
   .media-text-left,
   .media-text-right {
@@ -45,9 +68,6 @@
     align-items: start;
   }
 
-  /* * fit-content(75%): Image takes its natural width (auto), but STOPS growing at 75%.
-     * minmax(200px, 1fr): Text column is guaranteed at least 200px, but takes all remaining space.
-     */
   .media-text-left {
     grid-template-columns: fit-content(75%) minmax(200px, 1fr);
   }
@@ -56,7 +76,6 @@
     grid-template-columns: minmax(200px, 1fr) fit-content(75%);
   }
 
-  /* Keep your placement hacks below exactly the same */
   .media-text-left > *:first-child {
     grid-column: 1;
     grid-row: 1 / span 100;
@@ -74,8 +93,6 @@
   }
 }
 
-/* For small screens reduce margin on headings after image */
-
 @media (max-width: 768px) {
   .media-text-left h1,
   .media-text-left h2,
@@ -85,4 +102,33 @@
   .media-text-left h6 {
     margin-top: 1rem;
   }
+}
+
+/* --- Embeds (iframe, video, audio) --- */
+
+.embed-node[data-embed-type="youtube"] {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+}
+
+.embed-node iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.embed-node[data-embed-type="youtube"] iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.embed-node video {
+  width: 100%;
+  max-width: 100%;
+}
+
+.embed-node audio {
+  width: 100%;
 }

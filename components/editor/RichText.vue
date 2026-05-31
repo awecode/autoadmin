@@ -544,9 +544,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 </template>
 
 <style>
-@import '../../assets/css/rich-media-text.css';
-@import '../../assets/css/rich-image-float.css';
-@import '../../assets/css/rich-embed.css';
+@import '../../assets/css/rich-text.css';
 
 .tiptap .embed-node.ProseMirror-selectednode {
   outline: 2px solid var(--ui-primary, #3b82f6);
@@ -559,7 +557,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   max-width: 100%;
 }
 
-/* Figure (image with caption) — skip floated figures; shared rules in rich-image-float.css */
+/* Figure (image with caption) — skip floated figures; float rules in rich-text.css */
 .tiptap figure:not(.content-image-float-left):not(.content-image-float-right) {
   display: inline-block;
   flex-direction: column;
