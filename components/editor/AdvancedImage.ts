@@ -153,7 +153,7 @@ export function imageToolbarItems(editor: Editor): EditorToolbarItem[][] {
     onClick: () => setFloatOnSelection(editor, 'left'),
   }, {
     icon: 'i-lucide-wrap-text',
-    tooltip: { text: 'Block image' },
+    tooltip: { text: 'No wrap' },
     active: currentFloat === 'none',
     onClick: () => setFloatOnSelection(editor, 'none'),
   }, {
