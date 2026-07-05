@@ -13,6 +13,8 @@ const props = withDefaults(defineProps<{
 const route = useRoute()
 const router = useRouter()
 
+const routePage = useRouteQuery('page', undefined, { route, router })
+
 // Manage filter state via URL query parameters
 const filterQuery = useRouteQuery('filters', '', {
   route,
@@ -60,6 +62,8 @@ function getFilterModel(filter: { field: string, type?: string }) {
         }
 
         filterQuery.value = current
+        // Changed filters invalidate the current pagination; go back to page 1
+        routePage.value = undefined
       },
     })
     filterModels.set(filter.field, model)
@@ -73,6 +77,7 @@ const mobileFiltersOpen = ref(false)
 // Clear all filters
 function clearAllFilters() {
   filterQuery.value = {}
+  routePage.value = undefined
   mobileFiltersOpen.value = false
 }
 
