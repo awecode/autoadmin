@@ -17,10 +17,18 @@ const route = useRoute()
 const router = useRouter()
 
 const routeSearch = useRouteQuery<string>('q', '', { route, router })
+const routePage = useRouteQuery('page', undefined, { route, router })
 const searchInput = ref(String(routeSearch.value ?? ''))
 
 // input -> route (debounced), route -> input (immediate, e.g. back/forward nav)
-watchDebounced(searchInput, value => routeSearch.value = value.trim(), { debounce: () => props.debounceMs })
+watchDebounced(searchInput, (value) => {
+  const trimmed = value.trim()
+  if (trimmed === routeSearch.value)
+    return
+  routeSearch.value = trimmed
+  // A new search invalidates the current pagination; go back to page 1
+  routePage.value = undefined
+}, { debounce: () => props.debounceMs })
 watch(routeSearch, value => searchInput.value = String(value ?? ''))
 </script>
 
