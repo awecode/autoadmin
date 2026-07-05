@@ -295,11 +295,11 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
               :loading="status === 'pending' || isLoadingChoices"
               @update:open="onSelectMenuOpen"
             >
-              <template v-if="relationManySelectedList" #default="{ modelValue }">
+              <template v-if="relationManySelectedList" #default="{ modelValue: selectedItems }">
                 <span class="truncate text-dimmed">
                   {{
-                    Array.isArray(modelValue) && modelValue.length
-                      ? `${modelValue.length} selected`
+                    Array.isArray(selectedItems) && selectedItems.length
+                      ? `${selectedItems.length} selected`
                       : (field.inputAttrs?.placeholder ?? 'Select…')
                   }}
                 </span>
