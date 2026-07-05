@@ -20,7 +20,7 @@ const routeSearch = useRouteQuery<string>('q', '', { route, router })
 const searchInput = ref(String(routeSearch.value ?? ''))
 
 // input -> route (debounced), route -> input (immediate, e.g. back/forward nav)
-watchDebounced(searchInput, value => routeSearch.value = value, { debounce: () => props.debounceMs })
+watchDebounced(searchInput, value => routeSearch.value = value.trim(), { debounce: () => props.debounceMs })
 watch(routeSearch, value => searchInput.value = String(value ?? ''))
 </script>
 
