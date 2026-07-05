@@ -13,7 +13,7 @@ defineProps<{
 const route = useRoute()
 const router = useRouter()
 
-const page = useRouteQuery('page', 1, { route, router, transform: Number })
+const page = useRouteQuery('page', 1, { route, router, transform: Number, mode: 'push' })
 </script>
 
 <template>

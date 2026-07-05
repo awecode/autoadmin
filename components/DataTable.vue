@@ -84,6 +84,7 @@ const defaultListPath = router.resolve({ name: props.listRouteName, params: { mo
 const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[]>('sort', '', {
   route,
   router,
+  mode: 'push',
   transform: {
     get(value: string | undefined) {
       if (!value) {
@@ -110,7 +111,7 @@ const sort = useRouteQuery<string | undefined, { id: string, desc: boolean }[]>(
 
 const paginationConfig = config.public?.pagination
 const defaultSize = (paginationConfig && typeof paginationConfig === 'object' && 'defaultSize' in paginationConfig && typeof paginationConfig.defaultSize === 'number' ? paginationConfig.defaultSize : 20)
-const size = useRouteQuery('size', defaultSize, { route, router, transform: Number })
+const size = useRouteQuery('size', defaultSize, { route, router, transform: Number, mode: 'push' })
 
 const filterQuery = useRouteQuery('filters', '', {
   route,

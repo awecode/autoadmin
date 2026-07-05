@@ -19,6 +19,7 @@ const routePage = useRouteQuery('page', undefined, { route, router })
 const filterQuery = useRouteQuery('filters', '', {
   route,
   router,
+  mode: 'push',
   transform: {
     get(value: string) {
       if (!value) {
