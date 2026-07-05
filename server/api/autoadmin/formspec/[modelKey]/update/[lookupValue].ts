@@ -1,9 +1,11 @@
 import type { Table } from 'drizzle-orm'
 import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
+import { isDateOnlyColumn, isDateTimeColumn, isSQLiteTimestampColumn } from '#layers/autoadmin/server/utils/dialect'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metadata'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 import { assertRoleAccessAllowed, getAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
+import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { eq } from 'drizzle-orm'
 import { zerialize } from 'zodex'
 
@@ -102,7 +104,19 @@ export default defineEventHandler(async (event) => {
 
   const labelColumnName = cfg.labelColumnName
   if (specWithMetadata.values && labelColumnName in specWithMetadata.values) {
-    specWithMetadata.labelString = specWithMetadata.values[labelColumnName]
+    const labelValue = specWithMetadata.values[labelColumnName]
+    const labelColumn = cfg.columns[labelColumnName]
+    const isTemporalLabel = labelValue instanceof Date
+      || (labelColumn && (isDateTimeColumn(labelColumn) || isDateOnlyColumn(labelColumn) || isSQLiteTimestampColumn(labelColumn)))
+    if (isTemporalLabel && labelValue) {
+      // Date/datetime labels serialize as ISO strings; humanify for the page header
+      const labelFieldType = specWithMetadata.fields.find(field => field.name === labelColumnName)?.type
+      const dateOnly = (labelColumn && isDateOnlyColumn(labelColumn)) || labelFieldType === 'date'
+      specWithMetadata.labelString = humanifyDateTime(labelValue, { includeTime: !dateOnly })
+    }
+    else {
+      specWithMetadata.labelString = labelValue
+    }
     // Now remove the label column from the spec values if it is not included in form fields
     if (!specWithMetadata.fields.some(field => field.name === labelColumnName)) {
       delete specWithMetadata.values[labelColumnName]
