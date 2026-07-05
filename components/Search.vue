@@ -41,6 +41,7 @@ watch(routeSearch, value => searchInput.value = String(value ?? ''))
       v-model="searchInput"
       class="max-w-xl"
       color="neutral"
+      type="search"
       :placeholder="placeholder"
     />
   </div>
