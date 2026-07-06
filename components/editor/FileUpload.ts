@@ -10,6 +10,13 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
   })
 }
 
+const pendingUploadCount = ref(0)
+
+/** Number of editor file uploads currently in flight (images, files, embed media). */
+export function useEditorPendingUploads() {
+  return readonly(pendingUploadCount)
+}
+
 export async function uploadFile(file: File, uploadPrefix?: string): Promise<string> {
   const config = useRuntimeConfig()
   const apiPrefix = config.public.autoadmin.apiPrefix
@@ -20,6 +27,7 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
     fileName: file.name,
   })
 
+  pendingUploadCount.value++
   try {
     const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
       method: 'POST',
@@ -37,6 +45,9 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
     // eslint-disable-next-line no-alert
     window.alert(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error
+  }
+  finally {
+    pendingUploadCount.value--
   }
 }
 

@@ -3,6 +3,7 @@ import type { FormSpec } from '#layers/autoadmin/server/utils/form'
 import type { RouteLocationRaw } from 'vue-router'
 
 import type { ZodObject, ZodType } from 'zod'
+import { useEditorPendingUploads } from '#layers/autoadmin/components/editor/FileUpload'
 import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
 import { getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
 import { slugify } from '#layers/autoadmin/utils/string'
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 
 const form = useTemplateRef('form')
 const loading = ref(false)
+const pendingUploads = useEditorPendingUploads()
 
 // Initialize state with values for update and default values for create
 function initializeState() {
@@ -114,6 +116,10 @@ function handleError(error: Error) {
 const router = useRouter()
 
 async function performSave() {
+  if (pendingUploads.value > 0) {
+    toast.add({ title: 'Please wait', description: 'File uploads are still in progress.', color: 'warning' })
+    return
+  }
   loading.value = true
   try {
     const response = await $fetch<{ success: boolean, data: Record<string, any> }>(props.endpoint, {
@@ -177,10 +183,11 @@ onUnmounted(() => {
         color="neutral"
         type="submit"
         variant="solid"
-        :class="{ 'cursor-not-allowed': loading || form?.errors?.length }"
-        :disabled="loading || !!form?.errors?.length"
+        :class="{ 'cursor-not-allowed': loading || pendingUploads > 0 || form?.errors?.length }"
+        :disabled="loading || pendingUploads > 0 || !!form?.errors?.length"
+        :loading="pendingUploads > 0"
       >
-        {{ loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
+        {{ pendingUploads > 0 ? 'Uploading files...' : loading ? mode === 'create' ? 'Creating...' : 'Updating...' : mode === 'create' ? 'Create' : 'Update' }}
       </UButton>
       <UButton
         v-if="cancelPath || redirectPath"
