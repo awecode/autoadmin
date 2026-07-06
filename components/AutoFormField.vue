@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormSpec } from '#layers/autoadmin/server/utils/form'
-import { normalizeOptions, transformErrorMessage } from '#layers/autoadmin/utils/form'
+import { normalizeOptions, sortOptionsWithSelectedFirst, transformErrorMessage } from '#layers/autoadmin/utils/form'
 import { useAdminClient } from '../composables/adminClient'
 import AutoFormModal from './AutoFormModal.vue'
 
@@ -117,9 +117,23 @@ const { data: selectMenuItemsRaw, status, execute } = await useLazyFetch<{
   immediate: false,
 })
 
-const selectMenuItems = computed(() =>
-  selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : [],
+const selectMenuItems = computed(() => {
+  const items = selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : []
+  if (props.field.type === 'relation-many')
+    return sortOptionsWithSelectedFirst(items, props.modelValue)
+  return items
+})
+
+const relationManySelectedList = computed(() =>
+  props.field.type === 'relation-many' && !!props.field.fieldAttrs?.selectedList,
 )
+
+const formFieldAttrs = computed(() => {
+  if (!props.field.fieldAttrs)
+    return undefined
+  const { selectedList, ...attrs } = props.field.fieldAttrs
+  return Object.keys(attrs).length ? attrs : undefined
+})
 
 if (props.field.options) {
   selectMenuItemsRaw.value = normalizeOptions(props.field.options)
@@ -138,6 +152,22 @@ async function onSelectMenuOpen(open: boolean) {
       isLoadingChoices.value = false
     }
   }
+}
+
+const selectedRelationManyItems = computed(() => {
+  if (props.field.type !== 'relation-many' || !Array.isArray(fieldValue.value))
+    return []
+  const itemByValue = new Map(selectMenuItems.value.map(item => [String(item.value), item]))
+  return fieldValue.value.map((value) => {
+    const item = itemByValue.get(String(value))
+    return item ?? { label: String(value), value }
+  })
+})
+
+function removeRelationManyItem(value: string | number) {
+  if (!Array.isArray(fieldValue.value))
+    return
+  fieldValue.value = fieldValue.value.filter(v => String(v) !== String(value))
 }
 
 const overlay = useOverlay()
@@ -193,7 +223,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
     :label="field.label"
     :name="field.name"
     :required="field.required"
-    v-bind="field.fieldAttrs"
+    v-bind="formFieldAttrs"
   >
     <!-- Error slot with error message transformation -->
     <template #error="{ error }">
@@ -255,51 +285,86 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         </div>
 
         <!-- Relation (multi-select) -->
-        <div v-else-if="field.type === 'relation-many'" class="flex items-center">
-          <USelectMenu
-            v-model="fieldValue"
-            multiple
-            trailing
-            class="w-full"
-            label-key="label"
-            value-key="value"
-            v-bind="field.inputAttrs"
-            :virtualize="selectMenuItems.length > 100"
-            :items="selectMenuItems ?? []"
-            :loading="status === 'pending' || isLoadingChoices"
-            @update:open="onSelectMenuOpen"
+        <div
+          v-else-if="field.type === 'relation-many'"
+          class="flex w-full flex-col gap-2"
+        >
+          <div class="flex items-center">
+            <USelectMenu
+              v-model="fieldValue"
+              multiple
+              trailing
+              class="w-full"
+              label-key="label"
+              value-key="value"
+              v-bind="field.inputAttrs"
+              :virtualize="selectMenuItems.length > 100"
+              :items="selectMenuItems ?? []"
+              :loading="status === 'pending' || isLoadingChoices"
+              @update:open="onSelectMenuOpen"
+            >
+              <template v-if="relationManySelectedList" #default="{ modelValue: selectedItems }">
+                <span class="truncate text-dimmed">
+                  {{
+                    Array.isArray(selectedItems) && selectedItems.length
+                      ? `${selectedItems.length} selected`
+                      : (field.inputAttrs?.placeholder ?? 'Select…')
+                  }}
+                </span>
+              </template>
+              <template #empty>
+                {{ status === 'pending' || isLoadingChoices ? 'Loading...' : 'No data' }}
+              </template>
+              <template #trailing>
+                <ClientOnly>
+                  <UIcon
+                    v-if="fieldValue && Array.isArray(fieldValue) && fieldValue.length"
+                    class="text-dimmed px-2 hover:text-red-300"
+                    name="i-lucide-x"
+                    @click.stop="() => { fieldValue = [] }"
+                  />
+                  <UIcon class="text-dimmed size-5" name="i-lucide-chevron-down" />
+                </ClientOnly>
+              </template>
+            </USelectMenu>
+            <UButton
+              v-if="field.relationConfig?.enableCreate"
+              class="ml-1 shrink-0"
+              color="neutral"
+              icon="i-lucide-square-plus"
+              variant="soft"
+              @click.prevent="openRelationModal('create')"
+            />
+            <UButton
+              v-if="field.relationConfig?.enableUpdate && fieldValue && Array.isArray(fieldValue) && fieldValue.length === 1"
+              class="shrink-0"
+              color="neutral"
+              icon="i-lucide-edit"
+              variant="soft"
+              @click.prevent="openRelationModal('update', fieldValue[0])"
+            />
+            <span v-else class="ml-6 shrink-0" />
+          </div>
+          <ul
+            v-if="relationManySelectedList && selectedRelationManyItems.length"
+            class="flex flex-col gap-1 rounded-md border border-muted p-2"
           >
-            <template #empty>
-              {{ status === 'pending' || isLoadingChoices ? 'Loading...' : 'No data' }}
-            </template>
-            <template #trailing>
-              <ClientOnly>
-                <UIcon
-                  v-if="fieldValue"
-                  class="text-dimmed px-2 hover:text-red-300"
-                  name="i-lucide-x"
-                  @click.stop="() => { fieldValue = [] }"
-                />
-                <UIcon class="text-dimmed size-5" name="i-lucide-chevron-down" />
-              </ClientOnly>
-            </template>
-          </USelectMenu>
-          <UButton
-            v-if="field.relationConfig?.enableCreate"
-            class="ml-1"
-            color="neutral"
-            icon="i-lucide-square-plus"
-            variant="soft"
-            @click.prevent="openRelationModal('create')"
-          />
-          <UButton
-            v-if="field.relationConfig?.enableUpdate && fieldValue && Array.isArray(fieldValue) && fieldValue.length === 1"
-            color="neutral"
-            icon="i-lucide-edit"
-            variant="soft"
-            @click.prevent="openRelationModal('update', fieldValue[0])"
-          />
-          <span v-else class="ml-6" />
+            <li
+              v-for="item in selectedRelationManyItems"
+              :key="String(item.value)"
+              class="flex min-w-0 items-start gap-2 rounded-sm px-1 py-0.5 hover:bg-elevated/50"
+            >
+              <span class="min-w-0 flex-1 text-sm leading-snug wrap-break-word">{{ item.label }}</span>
+              <UButton
+                class="shrink-0"
+                color="neutral"
+                icon="i-lucide-x"
+                size="xs"
+                variant="ghost"
+                @click="removeRelationManyItem(item.value)"
+              />
+            </li>
+          </ul>
         </div>
 
         <!-- Select dropdown -->

@@ -1,6 +1,8 @@
 import type { InferSelectModel, SQL, Table } from 'drizzle-orm'
+import type { H3Event } from 'h3'
 import type { VNode } from 'vue'
 import type { ZodObject, ZodType } from 'zod'
+import type { BaseWhereFn } from './baseWhere'
 import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
 import type { FieldSpec, Option } from './form'
@@ -11,8 +13,13 @@ import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
+import { assertValidListOrdering } from './listOrdering'
 import { getTableMetadata } from './metadata'
 import { normalizeAutoadminRolesInput } from './roleHelpers'
+
+export interface AutoadminRequestContext {
+  event?: H3Event
+}
 
 // Represents a column name of table T
 export type ColKey<T extends Table> = Extract<keyof T['_']['columns'], string>
@@ -122,6 +129,8 @@ interface ListOptions<T extends Table = Table, C extends CustomSelections = Cust
   endpoint?: string
   filterFields?: FilterFieldDef<T>[]
   fields?: Array<ListFieldDef<T, C>>
+  /** Default ordering by column (format: `columnName:asc` or `columnName:desc`). */
+  defaultOrdering?: string
   // Do not allow both fields and columns to be set at the same time
 }
 
@@ -190,6 +199,12 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   lookupColumnName?: ColKey<T>
   /** An integer column used for drag-and-drop ordering. When set, the list view enables drag-drop reordering and defaults to sorting by this field ascending. */
   sortField?: ColKey<T>
+  /**
+   * Display order in the sidebar and dashboard index. Lower numbers come first.
+   * Models without an explicit `order` are treated as `0`; use a negative number to
+   * float to the top or a positive one to push down. Ties preserve registration order.
+   */
+  order?: number
   // searchFields?: ColKey<T>[]
   list?: Partial<ListOptions<T, C>>
   create?: Partial<CreateOptions<T>>
@@ -204,6 +219,11 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
    * Role allowlists: `string[]` or `{ full?: string[], list?: string[], view?: string[], create?: string[], update?: string[], delete?: string[] }`.
    */
   roles?: string[] | AutoadminRolesConfig
+  /**
+   * Persistent row filter (Drizzle `SQL`) AND-ed onto list, detail, update, delete, bulk-delete, and reorder.
+   * Example: [eq(posts.status, 'published')]
+   */
+  baseWhere?: BaseWhereFn<T>
 }
 
 // AdminModelConfig is the config available in the registry after processing AdminModelOptions
@@ -218,6 +238,7 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   lookupColumnName: ColKey<T>
   lookupColumn: T['_']['columns'][ColKey<T>]
   sortField?: string
+  order: number
   list: ListOptions<T, C>
   create: CreateOptions<T>
   update: UpdateOptions<T>
@@ -235,6 +256,7 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   slugLockedByDefault?: boolean
   /** Normalized from `AdminModelOptions.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
+  baseWhere?: BaseWhereFn<T>
 }
 
 function getStaticDefaultOptions() {
@@ -361,8 +383,19 @@ export function useAdminRegistry() {
       }
     }
 
+    if (cfg.list.defaultOrdering) {
+      if (cfg.sortField) {
+        throw new Error(
+          `Model "${label}": list.defaultOrdering cannot be used together with sortField (drag-drop ordering).`,
+        )
+      }
+      assertValidListOrdering(cfg.list.defaultOrdering, `list.defaultOrdering for model "${label}"`)
+    }
+
     cfg.metadata = getTableMetadata(cfg.columns)
     cfg.roles = normalizeAutoadminRolesInput(opts.roles)
+    cfg.baseWhere = opts.baseWhere
+    cfg.order = opts.order ?? 0
     return cfg
   }
 

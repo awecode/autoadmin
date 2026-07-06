@@ -1,17 +1,26 @@
-import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { Table } from 'drizzle-orm'
 import { asc, inArray, sql } from 'drizzle-orm'
+import { buildBaseWhereContext, getBaseWhereClause } from './baseWhere'
 
 /**
  * Fetch all rows sorted by sortField ASC, lookupColumn ASC (deterministic).
  * Returns the ordered list of lookup values and a map of lookup -> current sortValue.
  */
-export async function fetchSortedRows(db: any, cfg: AdminModelConfig<Table>) {
+export async function fetchSortedRows(
+  db: any,
+  cfg: AdminModelConfig<Table>,
+  requestCtx?: AutoadminRequestContext,
+) {
   const sortColumn = cfg.columns[cfg.sortField!]!
-  const allRows = await db
+  const baseWhere = await getBaseWhereClause(cfg, buildBaseWhereContext(cfg, 'reorder', requestCtx))
+  let query = db
     .select({ lookup: cfg.lookupColumn, sortValue: sortColumn })
     .from(cfg.model)
-    .orderBy(asc(sortColumn), asc(cfg.lookupColumn))
+  if (baseWhere) {
+    query = query.where(baseWhere)
+  }
+  const allRows = await query.orderBy(asc(sortColumn), asc(cfg.lookupColumn))
 
   const allLookups: (string | number)[] = allRows.map((r: any) => r.lookup)
   const oldValues = new Map<string, number>(allRows.map((r: any) => [String(r.lookup), r.sortValue as number]))

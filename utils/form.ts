@@ -14,6 +14,26 @@ export function normalizeOptions(opts: Option[]) {
   })
 }
 
+/** Put selected relation-many options first, preserving selection order. */
+export function sortOptionsWithSelectedFirst<T extends { value: string | number }>(
+  items: T[],
+  selectedValues: unknown[] | null | undefined,
+): T[] {
+  if (!selectedValues?.length)
+    return items
+
+  const selectedSet = new Set(selectedValues.map(v => String(v)))
+  const itemByValue = new Map(items.map(item => [String(item.value), item]))
+  const selected: T[] = []
+  for (const value of selectedValues) {
+    const item = itemByValue.get(String(value))
+    if (item)
+      selected.push(item)
+  }
+  const unselected = items.filter(item => !selectedSet.has(String(item.value)))
+  return [...selected, ...unselected]
+}
+
 export function getErrorMessageFromError(error: Error) {
   return typeof error === 'object' && error !== null
     ? (error as any)?.data?.data?.message ?? (error as any)?.data?.message ?? (error as any)?.message ?? String(error)

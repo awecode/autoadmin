@@ -1,6 +1,7 @@
 import { inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { getModelConfig } from '../../utils/autoadmin'
+import { assertLookupsInBaseWhere, buildBaseWhereContext, getBaseWhereClause, mergeWhere } from '../../utils/baseWhere'
 import { useAdminDb } from '../../utils/db'
 import { handleDrizzleError } from '../../utils/drizzle'
 import { batchUpdate, fetchSortedRows, resequenceAndUpdate } from '../../utils/reorder'
@@ -31,12 +32,23 @@ export default defineEventHandler(async (event) => {
   }
 
   const db = useAdminDb()
+  const requestCtx = { event }
+  const reorderCtx = buildBaseWhereContext(cfg, 'reorder', requestCtx, { lookupValues: body.orderedLookups })
 
   try {
-    const pageRows = await (db as any)
+    await assertLookupsInBaseWhere(db, cfg, reorderCtx, body.orderedLookups)
+
+    const pageWhere = await mergeWhere(
+      inArray(cfg.lookupColumn, body.orderedLookups),
+      await getBaseWhereClause(cfg, reorderCtx),
+    )
+    let pageQuery = (db as any)
       .select({ lookup: cfg.lookupColumn, sortValue: sortColumn })
       .from(cfg.model)
-      .where(inArray(cfg.lookupColumn, body.orderedLookups))
+    if (pageWhere) {
+      pageQuery = pageQuery.where(pageWhere)
+    }
+    const pageRows = await pageQuery
 
     const requestedLookups = body.orderedLookups.map(lookup => String(lookup))
     const requestedLookupSet = new Set(requestedLookups)
@@ -77,7 +89,7 @@ export default defineEventHandler(async (event) => {
     }
     else {
       // Slow path: full-table resequence (first use / duplicate values)
-      const { allLookups, oldValues } = await fetchSortedRows(db, cfg)
+      const { allLookups, oldValues } = await fetchSortedRows(db, cfg, requestCtx)
 
       const reorderedSet = new Set(body.orderedLookups.map(String))
       const pagePositions: number[] = []

@@ -18,5 +18,5 @@ export default defineEventHandler(async (event) => {
     })
   }
   assertRoleAccessAllowed(event, { roles: cfg.roles }, 'delete')
-  return await bulkDeleteJsonArrayRecords(cfg, body.rowLookups)
+  return await bulkDeleteJsonArrayRecords(cfg, body.rowLookups, { event })
 })

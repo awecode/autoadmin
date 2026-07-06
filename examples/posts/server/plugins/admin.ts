@@ -1,5 +1,5 @@
 import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
-import { inArray, sql } from 'drizzle-orm'
+import { inArray, ne, sql } from 'drizzle-orm'
 import { categories, posts, postsToTags, tags, users } from '../db/schema'
 
 export default defineNitroPlugin(() => {
@@ -71,6 +71,12 @@ export default defineNitroPlugin(() => {
   // Posts - Complex setup with relationships and custom functions
   registry.register(posts, {
     slugFields: { slug: ['title'] },
+    baseWhere: async (_db, ctx) => {
+      if (ctx.event?.context.auth?.user?.role === 'admin') {
+        return undefined
+      }
+      return [ne(posts.status, 'archived')]
+    },
     fields: [
       {
         name: 'content',
@@ -102,6 +108,7 @@ export default defineNitroPlugin(() => {
       },
     ],
     list: {
+      defaultOrdering: 'publishedAt:desc',
       fields: [
         'title',
         {

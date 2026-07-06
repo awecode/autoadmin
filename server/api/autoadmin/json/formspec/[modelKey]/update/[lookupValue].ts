@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     if (!cfg.update.enabled) {
       throw createError({ statusCode: 404, statusMessage: 'Update is disabled for this resource.' })
     }
-    const spec = await buildJsonArrayUpdateFormSpec(cfg, modelKey, lookupValue)
+    const spec = await buildJsonArrayUpdateFormSpec(cfg, modelKey, lookupValue, { event })
     spec.canList = getAllowedActions(event, { roles: cfg.roles }).list
     return { spec }
   }

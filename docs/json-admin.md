@@ -105,6 +105,56 @@ Per-resource **`githubToken`** / `storage.token` overrides the global token when
 
 ---
 
+## Record filter (`baseWhere`) — arrays only
+
+For `kind: 'array'`, `baseWhere` filters rows (in memory) after the file is read.
+
+```ts
+register({
+  kind: 'array',
+  key: 'banners',
+  path: 'content/banners.json',
+  storage: { kind: 'local' },
+  elementSchema: z.object({
+    headline: z.string(),
+    active: z.boolean().optional(),
+  }),
+  baseWhere: (rows, ctx) => {
+    if (ctx.event?.context.auth?.user?.role === 'admin') {
+      return rows
+    }
+    return rows.filter(r => r.active !== false)
+  },
+})
+```
+
+`ctx.action` is `list`, `detail`, `update`, `delete`, or `bulkDelete`. On `list`, `ctx.query` has the request query string. For lookups, `ctx.lookupValue` or `ctx.lookupValues` is set. Use `ctx.event` for auth (see [autoadmin-roles.md](./autoadmin-roles.md)).
+
+Out-of-scope rows return **404** on detail/update/delete.
+
+---
+
+## Programmatic access
+
+You can also reuse the existing json file editing routine for programatically editing a json file. It is exposed with `patchJsonKey` service.
+
+```ts
+import { patchJsonKey } from '#layers/autoadmin/server/services/jsonFileService'
+
+await patchJsonKey(
+  {
+    path: 'config/site-settings.json',
+    storage: { kind: 'github' },
+  },
+  'maintenanceMode',
+  true,
+)
+```
+
+Optional `commitMessage` on the target object; if omitted, GitHub uses **Update JSON**. Credentials: `NUXT_AUTOADMIN_GITHUB_*` / `runtimeConfig.autoadmin.github` (see [Configuration](#configuration)).
+
+---
+
 ## Other notes
 
 - **Auth:** Optional per-resource `roles` — same as Drizzle admin; see [autoadmin-roles.md](./autoadmin-roles.md).

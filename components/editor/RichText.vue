@@ -14,7 +14,7 @@ import EditorTablePopover from './EditorTablePopover.vue'
 import { Embed } from './Embed'
 import { Figure } from './Figure'
 import { handleFiles } from './FileUpload'
-import { MediaText } from './MediaText'
+import { isInsideMediaText, MediaText, mediaTextToolbarItems } from './MediaText'
 import { tableToolbarItems } from './TableToolbar'
 
 const props = defineProps<{
@@ -479,6 +479,8 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
       :should-show="({ editor, view, state }) => {
         if (!view.hasFocus())
           return false
+        if (isInsideMediaText(editor))
+          return false
         if (editor.isActive('image') && !editor.isActive('figure'))
           return true
         const sel = state.selection as { node?: { type?: { name?: string } } }
@@ -486,6 +488,13 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
           return true
         return false
       }"
+    />
+
+    <UEditorToolbar
+      :editor="editor"
+      :items="mediaTextToolbarItems(editor)"
+      layout="bubble"
+      :should-show="({ editor, view }) => view.hasFocus() && editor.isActive('mediaText')"
     />
 
     <UEditorToolbar
@@ -535,30 +544,29 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 </template>
 
 <style>
-@import '../../assets/css/rich-media-text.css';
-@import '../../assets/css/rich-embed.css';
+@import '../../assets/css/rich-text.css';
 
 .tiptap .embed-node.ProseMirror-selectednode {
   outline: 2px solid var(--ui-primary, #3b82f6);
   border-radius: 0.375rem;
 }
 
-.tiptap img{
+.tiptap img:not(.content-image-float-left):not(.content-image-float-right) {
   /* display: inline-block; */
   height: auto;
   max-width: 100%;
 }
 
-/* Figure (image with caption) */
-.tiptap figure {
-  display: flex;
+/* Figure (image with caption) — skip floated figures; float rules in rich-text.css */
+.tiptap figure:not(.content-image-float-left):not(.content-image-float-right) {
+  display: inline-block;
   flex-direction: column;
   gap: 0.5rem;
-  margin: 1rem 0;
+  margin: 0;
   width: fit-content;
   max-width: 100%;
 }
-.tiptap figure > img {
+.tiptap figure:not(.content-image-float-left):not(.content-image-float-right) > img {
   display: block;
   height: auto;
   max-width: 100%;
@@ -567,6 +575,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
 .tiptap figure figcaption {
   color: var(--ui-text-dimmed, #6b7280);
 }
+
 .tiptap figure.ProseMirror-selectednode,
 .tiptap figure:has(figcaption:focus) {
   outline: 2px solid var(--ui-primary, #3b82f6);

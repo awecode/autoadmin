@@ -17,6 +17,25 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
   })
 }
 
+/** Fill missing width/height from natural size; scale the other axis when only one is set. */
+function resolveImageSize(
+  widthInput: number | null,
+  heightInput: number | null,
+  natural: { width: number, height: number },
+): { width: number | null, height: number | null } {
+  const hasWidth = widthInput != null && !Number.isNaN(widthInput)
+  const hasHeight = heightInput != null && !Number.isNaN(heightInput)
+  if (!hasWidth && !hasHeight)
+    return { width: natural.width, height: natural.height }
+  if (natural.width <= 0 || natural.height <= 0)
+    return { width: hasWidth ? widthInput : natural.width, height: hasHeight ? heightInput : natural.height }
+  if (hasWidth && !hasHeight)
+    return { width: widthInput, height: Math.round(widthInput * natural.height / natural.width) }
+  if (!hasWidth && hasHeight)
+    return { width: Math.round(heightInput * natural.width / natural.height), height: heightInput }
+  return { width: widthInput, height: heightInput }
+}
+
 const open = ref(false)
 const url = ref('')
 const alt = ref('')
@@ -109,10 +128,13 @@ async function setImageFromUrl() {
   if (needDims && url.value) {
     const dims = await getImageDimensions(url.value)
     if (dims) {
-      if (widthVal == null || Number.isNaN(widthVal))
-        widthVal = dims.width
-      if (heightVal == null || Number.isNaN(heightVal))
-        heightVal = dims.height
+      const resolved = resolveImageSize(
+        widthVal == null || Number.isNaN(widthVal) ? null : widthVal,
+        heightVal == null || Number.isNaN(heightVal) ? null : heightVal,
+        dims,
+      )
+      widthVal = resolved.width
+      heightVal = resolved.height
     }
   }
   const sizeAttrs = {
@@ -193,13 +215,20 @@ watch(file, async (newFile) => {
     if (src && (attrs.width == null || attrs.height == null)) {
       const dims = await getImageDimensions(src)
       if (dims) {
+        const w = attrs.width != null ? Number(attrs.width) : null
+        const h = attrs.height != null ? Number(attrs.height) : null
+        const resolved = resolveImageSize(
+          w == null || Number.isNaN(w) ? null : w,
+          h == null || Number.isNaN(h) ? null : h,
+          dims,
+        )
         const nodeType = isFig ? 'figure' : 'image'
         props.editor.chain().focus().updateAttributes(nodeType, {
-          width: attrs.width ?? dims.width,
-          height: attrs.height ?? dims.height,
+          width: resolved.width,
+          height: resolved.height,
         }).run()
-        width.value = String(attrs.width ?? dims.width)
-        height.value = String(attrs.height ?? dims.height)
+        width.value = resolved.width != null ? String(resolved.width) : ''
+        height.value = resolved.height != null ? String(resolved.height) : ''
       }
     }
   }
@@ -209,7 +238,10 @@ watch(file, async (newFile) => {
 </script>
 
 <template>
-  <UPopover v-model:open="open" :ui="{ content: 'p-0.5' }">
+  <UPopover
+    v-model:open="open"
+    :ui="{ content: 'p-0.5' }"
+  >
     <UTooltip text="Image">
       <UButton
         icon="i-lucide-image"
@@ -224,8 +256,14 @@ watch(file, async (newFile) => {
     </UTooltip>
 
     <template #content>
-      <div v-if="isUploading" class="flex flex-col items-center justify-center gap-4 h-36">
-        <UIcon name="i-lucide-loader-circle" class="animate-spin" />
+      <div
+        v-if="isUploading"
+        class="flex flex-col items-center justify-center gap-4 h-36"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="animate-spin"
+        />
         <div class="text-sm font-medium">
           Uploading...
         </div>
@@ -238,47 +276,52 @@ watch(file, async (newFile) => {
         v-model="file"
         icon="i-lucide-image"
         accept="image/*"
-        label="Upload an image"
+        class="cursor-pointer"
+        label="Click to upload an image or drag and drop here"
         :preview="false"
       />
       <div class="flex flex-col gap-2 p-2 min-w-64">
         <template v-if="!active">
-          <UInput
-            v-model="url"
-            autofocus
-            name="url"
-            type="url"
-            variant="none"
-            placeholder="Or paste image URL..."
-            @keydown="handleKeyDown"
-          >
-            <div class="flex items-center mr-0.5">
-              <UButton
-                icon="i-lucide-corner-down-left"
-                variant="ghost"
-                size="sm"
-                :disabled="!url"
-                title="Insert image"
-                @click="setImageFromUrl"
-              />
+          <UFormField>
+            <UInput
+              v-model="url"
+              class="w-full"
+              name="url"
+              type="url"
+              placeholder="Or paste image URL..."
+              @keydown="handleKeyDown"
+            >
+              <div class="flex items-center mr-0.5">
+                <UButton
+                  icon="i-lucide-corner-down-left"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="!url"
+                  title="Insert image"
+                  @click="setImageFromUrl"
+                />
 
-              <USeparator orientation="vertical" class="h-6 mx-1" />
+                <USeparator
+                  orientation="vertical"
+                  class="h-6 mx-1"
+                />
 
-              <UButton
-                icon="i-lucide-external-link"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="!url"
-                title="Open in new window"
-                @click="openLink"
-              />
-            </div>
-          </UInput>
+                <UButton
+                  icon="i-lucide-external-link"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="!url"
+                  title="Open in new window"
+                  @click="openLink"
+                />
+              </div>
+            </UInput>
+          </UFormField>
         </template>
         <div class="flex flex-col gap-2">
           <span class="text-xs font-medium text-dimmed">Optional fields</span>
-          <UFormField label="Alt text">
+          <UFormField label="Description (Alt text)">
             <UInput
               v-model="alt"
               name="alt"

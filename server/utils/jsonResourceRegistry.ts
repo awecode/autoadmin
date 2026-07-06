@@ -3,6 +3,7 @@ import type { JsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStora
 import type { JsonStorageRegisterDiscriminated } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
 import type { FieldType } from '#layers/autoadmin/server/utils/registry'
 import type { ZodObject, ZodType } from 'zod'
+import type { JsonArrayBaseWhereFn } from './jsonBaseWhere'
 import type { AutoadminRolesConfig } from './roleAccess'
 import { basename } from 'node:path'
 import { buildJsonStorageConfig } from '#layers/autoadmin/server/utils/jsonStorage/normalizeRegisterStorage'
@@ -10,6 +11,7 @@ import { resolveJsonAdminApiPrefix } from '#layers/autoadmin/utils/jsonAdmin'
 import { createNoSpaceString, slugify, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
 import { z } from 'zod'
+import { assertValidListOrdering } from './listOrdering'
 import { normalizeAutoadminRolesInput } from './roleHelpers'
 
 export const JSON_OBJECT_LOOKUP = '__root__'
@@ -32,6 +34,8 @@ export interface JsonArrayListOptions {
   searchPlaceholder?: string
   searchFields?: string[]
   fields?: Array<JsonArrayListFieldDef | string>
+  /** Default ordering by field (format: `field:asc` or `field:desc`). */
+  defaultOrdering?: string
 }
 
 export interface JsonCrudRoute {
@@ -115,6 +119,11 @@ export interface RegisterJsonArrayResourceInput {
    * Role allowlists: `string[]` or an object for per-action roles.
    */
   roles?: string[] | AutoadminRolesConfig
+  /**
+   * In-memory row filter for list/detail/update/delete (not create).
+   * Receives all rows from the file; return the subset visible for `ctx.action`.
+   */
+  baseWhere?: JsonArrayBaseWhereFn
 }
 
 export type RegisterJsonResourceInput = RegisterJsonObjectResourceInput | RegisterJsonArrayResourceInput
@@ -168,6 +177,7 @@ export interface JsonArrayResourceConfig {
   slugLockedByDefault?: boolean
   /** Normalized from `RegisterJsonArrayResourceInput.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
+  baseWhere?: JsonArrayBaseWhereFn
 }
 
 export type JsonResourceConfig = JsonObjectResourceConfig | JsonArrayResourceConfig
@@ -297,6 +307,10 @@ function defaultArrayConfig(
     deleteOpts.endpoint = `${apiPrefix}/${key}`
   }
 
+  if (list.defaultOrdering) {
+    assertValidListOrdering(list.defaultOrdering, `list.defaultOrdering for JSON array "${key}"`)
+  }
+
   return {
     kind: 'array',
     key,
@@ -319,6 +333,7 @@ function defaultArrayConfig(
     slugCollision: input.slugCollision,
     slugLockedByDefault: input.slugLockedByDefault,
     roles: normalizeAutoadminRolesInput(input.roles),
+    baseWhere: input.baseWhere,
   }
 }
 

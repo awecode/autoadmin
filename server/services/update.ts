@@ -1,13 +1,19 @@
-import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { InferSelectModel, Table } from 'drizzle-orm'
 import { eq } from 'drizzle-orm'
+import { buildBaseWhereContext, whereWithBaseWhere } from '../utils/baseWhere'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { assertUniqueSlugs, ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
 import { unwrapZodType } from '../utils/zod'
 
-export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lookupValue: string, data: any): Promise<any> {
+export async function updateRecord<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  lookupValue: string,
+  data: any,
+  requestCtx?: AutoadminRequestContext,
+): Promise<any> {
   const modelKey = cfg.key
   if (!cfg.update.enabled) {
     throw createError({
@@ -50,10 +56,16 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
   if (cfg.slugCollision === 'reject') {
     await assertUniqueSlugs(cfg, validatedData as Record<string, any>, lookupValue)
   }
+  const baseWhereCtx = buildBaseWhereContext(cfg, 'update', requestCtx, { lookupValue })
+  const updateWhere = await whereWithBaseWhere(cfg, baseWhereCtx, eq(cfg.lookupColumn, lookupValue))
 
   let result
   try {
-    result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
+    let updateQuery = db.update(model).set(validatedData)
+    if (updateWhere) {
+      updateQuery = updateQuery.where(updateWhere) as typeof updateQuery
+    }
+    result = await updateQuery.returning()
   }
   catch (error) {
     if (isSlugUniqueViolation(cfg, error)) {
@@ -64,7 +76,11 @@ export async function updateRecord<T extends Table>(cfg: AdminModelConfig<T>, lo
       }
       await ensureUniqueSlugs(cfg, validatedData as Record<string, any>, lookupValue)
       try {
-        result = await db.update(model).set(validatedData).where(eq(cfg.lookupColumn, lookupValue)).returning()
+        let updateQuery = db.update(model).set(validatedData)
+        if (updateWhere) {
+          updateQuery = updateQuery.where(updateWhere) as typeof updateQuery
+        }
+        result = await updateQuery.returning()
       }
       catch (retryError) {
         throw createError(handleDrizzleError(retryError))

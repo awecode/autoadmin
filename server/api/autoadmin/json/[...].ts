@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const body = method !== 'GET' && method !== 'DELETE' ? await readBody(event) : undefined
 
+  const requestCtx = { event }
   const reg = useJsonResourceRegistry()
   const cfg = reg.get(parsed.resourceKey)
   if (!cfg) {
@@ -52,7 +53,7 @@ export default defineEventHandler(async (event) => {
       if (cfg.kind !== 'array') {
         throw createError({ statusCode: 400, statusMessage: 'Not an array resource.' })
       }
-      return await listJsonArrayRecords(cfg, query, getAllowedActions(event, { roles: cfg.roles }))
+      return await listJsonArrayRecords(cfg, query, getAllowedActions(event, { roles: cfg.roles }), requestCtx)
     }
     case 'create': {
       if (cfg.kind !== 'array') {
@@ -68,7 +69,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: 'Lookup value is required.' })
       }
       if (cfg.kind === 'array') {
-        return await getJsonArrayDetail(cfg, parsed.lookupValue)
+        return await getJsonArrayDetail(cfg, parsed.lookupValue, requestCtx)
       }
       return await getJsonObjectDetail(cfg, parsed.lookupValue!)
     }
@@ -80,7 +81,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: 'Request body is required.' })
       }
       if (cfg.kind === 'array') {
-        return await updateJsonArrayRecord(cfg, parsed.lookupValue, body)
+        return await updateJsonArrayRecord(cfg, parsed.lookupValue, body, requestCtx)
       }
       return await updateJsonObjectRecord(cfg, parsed.lookupValue, body)
     }
@@ -91,7 +92,7 @@ export default defineEventHandler(async (event) => {
       if (cfg.kind !== 'array') {
         throw createError({ statusCode: 400, statusMessage: 'Delete is only supported for array JSON resources.' })
       }
-      return await deleteJsonArrayRecord(cfg, parsed.lookupValue)
+      return await deleteJsonArrayRecord(cfg, parsed.lookupValue, requestCtx)
     }
     default:
       throw createError({ statusCode: 400, statusMessage: 'Invalid route.' })

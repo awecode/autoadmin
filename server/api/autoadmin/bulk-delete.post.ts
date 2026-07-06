@@ -11,5 +11,5 @@ export default defineEventHandler(async (event) => {
 
   const cfg = getModelConfig(body.modelKey)
   assertRoleAccessAllowed(event, { roles: cfg.roles }, 'delete')
-  return await bulkDelete(body.modelKey, body.rowLookups)
+  return await bulkDelete(body.modelKey, body.rowLookups, { event })
 })

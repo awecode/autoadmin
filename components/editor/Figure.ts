@@ -1,6 +1,8 @@
+import type { ImageFloat } from './imageFloat'
 import { mergeAttributes, Node } from '@tiptap/core'
 import { Fragment, DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model'
 import { NodeSelection } from '@tiptap/pm/state'
+import { applyFloatClass, parseFloatAttribute } from './imageFloat'
 
 function findNodesInRange(doc: import('@tiptap/pm/model').Node, from: number, to: number, predicate: (node: import('@tiptap/pm/model').Node) => boolean): { node: import('@tiptap/pm/model').Node, pos: number }[] {
   const result: { node: import('@tiptap/pm/model').Node, pos: number }[] = []
@@ -9,6 +11,29 @@ function findNodesInRange(doc: import('@tiptap/pm/model').Node, from: number, to
       result.push({ node, pos })
   })
   return result
+}
+
+function applyFigureImgAttributes(
+  img: HTMLImageElement,
+  attrs: { src?: string | null, alt?: string | null, title?: string | null, width?: string | number | null, height?: string | number | null },
+) {
+  if (attrs.src)
+    img.setAttribute('src', attrs.src)
+  else
+    img.removeAttribute('src')
+  img.setAttribute('alt', attrs.alt ?? '')
+  if (attrs.title)
+    img.setAttribute('title', attrs.title)
+  else
+    img.removeAttribute('title')
+  if (attrs.width != null)
+    img.setAttribute('width', String(attrs.width))
+  else
+    img.removeAttribute('width')
+  if (attrs.height != null)
+    img.setAttribute('height', String(attrs.height))
+  else
+    img.removeAttribute('height')
 }
 
 declare module '@tiptap/core' {
@@ -62,6 +87,11 @@ export const Figure = Node.create({
         default: null,
         parseHTML: element => element.querySelector('img')?.getAttribute('height'),
       },
+      float: {
+        default: 'none' as ImageFloat,
+        parseHTML: element => parseFloatAttribute(element as HTMLElement),
+        renderHTML: () => ({}),
+      },
     }
   },
 
@@ -80,11 +110,28 @@ export const Figure = Node.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node }) {
+    const floatClass = node.attrs.float === 'left'
+      ? 'content-image-float-left'
+      : node.attrs.float === 'right'
+        ? 'content-image-float-right'
+        : undefined
+    const { src, alt, title, width, height } = node.attrs
+    const imgAttrs: Record<string, string> = {}
+    if (src)
+      imgAttrs.src = src
+    if (alt != null)
+      imgAttrs.alt = alt
+    if (title)
+      imgAttrs.title = title
+    if (width != null)
+      imgAttrs.width = String(width)
+    if (height != null)
+      imgAttrs.height = String(height)
     return [
       'figure',
-      this.options.HTMLAttributes,
-      ['img', mergeAttributes(HTMLAttributes, { draggable: false, contenteditable: false })],
+      mergeAttributes(this.options.HTMLAttributes, floatClass ? { class: floatClass } : {}),
+      ['img', mergeAttributes(imgAttrs, { draggable: false, contenteditable: false })],
       ['figcaption', 0],
     ]
   },
@@ -95,16 +142,9 @@ export const Figure = Node.create({
       const img = document.createElement('img')
       img.setAttribute('draggable', 'false')
       img.setAttribute('contenteditable', 'false')
-      if (node.attrs.src)
-        img.setAttribute('src', node.attrs.src)
-      img.setAttribute('alt', node.attrs.alt ?? '')
-      if (node.attrs.title)
-        img.setAttribute('title', node.attrs.title)
-      if (node.attrs.width != null)
-        img.setAttribute('width', String(node.attrs.width))
-      if (node.attrs.height != null)
-        img.setAttribute('height', String(node.attrs.height))
+      applyFigureImgAttributes(img, node.attrs)
       const figcaption = document.createElement('figcaption')
+      applyFloatClass(figure, node.attrs.float as ImageFloat)
       figure.appendChild(img)
       figure.appendChild(figcaption)
       figure.addEventListener('click', (e) => {
@@ -118,6 +158,13 @@ export const Figure = Node.create({
       return {
         dom: figure,
         contentDOM: figcaption,
+        update(updatedNode) {
+          if (updatedNode.type.name !== 'figure')
+            return false
+          applyFloatClass(figure, updatedNode.attrs.float as ImageFloat)
+          applyFigureImgAttributes(img, updatedNode.attrs)
+          return true
+        },
       }
     }
   },
@@ -193,6 +240,7 @@ export const Figure = Node.create({
                 title: node.attrs.title,
                 width: node.attrs.width,
                 height: node.attrs.height,
+                float: node.attrs.float,
               }, content))
             }
             if (dispatch)
@@ -226,6 +274,7 @@ export const Figure = Node.create({
                 title: node.attrs.title,
                 width: node.attrs.width,
                 height: node.attrs.height,
+                float: node.attrs.float,
               }))
             }
             if (dispatch)

@@ -165,6 +165,7 @@ Role-based access for registered models is configured with the **`roles`** optio
 | `label` | `string` | Table name | Display name for the model (e.g., in the sidebar). |
 | `key` | `string` | tableName | Unique identifier for the model. Used in URLs and API endpoints. Pass if you have two models with the same table name. |
 | `icon` | `string` | `undefined` | Iconify icon name. Auto-detected for common names. |
+| `order` | `number` | `0` | Display order in the sidebar and dashboard index. Lower numbers come first; negatives float to the top, positives push down. Ties preserve registration order. |
 | `labelColumnName` | `string` | `name`, `title`, etc. | Column used for display labels in relationships and select options. |
 | `lookupColumnName` | `string` | `id` | The primary or unique key used to fetch single records. |
 | `slugFields` | `Record<string, string[]>` | `undefined` | Auto-generate URL-friendly slugs from other fields. [Reference ↗](#automatic-slug-generation-slugfields) |
@@ -175,6 +176,7 @@ Role-based access for registered models is configured with the **`roles`** optio
 | `delete` | `Partial<DeleteOptions>` | `{}` | Configuration for the delete action. [Reference ↗](#delete-configuration-delete) |
 | `fields` | `FieldSpec[]` | `undefined` | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields) |
 | `sortField` | `string` | `undefined` | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield) |
+| `baseWhere` | `function` | `undefined` | Persistent row filter (Drizzle `SQL`) on list/detail/update/delete. [Reference ↗](#record-filter-basewhere) |
 | `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
 | `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
 | `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
@@ -387,6 +389,9 @@ Toggles search functionality.
 **`enableSort: boolean`** (Default: `true`) -
 Toggles sorting functionality. See [List Sorting](#list-sorting) for more details.
 
+**`defaultOrdering: string`** (Default: `undefined`) -
+Initial sort when the URL has no `?sort=` (e.g. `'publishedAt:desc'`). See [Default ordering](#default-ordering-listdefaultordering).
+
 **`searchFields: string[]`** (Default: `[labelColumnName]`) -
 An array of column names (including relational fields in dot-notation) to search against.
 
@@ -536,13 +541,12 @@ export default defineNuxtPlugin(() => {
 })
 ```
 
-### Styling embeds and media text on the frontend
+### Styling rich text output on the frontend
 
-If you use **Embed** and **Media text** in the rich text editor, the stored HTML may rely on styles that are not bundled in your public-facing app by default. Import these layer styles where you render that HTML (for example in a global CSS file or layout):
+If you use **float images**, **media text**, or **embeds** in the rich text editor, the stored HTML may rely on styles that are not bundled in your public-facing app by default. Import the layer stylesheet where you render that HTML (for example in a global CSS file or layout):
 
 ```css
-@import '#layers/autoadmin/assets/css/rich-media-text.css';
-@import '#layers/autoadmin/assets/css/rich-embed.css';
+@import '#layers/autoadmin/assets/css/rich-text.css';
 ```
 
 ### Available options
@@ -631,6 +635,18 @@ export default defineNitroPlugin(() => {
 ```
 
 This will render a multi-select component on the `posts` form, allowing you to associate multiple tags with a post.
+
+For long labels or many selections, enable a per-line selected list with `fieldAttrs.selectedList` on the relation field (field name is `___<relationName>___<columnName>`, e.g. `___tags___tagId`):
+
+```ts
+registry.register(posts, {
+  m2m: { tags: postsToTags },
+  fields: [{
+    name: '___tags___tagId',
+    fieldAttrs: { selectedList: true },
+  }],
+})
+```
 
 ### One-to-Many (`o2m`)
 
@@ -758,6 +774,43 @@ registry.register(posts, {
 ## List Sorting
 
 Sorting is enabled by default but can be controlled through the `list.enableSort` option. Sorting can be done by clicking on a column header. Sorting is persisted in the URL just like filtering and searching.
+
+### Default ordering (`list.defaultOrdering`)
+
+When the list URL has no `?sort=` parameter, you can set an initial sort with `list.defaultOrdering`. Use the same format as the URL: `accessorKey:asc` or `accessorKey:desc` (the list column’s `accessorKey`, not necessarily the DB column name — use `sortKey` when they differ).
+
+```ts
+registry.register(posts, {
+  list: {
+    defaultOrdering: 'publishedAt:desc',
+    fields: ['title', 'publishedAt', 'status'],
+  },
+})
+```
+
+Without `defaultOrdering`, the list falls back to primary key descending (or to `sortField` ascending when drag-drop ordering is enabled). `defaultOrdering` cannot be combined with `sortField`.
+
+## Record filter (`baseWhere`)
+
+This enables exposing a subset of records for admin interfaces and actions. `baseWhere` adds **persistent `WHERE` conditions** on list queries (and matching count), detail, update, delete, bulk delete, bulk actions (lookup checks), filter option queries, and reorder. Example use-cases: tenant scoping, soft-delete exclusions, or “hide archived rows” rules, showing "Draft" posts in a different list.
+
+```ts
+import { ne } from 'drizzle-orm'
+
+registry.register(posts, {
+  baseWhere: async (_db, ctx) => {
+    if (ctx.event?.context.auth?.user?.role === 'admin') {
+      return undefined
+    }
+    return [ne(posts.status, 'archived')]
+  },
+  list: { fields: ['title', 'status'] },
+})
+```
+
+Return `undefined` or `[]` for no extra filter. Return one `SQL` fragment or an array of fragments (combined with `AND`).
+
+`ctx.action` is one of: `list`, `detail`, `update`, `delete`, `bulkDelete`, `reorder`. On `list`, `ctx.query` has the request query string params. For lookup operations, `ctx.lookupValue` or `ctx.lookupValues` is set. Use `ctx.event` for auth/session (see [roles guide](docs/autoadmin-roles.md)).
 
 ```ts
 async function displayTitle(db: AdminDbType, obj: typeof posts.$inferSelect) {

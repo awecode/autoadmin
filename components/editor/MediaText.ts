@@ -5,6 +5,15 @@ import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 const mediaTextUnwrapPluginKey = new PluginKey('mediaTextUnwrap')
 
+export function isInsideMediaText(editor: { state: { selection: { $from: { depth: number, node: (depth: number) => { type: { name: string } } } } } }): boolean {
+  const { $from } = editor.state.selection
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type.name === 'mediaText')
+      return true
+  }
+  return false
+}
+
 export const MediaText = Node.create({
   name: 'mediaText',
   group: 'block',
@@ -70,17 +79,17 @@ export const MediaText = Node.create({
 export function mediaTextToolbarItems(editor: Editor): EditorToolbarItem[][] {
   return [[{
     icon: 'i-lucide-arrow-left-right',
-    tooltip: { text: 'Swap Layout' },
+    tooltip: { text: 'Swap side' },
     onClick: () => {
       const currentLayout = editor.getAttributes('mediaText').layout
-      const newLayout = currentLayout === 'image-left' ? 'image-right' : 'image-left'
+      const newLayout = currentLayout === 'left' ? 'right' : 'left'
       editor.chain().focus().updateAttributes('mediaText', { layout: newLayout }).run()
     },
   }, {
     // This allows the user to break the block back into a normal image and text,
     // so they can use your standard image replacement/upload tools!
     icon: 'i-lucide-ungroup',
-    tooltip: { text: 'Revert to Standard Image' },
+    tooltip: { text: 'Break media block' },
     onClick: () => {
       const { state } = editor
       const $from = state.selection.$from

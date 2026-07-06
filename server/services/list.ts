@@ -1,14 +1,16 @@
-import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { AutoadminAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
 import type { SQL, Table } from 'drizzle-orm'
 import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { asc, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm'
+import { buildBaseWhereContext, getBaseWhereClause, mergeWhere } from '../utils/baseWhere'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
 import { buildAggregateExpression, buildTextSearchCondition } from '../utils/dialect'
 import { colKey, getPaginatedResults } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
+import { resolveListOrdering } from '../utils/listOrdering'
 import { getPrimaryKeyColumn, getTableForeignKeysByColumn } from '../utils/relation'
 
 export async function listRecords<T extends Table>(
@@ -17,6 +19,7 @@ export async function listRecords<T extends Table>(
   returnSpec: boolean = true,
   /** Missing entries default to `true` (no restriction). See `#autoadmin/roleAccess.getAllowedActions`. */
   allowedActions: Partial<AutoadminAllowedActions> = {},
+  requestCtx?: AutoadminRequestContext,
 ) {
   const model = cfg.model
   const tableColumns = cfg.columns
@@ -24,7 +27,9 @@ export async function listRecords<T extends Table>(
   const columnTypes = zodToListSpec(cfg.create.schema)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
   const db = useAdminDb()
-  const filters = cfg.list.enableFilter ? await getFilters(cfg, db, columnTypes, cfg.metadata, query) : undefined
+  const baseWhereCtx = buildBaseWhereContext(cfg, 'list', requestCtx, { query })
+  const baseWhereClause = await getBaseWhereClause(cfg, baseWhereCtx)
+  const filters = cfg.list.enableFilter ? await getFilters(cfg, db, columnTypes, cfg.metadata, query, requestCtx) : undefined
 
   const enableSort = cfg.list.enableSort
 
@@ -258,15 +263,19 @@ export async function listRecords<T extends Table>(
     baseQuery = baseQuery.leftJoin(join.table, join.on)
   }
 
-  // Apply combined conditions to base query
-  if (combinedConditions) {
-    baseQuery = baseQuery.where(combinedConditions)
+  // Apply baseWhere + search/filter conditions
+  const listWhere = mergeWhere(baseWhereClause, combinedConditions)
+  if (listWhere) {
+    baseQuery = baseQuery.where(listWhere)
   }
 
   // Handle ordering (after joins are applied)
-  const ordering = query.ordering
+  const ordering = resolveListOrdering(query.ordering, cfg.list.defaultOrdering, {
+    enableSort,
+    hasSortField: !!cfg.sortField,
+  })
   let orderApplied = false
-  if (enableSort && ordering && typeof ordering === 'string') {
+  if (enableSort && ordering) {
     const [columnAccessorKey, direction] = ordering.split(':')
     const column = columns.find(column => column.accessorKey === columnAccessorKey)
 
@@ -322,8 +331,8 @@ export async function listRecords<T extends Table>(
   for (const join of joins) {
     countQuery = countQuery.leftJoin(join.table, join.on)
   }
-  if (combinedConditions) {
-    countQuery = countQuery.where(combinedConditions)
+  if (listWhere) {
+    countQuery = countQuery.where(listWhere)
   }
 
   const response = await getPaginatedResults<typeof model>(baseQuery, countQuery, query)
