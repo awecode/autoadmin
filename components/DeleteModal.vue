@@ -1,15 +1,32 @@
 <script setup lang="ts">
+const props = defineProps<{
+  onConfirm?: () => void | Promise<void>
+}>()
+
 defineEmits<{
   close: []
-  confirm: []
 }>()
 
 const title = 'Confirm Delete'
 const description = 'Are you sure you want to delete this item? This action cannot be undone.'
+
+const isDeleting = ref(false)
+
+async function confirm() {
+  if (isDeleting.value)
+    return
+  isDeleting.value = true
+  try {
+    await props.onConfirm?.()
+  }
+  finally {
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
-  <UModal :description="description" :title="title">
+  <UModal :description="description" :title="title" :dismissible="!isDeleting">
     <template #content>
       <div class="p-4">
         <h3 class="text-lg font-medium mb-2">
@@ -24,6 +41,7 @@ const description = 'Are you sure you want to delete this item? This action cann
             color="neutral"
             label="Cancel"
             variant="soft"
+            :disabled="isDeleting"
             @click="$emit('close')"
           />
           <UButton
@@ -31,7 +49,8 @@ const description = 'Are you sure you want to delete this item? This action cann
             color="error"
             label="Delete"
             variant="solid"
-            @click="$emit('confirm')"
+            :loading="isDeleting"
+            @click="confirm"
           />
         </div>
       </div>
