@@ -551,6 +551,19 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
   border-radius: 0.375rem;
 }
 
+/* Upload in progress: images with a local blob placeholder src (see FileUpload.ts) */
+.tiptap img[src^="blob:"] {
+  opacity: 0.5;
+  filter: grayscale(30%);
+  animation: autoadmin-upload-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes autoadmin-upload-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
 .tiptap img:not(.content-image-float-left):not(.content-image-float-right) {
   /* display: inline-block; */
   height: auto;

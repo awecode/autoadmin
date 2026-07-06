@@ -1,3 +1,4 @@
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
 
 function getImageDimensions(src: string): Promise<{ width: number, height: number } | null> {
@@ -90,6 +91,37 @@ export function getAltFromUrl(urlStr: string): string {
   }
 }
 
+/** Find an image/figure node by its current src (blob URLs are unique per placeholder). */
+function findImageNodeBySrc(editor: Editor, src: string): { pos: number, node: ProseMirrorNode } | undefined {
+  let found: { pos: number, node: ProseMirrorNode } | undefined
+  editor.state.doc.descendants((node, pos) => {
+    if (found)
+      return false
+    if ((node.type.name === 'image' || node.type.name === 'figure') && node.attrs.src === src) {
+      found = { pos, node }
+      return false
+    }
+    return true
+  })
+  return found
+}
+
+function updateImageAttrsBySrc(editor: Editor, src: string, attrs: Record<string, any>) {
+  const found = findImageNodeBySrc(editor, src)
+  if (!found)
+    return
+  const tr = editor.state.tr.setNodeMarkup(found.pos, undefined, { ...found.node.attrs, ...attrs })
+  editor.view.dispatch(tr)
+}
+
+function removeImageNodeBySrc(editor: Editor, src: string) {
+  const found = findImageNodeBySrc(editor, src)
+  if (!found)
+    return
+  const tr = editor.state.tr.delete(found.pos, found.pos + found.node.nodeSize)
+  editor.view.dispatch(tr)
+}
+
 /** Returns the document position of the first inserted image/figure, or undefined if none. */
 export async function handleFiles(
   files: File[],
@@ -104,40 +136,54 @@ export async function handleFiles(
   let firstImagePos: number | undefined
   const caption = options?.caption?.trim() || undefined
   for (const file of files) {
-    try {
-      const uploadedUrl = await uploadFile(file, uploadPrefix)
-      if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
-        if (firstImagePos === undefined)
-          firstImagePos = pos
-        const alt = (options?.alt?.trim() || undefined) ?? getAltFromFilename(file.name)
-        const dims = await getImageDimensions(uploadedUrl)
-        const sizeAttrs = dims
-          ? { width: dims.width, height: dims.height }
-          : {}
-        if (caption) {
-          editor
-            .chain()
-            .insertContentAt(pos, {
-              type: 'figure',
-              attrs: { src: uploadedUrl, alt: alt ?? '', ...sizeAttrs },
-              content: [{ type: 'text', text: caption }],
-            })
-            .focus()
-            .run()
-        }
-        else {
-          editor
-            .chain()
-            .insertContentAt(pos, {
-              type: 'image',
-              attrs: { src: uploadedUrl, alt: alt ?? '', ...sizeAttrs },
-            })
-            .focus()
-            .run()
-        }
-        pos += (editor.state.doc.nodeAt(pos)?.nodeSize ?? 1)
+    if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
+      if (firstImagePos === undefined)
+        firstImagePos = pos
+      const alt = (options?.alt?.trim() || undefined) ?? getAltFromFilename(file.name)
+      // Insert a local blob-URL placeholder immediately for upload feedback;
+      // editor CSS dims img[src^="blob:"] while the upload is in progress.
+      const blobUrl = URL.createObjectURL(file)
+      const dims = await getImageDimensions(blobUrl)
+      const sizeAttrs = dims
+        ? { width: dims.width, height: dims.height }
+        : {}
+      if (caption) {
+        editor
+          .chain()
+          .insertContentAt(pos, {
+            type: 'figure',
+            attrs: { src: blobUrl, alt: alt ?? '', ...sizeAttrs },
+            content: [{ type: 'text', text: caption }],
+          })
+          .focus()
+          .run()
       }
       else {
+        editor
+          .chain()
+          .insertContentAt(pos, {
+            type: 'image',
+            attrs: { src: blobUrl, alt: alt ?? '', ...sizeAttrs },
+          })
+          .focus()
+          .run()
+      }
+      pos += (editor.state.doc.nodeAt(pos)?.nodeSize ?? 1)
+      try {
+        const uploadedUrl = await uploadFile(file, uploadPrefix)
+        updateImageAttrsBySrc(editor, blobUrl, { src: uploadedUrl })
+      }
+      catch (error) {
+        removeImageNodeBySrc(editor, blobUrl)
+        console.error('Failed to upload file:', error)
+      }
+      finally {
+        URL.revokeObjectURL(blobUrl)
+      }
+    }
+    else {
+      try {
+        const uploadedUrl = await uploadFile(file, uploadPrefix)
         editor
           .chain()
           .insertContentAt(pos, {
@@ -148,9 +194,9 @@ export async function handleFiles(
           .focus()
           .run()
       }
-    }
-    catch (error) {
-      console.error('Failed to upload file:', error)
+      catch (error) {
+        console.error('Failed to upload file:', error)
+      }
     }
   }
   return firstImagePos
