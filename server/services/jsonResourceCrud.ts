@@ -395,6 +395,46 @@ function preprocessDates(schema: ZodObject<Record<string, ZodType>>, inputData: 
   return preprocessed
 }
 
+/**
+ * In-memory counterpart of the Drizzle admin's `ensureUniqueSlugs`: for each
+ * configured slug field, append -1, -2, … when the value collides with another
+ * row. `excludeId` skips the row being updated.
+ */
+function ensureUniqueJsonSlugs(
+  cfg: JsonArrayResourceConfig,
+  data: Record<string, any>,
+  rows: Record<string, any>[],
+  excludeId?: string,
+) {
+  if (!cfg.slugFields) {
+    return
+  }
+  const others = excludeId === undefined
+    ? rows
+    : rows.filter(r => String(r[cfg.idField]) !== excludeId)
+  for (const slugFieldName of Object.keys(cfg.slugFields)) {
+    const slug = data[slugFieldName]
+    if (typeof slug !== 'string' || slug === '') {
+      continue
+    }
+    const existing = new Set<string>()
+    for (const row of others) {
+      const v = row[slugFieldName]
+      if (typeof v === 'string') {
+        existing.add(v)
+      }
+    }
+    if (!existing.has(slug)) {
+      continue
+    }
+    let suffix = 1
+    while (existing.has(`${slug}-${suffix}`)) {
+      suffix++
+    }
+    data[slugFieldName] = `${slug}-${suffix}`
+  }
+}
+
 async function writeArrayWithRetry(
   cfg: JsonArrayResourceConfig,
   mutator: (rows: Record<string, any>[]) => Record<string, any>[],
@@ -433,6 +473,7 @@ export async function createJsonArrayRecord(cfg: JsonArrayResourceConfig, data: 
     delete input[cfg.idField]
     const preprocessed = preprocessDates(cfg.elementSchema, input)
     const validated = cfg.elementSchema.parse(preprocessed) as Record<string, any>
+    ensureUniqueJsonSlugs(cfg, validated, rows)
     const ids = new Set(rows.map(r => String(r[cfg.idField])))
     validated[cfg.idField] = crypto.randomUUID()
     if (ids.has(String(validated[cfg.idField]))) {
@@ -490,6 +531,7 @@ export async function updateJsonArrayRecord(
       })
     }
     const validated = cfg.elementSchema.parse(merged) as Record<string, any>
+    ensureUniqueJsonSlugs(cfg, validated, rows, decoded)
     updated = validated
     const next = [...rows]
     next[idx] = validated

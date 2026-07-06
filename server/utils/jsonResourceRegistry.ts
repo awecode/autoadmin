@@ -99,6 +99,8 @@ export interface RegisterJsonArrayResourceInput {
   elementSchema: ZodObject<Record<string, ZodType>>
   /** List/search label column; defaults to first `elementSchema` key (excluding `_id`). */
   labelField?: string
+  /** Auto-generate URL-friendly slugs from other fields. Example: { slug: ["title", "date"] } */
+  slugFields?: Partial<Record<string, string[]>>
   list?: Partial<JsonArrayListOptions>
   create?: Partial<JsonCreateOptions>
   update?: Partial<JsonUpdateOptions>
@@ -146,6 +148,7 @@ export interface JsonArrayResourceConfig {
   elementSchema: ZodObject<Record<string, ZodType>>
   idField: string
   labelField: string
+  slugFields?: Partial<Record<string, string[]>>
   list: JsonArrayListOptions & {
     title: string
     endpoint: string
@@ -298,6 +301,19 @@ function defaultArrayConfig(
     assertValidListOrdering(list.defaultOrdering, `list.defaultOrdering for JSON array "${key}"`)
   }
 
+  if (input.slugFields) {
+    for (const [slugField, sourceFields] of Object.entries(input.slugFields)) {
+      if (!(slugField in userSchema.shape)) {
+        throw new Error(`JSON admin array "${key}": slugFields key "${slugField}" is not on elementSchema.`)
+      }
+      for (const source of sourceFields ?? []) {
+        if (!(source in userSchema.shape)) {
+          throw new Error(`JSON admin array "${key}": slugFields source "${source}" for "${slugField}" is not on elementSchema.`)
+        }
+      }
+    }
+  }
+
   return {
     kind: 'array',
     key,
@@ -309,6 +325,7 @@ function defaultArrayConfig(
     elementSchema,
     idField: JSON_ARRAY_ROW_ID,
     labelField,
+    slugFields: input.slugFields,
     list,
     create,
     update,

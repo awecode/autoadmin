@@ -159,6 +159,7 @@ Optional `commitMessage` on the target object; if omitted, GitHub uses **Update 
 
 - **Auth:** Optional per-resource `roles` — same as Drizzle admin; see [autoadmin-roles.md](./autoadmin-roles.md).
 - **`labelField`** (optional) chooses the column used for list titles / default search; otherwise the first schema field (other than `_id`) is used.
+- **`slugFields`** (optional, arrays only) — same as Drizzle admin: auto-generates a URL-friendly slug from other fields while typing on the create form, e.g. `slugFields: { slug: ['title'] }`. On save (create and update), the server appends `-1`, `-2`, … when the slug collides with another row in the file.
 - Each row for `array` kind gets an internal **`_id`** (UUID): stored in the JSON file, used in URLs, **not** part of your `elementSchema`. **Do not** declare `_id` on `elementSchema` (it is reserved).
 - Each save is **read → merge → write**; conflicts return **409** and the server may retry once (GitHub `sha` / local `mtime`).
 - Opening a **list** may write missing `_id` values once (migration-style). If older data used another key (e.g. `id`), copy values into `_id` or re-save from the UI.

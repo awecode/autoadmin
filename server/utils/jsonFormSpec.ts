@@ -22,6 +22,7 @@ export async function buildJsonArrayCreateFormSpec(cfg: JsonArrayResourceConfig,
   spec.endpoint = cfg.create.endpoint ?? `${apiPrefix}/${modelKey}`
   spec.listTitle = cfg.list.title ?? cfg.label
   spec.schema = zerialize(cfg.elementSchema)
+  spec.slugFields = cfg.slugFields
   return spec
 }
 
