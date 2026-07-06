@@ -185,6 +185,7 @@
     },
     "warnOnUnsavedChanges": false,
     "labelString": "Post 1",
+    "canList": true,
     "endpoint": "/api/autoadmin/posts/1",
     "listTitle": "Posts",
     "schema": {
