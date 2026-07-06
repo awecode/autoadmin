@@ -271,9 +271,13 @@ function defaultArrayConfig(
     enableSearch: true,
     enableSort: true,
     searchPlaceholder: 'Search …',
-    searchFields: [labelField],
     bulkActions: [],
   }) as JsonArrayResourceConfig['list']
+  // searchFields is set outside defu — defu concatenates arrays, which would
+  // append the default labelField to user-provided searchFields.
+  if (!list.searchFields?.length) {
+    list.searchFields = [labelField]
+  }
 
   const create = defu(input.create ?? {}, {
     enabled: true,
