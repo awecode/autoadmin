@@ -1,20 +1,32 @@
-# AutoAdmin Documentation
+# AutoAdmin
 
-AutoAdmin automatically creates admin interfaces from Drizzle ORM models in your Nuxt project. SQLite and its variants (including Cloudflare D1 and libsql) are supported, and Node PostgreSQL is supported via the `pg` package.
+**Automatic CRUD interfaces, generated from your Drizzle schema.**
 
-*Requirements: A Nuxt Project with Drizzle configured with a supported Drizzle schema*
+AutoAdmin generates a complete admin panel from your existing Drizzle schema - list views with search, filters, sorting, and pagination; create and update forms with validation; relation dropdowns; file and image uploads; and a rich text editor. A single registration is enough for a model:
 
-## Installation
-
-Configure `NUXT_DATABASE_URL` environment variable with your database connection URL.
+```ts
+registry.register(posts)
 ```
-NUXT_DATABASE_URL=file:server/db/db.sqlite
-# OR for Postgres
-NUXT_DATABASE_URL=postgresql://postgres:password@localhost:5432/dbname
-```
-Cloudflare D1 binding is automatically detected for the binding name `DB`.
 
-Use autoadmin as a layer in your nuxt project. You can add the following to your nuxt.config.ts
+There is no code generation step, no separate admin service, and no UI to build by hand. AutoAdmin runs inside your Nuxt application as a layer, so it deploys wherever your application deploys and can integrate with your existing authentication. This makes it well suited for back-offices, dashboards, and internal tools.
+
+## Features
+
+- **Schema-driven CRUD** - list, create, update, and delete views inferred from your Drizzle tables, including column types, enums, and defaults. Any field can be overridden (rich text, image, file, textarea, and more).
+- **Relationship support** - foreign keys, many-to-many, and one-to-many relations render as searchable dropdowns in forms and filters.
+- **Complete list views** - search, filters, column sorting, pagination, bulk actions, aggregates, drag-and-drop ordering, and custom cell rendering.
+- **Files and media** - image and file uploads to any S3-compatible storage, and a WYSIWYG editor with image uploads, embeds, and float layouts.
+- **Extensibility** - lifecycle hooks, persistent row filters (`baseWhere`), role-based access, automatic slug generation, and reusable CRUD services for custom API routes.
+- **JSON admin** - manage JSON-backed settings and lists (stored in local files or a GitHub repository) with the same auto-generated forms, useful for site configuration, feature flags, or content that does not belong in the database. See [docs/json-admin.md](./docs/json-admin.md).
+- **SQLite, PostgreSQL, D1, libsql** - SQLite and its variants (including Cloudflare D1 and libsql), plus PostgreSQL.
+
+Built with [Nuxt](https://nuxt.com/), [Drizzle](https://orm.drizzle.team/), [Nuxt UI](https://ui.nuxt.com/), and [Zod](https://zod.dev/).
+
+## Quick Start
+
+*Requirements: a Nuxt project with Drizzle configured and a supported Drizzle schema.*
+
+**1. Add AutoAdmin as a layer** in your `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
@@ -24,7 +36,7 @@ export default defineNuxtConfig({
 })
 ```
 
-Or you can download the project inside layers directory in your nuxt project.
+Alternatively, download the layer into your project's `layers` directory:
 
 ```bash
 npx -y giget gh:awecode/autoadmin layers/autoadmin
@@ -33,11 +45,36 @@ npx -y nypm add @awecode/autoadmin@file:layers/autoadmin
 npx -y nypm install
 ```
 
-## Usage
+**2. Configure the database connection** with the `NUXT_DATABASE_URL` environment variable:
+
+```
+NUXT_DATABASE_URL=file:server/db/db.sqlite
+# OR for Postgres
+NUXT_DATABASE_URL=postgresql://postgres:password@localhost:5432/dbname
+```
+
+A Cloudflare D1 binding named `DB` is detected automatically.
+
+**3. Register your models** in a Nitro plugin:
+
+```ts
+// server/plugins/admin.ts
+import { posts, users } from '~~/server/db/schema'
+
+export default defineNitroPlugin(() => {
+  const registry = useAdminRegistry()
+  registry.register(users)
+  registry.register(posts)
+})
+```
+
+**4. Open `/admin`** to access the generated admin interfaces for the registered tables.
+
+## What Gets Inferred
 
 <!-- AutoAdmin uses Nuxt UI. Make sure you wrap your pages with Nuxt UI's [`<UApp>`](https://ui.nuxt.com/components/app) component in `app.vue` or your layout file. -->
 
-Here is an example schema for SQLite demonstrating various column types.
+AutoAdmin derives form controls directly from column types: text and number inputs, boolean toggles, date and datetime pickers, enum selects, and foreign-key dropdowns are all generated automatically. Here is an example schema for SQLite demonstrating various column types.
 
 ```ts
 // server/db/schema.ts
@@ -103,24 +140,11 @@ export const posts = pgTable('posts', {
 })
 ```
 
-Register your Drizzle schemas in a Nuxt plugin.
+Register both models as shown in the [Quick Start](#quick-start) and open `/admin` to get list views and forms for users and posts.
 
-```ts
-// server/plugins/admin.ts
-import { posts, users } from '~~/server/db/schema'
+## JSON Admin
 
-export default defineNitroPlugin(() => {
-  const registry = useAdminRegistry()
-  registry.register(users)
-  registry.register(posts)
-})
-```
-
-Run the project and open `/admin` to access the admin interfaces for users and posts tables.
-
-## JSON admin
-
-JSON-backed settings and lists (GitHub or local files), separate from Drizzle tables. **Start here:** [docs/json-admin.md](./docs/json-admin.md) — quick start, registration, storage, env vars, and UI options.
+In addition to database tables, AutoAdmin can manage JSON files with the same auto-generated forms and list views, for site settings, feature flags, navigation menus, or small content collections. Files can be stored locally or in a GitHub repository, where each edit becomes a commit. Resources are defined with a Zod schema and registered in the same manner as database models. **More here:** [docs/json-admin.md](./docs/json-admin.md).
 
 ## Specifying Custom Field Types
 
@@ -447,7 +471,7 @@ registry.register(posts, {
 
 ### Auto-Unique Slugs
 
-By default, AutoAdmin ensures slug uniqueness automatically. When a record is saved and the slug collides with an existing one, a numeric suffix is appended (`-1`, `-2`, etc.) until the value is unique. This uses an optimistic approach — no extra database query is made unless the insert/update actually fails with a unique constraint violation.
+By default, AutoAdmin ensures slug uniqueness automatically. When a record is saved and the slug collides with an existing one, a numeric suffix is appended (`-1`, `-2`, etc.) until the value is unique. This uses an optimistic approach; no extra database query is made unless the insert/update actually fails with a unique constraint violation.
 
 For example, if `my-post` already exists, saving another record with the same slug produces `my-post-1`. If `my-post-1` also exists, it becomes `my-post-2`, and so on.
 
@@ -777,7 +801,7 @@ Sorting is enabled by default but can be controlled through the `list.enableSort
 
 ### Default ordering (`list.defaultOrdering`)
 
-When the list URL has no `?sort=` parameter, you can set an initial sort with `list.defaultOrdering`. Use the same format as the URL: `accessorKey:asc` or `accessorKey:desc` (the list column’s `accessorKey`, not necessarily the DB column name — use `sortKey` when they differ).
+When the list URL has no `?sort=` parameter, you can set an initial sort with `list.defaultOrdering`. Use the same format as the URL: `accessorKey:asc` or `accessorKey:desc`.
 
 ```ts
 registry.register(posts, {
@@ -937,7 +961,7 @@ When `sortField` is set:
 
 - A **drag handle** (grip icon) appears as the first column in the list view.
 - Users can **drag and drop** rows to reorder them within the current page.
-- Column header sorting is disabled — the list is always ordered by the sort field.
+- Column header sorting is disabled, the list is always ordered by the sort field.
 
 ### Cross-Page Ordering
 
@@ -952,7 +976,7 @@ When the list is paginated (more than one page), a **reorder menu** (↕ icon) a
 
 ### Performance
 
-- **Within-page reorder**: If sort values are already unique, only the affected page rows are updated (fast path — 1 SELECT + 1 UPDATE). If duplicates exist (e.g., all zeros on first use), the entire table is resequenced once.
+- **Within-page reorder**: If sort values are already unique, only the affected page rows are updated (fast path - 1 SELECT + 1 UPDATE). If duplicates exist (e.g., all zeros on first use), the entire table is resequenced once.
 - **Cross-page move**: Fetches all rows, repositions the item, and batch-updates only the rows whose sort value changed.
 - All updates use a batched `UPDATE ... SET = CASE` statement, chunked to stay within database parameter limits (e.g., Cloudflare D1's 100-parameter cap). -->
 ## List Filters
@@ -1354,13 +1378,6 @@ You can also customize how cells are rendered on table list by defining a cell f
 
 - Tailwind classes not working correctly - https://github.com/tailwindlabs/tailwindcss/discussions/18273
   - Solution: Use layer locally instead of using GitHub source. -->
-
-## Stack
-
-- [Nuxt](https://nuxt.com/)
-- [Drizzle](https://orm.drizzle.team/)
-- [Nuxt UI](https://ui.nuxt.com/)
-- [Zod](https://zod.dev/)
 
 ## License
 
