@@ -2,9 +2,9 @@ import type { AdminModelConfig, ColKey, FieldType, ListColumnDef, ListFieldDef }
 import type { Column, Table } from 'drizzle-orm'
 import type { ZodObject, ZodType } from 'zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { createInsertSchema } from 'drizzle-zod'
 import { ZodEnum, ZodUnion } from 'zod'
 import { colKey } from './drizzle'
+import { createInsertSchema } from './drizzleZod'
 import { getTableForeignKeys, getTableForeignKeysByColumn } from './relation'
 import { unwrapZodType } from './zod'
 
