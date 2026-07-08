@@ -12,7 +12,13 @@
     "lint": "eslint ."
   },
   "peerDependencies": {
-    "drizzle-orm": "^0.45.1"
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.16.3"
+  },
+  "peerDependenciesMeta": {
+    "pg": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.57",
@@ -27,7 +33,6 @@
     "@vueuse/router": "^14.2.1",
     "aws4fetch": "^1.0.20",
     "drizzle-zod": "0.8.3",
-    "pg": "^8.16.3",
     "tailwindcss": "^4.2.1",
     "uuid": "^13.0.0",
     "y-protocols": "^1.0.7",
@@ -37,6 +42,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.18.0",
+    "pg": "^8.16.3",
     "vite": "^8.0.1"
   },
   "pnpm": {

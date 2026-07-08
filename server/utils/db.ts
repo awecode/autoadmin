@@ -1,14 +1,42 @@
+import type { drizzle as DrizzlePgFn } from 'drizzle-orm/node-postgres'
 import process from 'node:process'
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1'
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
-import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { getConfiguredAdminDialect } from './dialect'
 
 export type AdminDbDialect = 'sqlite' | 'postgresql' | 'd1'
 
 export interface HyperdriveBinding { connectionString?: string }
 
-type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<typeof drizzlePg>
+type DrizzlePg = typeof DrizzlePgFn
+
+type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<DrizzlePg>
+
+// The Postgres driver is loaded lazily so that projects using SQLite/libsql/D1 don't need the optional `pg` package installed.
+
+let drizzlePg: DrizzlePg | undefined
+
+export async function preloadAdminPgDriver(): Promise<void> {
+  if (drizzlePg) {
+    return
+  }
+  try {
+    const mod = await import('drizzle-orm/node-postgres')
+    drizzlePg = mod.drizzle
+  }
+  catch {
+    // `pg` is not installed. Only an error if a Postgres connection is actually used.
+  }
+}
+
+function requirePgDriver(): DrizzlePg {
+  if (!drizzlePg) {
+    throw new Error(
+      'AutoAdmin: a PostgreSQL connection was configured, but the "pg" package could not be loaded. Install it in your project, e.g. `npx nypm add pg`.',
+    )
+  }
+  return drizzlePg
+}
 
 export interface AutoAdminDbTypes {}
 
@@ -19,7 +47,7 @@ type ResolvedAdminDbDialect = AutoAdminDbTypes extends { dialect: infer D }
   : 'sqlite'
 
 export type AdminDbTypeForDialect<D extends AdminDbDialect> = D extends 'postgresql'
-  ? ReturnType<typeof drizzlePg>
+  ? ReturnType<DrizzlePg>
   : D extends 'd1'
     ? ReturnType<typeof drizzleD1>
     : ReturnType<typeof drizzleLibsql>
@@ -60,7 +88,7 @@ export function useAdminDb(): AdminDbType {
       if (hyperdriveBinding && hyperdriveBinding.connectionString) {
         // eslint-disable-next-line no-console
         console.info('Using PostgreSQL database via Hyperdrive')
-        return drizzlePg({
+        return requirePgDriver()({
           connection: {
             connectionString: hyperdriveBinding.connectionString,
           },
@@ -73,7 +101,7 @@ export function useAdminDb(): AdminDbType {
         if (dialect === 'postgresql') {
           // eslint-disable-next-line no-console
           console.info('Using PostgreSQL database')
-          return drizzlePg({
+          return requirePgDriver()({
             connection: {
               connectionString: config.databaseUrl as string,
             },
