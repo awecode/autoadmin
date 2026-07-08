@@ -24,7 +24,7 @@ Built with [Nuxt](https://nuxt.com/), [Drizzle](https://orm.drizzle.team/), [Nux
 
 ## Quick Start
 
-*Requirements: a Nuxt project with Drizzle configured and a supported Drizzle schema.*
+*Requirements: a Nuxt project with Drizzle configured and a supported Drizzle schema.* (Drizzle v1 RC support is being worked in [drizzlev1](https://github.com/awecode/autoadmin/tree/drizzlev1) branch.)
 
 **1. Add AutoAdmin as a layer** in your `nuxt.config.ts`:
 
