@@ -1,7 +1,7 @@
+import type { drizzle as DrizzleLibsqlFn } from 'drizzle-orm/libsql'
 import type { drizzle as DrizzlePgFn } from 'drizzle-orm/node-postgres'
 import process from 'node:process'
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1'
-import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
 import { getConfiguredAdminDialect } from './dialect'
 
 export type AdminDbDialect = 'sqlite' | 'postgresql' | 'd1'
@@ -9,16 +9,26 @@ export type AdminDbDialect = 'sqlite' | 'postgresql' | 'd1'
 export interface HyperdriveBinding { connectionString?: string }
 
 type DrizzlePg = typeof DrizzlePgFn
+type DrizzleLibsql = typeof DrizzleLibsqlFn
 
-type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<DrizzlePg>
+type DBType = ReturnType<typeof drizzleD1> | ReturnType<DrizzleLibsql> | ReturnType<DrizzlePg>
 
-// The Postgres driver is loaded lazily so that projects using SQLite/libsql/D1 don't need the optional `pg` package installed.
+// The db drivers are loaded lazily so that projects using SQLite/libsql/D1 don't need the optional `pg` package installed.
 let pgDriverLoadError: unknown
 // eslint-disable-next-line antfu/no-top-level-await
 const drizzlePg: DrizzlePg | undefined = await import('drizzle-orm/node-postgres')
   .then(mod => mod.drizzle)
   .catch((error) => {
     pgDriverLoadError = error
+    return undefined
+  })
+
+let libsqlDriverLoadError: unknown
+// eslint-disable-next-line antfu/no-top-level-await
+const drizzleLibsql: DrizzleLibsql | undefined = await import('drizzle-orm/libsql')
+  .then(mod => mod.drizzle)
+  .catch((error) => {
+    libsqlDriverLoadError = error
     return undefined
   })
 
@@ -30,6 +40,16 @@ function requirePgDriver(): DrizzlePg {
     )
   }
   return drizzlePg
+}
+
+function requireLibsqlDriver(): DrizzleLibsql {
+  if (!drizzleLibsql) {
+    throw new Error(
+      'AutoAdmin: a SQLite/libsql connection was configured, but the "@libsql/client" package could not be loaded. Install it in your project, e.g. `npx nypm add @libsql/client`.',
+      { cause: libsqlDriverLoadError },
+    )
+  }
+  return drizzleLibsql
 }
 
 export interface AutoAdminDbTypes {}
@@ -44,7 +64,7 @@ export type AdminDbTypeForDialect<D extends AdminDbDialect> = D extends 'postgre
   ? ReturnType<DrizzlePg>
   : D extends 'd1'
     ? ReturnType<typeof drizzleD1>
-    : ReturnType<typeof drizzleLibsql>
+    : ReturnType<DrizzleLibsql>
 
 export type AdminDbType = AdminDbTypeForDialect<ResolvedAdminDbDialect>
 
@@ -104,7 +124,7 @@ export function useAdminDb(): AdminDbType {
           }) as unknown as AdminDbType
         }
         else {
-          _db = drizzleLibsql(config.databaseUrl as string, {
+          _db = requireLibsqlDriver()(config.databaseUrl as string, {
             casing: 'snake_case',
             logger: logDb,
           })

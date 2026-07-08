@@ -12,17 +12,20 @@
     "lint": "eslint ."
   },
   "peerDependencies": {
+    "@libsql/client": "^0.15.9",
     "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3"
   },
   "peerDependenciesMeta": {
+    "@libsql/client": {
+      "optional": true
+    },
     "pg": {
       "optional": true
     }
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.57",
-    "@libsql/client": "^0.15.9",
     "@nuxt/ui": "^4.5.1",
     "@peculiar/webcrypto": "^1.5.0",
     "@tailwindcss/typography": "^0.5.16",
@@ -41,6 +44,7 @@
     "zodex": "^4.0.0"
   },
   "devDependencies": {
+    "@libsql/client": "^0.15.9",
     "@types/pg": "^8.18.0",
     "pg": "^8.16.3",
     "vite": "^8.0.1"
