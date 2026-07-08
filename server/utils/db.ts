@@ -13,26 +13,20 @@ type DrizzlePg = typeof DrizzlePgFn
 type DBType = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleLibsql> | ReturnType<DrizzlePg>
 
 // The Postgres driver is loaded lazily so that projects using SQLite/libsql/D1 don't need the optional `pg` package installed.
-
-let drizzlePg: DrizzlePg | undefined
-
-export async function preloadAdminPgDriver(): Promise<void> {
-  if (drizzlePg) {
-    return
-  }
-  try {
-    const mod = await import('drizzle-orm/node-postgres')
-    drizzlePg = mod.drizzle
-  }
-  catch {
-    // `pg` is not installed. Only an error if a Postgres connection is actually used.
-  }
-}
+let pgDriverLoadError: unknown
+// eslint-disable-next-line antfu/no-top-level-await
+const drizzlePg: DrizzlePg | undefined = await import('drizzle-orm/node-postgres')
+  .then(mod => mod.drizzle)
+  .catch((error) => {
+    pgDriverLoadError = error
+    return undefined
+  })
 
 function requirePgDriver(): DrizzlePg {
   if (!drizzlePg) {
     throw new Error(
       'AutoAdmin: a PostgreSQL connection was configured, but the "pg" package could not be loaded. Install it in your project, e.g. `npx nypm add pg`.',
+      { cause: pgDriverLoadError },
     )
   }
   return drizzlePg
