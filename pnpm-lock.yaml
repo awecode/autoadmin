@@ -14,9 +14,6 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.57
         version: 1.2.97
-      '@libsql/client':
-        specifier: ^0.15.9
-        version: 0.15.15
       '@nuxt/ui':
         specifier: ^4.5.1
         version: 4.5.1(@tiptap/extensions@3.20.1(@tiptap/core@3.20.1(@tiptap/pm@3.20.1))(@tiptap/pm@3.20.1))(@tiptap/y-tiptap@3.0.2(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.6)(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29))(aws4fetch@1.0.20)(embla-carousel@8.6.0)(tailwindcss@4.2.1)(vite@8.0.1(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1))(vue@3.5.30)(yjs@13.6.29)(zod@4.3.6)
@@ -47,9 +44,6 @@ importers:
       drizzle-zod:
         specifier: 0.8.3
         version: 0.8.3(zod@4.3.6)
-      pg:
-        specifier: ^8.16.3
-        version: 8.20.0
       tailwindcss:
         specifier: ^4.2.1
         version: 4.2.1
@@ -69,9 +63,15 @@ importers:
         specifier: ^4.0.0
         version: 4.0.1(zod@4.3.6)
     devDependencies:
+      '@libsql/client':
+        specifier: ^0.15.9
+        version: 0.15.15
       '@types/pg':
         specifier: ^8.18.0
         version: 8.18.0
+      pg:
+        specifier: ^8.16.3
+        version: 8.20.0
       vite:
         specifier: ^8.0.1
         version: 8.0.1(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)
