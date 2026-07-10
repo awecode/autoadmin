@@ -55,7 +55,7 @@ export async function ensureUniqueSlugs<T extends Table>(
   if (!cfg.slugFields)
     return
 
-  const db = useAdminDb()
+  const db = await useAdminDb()
 
   for (const slugFieldName of Object.keys(cfg.slugFields)) {
     const slug = data[slugFieldName]

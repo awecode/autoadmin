@@ -10,7 +10,7 @@ import { eq } from 'drizzle-orm'
 import { zerialize } from 'zodex'
 
 async function getTableValues(cfg: AdminModelConfig<Table>, spec: FormSpec, lookupValue: string) {
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const model = cfg.model
   const lookupColumn = cfg.lookupColumn
   const columns = spec.fields.map(field => field.name)

@@ -15,7 +15,7 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
     })
   }
   const model = cfg.model
-  const db = useAdminDb()
+  const db = await useAdminDb()
   let inputData = typeof data === 'object' && data !== null ? { ...data } : {}
 
   const beforeData = await cfg.create.before?.(db, {

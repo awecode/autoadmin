@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `No relations found for column ${columnName}.`,
     })
   }
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const choices = []
   for (const relation of relations) {
     // TODO only select colKey(foreignColumn) and labelField

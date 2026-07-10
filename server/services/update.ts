@@ -22,7 +22,7 @@ export async function updateRecord<T extends Table>(
     })
   }
   const model = cfg.model
-  const db = useAdminDb()
+  const db = await useAdminDb()
   let inputData = typeof data === 'object' && data !== null ? { ...data } : {}
 
   const beforeData = await cfg.update.before?.(db, {

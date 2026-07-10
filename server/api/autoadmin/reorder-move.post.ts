@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const requestCtx = { event }
 
   try {

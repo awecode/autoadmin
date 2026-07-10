@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const requestCtx = { event }
   const reorderCtx = buildBaseWhereContext(cfg, 'reorder', requestCtx, { lookupValues: body.orderedLookups })
 

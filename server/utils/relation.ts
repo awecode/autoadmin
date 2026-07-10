@@ -165,7 +165,7 @@ export async function addForeignKeysToFormSpec(formSpec: FormSpec, cfg: AdminMod
       //   strip id from field label
       field.label = (field.label || field.name).replace(' Id', '')
       if (formSpec.values?.[colKey(relation.column)]) {
-        const db = useAdminDb()
+        const db = await useAdminDb()
         // TODO only select the columns that are needed for the form spec
         const rows = await db.select().from(relation.foreignTable).where(eq(relation.foreignColumn, formSpec.values[colKey(relation.column)]))
         field.options = rows.map(row => ({
@@ -228,7 +228,7 @@ export async function addO2mRelationsToFormSpec(formSpec: FormSpec, cfg: AdminMo
       if (selfPrimaryValue === undefined || selfPrimaryValue === null) {
         throw new Error(`Primary key value is required for one-to-many relation. None found for ${modelKey}.`)
       }
-      const db = useAdminDb()
+      const db = await useAdminDb()
       // const rows = await db.select().from(table).where(eq(table[colKey(relationData.foreignRelatedColumn)], selfPrimaryValue))
       // TODO only select the columns that are needed for the form spec
       const rows = await db.select().from(table).where(eq(relationData.foreignRelatedColumn, selfPrimaryValue))
@@ -268,7 +268,7 @@ export async function addM2mRelationsToFormSpec(formSpec: FormSpec, cfg: AdminMo
       options: [],
     }
     if (formSpec.values) {
-      const db = useAdminDb()
+      const db = await useAdminDb()
       const selfValue = formSpec.values[colKey(relation.selfForeignColumn)]
       // TODO only select the columns that are needed for the form spec
       const result = await db

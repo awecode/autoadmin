@@ -58,11 +58,6 @@ export default defineNuxtConfig({
     transpile: ['vue'],
   },
   nitro: {
-    esbuild: {
-      options: {
-        target: 'es2022',
-      },
-    },
     rollupConfig: {
       external: ['pg-native', 'cloudflare:sockets'],
     },

@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: `No relation found for column ${columnDef}.`,
     })
   }
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const choices = []
   const rows = await db.select().from(relation.otherTable)
   choices.push(...rows.map(row => ({

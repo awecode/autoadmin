@@ -49,7 +49,7 @@ export async function getBaseWhereConditions<T extends Table>(
   if (!cfg.baseWhere) {
     return []
   }
-  const db = useAdminDb()
+  const db = await useAdminDb()
   return normalizeBaseWhereResult(await cfg.baseWhere(db, ctx))
 }
 

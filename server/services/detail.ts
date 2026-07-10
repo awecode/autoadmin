@@ -10,7 +10,7 @@ export async function getRecordDetail<T extends Table>(
   lookupValue: string,
   requestCtx?: AutoadminRequestContext,
 ): Promise<any> {
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const ctx = buildBaseWhereContext(cfg, 'detail', requestCtx, { lookupValue })
   try {
     const where = await whereWithBaseWhere(cfg, ctx, eq(cfg.lookupColumn, lookupValue))

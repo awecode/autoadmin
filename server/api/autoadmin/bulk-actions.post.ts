@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Action not found',
     })
   }
-  const db = useAdminDb()
+  const db = await useAdminDb()
   await assertLookupsInBaseWhere(
     db,
     cfg,

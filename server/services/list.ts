@@ -26,7 +26,7 @@ export async function listRecords<T extends Table>(
   // TODO Maybe move the following two lines to registry, have it computed once instead of on each ssr
   const columnTypes = zodToListSpec(cfg.create.schema)
   const { columns, toJoin } = getListColumns(cfg, tableColumns, columnTypes, cfg.metadata)
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const baseWhereCtx = buildBaseWhereContext(cfg, 'list', requestCtx, { query })
   const baseWhereClause = await getBaseWhereClause(cfg, baseWhereCtx)
   const filters = cfg.list.enableFilter ? await getFilters(cfg, db, columnTypes, cfg.metadata, query, requestCtx) : undefined

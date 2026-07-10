@@ -19,7 +19,7 @@ export async function deleteRecord<T extends Table>(
     })
   }
   const model = cfg.model
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const lookupColumn = cfg.lookupColumn
   await cfg.delete.before?.(db, {
     config: cfg,
@@ -73,7 +73,7 @@ export async function bulkDelete(
     })
   }
   const model = cfg.model
-  const db = useAdminDb()
+  const db = await useAdminDb()
   const lookupColumn = cfg.lookupColumn
   const baseWhereCtx = buildBaseWhereContext(cfg, 'bulkDelete', requestCtx, { lookupValues: rowLookups })
   const deleteWhere = await whereWithBaseWhere(cfg, baseWhereCtx, inArray(lookupColumn, rowLookups))
