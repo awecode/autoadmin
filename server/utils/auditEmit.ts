@@ -2,6 +2,7 @@ import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmi
 import type { Table } from 'drizzle-orm'
 import type { AuditAction, AuditChanges } from './audit'
 import {
+  auditRecordsEqual,
   emitAuditEvent,
   getAuditConfig,
   isModelAuditEnabled,
@@ -40,6 +41,16 @@ export async function maybeEmitModelAudit<T extends Table>(options: {
   const changes: AuditChanges | undefined = options.changes ?? {
     before: sanitizeAuditRecord(options.beforeRecord ?? undefined, sanitizeOpts),
     after: sanitizeAuditRecord(options.afterRecord ?? undefined, sanitizeOpts),
+  }
+
+  // No-op update (open form and save without edits): skip the audit row.
+  if (
+    options.action === 'update'
+    && changes.before
+    && changes.after
+    && auditRecordsEqual(changes.before, changes.after)
+  ) {
+    return
   }
 
   const hasChanges = changes.before || changes.after

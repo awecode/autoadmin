@@ -140,6 +140,33 @@ export function sanitizeAuditRecord(
   return out
 }
 
+/** Stable equality for sanitized audit payloads (key order independent). */
+export function auditRecordsEqual(
+  a: Record<string, unknown> | undefined,
+  b: Record<string, unknown> | undefined,
+): boolean {
+  if (a === b) {
+    return true
+  }
+  if (!a || !b) {
+    return false
+  }
+  return stableStringify(a) === stableStringify(b)
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, v) => {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const obj = v as Record<string, unknown>
+      return Object.keys(obj).sort().reduce((acc, key) => {
+        acc[key] = obj[key]
+        return acc
+      }, {} as Record<string, unknown>)
+    }
+    return v
+  })
+}
+
 async function defaultTableWrite(entry: AuditEntry, table: Table): Promise<void> {
   const db = await useAdminDb()
   const row = {
