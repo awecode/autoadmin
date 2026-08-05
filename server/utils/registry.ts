@@ -215,8 +215,10 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
    */
   baseWhere?: BaseWhereFn<T>
   /**
-   * Opt-in audit logging for this model. Requires `configureAudit({ table })` or a custom `write`.
-   * `true` enables with defaults; pass an object for field include/exclude lists.
+   * Audit logging for this model. Requires `configureAudit({ table })` or a custom `write`.
+   * - Omit to inherit `configureAudit({ enabled: true })`
+   * - `true` / `{ excludeFields }` to enable (or override field lists)
+   * - `false` / `{ enabled: false }` to opt out when auditing is global
    */
   audit?: AuditModelConfig
 }

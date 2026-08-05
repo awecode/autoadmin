@@ -36,6 +36,12 @@ export interface AuditModelOptions {
 export type AuditModelConfig = boolean | AuditModelOptions
 
 export interface AuditGlobalConfig {
+  /**
+   * When true, audit all registered models unless a model sets `audit: false`
+   * (or `{ enabled: false }`). Per-model `audit: true` / options still work when
+   * this is false or omitted.
+   */
+  enabled?: boolean
   /** User-owned audit table (from shipped schema or compatible columns). */
   table?: Table
   /** When set, replaces the default table insert. */
@@ -64,22 +70,35 @@ export function getAuditConfig(): AuditGlobalConfig {
   return getAuditState().config
 }
 
+/**
+ * Whether auditing is on for a model: explicit per-model setting wins;
+ * otherwise falls back to `configureAudit({ enabled: true })`.
+ */
 export function isModelAuditEnabled(audit: AuditModelConfig | undefined): boolean {
+  if (audit === false) {
+    return false
+  }
   if (audit === true) {
     return true
   }
-  if (audit && typeof audit === 'object' && audit.enabled !== false) {
-    return true
+  if (audit && typeof audit === 'object') {
+    return audit.enabled !== false
   }
-  return false
+  return getAuditConfig().enabled === true
 }
 
 export function resolveModelAuditOptions(audit: AuditModelConfig | undefined): AuditModelOptions | undefined {
   if (audit === true) {
     return { enabled: true }
   }
+  if (audit === false) {
+    return { enabled: false }
+  }
   if (audit && typeof audit === 'object') {
     return { enabled: audit.enabled !== false, ...audit }
+  }
+  if (getAuditConfig().enabled === true) {
+    return { enabled: true }
   }
   return undefined
 }
