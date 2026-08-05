@@ -2,6 +2,7 @@ import type { InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import type { VNode } from 'vue'
 import type { ZodObject, ZodType } from 'zod'
+import type { AuditModelConfig } from './audit'
 import type { BaseWhereFn } from './baseWhere'
 import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
@@ -13,6 +14,7 @@ import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
+import { configureAudit } from './audit'
 import { assertValidListOrdering } from './listOrdering'
 import { getTableMetadata } from './metadata'
 import { normalizeAutoadminRolesInput } from './roleHelpers'
@@ -212,6 +214,11 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
    * Example: [eq(posts.status, 'published')]
    */
   baseWhere?: BaseWhereFn<T>
+  /**
+   * Opt-in audit logging for this model. Requires `configureAudit({ table })` or a custom `write`.
+   * `true` enables with defaults; pass an object for field include/exclude lists.
+   */
+  audit?: AuditModelConfig
 }
 
 // AdminModelConfig is the config available in the registry after processing AdminModelOptions
@@ -243,6 +250,8 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   /** Normalized from `AdminModelOptions.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
   baseWhere?: BaseWhereFn<T>
+  /** Resolved from `AdminModelOptions.audit`. */
+  audit?: AuditModelConfig
 }
 
 function getStaticDefaultOptions() {
@@ -381,6 +390,7 @@ export function useAdminRegistry() {
     cfg.metadata = getTableMetadata(cfg.columns)
     cfg.roles = normalizeAutoadminRolesInput(opts.roles)
     cfg.baseWhere = opts.baseWhere
+    cfg.audit = opts.audit
     cfg.order = opts.order ?? 0
     return cfg
   }
@@ -395,6 +405,44 @@ export function useAdminRegistry() {
     }
   }
 
+  /**
+   * Register the audit log table as an append-only admin model (list/view only).
+   */
+  function registerAuditLog<T extends Table>(
+    model: T,
+    opts: Omit<AdminModelOptions<T>, 'create' | 'update' | 'delete' | 'audit' | 'formFields'> = {},
+  ): void {
+    register(model, {
+      key: opts.key ?? 'audit-logs',
+      label: opts.label ?? 'Audit Logs',
+      icon: opts.icon ?? 'i-lucide-scroll-text',
+      labelColumnName: (opts.labelColumnName ?? 'action') as ColKey<T>,
+      order: opts.order ?? 100,
+      roles: opts.roles,
+      baseWhere: opts.baseWhere,
+      list: defu(opts.list, {
+        showCreateButton: false,
+        enableSort: true,
+        defaultOrdering: 'createdAt:desc',
+        searchFields: ['modelKey', 'lookupValue', 'actorLabel', 'actorId'] as ColKey<T>[],
+        filterFields: ['action', 'modelKey', 'createdAt'] as ColKey<T>[],
+        fields: [
+          'createdAt',
+          'action',
+          'modelKey',
+          'lookupValue',
+          'actorLabel',
+          'actorRole',
+        ] as ColKey<T>[],
+      }),
+      create: { enabled: false },
+      update: { enabled: false },
+      delete: { enabled: false },
+      fields: opts.fields,
+      warnOnUnsavedChanges: false,
+    })
+  }
+
   function getModelConfig<T extends Table>(
     key: string,
   ): AdminModelConfig<T> | undefined {
@@ -407,5 +455,7 @@ export function useAdminRegistry() {
     get: getModelConfig,
     configure,
     register,
+    configureAudit,
+    registerAuditLog,
   }
 }
