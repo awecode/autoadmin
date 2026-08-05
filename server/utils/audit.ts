@@ -299,6 +299,26 @@ async function ensureOwnedAuditTable(): Promise<void> {
   await execAuditDdl(ddl)
 }
 
+/**
+ * Run a DB operation against the owned audit table. On "table missing", create it
+ * and retry once (same path as audit inserts). No-op for other tables.
+ */
+export async function withOwnedAuditTableRetry<T>(
+  table: Table | undefined,
+  run: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await run()
+  }
+  catch (error) {
+    if (!isOwnedAuditTable(table) || !isMissingTableError(error)) {
+      throw error
+    }
+    await ensureOwnedAuditTable()
+    return await run()
+  }
+}
+
 function toAuditRow(entry: AuditEntry) {
   return {
     action: entry.action,

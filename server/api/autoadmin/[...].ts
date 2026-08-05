@@ -3,6 +3,7 @@ import { deleteRecord } from '../../services/delete'
 import { getRecordDetail } from '../../services/detail'
 import { listRecords } from '../../services/list'
 import { updateRecord } from '../../services/update'
+import { isOwnedAuditTable, withOwnedAuditTableRetry } from '../../utils/audit'
 import { getModelConfig } from '../../utils/autoadmin'
 import { assertRoleAccessAllowed, getAllowedActions } from '../../utils/roleHelpers'
 import { parseAutoadminRoute } from '../../utils/router'
@@ -34,8 +35,13 @@ export default defineEventHandler(async (event) => {
   assertRoleAccessAllowed(event, { roles: cfg.roles }, parsedRoute.routeType)
 
   switch (parsedRoute.routeType) {
-    case 'list':
-      return await listRecords(cfg, query, true, getAllowedActions(event, { roles: cfg.roles }), { event })
+    case 'list': {
+      const run = () => listRecords(cfg, query, true, getAllowedActions(event, { roles: cfg.roles }), { event })
+      if (isOwnedAuditTable(cfg.model)) {
+        return await withOwnedAuditTableRetry(cfg.model, run)
+      }
+      return await run()
+    }
 
     case 'create':
       if (!body) {
@@ -46,14 +52,19 @@ export default defineEventHandler(async (event) => {
       }
       return await createRecord(cfg, body, { event })
 
-    case 'detail':
+    case 'detail': {
       if (!parsedRoute.lookupValue) {
         throw createError({
           statusCode: 400,
           statusMessage: 'Lookup value is required for detail operation',
         })
       }
-      return await getRecordDetail(cfg, parsedRoute.lookupValue, { event })
+      const run = () => getRecordDetail(cfg, parsedRoute.lookupValue!, { event })
+      if (isOwnedAuditTable(cfg.model)) {
+        return await withOwnedAuditTableRetry(cfg.model, run)
+      }
+      return await run()
+    }
 
     case 'update':
       if (!parsedRoute.lookupValue) {

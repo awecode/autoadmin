@@ -1,6 +1,7 @@
 import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { Table } from 'drizzle-orm'
 import { eq } from 'drizzle-orm'
+import { isMissingTableError } from '../utils/audit'
 import { buildBaseWhereContext, whereWithBaseWhere } from '../utils/baseWhere'
 import { useAdminDb } from '../utils/db'
 import { handleDrizzleError } from '../utils/drizzle'
@@ -31,6 +32,10 @@ export async function getRecordDetail<T extends Table>(
   }
   catch (error) {
     if ((error as any)?.statusCode) {
+      throw error
+    }
+    // Let owned-audit API retry create the table; do not wrap as H3 error yet.
+    if (isMissingTableError(error)) {
       throw error
     }
     throw createError(handleDrizzleError(error))
