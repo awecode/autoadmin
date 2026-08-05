@@ -32,6 +32,38 @@ export function getUserRoleFromEvent(event: H3Event): string | undefined {
   return s || undefined
 }
 
+export interface AuditActor {
+  id?: string | number
+  role?: string
+  label?: string
+}
+
+/**
+ * Resolve who performed an audited action. Override via `#autoadmin/roleAccess`
+ * when your auth user shape differs.
+ */
+export function getAuditActorFromEvent(event: H3Event): AuditActor | undefined {
+  const auth = event.context.auth as {
+    user?: {
+      id?: string | number
+      role?: string
+      email?: string
+      name?: string
+    }
+  } | undefined
+  const user = auth?.user
+  if (!user) {
+    return undefined
+  }
+  const role = user.role != null ? String(user.role).trim() || undefined : undefined
+  const label = user.email || user.name || undefined
+  const id = user.id
+  if (id == null && !role && !label) {
+    return undefined
+  }
+  return { id, role, label }
+}
+
 /**
  * Decide whether a resolved `userRole` may perform `action` under `roles`.
  * Order: no policy → allow; `full` short-circuit; then per `action`;
