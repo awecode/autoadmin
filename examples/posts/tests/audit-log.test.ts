@@ -14,22 +14,21 @@ describe('audit logs', () => {
   })
 
   it('logs create, update, delete, bulkDelete, and relation.m2m for posts', async () => {
-    const formSpec = await $fetch<any>(`${apiPrefix}/formspec/posts`)
-    const authors = await $fetch<{ label: string, value: number }[]>(
-      formSpec.spec.fields.find((field: any) => field.name === 'authorId')?.relationConfig?.choicesEndpoint,
-    )
-    const authorId = authors[0]?.value
-    expect(authorId).toBeDefined()
+    // resetDatabase clears users; seed required FK targets before creating posts.
+    const author = await $fetch<{ data: { id: number } }>(`${apiPrefix}/users`, {
+      method: 'POST',
+      body: {
+        name: 'Audit Author',
+        email: `audit-author-${Date.now()}@example.com`,
+      },
+    })
+    const authorId = author.data.id
 
-    const tags = await $fetch<{ results: { id: number, name: string }[] }>(`${apiPrefix}/tags`)
-    let tagId = tags.results[0]?.id
-    if (!tagId) {
-      const createdTag = await $fetch<{ data: { id: number } }>(`${apiPrefix}/tags`, {
-        method: 'POST',
-        body: { name: `audit-tag-${Date.now()}`, color: '#111111' },
-      })
-      tagId = createdTag.data.id
-    }
+    const createdTag = await $fetch<{ data: { id: number } }>(`${apiPrefix}/tags`, {
+      method: 'POST',
+      body: { name: `audit-tag-${Date.now()}`, color: '#111111' },
+    })
+    const tagId = createdTag.data.id
 
     const created = await $fetch<{ data: { id: number, title: string } }>(`${apiPrefix}/posts`, {
       method: 'POST',
@@ -76,15 +75,25 @@ describe('audit logs', () => {
       },
     })
 
+    // List omits bulky JSON columns; load detail for changes/meta assertions.
     const logs = await $fetch<{ results: Array<{
+      id: number
       action: string
       modelKey: string
       lookupValue: string | null
-      changes: { before?: Record<string, unknown>, after?: Record<string, unknown> } | null
-      meta: Record<string, unknown> | null
     }> }>(`${apiPrefix}/audit-logs?size=50`)
 
-    const postLogs = logs.results.filter(row => row.modelKey === 'posts')
+    const postLogSummaries = logs.results.filter(row => row.modelKey === 'posts')
+    const postLogs = await Promise.all(postLogSummaries.map(async (row) => {
+      return await $fetch<{
+        id: number
+        action: string
+        modelKey: string
+        lookupValue: string | null
+        changes: { before?: Record<string, unknown>, after?: Record<string, unknown> } | null
+        meta: Record<string, unknown> | null
+      }>(`${apiPrefix}/audit-logs/${row.id}`)
+    }))
     const actions = postLogs.map(row => row.action)
 
     expect(actions).toContain('create')
