@@ -146,7 +146,7 @@ In addition to database tables, AutoAdmin can manage JSON files with the same au
 
 ## Audit Logs
 
-Opt-in activity logging for changes made from autoadmin. **Guide:** [docs/audit-log.md](./docs/audit-log.md).
+Opt-in activity logging for admin writes. **Guide:** [docs/audit-log.md](./docs/audit-log.md).
 
 ## Specifying Custom Field Types
 

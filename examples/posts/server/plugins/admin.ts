@@ -9,7 +9,6 @@ export default defineNitroPlugin(() => {
     table: auditLogs,
     enabled: true,
   })
-  registry.registerAuditLog(auditLogs)
 
   //   Categories - Simple setup
   registry.register(categories, {

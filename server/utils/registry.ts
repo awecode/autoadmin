@@ -2,7 +2,7 @@ import type { InferSelectModel, SQL, Table } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import type { VNode } from 'vue'
 import type { ZodObject, ZodType } from 'zod'
-import type { AuditModelConfig } from './audit'
+import type { AuditGlobalConfig, AuditModelConfig } from './audit'
 import type { BaseWhereFn } from './baseWhere'
 import type { AdminDbType } from './db'
 import type { CustomFilter, FilterType } from './filter'
@@ -14,10 +14,29 @@ import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string
 import { defu } from 'defu'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
-import { configureAudit } from './audit'
+import { getAuditConfig, configureAudit as setAuditConfig } from './audit'
 import { assertValidListOrdering } from './listOrdering'
 import { getTableMetadata } from './metadata'
 import { normalizeAutoadminRolesInput } from './roleHelpers'
+
+/** List/view options for the audit log admin model (create/update/delete stay disabled). */
+export type AuditLogUiOptions<T extends Table = Table> = Omit<
+  AdminModelOptions<T>,
+  'create' | 'update' | 'delete' | 'audit' | 'formFields'
+>
+
+/**
+ * Audit sink + optional admin UI. Pass `table` once; the list/view UI is
+ * registered automatically unless `ui: false`.
+ */
+export type ConfigureAuditOptions<T extends Table = Table> = AuditGlobalConfig & {
+  /**
+   * Admin list/view for `table`.
+   * Defaults to `true` when `table` is set. Use `false` for headless logging,
+   * or an object for `roles` / label / list overrides.
+   */
+  ui?: boolean | AuditLogUiOptions<T>
+}
 
 export interface AutoadminRequestContext {
   event?: H3Event
@@ -410,9 +429,9 @@ export function useAdminRegistry() {
   /**
    * Register the audit log table as an append-only admin model (list/view only).
    */
-  function registerAuditLog<T extends Table>(
+  function registerAuditLogModel<T extends Table>(
     model: T,
-    opts: Omit<AdminModelOptions<T>, 'create' | 'update' | 'delete' | 'audit' | 'formFields'> = {},
+    opts: AuditLogUiOptions<T> = {},
   ): void {
     register(model, {
       key: opts.key ?? 'audit-logs',
@@ -443,6 +462,43 @@ export function useAdminRegistry() {
       fields: opts.fields,
       warnOnUnsavedChanges: false,
     })
+  }
+
+  /**
+   * Configure the audit sink. When `table` is set, also registers the list/view
+   * admin UI unless `ui: false`.
+   */
+  function configureAudit<T extends Table>(config: ConfigureAuditOptions<T>): void {
+    const { ui, ...auditConfig } = config
+    setAuditConfig(auditConfig)
+
+    if (auditConfig.table && ui !== false) {
+      const uiOpts = typeof ui === 'object' ? ui : {}
+      registerAuditLogModel(auditConfig.table as T, uiOpts)
+    }
+  }
+
+  /**
+   * Ensure `table` is the audit sink and register the list/view UI.
+   * Prefer `configureAudit({ table, enabled: true })` for the common case
+   * (sink + UI in one call). Use this when you configured a custom `write`
+   * with `ui: false` and only need the admin model.
+   */
+  function registerAuditLog<T extends Table>(
+    model: T,
+    opts: AuditLogUiOptions<T> & Pick<AuditGlobalConfig, 'enabled' | 'excludeFields' | 'write' | 'getActor'> = {},
+  ): void {
+    const { enabled, excludeFields, write, getActor, ...uiOpts } = opts
+    const current = getAuditConfig()
+    setAuditConfig({
+      ...current,
+      table: model,
+      ...(enabled !== undefined ? { enabled } : {}),
+      ...(excludeFields !== undefined ? { excludeFields } : {}),
+      ...(write !== undefined ? { write } : {}),
+      ...(getActor !== undefined ? { getActor } : {}),
+    })
+    registerAuditLogModel(model, uiOpts)
   }
 
   function getModelConfig<T extends Table>(

@@ -6,7 +6,7 @@ JSON admin is not audited in this version.
 
 ## 1. Add the audit table to your schema
 
-Import the dialect-specific table from the layer and re-export it from your app schema, then run your usual drizzle-kit generate/migrate.
+Re-export the dialect-specific table from your app schema so drizzle-kit can migrate it (same pattern as your other tables).
 
 **SQLite / libsql / D1:**
 
@@ -26,9 +26,9 @@ export { auditLogs } from '#layers/autoadmin/server/db/auditLog.postgresql'
 
 Columns: `id`, `createdAt`, `action`, `modelKey`, `lookupValue`, `actorId`, `actorRole`, `actorLabel`, `changes`, `meta`.
 
-## 2. Configure the writer
+## 2. Enable auditing (one call)
 
-In your Nitro admin plugin:
+In your Nitro admin plugin, pass the table once. That configures the writer and registers the list/view admin UI (create/update/delete stay disabled).
 
 ```ts
 import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
@@ -43,11 +43,10 @@ export default defineNitroPlugin(() => {
     enabled: true,
     // Optional: strip sensitive fields from all models
     // excludeFields: ['passwordHash'],
-  })
-
-  // Optional: list/view UI (create/update/delete disabled)
-  registry.registerAuditLog(auditLogs, {
-    roles: ['admin'],
+    // Optional UI overrides (roles, label, list, …). Omit for defaults.
+    // ui: { roles: ['admin'] },
+    // Headless (sink only, no admin page):
+    // ui: false,
   })
 
   registry.register(posts)
@@ -58,7 +57,7 @@ export default defineNitroPlugin(() => {
 ```
 
 - Without `configureAudit({ table })` or a custom `write`, emits are no-ops.
-- Set `configureAudit({ enabled: true })` to audit all models by default, or set `audit: true` / options on individual models.
+- Set `enabled: true` to audit all models by default, or set `audit: true` / options on individual models.
 - Use `audit: false` (or `{ enabled: false }`) to opt a model out when global enable is on.
 - If both `table` and `write` are set, **`write` replaces** the default table insert.
 
@@ -70,6 +69,8 @@ registry.configureAudit({
     // send to your logger, queue, etc.
     console.info(entry)
   },
+  enabled: true,
+  // no table → no admin UI
 })
 ```
 
