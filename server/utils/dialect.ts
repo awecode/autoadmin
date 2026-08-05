@@ -3,8 +3,8 @@ import type { RuntimeConfig } from 'nuxt/schema'
 import type { DatabaseDialect } from '../../utils/databaseDialect'
 import process from 'node:process'
 import { getTableColumns, ilike, like, sql } from 'drizzle-orm'
-import { getTableConfig as getPgTableConfig } from 'drizzle-orm/pg-core'
-import { getTableConfig as getSqliteTableConfig } from 'drizzle-orm/sqlite-core'
+import { getTableConfig as getPgTableConfig, alias as pgAlias } from 'drizzle-orm/pg-core'
+import { getTableConfig as getSqliteTableConfig, alias as sqliteAlias } from 'drizzle-orm/sqlite-core'
 import { getDialectFromUrl } from '../../utils/databaseDialect'
 
 interface SupportedTableConfig {
@@ -50,6 +50,19 @@ export function getTableDialect(table: Table): DatabaseDialect | undefined {
     return undefined
   }
   return getColumnDialect(firstColumn)
+}
+
+/**
+ * Alias a related table for LEFT JOIN. Required for self-referential FKs and
+ * when multiple FKs target the same table (Drizzle rejects duplicate table refs).
+ */
+export function aliasRelationTable(table: Table, aliasName: string): Table {
+  const safeAlias = aliasName.replace(/\W/g, '_') || 'rel'
+  const dialect = getTableDialect(table) ?? 'sqlite'
+  if (dialect === 'postgresql') {
+    return pgAlias(table as never, safeAlias) as unknown as Table
+  }
+  return sqliteAlias(table as never, safeAlias) as unknown as Table
 }
 
 export function getTableConfigByDialect(table: Table): SupportedTableConfig {

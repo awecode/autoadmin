@@ -1,12 +1,12 @@
 import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { AutoadminAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
-import type { SQL, Table } from 'drizzle-orm'
+import type { AnyColumn, SQL, Table } from 'drizzle-orm'
 import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { asc, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm'
 import { buildBaseWhereContext, getBaseWhereClause, mergeWhere } from '../utils/baseWhere'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
-import { buildAggregateExpression, buildTextSearchCondition } from '../utils/dialect'
+import { aliasRelationTable, buildAggregateExpression, buildTextSearchCondition } from '../utils/dialect'
 import { colKey, getPaginatedResults } from '../utils/drizzle'
 import { getFilters } from '../utils/filter'
 import { getListColumns, zodToListSpec } from '../utils/list'
@@ -33,37 +33,50 @@ export async function listRecords<T extends Table>(
 
   const enableSort = cfg.list.enableSort
 
+  // Join alias map: required for self-referential FKs and multi-FK-to-same-table.
+  interface RelationJoin {
+    table: Table
+    on: SQL
+    columns: ReturnType<typeof getTableColumns>
+  }
+  const relationJoins = new Map<string, RelationJoin>()
+
+  function ensureRelationJoin(
+    fk: string,
+    foreignKey: { foreignTable: Table, foreignColumn: AnyColumn },
+  ): RelationJoin {
+    const joinKey = `${fk}_${colKey(foreignKey.foreignColumn)}`
+    const existing = relationJoins.get(joinKey)
+    if (existing) {
+      return existing
+    }
+    if (!(fk in tableColumns)) {
+      throw new Error(`Invalid foreign key field: ${fk}`)
+    }
+    const aliasedTable = aliasRelationTable(foreignKey.foreignTable, joinKey)
+    const aliasedColumns = getTableColumns(aliasedTable)
+    const foreignPkKey = colKey(foreignKey.foreignColumn)
+    const entry: RelationJoin = {
+      table: aliasedTable,
+      on: eq(tableColumns[fk]!, aliasedColumns[foreignPkKey]!),
+      columns: aliasedColumns,
+    }
+    relationJoins.set(joinKey, entry)
+    return entry
+  }
+
   // Build joins and foreign column selections
-  const joins: { table: Table, on: SQL }[] = []
   const foreignColumnSelections: Record<string, any> = {}
-  const addedJoins = new Set<string>() // Track which foreign keys have already been joined
 
   for (const [relation, field] of toJoin) {
     const [fk, foreignColumnName] = field.split('.')
     if (!fk || !foreignColumnName) {
       throw new Error(`Invalid field definition: ${JSON.stringify(field)}`)
     }
-    const foreignTable = relation.foreignTable
-
-    // Get table columns to access them properly
-    const foreignTableColumns = getTableColumns(foreignTable)
-
-    // Create a unique key for this join based on the foreign key column
-    const joinKey = `${fk}_${colKey(relation.foreignColumn)}`
-
-    // Only add join if we haven't already added it for this foreign key
-    if (!addedJoins.has(joinKey) && fk in tableColumns) {
-      joins.push({
-        table: foreignTable,
-        on: eq(tableColumns[fk]!, foreignTableColumns[colKey(relation.foreignColumn)]),
-      })
-      addedJoins.add(joinKey)
-    }
-
-    // Add foreign column to selection with alias
+    const join = ensureRelationJoin(fk, relation)
     const accessorKey = `${fk}__${foreignColumnName}`
-    if (foreignTableColumns[foreignColumnName]) {
-      foreignColumnSelections[accessorKey] = foreignTableColumns[foreignColumnName]
+    if (join.columns[foreignColumnName]) {
+      foreignColumnSelections[accessorKey] = join.columns[foreignColumnName]
     }
   }
 
@@ -162,22 +175,10 @@ export async function listRecords<T extends Table>(
           const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
           if (foreignKeys.length > 0) {
             const foreignKey = foreignKeys[0]!
-            const foreignTable = foreignKey.foreignTable
-            const foreignTableColumns = getTableColumns(foreignTable)
+            const join = ensureRelationJoin(fk, foreignKey)
 
-            if (foreignColumnName in foreignTableColumns) {
-              // Ensure this foreign table is joined
-              const joinKey = `${fk}_${colKey(foreignKey.foreignColumn)}`
-              if (!addedJoins.has(joinKey)) {
-                joins.push({
-                  table: foreignTable,
-                  on: eq(tableColumns[fk]!, foreignTableColumns[colKey(foreignKey.foreignColumn)]),
-                })
-                addedJoins.add(joinKey)
-              }
-
-              // Add search condition for foreign column
-              searchConditions.push(buildTextSearchCondition(foreignTableColumns[foreignColumnName]!, searchQuery))
+            if (foreignColumnName in join.columns) {
+              searchConditions.push(buildTextSearchCondition(join.columns[foreignColumnName]!, searchQuery))
             }
           }
         }
@@ -258,8 +259,39 @@ export async function listRecords<T extends Table>(
   else if (filterConditions.length > 0) {
     combinedConditions = sql.join(filterConditions, sql` AND `)
   }
+
+  // Resolve FK sort join before applying joins (so sort can share the same alias).
+  let pendingRelationOrder: { column: AnyColumn, direction: 'asc' | 'desc' } | undefined
+  const ordering = resolveListOrdering(query.ordering, cfg.list.defaultOrdering, {
+    enableSort,
+    hasSortField: !!cfg.sortField,
+  })
+  if (enableSort && ordering) {
+    const [columnAccessorKey, direction] = ordering.split(':')
+    const column = columns.find(column => column.accessorKey === columnAccessorKey)
+
+    if (column?.sortKey && (direction === 'asc' || direction === 'desc')) {
+      if (column.sortKey.includes('.')) {
+        const [fk, foreignColumnName] = column.sortKey.split('.')
+        if (!fk || !foreignColumnName) {
+          throw new Error(`Invalid ordering field: ${JSON.stringify(column.sortKey)}`)
+        }
+        const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
+        if (foreignKeys.length > 0) {
+          const join = ensureRelationJoin(fk, foreignKeys[0]!)
+          if (foreignColumnName in join.columns) {
+            pendingRelationOrder = {
+              column: join.columns[foreignColumnName]!,
+              direction,
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Add joins to the query and prepare ordering
-  for (const join of joins) {
+  for (const join of relationJoins.values()) {
     baseQuery = baseQuery.leftJoin(join.table, join.on)
   }
 
@@ -270,10 +302,6 @@ export async function listRecords<T extends Table>(
   }
 
   // Handle ordering (after joins are applied)
-  const ordering = resolveListOrdering(query.ordering, cfg.list.defaultOrdering, {
-    enableSort,
-    hasSortField: !!cfg.sortField,
-  })
   let orderApplied = false
   if (enableSort && ordering) {
     const [columnAccessorKey, direction] = ordering.split(':')
@@ -282,35 +310,11 @@ export async function listRecords<T extends Table>(
     if (column?.sortKey && (direction === 'asc' || direction === 'desc')) {
       const orderFn = direction === 'desc' ? desc : asc
 
-      // Check if sortKey is a foreign key relation (contains dot)
-      if (column.sortKey.includes('.')) {
-        const [fk, foreignColumnName] = column.sortKey.split('.')
-
-        if (!fk || !foreignColumnName) {
-          throw new Error(`Invalid ordering field: ${JSON.stringify(column.sortKey)}`)
-        }
-
-        // Get foreign key relations for this column
-        const foreignKeys = getTableForeignKeysByColumn(cfg.model, fk)
-        if (foreignKeys.length > 0) {
-          const foreignKey = foreignKeys[0]!
-          const foreignTable = foreignKey.foreignTable
-          const foreignTableColumns = getTableColumns(foreignTable)
-
-          // Ensure the foreign table is joined
-          const joinKey = `${fk}_${colKey(foreignKey.foreignColumn)}`
-          if (!addedJoins.has(joinKey) && fk in tableColumns) {
-            baseQuery = baseQuery.leftJoin(foreignTable, eq(tableColumns[fk]!, foreignTableColumns[colKey(foreignKey.foreignColumn)]))
-          }
-
-          // Apply ordering on foreign column
-          if (foreignColumnName in foreignTableColumns) {
-            baseQuery = baseQuery.orderBy(orderFn(foreignTableColumns[foreignColumnName]!))
-            orderApplied = true
-          }
-        }
+      if (pendingRelationOrder) {
+        baseQuery = baseQuery.orderBy(orderFn(pendingRelationOrder.column))
+        orderApplied = true
       }
-      else if (column.sortKey in tableColumns) {
+      else if (!column.sortKey.includes('.') && column.sortKey in tableColumns) {
         baseQuery = baseQuery.orderBy(orderFn(tableColumns[column.sortKey]!))
         orderApplied = true
       }
@@ -328,7 +332,7 @@ export async function listRecords<T extends Table>(
 
   // Build count query with combined conditions
   let countQuery = db.select({ resultCount: count() }).from(model) as any
-  for (const join of joins) {
+  for (const join of relationJoins.values()) {
     countQuery = countQuery.leftJoin(join.table, join.on)
   }
   if (listWhere) {
