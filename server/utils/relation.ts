@@ -1,16 +1,23 @@
-import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { AnyColumn, Table } from 'drizzle-orm'
 import type { AdminDbType } from './db'
 import type { FieldSpec, FormSpec } from './form'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { and, eq, getTableColumns, getTableName, inArray, not } from 'drizzle-orm'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
+import { emitAuditEvent, getAuditConfig, isModelAuditEnabled } from './audit'
 import { getEnabledStatuses, getLabelColumnFromModel } from './autoadmin'
 import { useAdminDb } from './db'
 import { getTableConfigByDialect } from './dialect'
 import { colKey, handleDrizzleError } from './drizzle'
 
 const NOTNULL_CONSTRAINT_CODES = ['SQLITE_CONSTRAINT_NOTNULL', '23502']
+
+export interface RelationAuditContext<T extends Table = Table> {
+  cfg: AdminModelConfig<T>
+  lookupValue: string | number
+  requestCtx?: AutoadminRequestContext
+}
 
 interface M2MRelationSelf {
   selfTable: Table
@@ -299,7 +306,13 @@ export async function addM2mRelationsToFormSpec(formSpec: FormSpec, cfg: AdminMo
   return { ...formSpec, fields: updatedFields }
 }
 
-export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: AdminModelConfig<T>, preprocessed: any, result: { [x: string]: any }[]) {
+export async function saveO2mRelation<T extends Table>(
+  db: AdminDbType,
+  cfg: AdminModelConfig<T>,
+  preprocessed: any,
+  result: { [x: string]: any }[],
+  requestCtx?: AutoadminRequestContext,
+) {
   if (cfg.o2m) {
     const modelKey = cfg.key
     for (const [name, table] of Object.entries(cfg.o2m)) {
@@ -308,6 +321,16 @@ export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: Adm
       const newValues = preprocessed[fieldName]
       if (newValues) {
         const selfValue = result[0]![colKey(relationData.selfPrimaryColumn)]
+
+        const existingRows = await db.select({
+          id: relationData.foreignPrimaryColumn,
+        }).from(table).where(eq(relationData.foreignRelatedColumn, selfValue))
+        const existingIds = existingRows.map(row => row.id)
+        const newSet = new Set((newValues as any[]).map(String))
+        const existingSet = new Set(existingIds.map(String))
+        const added = (newValues as any[]).filter(id => !existingSet.has(String(id)))
+        const removed = existingIds.filter(id => !newSet.has(String(id)))
+
         // Step 1: Unset foreignRelatedColumn for all rows pointing to selfValue, except those in newValues
         try {
           await db.update(table).set({ [colKey(relationData.foreignRelatedColumn)]: null }).where(and(eq(relationData.foreignRelatedColumn, selfValue), not(inArray(relationData.foreignPrimaryColumn, newValues))))
@@ -318,7 +341,6 @@ export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: Adm
               const userFriendlyMessage = `Cannot remove the relation to ${modelKey} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`
               throw createError({
                 statusCode: 400,
-                // statusMessage: `Cannot unset this ${colKey(foreignRelatedColumn)} (${selfValue}) in previously existing records in ${getTableName(table)} because it can not be empty/null.`,
                 statusMessage: `Cannot remove the relation to ${modelKey} (${selfValue}) from existing records in ${getTableName(table)} because this field is required and cannot be null.`,
                 data: {
                   message: userFriendlyMessage,
@@ -336,12 +358,39 @@ export async function saveO2mRelation<T extends Table>(db: AdminDbType, cfg: Adm
         if (newValues.length > 0) {
           await db.update(table).set({ [colKey(relationData.foreignRelatedColumn)]: selfValue }).where(inArray(relationData.foreignPrimaryColumn, newValues))
         }
+
+        if (added.length > 0 || removed.length > 0) {
+          await maybeEmitRelationAudit({
+            cfg,
+            action: 'relation.o2m',
+            lookupValue: selfValue,
+            requestCtx,
+            field: name,
+            added,
+            removed,
+          })
+        }
       }
     }
   }
 }
 
-export async function saveM2mRelation(db: AdminDbType, relation: M2MRelation, selfValue: any, newValues: any[]) {
+export async function saveM2mRelation(
+  db: AdminDbType,
+  relation: M2MRelation,
+  selfValue: any,
+  newValues: any[],
+  auditCtx?: RelationAuditContext,
+) {
+  const existing = await db.select()
+    .from(relation.m2mTable)
+    .where(eq(relation.selfColumn, selfValue))
+  const existingOtherIds = existing.map(row => row[colKey(relation.otherColumn)])
+  const newSet = new Set(newValues.map(String))
+  const existingSet = new Set(existingOtherIds.map(String))
+  const toDelete = existingOtherIds.filter(id => !newSet.has(String(id)))
+  const toInsert = newValues.filter((id: any) => !existingSet.has(String(id)))
+
   // if the m2m table has only two columns, we can delete and insert all at once
   if (Object.keys(getTableColumns(relation.m2mTable)).length === 2) {
     await db.delete(relation.m2mTable).where(eq(relation.selfColumn, selfValue))
@@ -352,42 +401,65 @@ export async function saveM2mRelation(db: AdminDbType, relation: M2MRelation, se
       }))
       await db.insert(relation.m2mTable).values(values)
     }
+  }
+  else {
+    // if the m2m table has more than two columns, preserve existing relationships still in new values
+    if (toDelete.length > 0) {
+      await db.delete(relation.m2mTable)
+        .where(and(
+          eq(relation.selfColumn, selfValue),
+          inArray(relation.otherColumn, toDelete),
+        ))
+    }
+
+    if (toInsert.length > 0) {
+      await db.insert(relation.m2mTable).values(
+        toInsert.map((otherForeignColumnValue: any) => ({
+          [colKey(relation.otherColumn)]: otherForeignColumnValue,
+          [colKey(relation.selfColumn)]: selfValue,
+        })),
+      )
+    }
+  }
+
+  if (auditCtx && (toInsert.length > 0 || toDelete.length > 0)) {
+    await maybeEmitRelationAudit({
+      cfg: auditCtx.cfg,
+      action: 'relation.m2m',
+      lookupValue: auditCtx.lookupValue,
+      requestCtx: auditCtx.requestCtx,
+      field: relation.name,
+      added: toInsert,
+      removed: toDelete,
+    })
+  }
+}
+
+async function maybeEmitRelationAudit(options: {
+  cfg: AdminModelConfig
+  action: 'relation.m2m' | 'relation.o2m'
+  lookupValue: string | number
+  requestCtx?: AutoadminRequestContext
+  field: string
+  added: unknown[]
+  removed: unknown[]
+}) {
+  if (!isModelAuditEnabled(options.cfg.audit)) {
     return
   }
-  // if the m2m table has more than two columns, there may be additional columns in junction table, so we can't just delete and insert all at once
-  // we need to preserve the exisiting relationships which are also in the new values
-
-  // Get existing relationships
-  const existing = await db.select()
-    .from(relation.m2mTable)
-    .where(eq(relation.selfColumn, selfValue))
-
-  const existingOtherIds = existing.map(row => row[colKey(relation.otherColumn)])
-
-  // Normalize to strings for comparison (DB may return numbers, client may send strings)
-  const newSet = new Set(newValues.map(String))
-  const existingSet = new Set(existingOtherIds.map(String))
-  // Find records to delete (exist but not in new set)
-  const toDelete = existingOtherIds.filter(id => !newSet.has(String(id)))
-  // Find records to insert (in new set but don't exist)
-  const toInsert = newValues.filter((id: any) => !existingSet.has(String(id)))
-
-  // Delete records that are no longer needed
-  if (toDelete.length > 0) {
-    await db.delete(relation.m2mTable)
-      .where(and(
-        eq(relation.selfColumn, selfValue),
-        inArray(relation.otherColumn, toDelete),
-      ))
+  const globalConfig = getAuditConfig()
+  if (!globalConfig.write && !globalConfig.table) {
+    return
   }
-
-  // Insert new records
-  if (toInsert.length > 0) {
-    await db.insert(relation.m2mTable).values(
-      toInsert.map((otherForeignColumnValue: any) => ({
-        [colKey(relation.otherColumn)]: otherForeignColumnValue,
-        [colKey(relation.selfColumn)]: selfValue,
-      })),
-    )
-  }
+  await emitAuditEvent({
+    action: options.action,
+    modelKey: options.cfg.key,
+    lookupValue: options.lookupValue,
+    event: options.requestCtx?.event,
+    meta: {
+      field: options.field,
+      added: options.added,
+      removed: options.removed,
+    },
+  })
 }

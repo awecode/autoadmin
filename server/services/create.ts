@@ -1,12 +1,17 @@
-import type { AdminModelConfig } from '#layers/autoadmin/server/utils/registry'
+import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
+import { maybeEmitModelAudit } from '../utils/auditEmit'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
 import { ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
 import { unwrapZodType } from '../utils/zod'
 
-export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, data: any): Promise<any> {
+export async function createRecord<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  data: any,
+  requestCtx?: AutoadminRequestContext,
+): Promise<any> {
   const modelKey = cfg.key
   if (!cfg.create.enabled) {
     throw createError({
@@ -64,24 +69,39 @@ export async function createRecord<T extends Table>(cfg: AdminModelConfig<T>, da
     }
   }
 
+  const record = result[0]! as unknown as InferSelectModel<T>
+  const lookupValue = record[cfg.lookupColumnName as keyof typeof record] as string | number
+
   if (cfg.m2m) {
     const relations = parseM2mRelations(model, cfg.m2m)
     for (const relation of relations) {
       const fieldName = `___${relation.name}___${colKey(relation.otherColumn)}`
       if (preprocessed[fieldName]) {
         const selfValue = result[0]![colKey(relation.selfForeignColumn)]
-        await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
+        await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName], {
+          cfg,
+          lookupValue: selfValue,
+          requestCtx,
+        })
       }
     }
   }
 
-  await saveO2mRelation(db, cfg, preprocessed, result)
+  await saveO2mRelation(db, cfg, preprocessed, result, requestCtx)
 
   await cfg.create.after?.(db, {
     config: cfg,
     data: { ...inputData },
     validatedData: { ...validatedData as Record<string, any> },
-    record: result[0]! as unknown as InferSelectModel<T>,
+    record,
+  })
+
+  await maybeEmitModelAudit({
+    cfg,
+    action: 'create',
+    requestCtx,
+    lookupValue,
+    afterRecord: record as Record<string, unknown>,
   })
 
   return {

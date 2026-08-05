@@ -1,6 +1,7 @@
 import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { InferSelectModel, Table } from 'drizzle-orm'
 import { eq, inArray } from 'drizzle-orm'
+import { maybeEmitModelAudit } from '../utils/auditEmit'
 import { getModelConfig } from '../utils/autoadmin'
 import { buildBaseWhereContext, whereWithBaseWhere } from '../utils/baseWhere'
 import { useAdminDb } from '../utils/db'
@@ -54,6 +55,14 @@ export async function deleteRecord<T extends Table>(
     record: deletedRecord! as unknown as InferSelectModel<T>,
   })
 
+  await maybeEmitModelAudit({
+    cfg,
+    action: 'delete',
+    requestCtx,
+    lookupValue,
+    beforeRecord: deletedRecord as Record<string, unknown>,
+  })
+
   return {
     success: true,
     message: `${modelKey} ${lookupValue} deleted successfully`,
@@ -93,6 +102,13 @@ export async function bulkDelete(
   catch (error) {
     throw createError(handleDrizzleError(error))
   }
+
+  await maybeEmitModelAudit({
+    cfg,
+    action: 'bulkDelete',
+    requestCtx,
+    meta: { lookupValues: rowLookups },
+  })
 
   return {
     success: true,

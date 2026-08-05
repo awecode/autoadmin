@@ -1,6 +1,7 @@
 import type { AdminModelConfig, AutoadminRequestContext } from '#layers/autoadmin/server/utils/registry'
 import type { InferSelectModel, Table } from 'drizzle-orm'
 import { eq } from 'drizzle-orm'
+import { maybeEmitModelAudit } from '../utils/auditEmit'
 import { buildBaseWhereContext, whereWithBaseWhere } from '../utils/baseWhere'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
@@ -56,6 +57,19 @@ export async function updateRecord<T extends Table>(
   const baseWhereCtx = buildBaseWhereContext(cfg, 'update', requestCtx, { lookupValue })
   const updateWhere = await whereWithBaseWhere(cfg, baseWhereCtx, eq(cfg.lookupColumn, lookupValue))
 
+  let beforeRecord: Record<string, unknown> | undefined
+  try {
+    let beforeQuery = db.select().from(model)
+    if (updateWhere) {
+      beforeQuery = beforeQuery.where(updateWhere) as unknown as typeof beforeQuery
+    }
+    const beforeRows = await beforeQuery.limit(1)
+    beforeRecord = beforeRows[0] as Record<string, unknown> | undefined
+  }
+  catch {
+    beforeRecord = undefined
+  }
+
   let result
   try {
     let updateQuery = db.update(model).set(validatedData)
@@ -90,25 +104,40 @@ export async function updateRecord<T extends Table>(
     })
   }
 
+  const record = result[0]! as unknown as InferSelectModel<T>
+
   if (cfg.m2m) {
     const relations = parseM2mRelations(model, cfg.m2m)
     for (const relation of relations) {
       const fieldName = `___${relation.name}___${colKey(relation.otherColumn)}`
       if (preprocessed[fieldName]) {
         const selfValue = result[0]![colKey(relation.selfForeignColumn)]
-        await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName])
+        await saveM2mRelation(db, relation, selfValue, preprocessed[fieldName], {
+          cfg,
+          lookupValue: selfValue,
+          requestCtx,
+        })
       }
     }
   }
 
-  await saveO2mRelation(db, cfg, preprocessed, result)
+  await saveO2mRelation(db, cfg, preprocessed, result, requestCtx)
 
   await cfg.update.after?.(db, {
     config: cfg,
     lookupValue,
     data: { ...inputData },
     validatedData: { ...validatedData as Record<string, any> },
-    record: result[0]! as unknown as InferSelectModel<T>,
+    record,
+  })
+
+  await maybeEmitModelAudit({
+    cfg,
+    action: 'update',
+    requestCtx,
+    lookupValue,
+    beforeRecord,
+    afterRecord: record as Record<string, unknown>,
   })
 
   return {

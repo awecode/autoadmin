@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Request body is required for create operation',
         })
       }
-      return await createRecord(cfg, body)
+      return await createRecord(cfg, body, { event })
 
     case 'detail':
       if (!parsedRoute.lookupValue) {
