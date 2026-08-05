@@ -2,39 +2,18 @@
 
 Opt-in activity logging for Drizzle admin writes (create, update, delete, bulk delete, and m2m/o2m relation changes).
 
-## 1. Add the audit table to your schema
+## 1. Enable auditing
 
-In your app's Drizzle schema, re-export the dialect-specific table so drizzle-kit can migrate it.
-
-**SQLite / libsql / D1:**
-
-```ts
-// server/db/schema.ts (or sqlite.ts)
-// Nuxt resolves `#layers/autoadmin` at runtime. For drizzle-kit, prefer a relative
-// path into the layer (or configure the same alias in drizzle.config).
-export { auditLogs } from '#layers/autoadmin/server/db/auditLog.sqlite'
-// e.g. export { auditLogs } from '../../../layers/autoadmin/server/db/auditLog.sqlite'
-```
-
-**PostgreSQL:**
-
-```ts
-export { auditLogs } from '#layers/autoadmin/server/db/auditLog.postgresql'
-```
-
-## 2. Enable auditing
-
-In your Nitro admin plugin, reference the table with `configureAudit`.
+In your Nitro admin plugin:
 
 ```ts
 import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
-import { auditLogs, posts, users } from '~~/server/db/schema'
+import { posts, users } from '~~/server/db/schema'
 
 export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
 
   registry.configureAudit({
-    table: auditLogs,
     // Audit every registered model (opt out per model with audit: false)
     enabled: true,
     // Optional: strip sensitive fields from all models
@@ -54,6 +33,7 @@ export default defineNitroPlugin(() => {
 
 - Set `enabled: true` to audit all models by default, or set `audit: true` / options on individual models.
 - Use `audit: false` in model-specific admin registration to opt the model out when global enable is on.
+- The list/view admin UI is registered automatically unless `ui: false`.
 
 ### Custom sink
 
@@ -67,11 +47,11 @@ registry.configureAudit({
 })
 ```
 
-## 3. Actor identity
+## 2. Actor identity
 
 By default, `event.context.auth.user` is read for saving as the audit log's actor data (`id`, `role`, `email` / `name`). Override it via `#autoadmin/roleAccess` (same alias as role helpers), or pass `getActor` to `configureAudit`.
 
-## 4. What is logged
+## 3. What is logged
 
 | Action | Payload |
 |--------|---------|
@@ -81,7 +61,12 @@ By default, `event.context.auth.user` is read for saving as the audit log's acto
 | `bulkDelete` | `meta.lookupValues` (no per-row payloads) |
 | `relation.m2m` / `relation.o2m` | `meta.field`, `meta.added`, `meta.removed` (only when the relation field was present and the set changed) |
 
-## 6. Field redaction
+## Notes
 
-- Global: `configureAudit({ excludeFields: ['password'] })`
-- Per model: `audit: { excludeFields: ['secret'] }` or `includeFields: ['id', 'title']` (include list wins when set). Works with global `enabled: true` without repeating `audit: true`.
+- Failure semantics : Audit writes run **after** a successful mutation and are **best-effort**. If the audit insert (or custom `write`) fails, the error is logged and the user-facing CRUD response still succeeds. Mutations and audit rows are not wrapped in a shared transaction.
+
+- Field redaction:
+  - Global: `configureAudit({ excludeFields: ['password'] })`
+  - Per model: `audit: { excludeFields: ['secret'] }` or `includeFields: ['id', 'title']` (include list wins when set). Works with global `enabled: true` without repeating `audit: true`.
+
+- Internal table: AutoAdmin owns the `autoadmin_audit_logs` table. You do not add it to your Drizzle schema. On first insert, if the table is missing, AutoAdmin creates it and retries once. Steady-state writes are insert-only (no DDL).
