@@ -1,16 +1,3 @@
-CREATE TABLE `autoadmin_audit_logs` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`created_at` integer DEFAULT (unixepoch()*1000) NOT NULL,
-	`action` text NOT NULL,
-	`model_key` text NOT NULL,
-	`lookup_value` text,
-	`actor_id` text,
-	`actor_role` text,
-	`actor_label` text,
-	`changes` text,
-	`meta` text
-);
---> statement-breakpoint
 PRAGMA foreign_keys=OFF;--> statement-breakpoint
 CREATE TABLE `__new_categories` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,

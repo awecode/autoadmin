@@ -14,7 +14,16 @@ export async function resetDatabase() {
   if (dialect === 'postgresql') {
     const pool = new Pool({ connectionString: databaseUrl })
     try {
-      await pool.query('TRUNCATE TABLE autoadmin_audit_logs, posts_to_tags, posts, tags, users, categories RESTART IDENTITY CASCADE')
+      await pool.query('TRUNCATE TABLE posts_to_tags, posts, tags, users, categories RESTART IDENTITY CASCADE')
+      // Owned by AutoAdmin (created on first audit write); ignore if not present yet.
+      try {
+        await pool.query('TRUNCATE TABLE autoadmin_audit_logs RESTART IDENTITY CASCADE')
+      }
+      catch (error) {
+        if ((error as { code?: string }).code !== '42P01') {
+          throw error
+        }
+      }
     }
     finally {
       await pool.end()
