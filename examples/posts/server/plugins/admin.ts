@@ -7,6 +7,7 @@ export default defineNitroPlugin(() => {
 
   registry.configureAudit({
     table: auditLogs,
+    enabled: true,
   })
   registry.registerAuditLog(auditLogs)
 
@@ -14,7 +15,6 @@ export default defineNitroPlugin(() => {
   registry.register(categories, {
     label: 'Categories',
     key: 'cat',
-    audit: true,
     list: {
       searchFields: ['name', 'description'],
       filterFields: ['isActive'],
@@ -32,7 +32,6 @@ export default defineNitroPlugin(() => {
   // Users - Custom field types and validation
   registry.register(users, {
     labelColumnName: 'email',
-    audit: true,
     fields: [
       {
         name: 'avatar',
@@ -78,7 +77,6 @@ export default defineNitroPlugin(() => {
   // Posts - Complex setup with relationships and custom functions
   registry.register(posts, {
     slugFields: { slug: ['title'] },
-    audit: true,
     baseWhere: async (_db, ctx) => {
       if (ctx.event?.context.auth?.user?.role === 'admin') {
         return undefined
@@ -225,10 +223,10 @@ export default defineNitroPlugin(() => {
     warnOnUnsavedChanges: false,
   })
 
-  // Tags
+  // Tags (opt out of global audit)
   registry.register(tags, {
     icon: 'i-lucide-tag',
-    audit: true,
+    audit: false,
     fields: [
       {
         name: 'color',
