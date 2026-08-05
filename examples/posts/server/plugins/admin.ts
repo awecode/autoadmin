@@ -1,14 +1,20 @@
 import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { inArray, ne, sql } from 'drizzle-orm'
-import { categories, posts, postsToTags, tags, users } from '../db/schema'
+import { auditLogs, categories, posts, postsToTags, tags, users } from '../db/schema'
 
 export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
+
+  registry.configureAudit({
+    table: auditLogs,
+  })
+  registry.registerAuditLog(auditLogs)
 
   //   Categories - Simple setup
   registry.register(categories, {
     label: 'Categories',
     key: 'cat',
+    audit: true,
     list: {
       searchFields: ['name', 'description'],
       filterFields: ['isActive'],
@@ -26,6 +32,7 @@ export default defineNitroPlugin(() => {
   // Users - Custom field types and validation
   registry.register(users, {
     labelColumnName: 'email',
+    audit: true,
     fields: [
       {
         name: 'avatar',
@@ -71,6 +78,7 @@ export default defineNitroPlugin(() => {
   // Posts - Complex setup with relationships and custom functions
   registry.register(posts, {
     slugFields: { slug: ['title'] },
+    audit: true,
     baseWhere: async (_db, ctx) => {
       if (ctx.event?.context.auth?.user?.role === 'admin') {
         return undefined
@@ -220,6 +228,7 @@ export default defineNitroPlugin(() => {
   // Tags
   registry.register(tags, {
     icon: 'i-lucide-tag',
+    audit: true,
     fields: [
       {
         name: 'color',
