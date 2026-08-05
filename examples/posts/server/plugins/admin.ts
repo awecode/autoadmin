@@ -14,8 +14,9 @@ export default defineNitroPlugin(() => {
     label: 'Categories',
     key: 'cat',
     list: {
-      searchFields: ['name', 'description'],
-      filterFields: ['isActive'],
+      fields: ['name', 'parentId.name', 'isActive', 'createdAt'],
+      searchFields: ['name', 'description', 'parentId.name'],
+      filterFields: ['isActive', 'parentId'],
       bulkActions: [{
         label: 'Archive Categories',
         icon: 'i-lucide-archive',

@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import { boolean, date, integer, pgEnum, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'editor', 'author'])
@@ -8,6 +9,7 @@ export const categories = pgTable('categories', {
   name: text().notNull().unique(),
   description: text(),
   isActive: boolean().default(true),
+  parentId: integer().references((): AnyPgColumn => categories.id),
   createdAt: timestamp({ withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 })
 

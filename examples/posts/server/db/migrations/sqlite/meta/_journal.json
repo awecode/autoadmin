@@ -15,6 +15,13 @@
       "when": 1785905240447,
       "tag": "0001_confused_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785920000000,
+      "tag": "0002_category_parent",
+      "breakpoints": true
     }
   ]
 }

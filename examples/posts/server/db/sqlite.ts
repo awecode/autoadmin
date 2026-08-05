@@ -1,3 +1,4 @@
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
@@ -6,6 +7,7 @@ export const categories = sqliteTable('categories', {
   name: text().notNull().unique(),
   description: text(),
   isActive: integer({ mode: 'boolean' }).default(true),
+  parentId: integer().references((): AnySQLiteColumn => categories.id),
   createdAt: integer({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 })
 
