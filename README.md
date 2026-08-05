@@ -16,7 +16,7 @@ There is no code generation step, no separate admin service, and no UI to build 
 - **Relationship support** - foreign keys, many-to-many, and one-to-many relations render as searchable dropdowns in forms and filters.
 - **Complete list views** - search, filters, column sorting, pagination, bulk actions, aggregates, drag-and-drop ordering, and custom cell rendering.
 - **Files and media** - image and file uploads to any S3-compatible storage, and a WYSIWYG editor with image uploads, embeds, and float layouts.
-- **Extensibility** - lifecycle hooks, persistent row filters (`baseWhere`), role-based access, automatic slug generation, and reusable CRUD services for custom API routes.
+- **Extensibility** - lifecycle hooks, persistent row filters (`baseWhere`), role-based access, automatic slug generation, reusable CRUD services for custom API routes, and [opt-in audit logs](./docs/audit-log.md).
 - **JSON admin** - manage JSON-backed settings and lists (stored in local files or a GitHub repository) with the same auto-generated forms, useful for site configuration, feature flags, or content that does not belong in the database. See [docs/json-admin.md](./docs/json-admin.md).
 - **SQLite, PostgreSQL, D1, libsql** - SQLite and its variants (including Cloudflare D1 and libsql), plus PostgreSQL.
 
@@ -68,11 +68,9 @@ export default defineNitroPlugin(() => {
 })
 ```
 
-**4. Open `/admin`** to access the generated admin interfaces for the registered tables.
+**4. Open** `/admin` to access the generated admin interfaces for the registered tables.
 
 ## What Gets Inferred
-
-<!-- AutoAdmin uses Nuxt UI. Make sure you wrap your pages with Nuxt UI's [`<UApp>`](https://ui.nuxt.com/components/app) component in `app.vue` or your layout file. -->
 
 AutoAdmin derives form controls directly from column types: text and number inputs, boolean toggles, date and datetime pickers, enum selects, and foreign-key dropdowns are all generated automatically. Here is an example schema for SQLite demonstrating various column types.
 
@@ -146,6 +144,10 @@ Register both models as shown in the [Quick Start](#quick-start) and open `/admi
 
 In addition to database tables, AutoAdmin can manage JSON files with the same auto-generated forms and list views, for site settings, feature flags, navigation menus, or small content collections. Files can be stored locally or in a GitHub repository, where each edit becomes a commit. Resources are defined with a Zod schema and registered in the same manner as database models. **More here:** [docs/json-admin.md](./docs/json-admin.md).
 
+## Audit Logs
+
+Opt-in activity logging for create, update, delete, bulk delete, and relation changes. Import a shipped SQLite or Postgres schema, run your migrations, then `configureAudit` + per-model `audit: true`. **Guide:** [docs/audit-log.md](./docs/audit-log.md).
+
 ## Specifying Custom Field Types
 
 While AutoAdmin infers types from your Drizzle schema, you can override them for more control over the UI. For example, you may want to change a text field to a textarea, a rich-text editor, or an image uploader. Use the fields option during registration.
@@ -182,29 +184,30 @@ export default defineNitroPlugin(() => {
 
 This is the main configuration object passed to `registry.register(model, options)`. All options are optional.
 
-Role-based access for registered models is configured with the **`roles`** option. See the [role access guide](docs/autoadmin-roles.md).
+Role-based access for registered models is configured with the `roles` option. See the [role access guide](docs/autoadmin-roles.md).
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `label` | `string` | Table name | Display name for the model (e.g., in the sidebar). |
-| `key` | `string` | tableName | Unique identifier for the model. Used in URLs and API endpoints. Pass if you have two models with the same table name. |
-| `icon` | `string` | `undefined` | Iconify icon name. Auto-detected for common names. |
-| `order` | `number` | `0` | Display order in the sidebar and dashboard index. Lower numbers come first; negatives float to the top, positives push down. Ties preserve registration order. |
-| `labelColumnName` | `string` | `name`, `title`, etc. | Column used for display labels in relationships and select options. |
-| `lookupColumnName` | `string` | `id` | The primary or unique key used to fetch single records. |
-| `slugFields` | `Record<string, string[]>` | `undefined` | Auto-generate URL-friendly slugs from other fields. [Reference ↗](#automatic-slug-generation-slugfields) |
-| `warnOnUnsavedChanges` | `boolean` | `false` | Prompt user before leaving a form with unsaved changes. |
-| `list` | `Partial<ListOptions>` | `{}` | Configuration for the list/table view. [Reference ↗](#list-view-configuration) |
-| `create` | `Partial<CreateOptions>` | `{}` | Create form configuration. [Reference ↗](#form-configuration-create-update-formfields) |
-| `update` | `Partial<UpdateOptions>` | `{}` | Edit form configuration. [Reference ↗](#form-configuration-create-update-formfields) |
-| `delete` | `Partial<DeleteOptions>` | `{}` | Configuration for the delete action. [Reference ↗](#delete-configuration-delete) |
-| `fields` | `FieldSpec[]` | `undefined` | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields) |
-| `sortField` | `string` | `undefined` | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield) |
-| `baseWhere` | `function` | `undefined` | Persistent row filter (Drizzle `SQL`) on list/detail/update/delete. [Reference ↗](#record-filter-basewhere) |
-| `formFields` | `(string \| FieldSpec)[]` | `undefined` | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields) |
-| `m2m` | `Record<string, Table>` | `undefined` | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m) |
-| `o2m` | `Record<string, Table>` | `undefined` | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m) |
-| `roles` | `string[]` or object | `undefined` | Optional per-model role allowlists (`string[]` = full access for those roles). [Guide ↗](docs/autoadmin-roles.md) |
+| Key                    | Type                       | Default               | Description                                                                                                                                                    |
+| ---------------------- | -------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`                | `string`                   | Table name            | Display name for the model (e.g., in the sidebar).                                                                                                             |
+| `key`                  | `string`                   | tableName             | Unique identifier for the model. Used in URLs and API endpoints. Pass if you have two models with the same table name.                                         |
+| `icon`                 | `string`                   | `undefined`           | Iconify icon name. Auto-detected for common names.                                                                                                             |
+| `order`                | `number`                   | `0`                   | Display order in the sidebar and dashboard index. Lower numbers come first; negatives float to the top, positives push down. Ties preserve registration order. |
+| `labelColumnName`      | `string`                   | `name`, `title`, etc. | Column used for display labels in relationships and select options.                                                                                            |
+| `lookupColumnName`     | `string`                   | `id`                  | The primary or unique key used to fetch single records.                                                                                                        |
+| `slugFields`           | `Record<string, string[]>` | `undefined`           | Auto-generate URL-friendly slugs from other fields. [Reference ↗](#automatic-slug-generation-slugfields)                                                       |
+| `warnOnUnsavedChanges` | `boolean`                  | `false`               | Prompt user before leaving a form with unsaved changes.                                                                                                        |
+| `list`                 | `Partial<ListOptions>`     | `{}`                  | Configuration for the list/table view. [Reference ↗](#list-view-configuration)                                                                                 |
+| `create`               | `Partial<CreateOptions>`   | `{}`                  | Create form configuration. [Reference ↗](#form-configuration-create-update-formfields)                                                                         |
+| `update`               | `Partial<UpdateOptions>`   | `{}`                  | Edit form configuration. [Reference ↗](#form-configuration-create-update-formfields)                                                                           |
+| `delete`               | `Partial<DeleteOptions>`   | `{}`                  | Configuration for the delete action. [Reference ↗](#delete-configuration-delete)                                                                               |
+| `fields`               | `FieldSpec[]`              | `undefined`           | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields)                                                             |
+| `sortField`            | `string`                   | `undefined`           | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield)                                                                |
+| `baseWhere`            | `function`                 | `undefined`           | Persistent row filter (Drizzle `SQL`) on list/detail/update/delete. [Reference ↗](#record-filter-basewhere)                                                    |
+| `audit`                | `boolean` or `object`      | `undefined`           | Opt-in audit logging for this model. [Guide ↗](docs/audit-log.md)                                                                                              |
+| `formFields`           | `(string \| FieldSpec)[]`  | `undefined`           | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields)                                                                          |
+| `m2m`                  | `Record<string, Table>`    | `undefined`           | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m)                                                         |
+| `o2m`                  | `Record<string, Table>`    | `undefined`           | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m)                                                           |
+| `roles`                | `string[]` or object       | `undefined`           | Optional per-model role allowlists (`string[]` = full access for those roles). [Guide ↗](docs/autoadmin-roles.md)                                              |
 
 ## Overriding Field Behavior with `fields`
 
@@ -400,41 +403,42 @@ registry.register(posts, {
 
 ### `list` options
 
-**`fields: (string | function | ListFieldDef)[]`** -
+`fields: (string | function | ListFieldDef)[]` -
 An array defining the columns to display. An item can be:
+
 - A string representing a column name (e.g., 'title').
 - A dot-notation string for a related field (e.g., 'authorId.email').
 - A function that returns a value for the column in list view. See `isArchived` example above.
 - An object (ListFieldDef) for more control, allowing you to set a custom label, type hint, sortKey, or a custom rendering field function. See examples above. `field` value in this object can be a string (column name or dot-notation relation string), or a function.
 
-**`enableSearch: boolean`** (Default: `true`) -
+`enableSearch: boolean` (Default: `true`) -
 Toggles search functionality.
 
-**`enableSort: boolean`** (Default: `true`) -
+`enableSort: boolean` (Default: `true`) -
 Toggles sorting functionality. See [List Sorting](#list-sorting) for more details.
 
-**`defaultOrdering: string`** (Default: `undefined`) -
+`defaultOrdering: string` (Default: `undefined`) -
 Initial sort when the URL has no `?sort=` (e.g. `'publishedAt:desc'`). See [Default ordering](#default-ordering-listdefaultordering).
 
-**`searchFields: string[]`** (Default: `[labelColumnName]`) -
+`searchFields: string[]` (Default: `[labelColumnName]`) -
 An array of column names (including relational fields in dot-notation) to search against.
 
-**`searchPlaceholder: string`** (Default: 'Search ...') -
+`searchPlaceholder: string` (Default: 'Search ...') -
 Placeholder text for the search input.
 
-**`enableFilter: boolean`** (Default: `true`) -
+`enableFilter: boolean` (Default: `true`) -
 Toggles the visibility of the filter controls. Setting to false disables default filters as well.
 
-**`filterFields: (string | FilterFieldDef)[]`** -
+`filterFields: (string | FilterFieldDef)[]` -
 An array of fields to generate filters for. If not specified, filters are automatically generated for enums, date fields (as date ranges), and boolean fields unless `enableFilter` is false. You can also define custom filters. See [List Filters](#list-filters) for more details.
 
-**`bulkActions: object[]`** -
+`bulkActions: object[]` -
 See [List Bulk Actions](#list-bulk-actions) for more details.
 
-**`showCreateButton: boolean`** (Default: `true`) -
+`showCreateButton: boolean` (Default: `true`) -
 Toggles the visibility of the "Create New" button on the list page.
 
-**`title: string`** (Default: Table Name as Title Case) -
+`title: string` (Default: Table Name as Title Case) -
 Page heading and document title for list page.
 
 ## Form Configuration (create, update, formFields)
@@ -443,15 +447,16 @@ Control the fields and behavior of create and update forms using the `create`, `
 
 The `create` and `update` objects allow you to enable/disable forms or specify a unique set of fields for each.
 
-- **`create: Partial<CreateOptions>`** - Configuration for the "Create New" form.
-- **`update: Partial<UpdateOptions>`** - Configuration for the "Edit" form.
+- `create: Partial<CreateOptions>` - Configuration for the "Create New" form.
+- `update: Partial<UpdateOptions>` - Configuration for the "Edit" form.
 
 Both options share these properties:
-- **`enabled: boolean`** (Default: `true`) - Toggles the create/update functionality.
-- **`warnOnUnsavedChanges: boolean`** (Default: `false`) - Prompts the user before navigating away from a form with unsaved changes. Top-level `warnOnUnsavedChanges` configuration can be used instead of defining separately for `create` and `update`
-- **`formFields: (string | FieldSpec)[]`** - An array defining the specific fields for that form.
-- **`before?: async (db, ctx) => ctx.data | void`** - Runs on the server before validation and persistence. Return a replacement payload to modify what gets validated and written.
-- **`after?: async (db, ctx) => void`** - Runs on the server after the record and its configured relations have been saved successfully.
+
+- `enabled: boolean` (Default: `true`) - Toggles the create/update functionality.
+- `warnOnUnsavedChanges: boolean` (Default: `false`) - Prompts the user before navigating away from a form with unsaved changes. Top-level `warnOnUnsavedChanges` configuration can be used instead of defining separately for `create` and `update`
+- `formFields: (string | FieldSpec)[]` - An array defining the specific fields for that form.
+- `before?: async (db, ctx) => ctx.data | void` - Runs on the server before validation and persistence. Return a replacement payload to modify what gets validated and written.
+- `after?: async (db, ctx) => void` - Runs on the server after the record and its configured relations have been saved successfully.
 
 The top-level `formFields` option is a convenient shortcut to apply the same field configuration to both create and update forms.
 
@@ -577,18 +582,18 @@ If you use **float images**, **media text**, or **embeds** in the rich text edit
 
 All options below work in both `inputAttrs` (server-side) and client-side configuration:
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `placeholder` | `string` | `'Write, type / for commands...'` | Placeholder text shown when the editor is empty. |
-| `disabledHeadingLevels` | `number[]` | `[]` | Heading levels (1-4) to disable. |
-| `allowedMimeTypes` | `string[]` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']` | MIME types accepted for file drag-drop and paste. |
-| `textAlignTypes` | `string[]` | `['heading', 'paragraph']` | Node types that support text alignment. |
-| `baseClass` | `string` | `'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none'` | CSS class for the editor content area. |
-| `toolbarClass` | `string` | `'border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto'` | CSS class for the fixed toolbar. |
-| `extraFixedToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the fixed toolbar. |
-| `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]` | Additional toolbar item groups appended to the bubble (selection) toolbar. |
-| `extensions` | `Extension[]` | `[]` | Additional Tiptap extensions to load alongside the built-in ones. |
-| `embedTypes` | `EmbedType[]` | all types | Embed types to show in the embed popover. Available: `'youtube'`, `'facebook'`, `'linkedin'`, `'pdf'`, `'video'`, `'audio'`, `'iframe'`. |
+| Option                    | Type                    | Default                                                                                             | Description                                                                                                                              |
+| ------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `placeholder`             | `string`                | `'Write, type / for commands...'`                                                                   | Placeholder text shown when the editor is empty.                                                                                         |
+| `disabledHeadingLevels`   | `number[]`              | `[]`                                                                                                | Heading levels (1-4) to disable.                                                                                                         |
+| `allowedMimeTypes`        | `string[]`              | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']`        | MIME types accepted for file drag-drop and paste.                                                                                        |
+| `textAlignTypes`          | `string[]`              | `['heading', 'paragraph']`                                                                          | Node types that support text alignment.                                                                                                  |
+| `baseClass`               | `string`                | `'p-8 sm:px-16 py-13.5 prose dark:prose-invert max-w-none'`                                         | CSS class for the editor content area.                                                                                                   |
+| `toolbarClass`            | `string`                | `'border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto'` | CSS class for the fixed toolbar.                                                                                                         |
+| `extraFixedToolbarItems`  | `EditorToolbarItem[][]` | `[]`                                                                                                | Additional toolbar item groups appended to the fixed toolbar.                                                                            |
+| `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]`                                                                                                | Additional toolbar item groups appended to the bubble (selection) toolbar.                                                               |
+| `extensions`              | `Extension[]`           | `[]`                                                                                                | Additional Tiptap extensions to load alongside the built-in ones.                                                                        |
+| `embedTypes`              | `EmbedType[]`           | all types                                                                                           | Embed types to show in the embed popover. Available: `'youtube'`, `'facebook'`, `'linkedin'`, `'pdf'`, `'video'`, `'audio'`, `'iframe'`. |
 
 Options like `extensions`, `extraFixedToolbarItems`, and `extraBubbleToolbarItems` are not serializable and should be configured via the client-side approach. When the same option is set in multiple places, the merge order from lowest to highest priority is:
 
@@ -716,8 +721,9 @@ This will add a dropdown selection of posts on users form.
 The `delete` option controls the deletion functionality for a model's records. By default, deletion is enabled.
 
 Delete configuration also supports lifecycle hooks:
-- **`before?: async (db, ctx) => void`** - Runs on the server before the delete query.
-- **`after?: async (db, ctx) => void`** - Runs on the server after the row has been deleted successfully.
+
+- `before?: async (db, ctx) => void` - Runs on the server before the delete query.
+- `after?: async (db, ctx) => void` - Runs on the server after the row has been deleted successfully.
 
 To disable the delete action for a model, set the `enabled` property to `false`. This will remove delete functionality, including delete button on list row and bulk delete from list data table.
 
@@ -816,7 +822,7 @@ Without `defaultOrdering`, the list falls back to primary key descending (or to 
 
 ## Record filter (`baseWhere`)
 
-This enables exposing a subset of records for admin interfaces and actions. `baseWhere` adds **persistent `WHERE` conditions** on list queries (and matching count), detail, update, delete, bulk delete, bulk actions (lookup checks), filter option queries, and reorder. Example use-cases: tenant scoping, soft-delete exclusions, or “hide archived rows” rules, showing "Draft" posts in a different list.
+This enables exposing a subset of records for admin interfaces and actions. `baseWhere` adds **persistent** `WHERE` **conditions** on list queries (and matching count), detail, update, delete, bulk delete, bulk actions (lookup checks), filter option queries, and reorder. Example use-cases: tenant scoping, soft-delete exclusions, or “hide archived rows” rules, showing "Draft" posts in a different list.
 
 ```ts
 import { ne } from 'drizzle-orm'
@@ -875,6 +881,7 @@ registry.register(posts, {
 The `sortKey` property determines how a column can be sorted:
 
 #### Direct Column Sorting
+
 Sort by the same column that's displayed:
 
 ```
@@ -885,6 +892,7 @@ Sort by the same column that's displayed:
 ```
 
 #### Custom Sort Key
+
 Sort by a different column than what's displayed:
 
 ```
@@ -895,6 +903,7 @@ Sort by a different column than what's displayed:
 ```
 
 #### Relation Sorting
+
 Sort by columns in related tables using dot notation:
 
 ```
@@ -905,6 +914,7 @@ Sort by columns in related tables using dot notation:
 ```
 
 #### Disable Sorting
+
 Prevent sorting on specific columns:
 
 ```
@@ -955,30 +965,24 @@ registry.register(categories, {
   ],
 })
 ```
-<!-- ### How It Works
-
-When `sortField` is set:
-
-- A **drag handle** (grip icon) appears as the first column in the list view.
-- Users can **drag and drop** rows to reorder them within the current page.
-- Column header sorting is disabled, the list is always ordered by the sort field.
 
 ### Cross-Page Ordering
 
 When the list is paginated (more than one page), a **reorder menu** (↕ icon) appears in each row's actions column with contextual options:
 
-| Action | Visible When | Effect |
-|--------|-------------|--------|
-| Move to top | Not on first page | Moves the item to the very first position globally |
-| Move up one page | Not on first page | Moves the item up by one page worth of positions |
-| Move down one page | Not on last page | Moves the item down by one page worth of positions |
-| Move to bottom | Not on last page | Moves the item to the very last position globally |
+| Action             | Visible When      | Effect                                             |
+| ------------------ | ----------------- | -------------------------------------------------- |
+| Move to top        | Not on first page | Moves the item to the very first position globally |
+| Move up one page   | Not on first page | Moves the item up by one page worth of positions   |
+| Move down one page | Not on last page  | Moves the item down by one page worth of positions |
+| Move to bottom     | Not on last page  | Moves the item to the very last position globally  |
 
 ### Performance
 
 - **Within-page reorder**: If sort values are already unique, only the affected page rows are updated (fast path - 1 SELECT + 1 UPDATE). If duplicates exist (e.g., all zeros on first use), the entire table is resequenced once.
 - **Cross-page move**: Fetches all rows, repositions the item, and batch-updates only the rows whose sort value changed.
 - All updates use a batched `UPDATE ... SET = CASE` statement, chunked to stay within database parameter limits (e.g., Cloudflare D1's 100-parameter cap). -->
+
 ## List Filters
 
 You can filter data in list using a table column, a relation column, or a custom filter.
@@ -1057,6 +1061,7 @@ registry.register(posts, {
 ### Filter Types
 
 #### Boolean Filters
+
 Automatically created for boolean columns. Provides Yes/No/All options.
 
 ```
@@ -1067,6 +1072,7 @@ Automatically created for boolean columns. Provides Yes/No/All options.
 ```
 
 #### Text Filters
+
 For string columns. You can provide a list of options for the filter. If not provided, the filter will be a dropdown with all unique values for the column in the database.
 
 ```
@@ -1081,6 +1087,7 @@ For string columns. You can provide a list of options for the filter. If not pro
 ```
 
 #### Date Filters
+
 Support single date or date range filtering. By default, if not provided, the filter will be a date range picker.
 
 ```
@@ -1096,6 +1103,7 @@ Support single date or date range filtering. By default, if not provided, the fi
 ```
 
 #### Relation Filters
+
 For foreign key relationships. Automatically provides choices from the related table.
 
 ```
@@ -1255,13 +1263,13 @@ registry.register(posts, {
 
 ### Custom Selection Properties
 
-**`sql: SQL`** (Required) -
+`sql: SQL` (Required) -
 The SQL expression using Drizzle's `sql` template literal.
 
-**`isAggregate?: boolean`** (Default: `false`) -
+`isAggregate?: boolean` (Default: `false`) -
 When `true`, the selection is treated as an aggregate statistic and displayed in the statistics cards below the table. Non-aggregate selections can be included in table columns using the `fields` or `columns` configuration.
 
-**`label?: string`** (Default: Capitalized key name) -
+`label?: string` (Default: Capitalized key name) -
 Display label for the custom selection.
 
 ## Aggregates
@@ -1302,27 +1310,27 @@ registry.register(posts, {
 
 ### Aggregate Properties
 
-**`function: 'sum' | 'avg' | 'count' | 'min' | 'max'`** (Required) -
+`function: 'sum' | 'avg' | 'count' | 'min' | 'max'` (Required) -
 The aggregate function to apply. `count` counts truthy values for a column using `CASE WHEN` expression.
 
-**`column: string`** (Required) -
+`column: string` (Required) -
 The column name to aggregate over.
 
-**`label?: string`** (Default: Capitalized key name) -
+`label?: string` (Default: Capitalized key name) -
 Display label for the aggregate statistic.
 
 ## Runtime Config
 
 AutoAdmin can be configured using environment variables:
 
-| Variable | Description | Default |
-| --- | --- | --- |
-| `NUXT_DATABASE_URL` | Database connection URL (e.g. `file:server/db/db.sqlite` or `postgres://user:pass@localhost:5432/db`) | undefined |
-| `NUXT_PUBLIC_AUTOADMIN_TITLE` | The title displayed in the admin interface | `AutoAdmin` |
-| `NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX` | The URL/path prefix for the admin interface. Required to be set during build. | `/admin` |
-| `NUXT_PUBLIC_PAGINATION_DEFAULT_SIZE` | The default page size for the list view | `20` |
-| `NUXT_PUBLIC_PAGINATION_MAX_SIZE` | The maximum page size for the list view | `200` |
-| `NUXT_AUTOADMIN_FILE_UPLOAD_ROLES` | Array of role strings (example: `["admin","editor"]`) allowed to upload files. Omit or empty → no global restriction on uploads. | _(empty)_ |
+| Variable                              | Description                                                                                                                      | Default     |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `NUXT_DATABASE_URL`                   | Database connection URL (e.g. `file:server/db/db.sqlite` or `postgres://user:pass@localhost:5432/db`)                            | undefined   |
+| `NUXT_PUBLIC_AUTOADMIN_TITLE`         | The title displayed in the admin interface                                                                                       | `AutoAdmin` |
+| `NUXT_PUBLIC_AUTOADMIN_PATH_PREFIX`   | The URL/path prefix for the admin interface. Required to be set during build.                                                    | `/admin`    |
+| `NUXT_PUBLIC_PAGINATION_DEFAULT_SIZE` | The default page size for the list view                                                                                          | `20`        |
+| `NUXT_PUBLIC_PAGINATION_MAX_SIZE`     | The maximum page size for the list view                                                                                          | `200`       |
+| `NUXT_AUTOADMIN_FILE_UPLOAD_ROLES`    | Array of role strings (example: `["admin","editor"]`) allowed to upload files. Omit or empty → no global restriction on uploads. | *(empty)*   |
 
 ### Object Storage Configuration
 
@@ -1348,37 +1356,3 @@ declare module '#layers/autoadmin/server/utils/db' {
   }
 }
 ```
-
-## Example
-
-Example Nuxt Project - https://github.com/awecode/autoadmin/tree/main/examples/posts
-
-SQLite Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/sqlite.ts
-
-PostgreSQL Schema - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/db/postgres.ts
-
-Plugin for Registering Models - https://github.com/awecode/autoadmin/blob/main/examples/posts/server/plugins/admin.ts
-
-You can also use list, create, update, delete service in your own API routes by passing the model config to the service. See [Example API Routes](https://github.com/awecode/autoadmin/tree/main/examples/posts/server/api) for more details.
-
-You can also customize how cells are rendered on table list by defining a cell function using a client side composable `useAdminClient`. See [Example Plugin](https://github.com/awecode/autoadmin/blob/main/examples/posts/app/plugins/admin.ts).
-
-## Roadmap
-
-- [x] Integrate Auth Layer - Can use any auth layer like [https://github.com/awecode/nuxt-better-auth-layer](https://github.com/awecode/nuxt-better-auth-layer)
-- [x] Aggregate Support in List View
-- [x] PostgreSQL Dialect Support
-- [x] Image Uploads in WYSIWYG Editor
-- [ ] Detail View
-- [ ] MySQL Dialect Support
-- [x] Hooks/Signals
-- [ ] Audit Logs
-
-<!-- ## Known Issues
-
-- Tailwind classes not working correctly - https://github.com/tailwindlabs/tailwindcss/discussions/18273
-  - Solution: Use layer locally instead of using GitHub source. -->
-
-## License
-
-MIT
