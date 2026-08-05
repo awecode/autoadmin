@@ -1,7 +1,5 @@
 import { boolean, date, integer, pgEnum, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
 
-export { auditLogs } from '../../../../server/db/auditLog.postgresql'
-
 export const userRoleEnum = pgEnum('user_role', ['admin', 'editor', 'author'])
 export const postStatusEnum = pgEnum('post_status', ['draft', 'published', 'archived'])
 

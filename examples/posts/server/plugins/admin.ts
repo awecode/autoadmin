@@ -1,12 +1,11 @@
 import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { inArray, ne, sql } from 'drizzle-orm'
-import { auditLogs, categories, posts, postsToTags, tags, users } from '../db/schema'
+import { categories, posts, postsToTags, tags, users } from '../db/schema'
 
 export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
 
   registry.configureAudit({
-    table: auditLogs,
     enabled: true,
   })
 

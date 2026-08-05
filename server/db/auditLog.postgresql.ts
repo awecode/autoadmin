@@ -1,12 +1,9 @@
 import { jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
 
 /**
- * Recommended audit log table for PostgreSQL.
- * Re-export from your app schema, then run drizzle-kit generate/migrate:
- * ```ts
- * // server/db/schema.ts (or postgresql.ts)
- * export { auditLogs } from '#layers/autoadmin/server/db/auditLog.postgresql'
- * ```
+ * AutoAdmin-owned audit log table (PostgreSQL).
+ * Used automatically by `configureAudit({ enabled: true })`. Created on first
+ * successful insert path when missing (insert-then-ensure). No app schema re-export needed.
  */
 export const auditLogs = pgTable('autoadmin_audit_logs', {
   id: serial().primaryKey(),

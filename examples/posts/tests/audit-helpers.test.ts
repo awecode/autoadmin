@@ -77,4 +77,19 @@ describe('audit helpers', () => {
 
     configure({})
   })
+
+  it('isMissingTableError detects sqlite and postgres missing-table errors', async () => {
+    const { isMissingTableError } = await import('#layers/autoadmin/server/utils/audit')
+    expect(isMissingTableError(new Error('no such table: autoadmin_audit_logs'))).toBe(true)
+    expect(isMissingTableError({ code: '42P01', message: 'relation "autoadmin_audit_logs" does not exist' })).toBe(true)
+    expect(isMissingTableError(new Error('UNIQUE constraint failed'))).toBe(false)
+  })
+
+  it('configureAudit without table or write resolves a default table when options are set', async () => {
+    const { configureAudit: configure, getAuditConfig, isOwnedAuditTable } = await import('#layers/autoadmin/server/utils/audit')
+    configure({ enabled: true })
+    expect(isOwnedAuditTable(getAuditConfig().table)).toBe(true)
+    configure({})
+    expect(getAuditConfig().table).toBeUndefined()
+  })
 })

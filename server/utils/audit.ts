@@ -2,7 +2,11 @@ import type { AuditActor } from '#autoadmin/roleAccess'
 import type { Table } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import { getAuditActorFromEvent } from '#autoadmin/roleAccess'
+import { getTableName, sql } from 'drizzle-orm'
+import { auditLogs as postgresqlAuditLogs } from '../db/auditLog.postgresql'
+import { auditLogs as sqliteAuditLogs } from '../db/auditLog.sqlite'
 import { useAdminDb } from './db'
+import { getConfiguredAdminDialect } from './dialect'
 
 export type AuditAction
   = | 'create'
@@ -42,13 +46,44 @@ export interface AuditGlobalConfig {
    * this is false or omitted.
    */
   enabled?: boolean
-  /** User-owned audit table (from shipped schema or compatible columns). */
+  /**
+   * Audit table used for inserts and the admin UI.
+   * When omitted (and no custom `write`), AutoAdmin uses its shipped dialect table.
+   */
   table?: Table
   /** When set, replaces the default table insert. */
   write?: (entry: AuditEntry) => Promise<void> | void
   getActor?: (event: H3Event) => AuditActor | undefined
   excludeFields?: string[]
 }
+
+const OWNED_AUDIT_TABLE_NAME = 'autoadmin_audit_logs'
+
+const SQLITE_CREATE_AUDIT_TABLE = `CREATE TABLE IF NOT EXISTS \`autoadmin_audit_logs\` (
+\t\`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+\t\`created_at\` integer DEFAULT (unixepoch()*1000) NOT NULL,
+\t\`action\` text NOT NULL,
+\t\`model_key\` text NOT NULL,
+\t\`lookup_value\` text,
+\t\`actor_id\` text,
+\t\`actor_role\` text,
+\t\`actor_label\` text,
+\t\`changes\` text,
+\t\`meta\` text
+)`
+
+const POSTGRES_CREATE_AUDIT_TABLE = `CREATE TABLE IF NOT EXISTS "autoadmin_audit_logs" (
+\t"id" serial PRIMARY KEY NOT NULL,
+\t"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+\t"action" text NOT NULL,
+\t"model_key" text NOT NULL,
+\t"lookup_value" text,
+\t"actor_id" text,
+\t"actor_role" text,
+\t"actor_label" text,
+\t"changes" jsonb,
+\t"meta" jsonb
+)`
 
 interface AuditRuntimeState {
   config: AuditGlobalConfig
@@ -62,8 +97,38 @@ function getAuditState(): AuditRuntimeState {
   return g.__autoadminAudit
 }
 
+/** Shipped audit table for the configured admin dialect (sqlite covers D1/libsql). */
+export function resolveDefaultAuditTable(): Table {
+  try {
+    const dialect = getConfiguredAdminDialect(useRuntimeConfig())
+    if (dialect === 'postgresql') {
+      return postgresqlAuditLogs
+    }
+  }
+  catch {
+    // Outside Nitro (e.g. unit tests): default to sqlite table.
+  }
+  return sqliteAuditLogs
+}
+
+export function isOwnedAuditTable(table: Table | undefined): boolean {
+  if (!table) {
+    return false
+  }
+  return getTableName(table) === OWNED_AUDIT_TABLE_NAME
+}
+
+/**
+ * Configure the audit sink. When neither `table` nor `write` is set, uses the
+ * shipped dialect table so callers only need `configureAudit({ enabled: true })`.
+ * Passing `{}` clears config without resolving a default table.
+ */
 export function configureAudit(config: AuditGlobalConfig): void {
-  getAuditState().config = { ...config }
+  const next: AuditGlobalConfig = { ...config }
+  if (!next.write && !next.table && Object.keys(config).length > 0) {
+    next.table = resolveDefaultAuditTable()
+  }
+  getAuditState().config = next
 }
 
 export function getAuditConfig(): AuditGlobalConfig {
@@ -186,9 +251,56 @@ function stableStringify(value: unknown): string {
   })
 }
 
-async function defaultTableWrite(entry: AuditEntry, table: Table): Promise<void> {
-  const db = await useAdminDb()
-  const row = {
+/** True when the driver error indicates the audit table is missing. */
+export function isMissingTableError(error: unknown): boolean {
+  const err = error as { code?: string, message?: string, cause?: { code?: string, message?: string } } | null
+  const code = String(err?.code ?? err?.cause?.code ?? '')
+  if (code === '42P01') {
+    return true
+  }
+  const msg = `${err?.message ?? ''} ${err?.cause?.message ?? ''} ${String(error)}`.toLowerCase()
+  if (msg.includes('no such table')) {
+    return true
+  }
+  if (msg.includes('relation') && msg.includes('does not exist')) {
+    return true
+  }
+  return false
+}
+
+async function execAuditDdl(ddl: string): Promise<void> {
+  const db = await useAdminDb() as {
+    run?: (query: unknown) => Promise<unknown>
+    execute?: (query: unknown) => Promise<unknown>
+  }
+  const dialect = getConfiguredAdminDialect(useRuntimeConfig())
+  const query = sql.raw(ddl)
+  if (dialect === 'postgresql') {
+    if (typeof db.execute !== 'function') {
+      throw new Error('[autoadmin] PostgreSQL audit DDL requires db.execute')
+    }
+    await db.execute(query)
+    return
+  }
+  if (typeof db.run === 'function') {
+    await db.run(query)
+    return
+  }
+  if (typeof db.execute === 'function') {
+    await db.execute(query)
+    return
+  }
+  throw new Error('[autoadmin] Database driver does not support raw DDL for audit table ensure')
+}
+
+async function ensureOwnedAuditTable(): Promise<void> {
+  const dialect = getConfiguredAdminDialect(useRuntimeConfig())
+  const ddl = dialect === 'postgresql' ? POSTGRES_CREATE_AUDIT_TABLE : SQLITE_CREATE_AUDIT_TABLE
+  await execAuditDdl(ddl)
+}
+
+function toAuditRow(entry: AuditEntry) {
+  return {
     action: entry.action,
     modelKey: entry.modelKey,
     lookupValue: entry.lookupValue != null ? String(entry.lookupValue) : null,
@@ -199,7 +311,25 @@ async function defaultTableWrite(entry: AuditEntry, table: Table): Promise<void>
     meta: entry.meta ?? null,
     createdAt: entry.timestamp,
   }
-  await db.insert(table).values(row)
+}
+
+/**
+ * Insert into the audit table. For AutoAdmin's owned table, on "missing table"
+ * create it and retry the insert once. Custom tables are insert-only.
+ */
+async function defaultTableWrite(entry: AuditEntry, table: Table): Promise<void> {
+  const db = await useAdminDb()
+  const row = toAuditRow(entry)
+  try {
+    await db.insert(table).values(row)
+  }
+  catch (error) {
+    if (!isOwnedAuditTable(table) || !isMissingTableError(error)) {
+      throw error
+    }
+    await ensureOwnedAuditTable()
+    await db.insert(table).values(row)
+  }
 }
 
 /**

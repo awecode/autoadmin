@@ -6,4 +6,4 @@ import * as sqliteSchema from './sqlite'
 
 const schema = sqliteSchema
 
-export const { categories, posts, postsToTags, tags, users, auditLogs } = schema
+export const { categories, posts, postsToTags, tags, users } = schema

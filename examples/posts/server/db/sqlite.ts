@@ -1,8 +1,6 @@
 import { sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-export { auditLogs } from '../../../../server/db/auditLog.sqlite'
-
 export const categories = sqliteTable('categories', {
   id: integer().primaryKey({ autoIncrement: true }),
   name: text().notNull().unique(),

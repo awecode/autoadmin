@@ -26,7 +26,7 @@ export async function maybeEmitModelAudit<T extends Table>(options: {
   const globalConfig = getAuditConfig()
   if (!globalConfig.write && !globalConfig.table) {
     console.warn(
-      `[autoadmin] Model "${options.cfg.key}" has audit enabled, but configureAudit({ table }) (or write) was not called. Skipping audit entry.`,
+      `[autoadmin] Model "${options.cfg.key}" has audit enabled, but configureAudit was not called (or has no table/write). Skipping audit entry.`,
     )
     return
   }

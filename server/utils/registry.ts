@@ -26,14 +26,15 @@ export type AuditLogUiOptions<T extends Table = Table> = Omit<
 >
 
 /**
- * Audit sink + optional admin UI. Pass `table` once; the list/view UI is
- * registered automatically unless `ui: false`.
+ * Audit sink + optional admin UI.
+ * Omitting `table` (and `write`) uses AutoAdmin's shipped dialect table.
+ * List/view UI registers automatically unless `ui: false`.
  */
 export type ConfigureAuditOptions<T extends Table = Table> = AuditGlobalConfig & {
   /**
-   * Admin list/view for `table`.
-   * Defaults to `true` when `table` is set. Use `false` for headless logging,
-   * or an object for `roles` / label / list overrides.
+   * Admin list/view for the audit table.
+   * Defaults to `true` when a table is available (default or explicit).
+   * Use `false` for headless logging, or an object for `roles` / label / list overrides.
    */
   ui?: boolean | AuditLogUiOptions<T>
 }
@@ -234,7 +235,8 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
    */
   baseWhere?: BaseWhereFn<T>
   /**
-   * Audit logging for this model. Requires `configureAudit({ table })` or a custom `write`.
+   * Audit logging for this model. Requires `configureAudit` (table is auto-resolved
+   * unless you pass a custom `write`).
    * - Omit to inherit `configureAudit({ enabled: true })`
    * - `true` / `{ excludeFields }` to enable (or override field lists)
    * - `false` / `{ enabled: false }` to opt out when auditing is global
@@ -465,24 +467,25 @@ export function useAdminRegistry() {
   }
 
   /**
-   * Configure the audit sink. When `table` is set, also registers the list/view
-   * admin UI unless `ui: false`.
+   * Configure the audit sink. Resolves AutoAdmin's shipped table when neither
+   * `table` nor `write` is set. Registers the list/view admin UI unless `ui: false`
+   * (or when only a custom `write` is used with no table).
    */
   function configureAudit<T extends Table>(config: ConfigureAuditOptions<T>): void {
     const { ui, ...auditConfig } = config
     setAuditConfig(auditConfig)
 
-    if (auditConfig.table && ui !== false) {
+    const resolved = getAuditConfig()
+    if (resolved.table && ui !== false) {
       const uiOpts = typeof ui === 'object' ? ui : {}
-      registerAuditLogModel(auditConfig.table as T, uiOpts)
+      registerAuditLogModel(resolved.table as T, uiOpts)
     }
   }
 
   /**
    * Ensure `table` is the audit sink and register the list/view UI.
-   * Prefer `configureAudit({ table, enabled: true })` for the common case
-   * (sink + UI in one call). Use this when you configured a custom `write`
-   * with `ui: false` and only need the admin model.
+   * Prefer `configureAudit({ enabled: true })` for the common case.
+   * Use this when you configured a custom `write` with `ui: false` and only need the admin model.
    */
   function registerAuditLog<T extends Table>(
     model: T,
