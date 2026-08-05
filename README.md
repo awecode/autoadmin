@@ -146,7 +146,7 @@ In addition to database tables, AutoAdmin can manage JSON files with the same au
 
 ## Audit Logs
 
-Opt-in activity logging for create, update, delete, bulk delete, and relation changes. Import a shipped SQLite or Postgres schema, run your migrations, then `configureAudit` + per-model `audit: true`. **Guide:** [docs/audit-log.md](./docs/audit-log.md).
+Opt-in activity logging for changes made from autoadmin. **Guide:** [docs/audit-log.md](./docs/audit-log.md).
 
 ## Specifying Custom Field Types
 
@@ -203,7 +203,7 @@ Role-based access for registered models is configured with the `roles` option. S
 | `fields`               | `FieldSpec[]`              | `undefined`           | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields)                                                             |
 | `sortField`            | `string`                   | `undefined`           | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield)                                                                |
 | `baseWhere`            | `function`                 | `undefined`           | Persistent row filter (Drizzle `SQL`) on list/detail/update/delete. [Reference ↗](#record-filter-basewhere)                                                    |
-| `audit`                | `boolean` or `object`      | `undefined`           | Opt-in audit logging for this model. [Guide ↗](docs/audit-log.md)                                                                                              |
+| `audit`                | `boolean` or `object`      | `undefined`           | Per-model audit override. Inherit global `configureAudit({ enabled: true })`, or set `true` / options / `false` to opt out. [Guide ↗](docs/audit-log.md) |
 | `formFields`           | `(string \| FieldSpec)[]`  | `undefined`           | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields)                                                                          |
 | `m2m`                  | `Record<string, Table>`    | `undefined`           | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m)                                                         |
 | `o2m`                  | `Record<string, Table>`    | `undefined`           | Defines one-to-many relationships to enable on form and detail view. [Reference ↗](#one-to-many-o2m)                                                           |

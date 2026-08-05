@@ -31,14 +31,16 @@ Columns: `id`, `createdAt`, `action`, `modelKey`, `lookupValue`, `actorId`, `act
 In your Nitro admin plugin:
 
 ```ts
-import { auditLogs, posts } from '~~/server/db/schema'
 import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
+import { auditLogs, posts, users } from '~~/server/db/schema'
 
 export default defineNitroPlugin(() => {
   const registry = useAdminRegistry()
 
   registry.configureAudit({
     table: auditLogs,
+    // Audit every registered model (opt out per model with audit: false)
+    enabled: true,
     // Optional: strip sensitive fields from all models
     // excludeFields: ['passwordHash'],
   })
@@ -48,15 +50,16 @@ export default defineNitroPlugin(() => {
     roles: ['admin'],
   })
 
-  registry.register(posts, {
-    audit: true,
-    // Or: audit: { excludeFields: ['content'], includeFields: ['title', 'status'] }
-  })
+  registry.register(posts)
+  // Opt out one model, or pass field lists without enabling globally:
+  // registry.register(users, { audit: false })
+  // registry.register(posts, { audit: { excludeFields: ['content'] } })
 })
 ```
 
 - Without `configureAudit({ table })` or a custom `write`, emits are no-ops.
-- Per-model `audit` defaults to off. Set `audit: true` (or an options object) to enable.
+- Set `configureAudit({ enabled: true })` to audit all models by default, or set `audit: true` / options on individual models.
+- Use `audit: false` (or `{ enabled: false }`) to opt a model out when global enable is on.
 - If both `table` and `write` are set, **`write` replaces** the default table insert.
 
 ### Custom sink
@@ -91,4 +94,4 @@ Audit writes run **after** a successful mutation and are **best-effort**. If the
 ## 6. Field redaction
 
 - Global: `configureAudit({ excludeFields: ['password'] })`
-- Per model: `audit: { excludeFields: ['secret'] }` or `includeFields: ['id', 'title']` (include list wins when set)
+- Per model: `audit: { excludeFields: ['secret'] }` or `includeFields: ['id', 'title']` (include list wins when set). Works with global `enabled: true` without repeating `audit: true`.
