@@ -17,7 +17,7 @@ There is no code generation step, no separate admin service, and no UI to build 
 - **Complete list views** - search, filters, column sorting, pagination, bulk actions, aggregates, drag-and-drop ordering, and custom cell rendering.
 - **Files and media** - image and file uploads to any S3-compatible storage, and a WYSIWYG editor with image uploads, embeds, and float layouts.
 - **Extensibility** - lifecycle hooks, persistent row filters (`baseWhere`), role-based access, automatic slug generation, reusable CRUD services for custom API routes, and [opt-in audit logs](./docs/audit-log.md).
-- **JSON admin** - manage JSON-backed settings and lists (stored in local files or a GitHub repository) with the same auto-generated forms, useful for site configuration, feature flags, or content that does not belong in the database. See [docs/json-admin.md](./docs/json-admin.md).
+- **JSON admin** - manage JSON-backed settings and lists (stored in local files, a GitHub repository, or S3/ S3-compatible object storage / R2) with the same auto-generated forms, useful for site configuration, feature flags, or content that does not belong in the database. See [docs/json-admin.md](./docs/json-admin.md).
 - **SQLite, PostgreSQL, D1, libsql** - SQLite and its variants (including Cloudflare D1 and libsql), plus PostgreSQL.
 
 Built with [Nuxt](https://nuxt.com/), [Drizzle](https://orm.drizzle.team/), [Nuxt UI](https://ui.nuxt.com/), and [Zod](https://zod.dev/).
@@ -142,7 +142,7 @@ Register both models as shown in the [Quick Start](#quick-start) and open `/admi
 
 ## JSON Admin
 
-In addition to database tables, AutoAdmin can manage JSON files with the same auto-generated forms and list views, for site settings, feature flags, navigation menus, or small content collections. Files can be stored locally or in a GitHub repository, where each edit becomes a commit. Resources are defined with a Zod schema and registered in the same manner as database models. **More here:** [docs/json-admin.md](./docs/json-admin.md).
+In addition to database tables, AutoAdmin can manage JSON files with the same auto-generated forms and list views, for site settings, feature flags, navigation menus, or small content collections. Files can be stored locally, in a GitHub repository (where each edit becomes a commit), or in object storage (R2 binding or S3-compatible API). Resources are defined with a Zod schema and registered in the same manner as database models. **More here:** [docs/json-admin.md](./docs/json-admin.md).
 
 ## Audit Logs
 

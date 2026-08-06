@@ -74,6 +74,19 @@ Persistence is built from your **`path`** plus **`storage`**.
 |------|-----------------|--------|
 | **GitHub** | `storage: { kind: 'github', owner?, repo?, ref? }` and a **non-empty token** | Contents API; optimistic concurrency via blob `sha`. `path` is **repo-relative** to the JSON file. `owner` / `repo` / `ref` can be omitted if set globally on `runtimeConfig.autoadmin.github` or via `NUXT_AUTOADMIN_GITHUB_*`. |
 | **Local** | `storage: { kind: 'local' }` or as a fallback in dev environment when GitHub token is not configured | File at `path`, resolved under `runtimeConfig.autoadmin.jsonLocalRoot` when `path` is relative, or as an absolute path. Uses file `mtime` for concurrency. |
+| **Object storage** | `storage: { kind: 'object-storage' }` | `path` is the **object key**. Uses the Worker **`R2`** binding when present; otherwise S3-compatible credentials from `runtimeConfig.s3` / `NUXT_S3_*` (including Cloudflare R2’s S3 API). Optimistic concurrency via object **ETag**. Public CDN caching of the object (for site reads) is an application concern, not part of the admin write path. |
+
+Example:
+
+```ts
+register({
+  kind: 'object',
+  key: 'ads',
+  path: 'config/ads.json',
+  storage: { kind: 'object-storage' },
+  schema: adsSchema,
+})
+```
 
 ---
 
@@ -161,7 +174,7 @@ Optional `commitMessage` on the target object; if omitted, GitHub uses **Update 
 - **`labelField`** (optional) chooses the column used for list titles / default search; otherwise the first schema field (other than `_id`) is used.
 - **`slugFields`** (optional, arrays only) — same as Drizzle admin: auto-generates a URL-friendly slug from other fields while typing on the create form, e.g. `slugFields: { slug: ['title'] }`. On save (create and update), the server appends `-1`, `-2`, … when the slug collides with another row in the file.
 - Each row for `array` kind gets an internal **`_id`** (UUID): stored in the JSON file, used in URLs, **not** part of your `elementSchema`. **Do not** declare `_id` on `elementSchema` (it is reserved).
-- Each save is **read → merge → write**; conflicts return **409** and the server may retry once (GitHub `sha` / local `mtime`).
+- Each save is **read → merge → write**; conflicts return **409** and the server may retry once (GitHub `sha` / local `mtime` / object-storage `ETag`).
 - Opening a **list** may write missing `_id` values once (migration-style). If older data used another key (e.g. `id`), copy values into `_id` or re-save from the UI.
 - On **read**, top-level `null` / `undefined` keys are stripped so Zod **defaults** can apply; **missing** keys are filled from schema defaults when present, otherwise simple sentinels (`''`, `false`, `0`, `{}`, `[]`, first enum value) so an empty file still opens the form. On **save**, the real document is written.
 
