@@ -8,7 +8,7 @@ import {
 
 /** Subset of `register()` input used to build `JsonStorageConfig`. */
 export interface JsonStorageFromRegister {
-  /** Repo-relative path for GitHub, or filesystem path (under `runtimeConfig.autoadmin.jsonLocalRoot` / absolute) for local. */
+  /** Repo-relative path for GitHub, filesystem path for local, or object key for object-storage. */
   path?: string
   storage?: JsonStorageRegisterDiscriminated
   /**
@@ -22,6 +22,7 @@ export interface JsonStorageFromRegister {
 /**
  * `local` — JSON file at top-level `path`.
  * `github` — repo-relative file path top-level `path`; optional **`ref`** is the branch or tag for the Contents API (`?ref=`). When omitted, GitHub uses the repository default branch. **`owner` / `repo` / `ref`** may be set globally (`NUXT_AUTOADMIN_GITHUB_OWNER`, `NUXT_AUTOADMIN_GITHUB_REPO`, `NUXT_AUTOADMIN_GITHUB_REF`).
+ * `object-storage` — object key at top-level `path` in the R2 binding `R2` when present, otherwise `runtimeConfig.s3` / `NUXT_S3_*`.
  */
 export type JsonStorageRegisterDiscriminated
   = | {
@@ -36,6 +37,7 @@ export type JsonStorageRegisterDiscriminated
     token?: string
   }
   | { kind: 'local' }
+  | { kind: 'object-storage' }
 
 function trimPath(p: unknown): string | undefined {
   if (p == null) {
@@ -65,6 +67,16 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
     return {
       kind: 'local',
       absolutePath: resolveLocalJsonAdminPath(filePath),
+    }
+  }
+
+  if (input.storage?.kind === 'object-storage') {
+    if (!filePath) {
+      throw new Error(`JSON admin "${resourceKey}": object-storage requires top-level \`path\` (object key).`)
+    }
+    return {
+      kind: 'object-storage',
+      objectKey: filePath.replace(/^\/+/, ''),
     }
   }
 
@@ -122,6 +134,6 @@ export function buildJsonStorageConfig(input: JsonStorageFromRegister, resourceK
   }
 
   throw new Error(
-    `JSON admin "${resourceKey}": set top-level \`path\` and \`storage: { kind: 'local' } | { kind: 'github', owner?, repo?, ref? }\` (or set owner/repo/ref globally via runtimeConfig.autoadmin.github / NUXT_AUTOADMIN_GITHUB_*).`,
+    `JSON admin "${resourceKey}": set top-level \`path\` and \`storage: { kind: 'local' } | { kind: 'github', owner?, repo?, ref? } | { kind: 'object-storage' }\` (or set owner/repo/ref globally via runtimeConfig.autoadmin.github / NUXT_AUTOADMIN_GITHUB_*).`,
   )
 }

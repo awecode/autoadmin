@@ -1,4 +1,4 @@
-/** Opaque revision for optimistic writes (GitHub blob sha or local mtime token). */
+/** Opaque revision for optimistic writes (GitHub blob sha, local mtime token, or object-storage ETag). */
 export type JsonStorageRevision = string
 
 export interface JsonStorageReadResult {
@@ -19,13 +19,13 @@ export interface JsonStorageWriteInput {
  * Pluggable persistence for JSON admin resources (GitHub Contents API, local filesystem, etc.).
  */
 export interface JsonStorageRepository {
-  readonly adapterKind: 'github' | 'local'
+  readonly adapterKind: 'github' | 'local' | 'object-storage'
 
   read: () => Promise<JsonStorageReadResult>
 
   /**
    * Replace file contents. Implementations should enforce `revision` against concurrent edits
-   * (GitHub sha, local mtime) and surface 409 when stale.
+   * (GitHub sha, local mtime, object-storage ETag) and surface 409 when stale.
    */
   write: (input: JsonStorageWriteInput) => Promise<void>
 }

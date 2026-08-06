@@ -48,6 +48,9 @@ function jsonStorageSourceHint(storage: JsonStorageConfig): string {
   if (storage.kind === 'local') {
     return storage.absolutePath
   }
+  if (storage.kind === 'object-storage') {
+    return `object-storage:${storage.objectKey}`
+  }
   return `${storage.owner}/${storage.repo}@${storage.ref}:${storage.path}`
 }
 

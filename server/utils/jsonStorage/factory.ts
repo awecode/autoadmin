@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path'
 import process from 'node:process'
 import { GithubJsonRepository } from './githubJsonRepository'
 import { LocalJsonRepository } from './localJsonRepository'
+import { ObjectStorageJsonRepository } from './objectStorageJsonRepository'
 
 export type JsonStorageConfig
   = | {
@@ -33,6 +34,11 @@ export type JsonStorageConfig
   | {
     kind: 'local'
     absolutePath: string
+  }
+  | {
+    kind: 'object-storage'
+    /** Object key in the configured R2 binding or S3 bucket. */
+    objectKey: string
   }
 
 function jsonAdminLocalRoot(): string {
@@ -95,6 +101,13 @@ export function createJsonStorageRepository(
   if (storage.kind === 'local') {
     return new LocalJsonRepository({
       absolutePath: storage.absolutePath,
+      defaultIfMissing: defaultParsedForKind(resourceKind),
+    })
+  }
+
+  if (storage.kind === 'object-storage') {
+    return new ObjectStorageJsonRepository({
+      objectKey: storage.objectKey,
       defaultIfMissing: defaultParsedForKind(resourceKind),
     })
   }
