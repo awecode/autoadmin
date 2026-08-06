@@ -13,6 +13,25 @@ export function encodeObjectKeyForUrl(key: string): string {
   return key.split('/').map(segment => encodeURIComponent(segment)).join('/')
 }
 
+/** Strip weak/strong quote wrappers from HTTP ETag values. */
+export function normalizeObjectStorageEtag(etag: string | null | undefined): string | undefined {
+  if (etag == null) {
+    return undefined
+  }
+  const trimmed = String(etag).trim()
+  if (!trimmed) {
+    return undefined
+  }
+  return trimmed.replace(/^W\//i, '').replaceAll('"', '')
+}
+
+/** R2 Worker binding named `R2` when present; otherwise S3-compatible credentials from `runtimeConfig.s3`. */
+export function getObjectStorageBackend() {
+  // @ts-expect-error - globalThis is not typed
+  const binding = process.env.R2 || globalThis.__env__?.R2 || globalThis.R2
+  return binding ? r2Backend : s3Backend
+}
+
 function normalizePath(path: string): string {
   const normalized = path
     .replaceAll('\\', '/')
@@ -40,9 +59,7 @@ export default async function uploadToObjectStorage(file: ReadableStream | Blob 
   prefix?: string
   contentLength?: string
 }) {
-  // @ts-expect-error - globalThis is not typed
-  const binding = process.env.R2 || globalThis.__env__?.R2 || globalThis.R2
-  const backend = binding ? r2Backend : s3Backend
+  const backend = getObjectStorageBackend()
   const client = backend.getClient()
 
   const prefix = normalizePath(config?.prefix || '')

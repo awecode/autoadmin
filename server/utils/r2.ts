@@ -1,16 +1,27 @@
+import type { ObjectStorageGetTextResult, ObjectStoragePutTextResult } from './s3'
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
-import { encodeObjectKeyForUrl } from './objectStorage'
+import { encodeObjectKeyForUrl, normalizeObjectStorageEtag } from './objectStorage'
+
+export interface R2ObjectBody {
+  httpEtag?: string
+  etag?: string
+  text: () => Promise<string>
+}
 
 export interface R2Binding {
   put: (key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob, options?: {
-    httpMetadata?: HeadersInit
+    httpMetadata?: HeadersInit | Record<string, string>
     customMetadata?: Record<string, string>
+    onlyIf?: {
+      etagMatches?: string
+      etagDoesNotMatch?: string
+    }
   }) => Promise<Record<string, unknown> | null>
   get: (key: string, options?: {
     onlyIf?: HeadersInit
     range?: HeadersInit
-  }) => Promise<Record<string, unknown> | null>
+  }) => Promise<R2ObjectBody | null>
   delete: (keys: string | string[]) => Promise<void>
 }
 
@@ -22,12 +33,27 @@ export const r2Backend = {
     if (!binding) {
       throw new Error('R2 bucket binding is required. Make sure the bucket is bound to your Worker.')
     }
-    return binding
+    return binding as R2Binding
   },
 
   checkIfFileExists: async (binding: R2Binding, key: string): Promise<boolean> => {
     const object = await binding.get(key)
     return object !== null
+  },
+
+  getText: async (binding: R2Binding, key: string): Promise<ObjectStorageGetTextResult | null> => {
+    const object = await binding.get(key)
+    if (!object) {
+      return null
+    }
+    const etag = normalizeObjectStorageEtag(object.httpEtag ?? object.etag)
+    if (!etag) {
+      throw new Error('R2 GET response missing ETag.')
+    }
+    return {
+      body: await object.text(),
+      etag,
+    }
   },
 
   getPublicUrl: (path?: string) => {
@@ -130,5 +156,33 @@ export const r2Backend = {
         throw new Error('Error uploading file to R2.')
       }
     }
+  },
+
+  putText: async (
+    binding: R2Binding,
+    path: string,
+    body: string,
+    options?: { ifMatch?: string, ifNoneMatch?: string, contentType?: string },
+  ): Promise<ObjectStoragePutTextResult> => {
+    const putOptions: {
+      httpMetadata?: Record<string, string>
+      onlyIf?: { etagMatches?: string, etagDoesNotMatch?: string }
+    } = {
+      httpMetadata: {
+        contentType: options?.contentType ?? 'application/json',
+      },
+    }
+    if (options?.ifMatch) {
+      putOptions.onlyIf = { etagMatches: options.ifMatch }
+    }
+    else if (options?.ifNoneMatch === '*') {
+      putOptions.onlyIf = { etagDoesNotMatch: '*' }
+    }
+
+    const result = await binding.put(path, body, putOptions)
+    if (!result) {
+      return 'precondition-failed'
+    }
+    return 'ok'
   },
 }

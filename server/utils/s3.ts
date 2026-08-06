@@ -1,5 +1,12 @@
 import { AwsClient } from 'aws4fetch'
-import { encodeObjectKeyForUrl } from './objectStorage'
+import { encodeObjectKeyForUrl, normalizeObjectStorageEtag } from './objectStorage'
+
+export interface ObjectStorageGetTextResult {
+  body: string
+  etag: string
+}
+
+export type ObjectStoragePutTextResult = 'ok' | 'precondition-failed'
 
 function objectStorageRequestUrl(objectKey: string): string {
   const { s3 } = useRuntimeConfig()
@@ -35,6 +42,27 @@ export const s3Backend = {
     return response.ok
   },
 
+  getText: async (client: AwsClient, path: string): Promise<ObjectStorageGetTextResult | null> => {
+    const request = await client.sign(objectStorageRequestUrl(path), {
+      method: 'GET',
+    })
+    const response = await fetch(request)
+    if (response.status === 404 || response.status === 403) {
+      return null
+    }
+    if (!response.ok) {
+      throw new Error(`Error reading object storage object: ${response.statusText}`)
+    }
+    const etag = normalizeObjectStorageEtag(response.headers.get('etag'))
+    if (!etag) {
+      throw new Error('Object storage GET response missing ETag.')
+    }
+    return {
+      body: await response.text(),
+      etag,
+    }
+  },
+
   getPublicUrl: (path?: string) => {
     const { s3 } = useRuntimeConfig()
     let publicUrl = s3.publicUrl || ''
@@ -64,4 +92,36 @@ export const s3Backend = {
     }
   },
 
+  putText: async (
+    client: AwsClient,
+    path: string,
+    body: string,
+    options?: { ifMatch?: string, ifNoneMatch?: string, contentType?: string },
+  ): Promise<ObjectStoragePutTextResult> => {
+    const bodyBytes = new TextEncoder().encode(body)
+    const requestHeaders: Record<string, string> = {
+      'Content-Type': options?.contentType ?? 'application/json',
+      'Content-Length': String(bodyBytes.byteLength),
+      'x-amz-content-sha256': 'UNSIGNED-PAYLOAD',
+    }
+    if (options?.ifMatch) {
+      requestHeaders['If-Match'] = `"${options.ifMatch}"`
+    }
+    if (options?.ifNoneMatch) {
+      requestHeaders['If-None-Match'] = options.ifNoneMatch
+    }
+    const request = await client.sign(objectStorageRequestUrl(path), {
+      method: 'PUT',
+      body,
+      headers: requestHeaders,
+    })
+    const response = await fetch(request)
+    if (response.status === 412) {
+      return 'precondition-failed'
+    }
+    if (!response.ok) {
+      throw new Error(`Error writing object storage object: ${response.statusText}`)
+    }
+    return 'ok'
+  },
 }
