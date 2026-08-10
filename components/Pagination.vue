@@ -35,6 +35,7 @@ const page = useRouteQuery('page', 1, { route, router, transform: Number, mode: 
         size="xs"
         :items-per-page="pagination.size!"
         :show-edges="true"
+        :sibling-count="1"
         :total="pagination.count!"
       />
     </div>
