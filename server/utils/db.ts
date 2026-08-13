@@ -128,9 +128,19 @@ async function createAdminDb(): Promise<DBType> {
     const drizzlePg = await ensurePgDriver()
     // eslint-disable-next-line no-console
     console.info('Using PostgreSQL database via Hyperdrive')
+    // Hyperdrive already pools at the edge. A default pg.Pool (max 10, no
+    // connectionTimeoutMillis, reusable sockets) can wait forever on Workers
+    // ("Worker's code had hung and would never generate a response"), especially
+    // when sockets are reused across request I/O contexts. Keep the local pool
+    // tiny, rotate connections, and fail fast instead of hanging.
     return drizzlePg({
       connection: {
         connectionString: hyperdriveBinding.connectionString,
+        max: 1,
+        maxUses: 1,
+        allowExitOnIdle: true,
+        connectionTimeoutMillis: 10_000,
+        idleTimeoutMillis: 10_000,
       },
       casing: 'snake_case',
       logger: logDb,
