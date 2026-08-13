@@ -1,5 +1,6 @@
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { optionalDriverAliases } from './utils/optionalDriverAliases'
 
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -58,6 +59,9 @@ export default defineNuxtConfig({
     transpile: ['vue'],
   },
   nitro: {
+    // Stub optional peers (@libsql/client, pg) when the consumer did not install them.
+    // Nitro still traces drizzle-orm/{libsql,node-postgres}; Cloudflare forbids unresolved externals.
+    alias: optionalDriverAliases(fileURLToPath(new URL('.', import.meta.url))),
     rollupConfig: {
       external: ['pg-native', 'cloudflare:sockets'],
     },
