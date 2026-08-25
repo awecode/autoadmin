@@ -55,9 +55,9 @@ By default, `event.context.auth.user` is read for saving as the audit log's acto
 
 | Action | Payload |
 |--------|---------|
-| `create` | `changes.after` |
-| `update` | `changes.before` + `changes.after` |
-| `delete` | `changes.before` |
+| `create` | Full `changes.after` |
+| `update` | Only keys that changed, in both `changes.before` and `changes.after` (no-op saves are skipped) |
+| `delete` | Full `changes.before` |
 | `bulkDelete` | `meta.lookupValues` (no per-row payloads) |
 | `relation.m2m` / `relation.o2m` | `meta.field`, `meta.added`, `meta.removed` (only when the relation field was present and the set changed) |
 
