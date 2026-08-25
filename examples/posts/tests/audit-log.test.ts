@@ -109,6 +109,17 @@ describe('audit logs', () => {
     const updateLog = postLogs.find(row => row.action === 'update' && row.lookupValue === String(postId))
     expect(updateLog?.changes?.before).toBeTruthy()
     expect(updateLog?.changes?.after).toBeTruthy()
+    // Sparse update payload: only changed columns, not the full row.
+    expect(updateLog?.changes?.before).toMatchObject({
+      title: 'Audit Create Post',
+      status: 'draft',
+    })
+    expect(updateLog?.changes?.after).toMatchObject({
+      title: 'Audit Updated Post',
+      status: 'published',
+    })
+    expect(updateLog?.changes?.before).not.toHaveProperty('authorId')
+    expect(updateLog?.changes?.after).not.toHaveProperty('authorId')
 
     const deleteLog = postLogs.find(row => row.action === 'delete' && row.lookupValue === String(postId))
     expect(deleteLog?.changes?.before).toBeTruthy()

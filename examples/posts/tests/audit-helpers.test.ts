@@ -29,6 +29,31 @@ describe('audit helpers', () => {
     expect(auditRecordsEqual({ a: 1 }, { a: 2 })).toBe(false)
   })
 
+  it('diffAuditRecords keeps only changed keys', async () => {
+    const { diffAuditRecords } = await import('#layers/autoadmin/server/utils/audit')
+
+    expect(diffAuditRecords(
+      { id: 1, title: 'Old', status: 'draft' },
+      { id: 1, title: 'New', status: 'draft' },
+    )).toEqual({
+      before: { title: 'Old' },
+      after: { title: 'New' },
+    })
+
+    expect(diffAuditRecords(
+      { id: 1, title: 'Same' },
+      { id: 1, title: 'Same' },
+    )).toBeUndefined()
+
+    expect(diffAuditRecords(
+      { id: 1, title: 'A', nested: { x: 1 } },
+      { id: 1, title: 'A', nested: { x: 2 } },
+    )).toEqual({
+      before: { nested: { x: 1 } },
+      after: { nested: { x: 2 } },
+    })
+  })
+
   it('emitAuditEvent uses custom write and does not throw on writer failure', async () => {
     const entries: AuditEntry[] = []
     configureAudit({
