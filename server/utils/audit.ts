@@ -238,9 +238,61 @@ export function auditRecordsEqual(
   return stableStringify(a) === stableStringify(b)
 }
 
+/**
+ * Keep only keys whose values differ between sanitized before/after snapshots.
+ * Used for update audits so unchanged columns are not duplicated.
+ * Returns undefined when there are no differences (no-op update).
+ */
+export function diffAuditRecords(
+  before: Record<string, unknown> | undefined,
+  after: Record<string, unknown> | undefined,
+): AuditChanges | undefined {
+  if (!before && !after) {
+    return undefined
+  }
+  if (!before) {
+    return after && Object.keys(after).length ? { after } : undefined
+  }
+  if (!after) {
+    return Object.keys(before).length ? { before } : undefined
+  }
+
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)])
+  const beforeDiff: Record<string, unknown> = {}
+  const afterDiff: Record<string, unknown> = {}
+
+  for (const key of keys) {
+    const hasBefore = Object.prototype.hasOwnProperty.call(before, key)
+    const hasAfter = Object.prototype.hasOwnProperty.call(after, key)
+    if (
+      hasBefore
+      && hasAfter
+      && stableStringify(before[key]) === stableStringify(after[key])
+    ) {
+      continue
+    }
+    if (hasBefore) {
+      beforeDiff[key] = before[key]
+    }
+    if (hasAfter) {
+      afterDiff[key] = after[key]
+    }
+  }
+
+  const hasBeforeDiff = Object.keys(beforeDiff).length > 0
+  const hasAfterDiff = Object.keys(afterDiff).length > 0
+  if (!hasBeforeDiff && !hasAfterDiff) {
+    return undefined
+  }
+  return {
+    ...(hasBeforeDiff ? { before: beforeDiff } : {}),
+    ...(hasAfterDiff ? { after: afterDiff } : {}),
+  }
+}
+
 function stableStringify(value: unknown): string {
   return JSON.stringify(value, (_key, v) => {
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
+    if (v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)) {
       const obj = v as Record<string, unknown>
       return Object.keys(obj).sort().reduce((acc, key) => {
         acc[key] = obj[key]
