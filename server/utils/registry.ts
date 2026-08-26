@@ -458,7 +458,7 @@ export function useAdminRegistry() {
         searchFields: ['modelKey', 'lookupValue', 'actorLabel', 'actorId'] as ColKey<T>[],
         filterFields: [
           'action' as ColKey<T>,
-          { field: 'modelKey' as ColKey<T>, label: 'Model' },
+          { field: 'modelKey' as ColKey<T>, label: 'Type' },
           { field: 'actorLabel' as ColKey<T>, label: 'Actor' },
           { field: 'actorRole' as ColKey<T>, label: 'Role' },
           {
@@ -492,7 +492,7 @@ export function useAdminRegistry() {
               const registered = getRegistry().get(key) as AdminModelConfig | undefined
               return registered?.label ?? toTitleCase(key.replace(/-/g, ' '))
             },
-            label: 'Model',
+            label: 'Type',
             sortKey: 'modelKey' as ColKey<T>,
           },
           'lookupValue' as ColKey<T>,

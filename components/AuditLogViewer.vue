@@ -205,13 +205,13 @@ const leftoverMeta = computed(() => {
             {{ actionLabel }}
           </dd>
           <dt class="text-muted">
-            Content Type
+            Entity Type
           </dt>
           <dd class="text-highlighted">
             {{ displayModelLabel }}
           </dd>
           <dt class="text-muted">
-            Content Id
+            Entity ID
           </dt>
           <dd class="text-highlighted font-mono text-xs sm:text-sm break-all">
             <span class="inline-flex flex-wrap items-center gap-2">
@@ -228,7 +228,7 @@ const leftoverMeta = computed(() => {
             </span>
           </dd>
           <dt class="text-muted">
-            Action Date/time
+            Date/time
           </dt>
           <dd class="text-highlighted">
             {{ createdLabel }}
