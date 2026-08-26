@@ -2,11 +2,17 @@
 import type { AuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
 import { auditChangeFieldKeys, formatAuditValue } from '#layers/autoadmin/utils/auditLogViewer'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
+import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { computed } from 'vue'
 
 const props = defineProps<{
   entry: AuditLogEntry
+  /** Registered admin label for `entry.modelKey` when known. */
+  modelLabel?: string
 }>()
+
+const actionLabel = computed(() => toTitleCase(props.entry.action.replace(/\./g, ' ')))
+const displayModelLabel = computed(() => props.modelLabel || props.entry.modelKey)
 
 const actionColor = computed(() => {
   switch (props.entry.action) {
@@ -117,11 +123,11 @@ const leftoverMeta = computed(() => {
         size="lg"
         class="font-mono"
       >
-        {{ entry.action }}
+        {{ actionLabel }}
       </UBadge>
       <div class="min-w-0 space-y-1">
         <p class="text-lg font-semibold text-highlighted">
-          {{ entry.modelKey }}
+          {{ displayModelLabel }}
           <span
             v-if="entry.lookupValue != null && entry.lookupValue !== ''"
             class="text-muted font-normal"

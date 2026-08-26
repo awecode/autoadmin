@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { AuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
+import type { AutoAdminMetaResponse } from '#layers/autoadmin/utils/registryMeta'
 import AuditLogViewer from '#layers/autoadmin/components/AuditLogViewer.vue'
-import { formatAuditValue, isAuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
+import { formatAuditValue, isAuditLogEntry, labelForModelKey } from '#layers/autoadmin/utils/auditLogViewer'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { computed } from 'vue'
 
@@ -23,6 +24,13 @@ if (error.value) {
   })
 }
 
+const { data: meta } = await useFetch<AutoAdminMetaResponse>('/api/autoadmin/meta', {
+  key: 'autoadmin-meta',
+  headers: {
+    referer: useRequestURL().pathname,
+  },
+})
+
 const row = computed(() => data.value ?? {})
 const auditEntry = computed(() => {
   if (isAuditLogEntry(row.value)) {
@@ -38,9 +46,17 @@ const listTitle = computed(() => {
   return toTitleCase(modelKey)
 })
 
+const auditedModelLabel = computed(() => {
+  if (!auditEntry.value) {
+    return ''
+  }
+  return labelForModelKey(auditEntry.value.modelKey, meta.value?.drizzle)
+})
+
 const heading = computed(() => {
   if (auditEntry.value) {
-    return `${auditEntry.value.action} · ${auditEntry.value.modelKey}`
+    const action = toTitleCase(auditEntry.value.action.replace(/\./g, ' '))
+    return `${action} · ${auditedModelLabel.value}`
   }
   return String(row.value.id ?? lookupValue)
 })
@@ -76,6 +92,7 @@ useHead({
     <AuditLogViewer
       v-if="auditEntry"
       :entry="auditEntry"
+      :model-label="auditedModelLabel"
     />
 
     <div

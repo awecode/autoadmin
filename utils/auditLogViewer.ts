@@ -1,6 +1,6 @@
-/**
- * Format a single audit payload value for display.
- */
+import { toTitleCase } from '#layers/autoadmin/utils/string'
+
+/** Format a single audit payload value for display. */
 export function formatAuditValue(value: unknown): string {
   if (value === undefined || value === null) {
     return '—'
@@ -54,4 +54,19 @@ export function auditChangeFieldKeys(changes: AuditChangesPayload | null | undef
     ...Object.keys(changes.after ?? {}),
   ])
   return Array.from(keys).sort()
+}
+
+/** Prefer the registered admin label when present in drizzle meta links. */
+export function labelForModelKey(
+  modelKey: string,
+  drizzleLinks?: Array<{ label: string, to: { params?: { modelKey?: string } | Record<string, string> } }>,
+): string {
+  const fromMeta = drizzleLinks?.find((link) => {
+    const params = link.to.params
+    return !!params && 'modelKey' in params && params.modelKey === modelKey
+  })?.label
+  if (fromMeta) {
+    return fromMeta
+  }
+  return toTitleCase(modelKey.replace(/-/g, ' '))
 }
