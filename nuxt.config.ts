@@ -138,6 +138,11 @@ export default defineNuxtConfig({
         path: `${adminPathPrefix}/:modelKey/update/:lookupValue`,
         file: '#layers/autoadmin/pages/_autoadmin/update.vue',
       })
+      pages.push({
+        name: 'autoadmin-detail',
+        path: `${adminPathPrefix}/:modelKey/detail/:lookupValue`,
+        file: '#layers/autoadmin/pages/_autoadmin/detail.vue',
+      })
     },
   },
 })

@@ -50,6 +50,7 @@ interface ListApiResponse {
   spec: {
     endpoint: string
     updatePage?: { name: string, params: { modelKey: string } }
+    detailPage?: { name: string, params: { modelKey: string } }
     createPage?: { name: string, params: { modelKey: string } }
     deleteEndpoint?: string
     title: string
@@ -325,7 +326,7 @@ function computeColumns() {
     header: ({ column }: { column: Column<T> }) => getHeader(column, col.header as string, col.sortKey),
   })) as unknown as (TableColumn<T> & { header?: (props: HeaderContext<T, unknown>) => any })[]
 
-  if (spec.value.updatePage || spec.value.deleteEndpoint) {
+  if (spec.value.updatePage || spec.value.detailPage || spec.value.deleteEndpoint) {
     parsedColumns!.push({
       id: 'actions',
     })
@@ -625,6 +626,20 @@ const CellRenderer = defineComponent({
             <div class="flex items-center gap-2">
               <slot name="actions-cell-prepend" v-bind="scope ?? {}" />
               <slot name="actions-cell" v-bind="scope ?? {}">
+                <NuxtLink
+                  v-if="spec.detailPage"
+                  :to="{
+                    ...spec.detailPage,
+                    params: { ...spec.detailPage.params, lookupValue: scope.row.original[data.spec.lookupColumnName] },
+                  }"
+                >
+                  <UButton
+                    aria-label="View"
+                    color="neutral"
+                    icon="i-lucide-eye"
+                    variant="ghost"
+                  />
+                </NuxtLink>
                 <NuxtLink
                   v-if="defaultActions?.includes('edit') && spec.updatePage"
                   :to="{
