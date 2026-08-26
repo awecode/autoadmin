@@ -73,6 +73,17 @@ const backText = formSpec.canList ? `Back to ${formSpec.listTitle}` : 'Back to D
       <div class="flex-1" />
 
       <UButton
+        v-if="formSpec.viewOnSiteUrl"
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-external-link"
+        label="View on site"
+        :to="formSpec.viewOnSiteUrl"
+        target="_blank"
+        external
+      />
+
+      <UButton
         v-if="formSpec.historyPath"
         color="neutral"
         variant="outline"

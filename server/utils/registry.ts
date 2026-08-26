@@ -242,6 +242,11 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
    * - `false` / `{ enabled: false }` to opt out when auditing is global
    */
   audit?: AuditModelConfig
+  /**
+   * Public URL for a record.
+   * Return a path or absolute URL; omit / return empty to hide the button.
+   */
+  getAbsoluteUrl?: (record: InferSelectModel<T>) => string | null | undefined
 }
 
 // AdminModelConfig is the config available in the registry after processing AdminModelOptions
@@ -275,6 +280,8 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   baseWhere?: BaseWhereFn<T>
   /** Resolved from `AdminModelOptions.audit`. */
   audit?: AuditModelConfig
+  /** Public URL builder for “View on site” on update forms. */
+  getAbsoluteUrl?: (record: InferSelectModel<T>) => string | null | undefined
 }
 
 function getStaticDefaultOptions() {
@@ -414,6 +421,7 @@ export function useAdminRegistry() {
     cfg.roles = normalizeAutoadminRolesInput(opts.roles)
     cfg.baseWhere = opts.baseWhere
     cfg.audit = opts.audit
+    cfg.getAbsoluteUrl = opts.getAbsoluteUrl
     cfg.order = opts.order ?? 0
     return cfg
   }

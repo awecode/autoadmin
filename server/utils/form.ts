@@ -69,12 +69,14 @@ export interface FormSpec<T extends Table = Table> {
   canList?: boolean
   schema?: SzType
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
-  /** Link to filtered audit log list for this record (Django-style object history). */
+  /** Link to filtered audit log list for this record. */
   historyPath?: {
     name: string
     params: { modelKey: string }
     query: { filters: string }
   }
+  /** Public site URL for this record (from `getAbsoluteUrl`). */
+  viewOnSiteUrl?: string
 }
 
 export function zodToFormSpec(schema: ZodObject<Record<string, ZodType>>): FormSpec {

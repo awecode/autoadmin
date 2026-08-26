@@ -148,6 +148,18 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  if (cfg.getAbsoluteUrl) {
+    const db = await useAdminDb()
+    const rows = await db.select().from(cfg.model).where(eq(cfg.lookupColumn, lookupValue)).limit(1)
+    const record = rows[0]
+    if (record) {
+      const url = cfg.getAbsoluteUrl(record)
+      if (url) {
+        specWithMetadata.viewOnSiteUrl = url
+      }
+    }
+  }
+
   return {
     spec: specWithMetadata,
   }
