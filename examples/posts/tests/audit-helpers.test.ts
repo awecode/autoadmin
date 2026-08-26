@@ -172,6 +172,20 @@ describe('audit value display diff', () => {
     ])
   })
 
+  it('getRichTextDiffState detects markup-only changes', async () => {
+    const { getRichTextDiffState } = await import('#layers/autoadmin/utils/auditLogViewer')
+    const prefix = '<p>Hello sector.'
+    const state = getRichTextDiffState(`${prefix}</p>`, `${prefix} </p>`)
+    expect(state.markupOnly).toBe(true)
+    expect(state.defaultMode).toBe('html')
+    expect(state.text.before.every(s => s.type === 'equal')).toBe(true)
+    expect(state.html.after.some(s => s.type === 'add')).toBe(true)
+
+    const textEdit = getRichTextDiffState('<p>Hello world</p>', '<p>Hello there</p>')
+    expect(textEdit.markupOnly).toBe(false)
+    expect(textEdit.defaultMode).toBe('text')
+  })
+
   it('datetime-local type humanizes before inline diff', async () => {
     const { diffAuditValues, formatAuditValueForType } = await import('#layers/autoadmin/utils/auditLogViewer')
     const before = '2026-08-26T05:32:51.991Z'

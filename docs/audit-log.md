@@ -70,7 +70,7 @@ It renders:
 
 - Header: action, content type (model label), content id, time, actor
 - Updates: field diff table using registry labels; values formatted by type
-  - `rich-text`: plaintext (HTML stripped), inline word/char highlight
+  - `rich-text`: plaintext by default with Text / HTML toggle; if only markup changed, defaults to HTML source and notes "Markup changed (text unchanged)"
   - `date` / `datetime-local`: humanized timestamps, inline highlight
   - `boolean`: Yes/No, no highlight
   - `image` / `file`: URL/path (image thumb when http(s)), no highlight

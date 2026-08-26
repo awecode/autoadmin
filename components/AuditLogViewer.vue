@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import type { AuditDiffSegment, AuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
+import type { AuditDiffSegment, AuditLogEntry, RichTextDiffMode } from '#layers/autoadmin/utils/auditLogViewer'
 import {
   auditChangeFieldKeys,
   diffAuditValues,
   formatAuditValue,
   formatAuditValueForType,
+  getRichTextDiffState,
   isHttpUrl,
 } from '#layers/autoadmin/utils/auditLogViewer'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 
 const props = defineProps<{
   entry: AuditLogEntry
@@ -60,10 +61,44 @@ function fieldLabel(key: string): string {
   return props.entry.fieldMeta?.[key]?.label || key
 }
 
+function isRichTextField(key: string): boolean {
+  return fieldType(key) === 'rich-text'
+}
+
+const richTextStates = computed(() => {
+  const changes = props.entry.changes
+  const map = new Map<string, ReturnType<typeof getRichTextDiffState>>()
+  for (const key of diffKeys.value) {
+    if (!isRichTextField(key)) {
+      continue
+    }
+    map.set(key, getRichTextDiffState(changes?.before?.[key], changes?.after?.[key]))
+  }
+  return map
+})
+
+/** User overrides for Text vs HTML source; unset keys use defaultMode. */
+const richTextModeOverrides = reactive<Record<string, RichTextDiffMode>>({})
+
+function richTextMode(key: string): RichTextDiffMode {
+  return richTextModeOverrides[key] || richTextStates.value.get(key)?.defaultMode || 'text'
+}
+
+function setRichTextMode(key: string, mode: RichTextDiffMode) {
+  richTextModeOverrides[key] = mode
+}
+
 const fieldDiffs = computed(() => {
   const changes = props.entry.changes
   const map = new Map<string, { before: AuditDiffSegment[], after: AuditDiffSegment[] }>()
   for (const key of diffKeys.value) {
+    if (isRichTextField(key)) {
+      const state = richTextStates.value.get(key)
+      if (state) {
+        map.set(key, richTextMode(key) === 'html' ? state.html : state.text)
+        continue
+      }
+    }
     map.set(key, diffAuditValues(changes?.before?.[key], changes?.after?.[key], fieldType(key)))
   }
   return map
@@ -237,6 +272,33 @@ const leftoverMeta = computed(() => {
                   class="font-mono text-xs text-muted"
                 >
                   {{ key }}
+                </div>
+                <div
+                  v-if="isRichTextField(key)"
+                  class="mt-2 space-y-1"
+                >
+                  <div class="flex gap-1">
+                    <UButton
+                      size="xs"
+                      :variant="richTextMode(key) === 'text' ? 'soft' : 'ghost'"
+                      color="neutral"
+                      label="Text"
+                      @click="setRichTextMode(key, 'text')"
+                    />
+                    <UButton
+                      size="xs"
+                      :variant="richTextMode(key) === 'html' ? 'soft' : 'ghost'"
+                      color="neutral"
+                      label="HTML"
+                      @click="setRichTextMode(key, 'html')"
+                    />
+                  </div>
+                  <p
+                    v-if="richTextStates.get(key)?.markupOnly"
+                    class="text-xs text-muted max-w-40 whitespace-normal"
+                  >
+                    Markup changed (text unchanged)
+                  </p>
                 </div>
               </td>
               <td class="px-3 py-2">

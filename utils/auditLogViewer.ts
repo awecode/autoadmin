@@ -426,3 +426,38 @@ export function diffAuditValues(before: unknown, after: unknown, type?: string):
   }
   return diffFormattedTexts(beforeText, afterText)
 }
+
+export type RichTextDiffMode = 'text' | 'html'
+
+export interface RichTextDiffState {
+  markupOnly: boolean
+  text: { before: AuditDiffSegment[], after: AuditDiffSegment[] }
+  html: { before: AuditDiffSegment[], after: AuditDiffSegment[] }
+  /** Default mode: HTML when only markup changed, otherwise text. */
+  defaultMode: RichTextDiffMode
+}
+
+function rawRichTextString(value: unknown): string {
+  if (value === undefined || value === null) {
+    return '—'
+  }
+  if (typeof value === 'string') {
+    return value || '—'
+  }
+  return formatAuditValue(value)
+}
+
+/** Plaintext + HTML source diffs for rich-text fields (toggle + markup-only detection). */
+export function getRichTextDiffState(before: unknown, after: unknown): RichTextDiffState {
+  const beforeHtml = rawRichTextString(before)
+  const afterHtml = rawRichTextString(after)
+  const beforeText = formatAuditValueForType(before, 'rich-text')
+  const afterText = formatAuditValueForType(after, 'rich-text')
+  const markupOnly = beforeHtml !== afterHtml && beforeText === afterText
+  return {
+    markupOnly,
+    text: diffFormattedTexts(beforeText, afterText),
+    html: diffFormattedTexts(beforeHtml, afterHtml),
+    defaultMode: markupOnly ? 'html' : 'text',
+  }
+}
