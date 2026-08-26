@@ -326,7 +326,7 @@ const leftoverMeta = computed(() => {
                   >
                 </div>
                 <pre
-                  class="whitespace-pre-wrap break-words font-mono text-xs"
+                  class="whitespace-pre-wrap wrap-break-word font-mono text-xs"
                   :title="rawDbTitle(entry.changes?.before?.[key], fieldType(key))"
                 ><span
                   v-for="(seg, i) in fieldDiffs.get(key)?.before ?? []"
@@ -346,7 +346,7 @@ const leftoverMeta = computed(() => {
                   >
                 </div>
                 <pre
-                  class="whitespace-pre-wrap break-words font-mono text-xs"
+                  class="whitespace-pre-wrap wrap-break-word font-mono text-xs"
                   :title="rawDbTitle(entry.changes?.after?.[key], fieldType(key))"
                 ><span
                   v-for="(seg, i) in fieldDiffs.get(key)?.after ?? []"
@@ -398,7 +398,7 @@ const leftoverMeta = computed(() => {
                   >
                 </div>
                 <pre
-                  class="whitespace-pre-wrap break-words font-mono text-xs"
+                  class="whitespace-pre-wrap wrap-break-word font-mono text-xs"
                   :title="rawDbTitle(snapshot.record?.[key], fieldType(key))"
                 >{{ formatAuditValueForType(snapshot.record?.[key], fieldType(key)) }}</pre>
               </td>
@@ -429,7 +429,7 @@ const leftoverMeta = computed(() => {
             Added
           </dt>
           <dd class="mt-1">
-            <pre class="whitespace-pre-wrap break-words font-mono text-xs">{{ formatAuditValue(relationMeta.added) }}</pre>
+            <pre class="whitespace-pre-wrap wrap-break-word font-mono text-xs">{{ formatAuditValue(relationMeta.added) }}</pre>
           </dd>
         </div>
         <div class="rounded-lg border border-default p-3">
@@ -437,7 +437,7 @@ const leftoverMeta = computed(() => {
             Removed
           </dt>
           <dd class="mt-1">
-            <pre class="whitespace-pre-wrap break-words font-mono text-xs">{{ formatAuditValue(relationMeta.removed) }}</pre>
+            <pre class="whitespace-pre-wrap wrap-break-word font-mono text-xs">{{ formatAuditValue(relationMeta.removed) }}</pre>
           </dd>
         </div>
       </dl>
