@@ -126,6 +126,19 @@ function isImageField(key: string): boolean {
   return fieldType(key) === 'image'
 }
 
+/** Native tooltip with stored DB value when display formatting differs. */
+function rawDbTitle(value: unknown, type?: string): string | undefined {
+  if (!type || type === 'rich-text' || type === 'text' || type === 'textarea' || type === 'email' || type === 'number') {
+    return undefined
+  }
+  const raw = formatAuditValue(value)
+  const displayed = formatAuditValueForType(value, type)
+  if (raw === displayed || raw === '—') {
+    return undefined
+  }
+  return raw
+}
+
 const snapshot = computed(() => {
   const action = props.entry.action
   if (action === 'create') {
@@ -312,7 +325,10 @@ const leftoverMeta = computed(() => {
                     class="max-h-24 max-w-full rounded border border-default object-contain"
                   >
                 </div>
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs"><span
+                <pre
+                  class="whitespace-pre-wrap break-words font-mono text-xs"
+                  :title="rawDbTitle(entry.changes?.before?.[key], fieldType(key))"
+                ><span
                   v-for="(seg, i) in fieldDiffs.get(key)?.before ?? []"
                   :key="`b-${i}`"
                   :class="segmentClass(seg.type)"
@@ -329,7 +345,10 @@ const leftoverMeta = computed(() => {
                     class="max-h-24 max-w-full rounded border border-default object-contain"
                   >
                 </div>
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs"><span
+                <pre
+                  class="whitespace-pre-wrap break-words font-mono text-xs"
+                  :title="rawDbTitle(entry.changes?.after?.[key], fieldType(key))"
+                ><span
                   v-for="(seg, i) in fieldDiffs.get(key)?.after ?? []"
                   :key="`a-${i}`"
                   :class="segmentClass(seg.type)"
@@ -378,7 +397,10 @@ const leftoverMeta = computed(() => {
                     class="max-h-24 max-w-full rounded border border-default object-contain"
                   >
                 </div>
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs">{{ formatAuditValueForType(snapshot.record?.[key], fieldType(key)) }}</pre>
+                <pre
+                  class="whitespace-pre-wrap break-words font-mono text-xs"
+                  :title="rawDbTitle(snapshot.record?.[key], fieldType(key))"
+                >{{ formatAuditValueForType(snapshot.record?.[key], fieldType(key)) }}</pre>
               </td>
             </tr>
           </tbody>

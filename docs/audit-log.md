@@ -64,20 +64,7 @@ By default, `event.context.auth.user` is read for saving as the audit log's acto
 
 ## 4. Detail UI
 
-The audit list omits bulky JSON columns. The detail page loads the full record via `GET /api/autoadmin/audit-logs/:id` and attaches `fieldMeta` from the audited model's registry (field `type` + `label`).
-
-It renders:
-
-- Header: action, content type (model label), content id, time, actor
-- Updates: field diff table using registry labels; values formatted by type
-  - `rich-text`: plaintext by default with Text / HTML toggle; if only markup changed, defaults to HTML source and notes "Markup changed (text unchanged)"
-  - `date` / `datetime-local`: humanized timestamps, inline highlight
-  - `boolean`: Yes/No, no highlight
-  - `image` / `file`: URL/path (image thumb when http(s)), no highlight
-  - `json`: pretty-printed, inline diff
-  - other types: raw display with inline text diff
-- Create / delete: key-value snapshot (same type formatting)
-- Relation / bulk delete: structured meta blocks
+The detail page shows action, actor, and related metadata, plus field-level before/after diffs with type-aware formatting and colored highlights where they help.
 
 ## Notes
 
