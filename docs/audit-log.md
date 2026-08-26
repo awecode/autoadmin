@@ -33,7 +33,8 @@ export default defineNitroPlugin(() => {
 
 - Set `enabled: true` to audit all models by default, or set `audit: true` / options on individual models.
 - Use `audit: false` in model-specific admin registration to opt the model out when global enable is on.
-- The list/view admin UI is registered automatically unless `ui: false`.
+- The list/detail admin UI is registered automatically unless `ui: false`.
+- Open a row with **View** to open the read-only detail page (`/admin/audit-logs/detail/:id`).
 
 ### Custom sink
 
@@ -60,6 +61,23 @@ By default, `event.context.auth.user` is read for saving as the audit log's acto
 | `delete` | Full `changes.before` |
 | `bulkDelete` | `meta.lookupValues` (no per-row payloads) |
 | `relation.m2m` / `relation.o2m` | `meta.field`, `meta.added`, `meta.removed` (only when the relation field was present and the set changed) |
+
+## 4. Detail UI
+
+The audit list omits bulky JSON columns. The detail page loads the full record via `GET /api/autoadmin/audit-logs/:id` and attaches `fieldMeta` from the audited model's registry (field `type` + `label`).
+
+It renders:
+
+- Header: action, content type (model label), content id, time, actor
+- Updates: field diff table using registry labels; values formatted by type
+  - `rich-text`: plaintext (HTML stripped), inline word/char highlight
+  - `date` / `datetime-local`: humanized timestamps, inline highlight
+  - `boolean`: Yes/No, no highlight
+  - `image` / `file`: URL/path (image thumb when http(s)), no highlight
+  - `json`: pretty-printed, inline diff
+  - other types: raw display with inline text diff
+- Create / delete: key-value snapshot (same type formatting)
+- Relation / bulk delete: structured meta blocks
 
 ## Notes
 

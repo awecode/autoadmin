@@ -4,6 +4,7 @@ import { getRecordDetail } from '../../services/detail'
 import { listRecords } from '../../services/list'
 import { updateRecord } from '../../services/update'
 import { isOwnedAuditTable, withOwnedAuditTableRetry } from '../../utils/audit'
+import { getAuditFieldMeta } from '../../utils/auditFieldMeta'
 import { getModelConfig } from '../../utils/autoadmin'
 import { assertRoleAccessAllowed, getAllowedActions } from '../../utils/roleHelpers'
 import { parseAutoadminRoute } from '../../utils/router'
@@ -59,7 +60,16 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Lookup value is required for detail operation',
         })
       }
-      const run = () => getRecordDetail(cfg, parsedRoute.lookupValue!, { event })
+      const run = async () => {
+        const row = await getRecordDetail(cfg, parsedRoute.lookupValue!, { event })
+        if (isOwnedAuditTable(cfg.model) && row && typeof row === 'object' && 'modelKey' in row && row.modelKey) {
+          return {
+            ...row,
+            fieldMeta: getAuditFieldMeta(String(row.modelKey)),
+          }
+        }
+        return row
+      }
       if (isOwnedAuditTable(cfg.model)) {
         return await withOwnedAuditTableRetry(cfg.model, run)
       }

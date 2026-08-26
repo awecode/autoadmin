@@ -155,4 +155,47 @@ describe('audit value display diff', () => {
     const equalBefore = result.before.filter(s => s.type === 'equal').map(s => s.text).join('')
     expect(equalBefore).toBe(before)
   })
+
+  it('rich-text type strips HTML before diffing', async () => {
+    const { diffAuditValues, formatAuditValueForType, stripHtmlToPlaintext } = await import('#layers/autoadmin/utils/auditLogViewer')
+    expect(stripHtmlToPlaintext('<p>Hello&nbsp;world</p>')).toBe('Hello world')
+    expect(formatAuditValueForType('<p>Hello</p>', 'rich-text')).toBe('Hello')
+
+    const result = diffAuditValues('<p>Hello world</p>', '<p>Hello there</p>', 'rich-text')
+    expect(result.before).toEqual([
+      { type: 'equal', text: 'Hello ' },
+      { type: 'remove', text: 'world' },
+    ])
+    expect(result.after).toEqual([
+      { type: 'equal', text: 'Hello ' },
+      { type: 'add', text: 'there' },
+    ])
+  })
+
+  it('datetime-local type humanizes before inline diff', async () => {
+    const { diffAuditValues, formatAuditValueForType } = await import('#layers/autoadmin/utils/auditLogViewer')
+    const before = '2026-08-26T05:32:51.991Z'
+    const after = '2026-08-26T05:37:08.098Z'
+    expect(formatAuditValueForType(before, 'datetime-local')).not.toBe(before)
+    const result = diffAuditValues(before, after, 'datetime-local')
+    expect(result.before.some(s => s.type === 'equal')).toBe(true)
+    expect(result.before.some(s => s.type === 'remove') || result.after.some(s => s.type === 'add')).toBe(true)
+  })
+
+  it('boolean and image/file skip highlight', async () => {
+    const { formatAuditValueForType, diffAuditValues } = await import('#layers/autoadmin/utils/auditLogViewer')
+    expect(formatAuditValueForType(true, 'boolean')).toBe('Yes')
+    expect(formatAuditValueForType(false, 'boolean')).toBe('No')
+    const boolDiff = diffAuditValues(false, true, 'boolean')
+    expect(boolDiff.before).toEqual([{ type: 'equal', text: 'No' }])
+    expect(boolDiff.after).toEqual([{ type: 'equal', text: 'Yes' }])
+
+    const urlDiff = diffAuditValues(
+      'https://example.com/a.jpg',
+      'https://example.com/b.jpg',
+      'image',
+    )
+    expect(urlDiff.before.every(s => s.type === 'equal')).toBe(true)
+    expect(urlDiff.after.every(s => s.type === 'equal')).toBe(true)
+  })
 })

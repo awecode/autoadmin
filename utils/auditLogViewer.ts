@@ -1,3 +1,4 @@
+import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 
 /** Format a single audit payload value for display. */
@@ -19,6 +20,112 @@ export function formatAuditValue(value: unknown): string {
   }
 }
 
+/** Strip HTML tags for rich-text audit diffs (plaintext). */
+export function stripHtmlToPlaintext(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, '\'')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function parseAuditDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value
+  }
+  if (typeof value === 'number') {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  return null
+}
+
+/** Format a value using registry field type when known. */
+export function formatAuditValueForType(value: unknown, type?: string): string {
+  if (value === undefined || value === null) {
+    return '—'
+  }
+
+  switch (type) {
+    case 'rich-text': {
+      const text = typeof value === 'string'
+        ? stripHtmlToPlaintext(value)
+        : stripHtmlToPlaintext(formatAuditValue(value))
+      return text || '—'
+    }
+    case 'date': {
+      const date = parseAuditDate(value)
+      return date ? humanifyDateTime(date, { includeTime: false }) : formatAuditValue(value)
+    }
+    case 'datetime-local': {
+      const date = parseAuditDate(value)
+      return date ? humanifyDateTime(date) : formatAuditValue(value)
+    }
+    case 'boolean': {
+      if (value === true || value === 'true' || value === 1 || value === '1') {
+        return 'Yes'
+      }
+      if (value === false || value === 'false' || value === 0 || value === '0') {
+        return 'No'
+      }
+      return formatAuditValue(value)
+    }
+    case 'json': {
+      if (typeof value === 'string') {
+        try {
+          return JSON.stringify(JSON.parse(value), null, 2)
+        }
+        catch {
+          return value || '—'
+        }
+      }
+      try {
+        return JSON.stringify(value, null, 2)
+      }
+      catch {
+        return formatAuditValue(value)
+      }
+    }
+    case 'image':
+    case 'file': {
+      if (typeof value === 'string') {
+        return value || '—'
+      }
+      return formatAuditValue(value)
+    }
+    default:
+      return formatAuditValue(value)
+  }
+}
+
+export function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
+
+/** Boolean and URL/file fields show plain before/after text with no red/green highlights. */
+export function skipsDiffHighlight(type?: string): boolean {
+  return type === 'boolean' || type === 'image' || type === 'file'
+}
+
+export interface AuditFieldMetaEntry {
+  type: string
+  label: string
+}
+
 export interface AuditChangesPayload {
   before?: Record<string, unknown>
   after?: Record<string, unknown>
@@ -35,6 +142,7 @@ export interface AuditLogEntry {
   createdAt?: string | Date | number | null
   changes?: AuditChangesPayload | null
   meta?: Record<string, unknown> | null
+  fieldMeta?: Record<string, AuditFieldMetaEntry> | null
 }
 
 export interface AuditDiffSegment {
@@ -104,7 +212,7 @@ function mergeSegments(segments: AuditDiffSegment[]): AuditDiffSegment[] {
   return merged
 }
 
-type DiffOp = { type: 'equal' | 'remove' | 'add', text: string }
+interface DiffOp { type: 'equal' | 'remove' | 'add', text: string }
 
 function lcsOps(a: string[], b: string[]): DiffOp[] {
   const m = a.length
@@ -275,17 +383,10 @@ function areNearEdits(a: string, b: string): boolean {
   return shared >= maxLen * 0.6 || (shared >= 2 && (maxLen - shared) <= 6)
 }
 
-/**
- * Token LCS diff for display: Before shows equal + removals, After shows equal + additions.
- * Uses line → word → character refinement so tiny edits in long HTML are not whole-value highlights.
- */
-export function diffAuditValues(before: unknown, after: unknown): {
+function diffFormattedTexts(beforeText: string, afterText: string): {
   before: AuditDiffSegment[]
   after: AuditDiffSegment[]
 } {
-  const beforeText = formatAuditValue(before)
-  const afterText = formatAuditValue(after)
-
   if (beforeText === afterText) {
     return {
       before: [{ type: 'equal', text: beforeText }],
@@ -304,4 +405,24 @@ export function diffAuditValues(before: unknown, after: unknown): {
   ops = refineOps(ops, text => Array.from(text), { onlyIfSimilar: true })
 
   return opsToSides(ops)
+}
+
+/**
+ * Token LCS diff for display: Before shows equal + removals, After shows equal + additions.
+ * When `type` is set, values are formatted first (rich-text stripped, dates humanized, etc.).
+ * Boolean and image/file skip highlight styling (plain equal segments).
+ */
+export function diffAuditValues(before: unknown, after: unknown, type?: string): {
+  before: AuditDiffSegment[]
+  after: AuditDiffSegment[]
+} {
+  const beforeText = formatAuditValueForType(before, type)
+  const afterText = formatAuditValueForType(after, type)
+  if (skipsDiffHighlight(type)) {
+    return {
+      before: [{ type: 'equal', text: beforeText }],
+      after: [{ type: 'equal', text: afterText }],
+    }
+  }
+  return diffFormattedTexts(beforeText, afterText)
 }

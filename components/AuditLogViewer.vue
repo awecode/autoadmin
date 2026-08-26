@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { AuditDiffSegment, AuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
-import { auditChangeFieldKeys, diffAuditValues, formatAuditValue } from '#layers/autoadmin/utils/auditLogViewer'
+import {
+  auditChangeFieldKeys,
+  diffAuditValues,
+  formatAuditValue,
+  formatAuditValueForType,
+  isHttpUrl,
+} from '#layers/autoadmin/utils/auditLogViewer'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { computed } from 'vue'
@@ -46,11 +52,19 @@ const actorRoleLabel = computed(() => props.entry.actorRole || '—')
 
 const diffKeys = computed(() => auditChangeFieldKeys(props.entry.changes))
 
+function fieldType(key: string): string | undefined {
+  return props.entry.fieldMeta?.[key]?.type
+}
+
+function fieldLabel(key: string): string {
+  return props.entry.fieldMeta?.[key]?.label || key
+}
+
 const fieldDiffs = computed(() => {
   const changes = props.entry.changes
   const map = new Map<string, { before: AuditDiffSegment[], after: AuditDiffSegment[] }>()
   for (const key of diffKeys.value) {
-    map.set(key, diffAuditValues(changes?.before?.[key], changes?.after?.[key]))
+    map.set(key, diffAuditValues(changes?.before?.[key], changes?.after?.[key], fieldType(key)))
   }
   return map
 })
@@ -63,6 +77,18 @@ function segmentClass(type: AuditDiffSegment['type']): string {
     return 'bg-success/20 text-success rounded-sm'
   }
   return ''
+}
+
+function imageUrlFromSegments(segments: AuditDiffSegment[] | undefined): string | null {
+  const text = segments?.map(s => s.text).join('') ?? ''
+  if (text && text !== '—' && isHttpUrl(text)) {
+    return text
+  }
+  return null
+}
+
+function isImageField(key: string): boolean {
+  return fieldType(key) === 'image'
 }
 
 const snapshot = computed(() => {
@@ -202,10 +228,28 @@ const leftoverMeta = computed(() => {
               :key="key"
               class="border-t border-default align-top"
             >
-              <td class="px-3 py-2 font-mono text-xs whitespace-nowrap">
-                {{ key }}
+              <td class="px-3 py-2 whitespace-nowrap">
+                <div class="text-sm text-highlighted">
+                  {{ fieldLabel(key) }}
+                </div>
+                <div
+                  v-if="fieldLabel(key) !== key"
+                  class="font-mono text-xs text-muted"
+                >
+                  {{ key }}
+                </div>
               </td>
               <td class="px-3 py-2">
+                <div
+                  v-if="isImageField(key) && imageUrlFromSegments(fieldDiffs.get(key)?.before)"
+                  class="mb-2"
+                >
+                  <img
+                    :src="imageUrlFromSegments(fieldDiffs.get(key)?.before)!"
+                    alt=""
+                    class="max-h-24 max-w-full rounded border border-default object-contain"
+                  >
+                </div>
                 <pre class="whitespace-pre-wrap break-words font-mono text-xs"><span
                   v-for="(seg, i) in fieldDiffs.get(key)?.before ?? []"
                   :key="`b-${i}`"
@@ -213,6 +257,16 @@ const leftoverMeta = computed(() => {
                 >{{ seg.text }}</span></pre>
               </td>
               <td class="px-3 py-2">
+                <div
+                  v-if="isImageField(key) && imageUrlFromSegments(fieldDiffs.get(key)?.after)"
+                  class="mb-2"
+                >
+                  <img
+                    :src="imageUrlFromSegments(fieldDiffs.get(key)?.after)!"
+                    alt=""
+                    class="max-h-24 max-w-full rounded border border-default object-contain"
+                  >
+                </div>
                 <pre class="whitespace-pre-wrap break-words font-mono text-xs"><span
                   v-for="(seg, i) in fieldDiffs.get(key)?.after ?? []"
                   :key="`a-${i}`"
@@ -240,11 +294,29 @@ const leftoverMeta = computed(() => {
               :key="key"
               class="border-t border-default first:border-t-0 align-top"
             >
-              <td class="px-3 py-2 font-mono text-xs whitespace-nowrap w-40 bg-elevated">
-                {{ key }}
+              <td class="px-3 py-2 whitespace-nowrap w-40 bg-elevated">
+                <div class="text-sm text-highlighted">
+                  {{ fieldLabel(key) }}
+                </div>
+                <div
+                  v-if="fieldLabel(key) !== key"
+                  class="font-mono text-xs text-muted"
+                >
+                  {{ key }}
+                </div>
               </td>
               <td class="px-3 py-2">
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs">{{ formatAuditValue(snapshot.record?.[key]) }}</pre>
+                <div
+                  v-if="isImageField(key) && typeof snapshot.record?.[key] === 'string' && isHttpUrl(String(snapshot.record[key]))"
+                  class="mb-2"
+                >
+                  <img
+                    :src="String(snapshot.record?.[key])"
+                    alt=""
+                    class="max-h-24 max-w-full rounded border border-default object-contain"
+                  >
+                </div>
+                <pre class="whitespace-pre-wrap break-words font-mono text-xs">{{ formatAuditValueForType(snapshot.record?.[key], fieldType(key)) }}</pre>
               </td>
             </tr>
           </tbody>
