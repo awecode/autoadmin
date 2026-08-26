@@ -64,7 +64,7 @@ By default, `event.context.auth.user` is read for saving as the audit log's acto
 
 ## 4. Detail UI
 
-The detail page shows action, actor, and related metadata, plus field-level before/after diffs with type-aware formatting and colored highlights where they help.
+The detail page shows action, actor, and related metadata, plus field-level before/after diffs with type-aware formatting and colored highlights where they help. When allowed, an **Edit** button opens that record’s update form.
 
 On update forms for audited models, a **History** button opens the audit log list filtered to that record.
 

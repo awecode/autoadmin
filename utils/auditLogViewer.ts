@@ -143,6 +143,11 @@ export interface AuditLogEntry {
   changes?: AuditChangesPayload | null
   meta?: Record<string, unknown> | null
   fieldMeta?: Record<string, AuditFieldMetaEntry> | null
+  /** Update form for the audited record when the user can edit it. */
+  objectPath?: {
+    name: string
+    params: { modelKey: string, lookupValue: string }
+  } | null
 }
 
 export interface AuditDiffSegment {

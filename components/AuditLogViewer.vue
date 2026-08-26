@@ -214,7 +214,18 @@ const leftoverMeta = computed(() => {
             Content Id
           </dt>
           <dd class="text-highlighted font-mono text-xs sm:text-sm break-all">
-            {{ lookupLabel }}
+            <span class="inline-flex flex-wrap items-center gap-2">
+              <span>{{ lookupLabel }}</span>
+              <UButton
+                v-if="entry.objectPath"
+                size="xs"
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-square-pen"
+                label="Edit"
+                :to="entry.objectPath"
+              />
+            </span>
           </dd>
           <dt class="text-muted">
             Action Date/time

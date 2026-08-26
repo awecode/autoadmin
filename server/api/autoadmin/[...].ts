@@ -6,6 +6,7 @@ import { updateRecord } from '../../services/update'
 import { isOwnedAuditTable, withOwnedAuditTableRetry } from '../../utils/audit'
 import { getAuditFieldMeta } from '../../utils/auditFieldMeta'
 import { getModelConfig } from '../../utils/autoadmin'
+import { useAdminRegistry } from '../../utils/registry'
 import { assertRoleAccessAllowed, getAllowedActions } from '../../utils/roleHelpers'
 import { parseAutoadminRoute } from '../../utils/router'
 
@@ -63,9 +64,28 @@ export default defineEventHandler(async (event) => {
       const run = async () => {
         const row = await getRecordDetail(cfg, parsedRoute.lookupValue!, { event })
         if (isOwnedAuditTable(cfg.model) && row && typeof row === 'object' && 'modelKey' in row && row.modelKey) {
+          const auditedModelKey = String(row.modelKey)
+          const auditedLookup = row.lookupValue
+          let objectPath: { name: string, params: { modelKey: string, lookupValue: string } } | undefined
+          if (auditedLookup != null && auditedLookup !== '') {
+            const auditedCfg = useAdminRegistry().get(auditedModelKey)
+            if (
+              auditedCfg?.update.enabled
+              && getAllowedActions(event, { roles: auditedCfg.roles }).update
+            ) {
+              objectPath = {
+                name: 'autoadmin-update',
+                params: {
+                  modelKey: auditedModelKey,
+                  lookupValue: String(auditedLookup),
+                },
+              }
+            }
+          }
           return {
             ...row,
-            fieldMeta: getAuditFieldMeta(String(row.modelKey)),
+            fieldMeta: getAuditFieldMeta(auditedModelKey),
+            objectPath,
           }
         }
         return row
