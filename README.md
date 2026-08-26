@@ -203,6 +203,7 @@ Role-based access for registered models is configured with the `roles` option. S
 | `fields`               | `FieldSpec[]`              | `undefined`           | Overwrite how columns are handled in the UI. [Reference ↗](#overriding-field-behavior-with-fields)                                                             |
 | `sortField`            | `string`                   | `undefined`           | Column name (integer) used for drag-drop ordering. [Reference ↗](#drag-drop-ordering-sortfield)                                                                |
 | `baseWhere`            | `function`                 | `undefined`           | Persistent row filter (Drizzle `SQL`) on list/detail/update/delete. [Reference ↗](#record-filter-basewhere)                                                    |
+| `getAbsoluteUrl`       | `(record) => string`       | `undefined`           | Public URL for “View on site” on the update form (path or absolute URL). [Reference ↗](#view-on-site-getabsoluteurl)                                           |
 | `audit`                | `boolean` or `object`      | `undefined`           | Per-model audit override. Inherit global `configureAudit({ enabled: true })`, or set `true` / options / `false` to opt out. [Guide ↗](docs/audit-log.md) |
 | `formFields`           | `(string \| FieldSpec)[]`  | `undefined`           | Form field configuration. [Reference ↗](#form-configuration-create-update-formfields)                                                                          |
 | `m2m`                  | `Record<string, Table>`    | `undefined`           | Defines many-to-many relationships to enable on form and detail view. [Reference ↗](#many-to-many-m2m)                                                         |
@@ -819,6 +820,18 @@ registry.register(posts, {
 ```
 
 Without `defaultOrdering`, the list falls back to primary key descending (or to `sortField` ascending when drag-drop ordering is enabled). `defaultOrdering` cannot be combined with `sortField`.
+
+## View on site (`getAbsoluteUrl`)
+
+Return a public path or absolute URL for a record. When set, the update form shows a **View on site** button that opens in a new tab.
+
+```ts
+registry.register(posts, {
+  getAbsoluteUrl: post => post.slug ? `/blog/${post.slug}` : undefined,
+})
+```
+
+Return `undefined` / `null` / `''` to hide the button for that row (for example drafts without a public URL).
 
 ## Record filter (`baseWhere`)
 
