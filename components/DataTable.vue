@@ -5,7 +5,6 @@ import type { Column, HeaderContext, Row, Table } from '@tanstack/vue-table'
 import type { PropType, VNode } from 'vue'
 import DeleteModal from '#layers/autoadmin/components/DeleteModal.vue'
 import { getAdminTitle } from '#layers/autoadmin/utils/autoadmin'
-import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { getErrorMessageFromError } from '#layers/autoadmin/utils/form'
 import { getFileNameFromUrl } from '#layers/autoadmin/utils/string'
 import { useRouteQuery } from '@vueuse/router'
@@ -603,10 +602,10 @@ const CellRenderer = defineComponent({
               </template>
 
               <template v-else-if="c.column.columnDef.type === 'date'">
-                <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date, { includeTime: false }) }}</span>
+                <HumanifyDateTime :value="c.getValue() as string" :include-time="false" />
               </template>
               <template v-else-if="c.column.columnDef.type === 'datetime-local'">
-                <span :title="c.getValue() as string || ''">{{ humanifyDateTime(c.getValue() as string | Date) }}</span>
+                <HumanifyDateTime :value="c.getValue() as string" />
               </template>
               <template v-else-if="c.column.columnDef.type === 'rich-text'">
                 <div :title="(c.getValue() as string || '').replace(/<[^>]*>/g, ' ')" class="max-h-10 overflow-hidden line-clamp-2">

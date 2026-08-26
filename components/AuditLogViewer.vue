@@ -8,7 +8,6 @@ import {
   getRichTextDiffState,
   isHttpUrl,
 } from '#layers/autoadmin/utils/auditLogViewer'
-import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { computed, reactive } from 'vue'
 
@@ -20,24 +19,6 @@ const props = defineProps<{
 
 const actionLabel = computed(() => toTitleCase(props.entry.action.replace(/\./g, ' ')))
 const displayModelLabel = computed(() => props.modelLabel || props.entry.modelKey)
-
-const createdLabel = computed(() => {
-  const raw = props.entry.createdAt
-  if (raw == null) {
-    return '—'
-  }
-  if (raw instanceof Date) {
-    return humanifyDateTime(raw)
-  }
-  if (typeof raw === 'number') {
-    return humanifyDateTime(new Date(raw))
-  }
-  const parsed = new Date(raw)
-  if (!Number.isNaN(parsed.getTime())) {
-    return humanifyDateTime(parsed)
-  }
-  return String(raw)
-})
 
 const lookupLabel = computed(() => {
   const value = props.entry.lookupValue
@@ -242,7 +223,13 @@ const leftoverMeta = computed(() => {
             Date/time
           </dt>
           <dd class="text-highlighted">
-            {{ createdLabel }}
+            <HumanifyDateTime
+              v-if="entry.createdAt != null"
+              :value="entry.createdAt"
+            />
+            <template v-else>
+              —
+            </template>
           </dd>
         </div>
       </dl>
