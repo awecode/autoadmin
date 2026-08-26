@@ -118,3 +118,41 @@ describe('audit helpers', () => {
     expect(getAuditConfig().table).toBeUndefined()
   })
 })
+
+describe('audit value display diff', () => {
+  it('diffAuditValues highlights changed words', async () => {
+    const { diffAuditValues } = await import('#layers/autoadmin/utils/auditLogViewer')
+    const result = diffAuditValues('hello world', 'hello there')
+    expect(result.before).toEqual([
+      { type: 'equal', text: 'hello ' },
+      { type: 'remove', text: 'world' },
+    ])
+    expect(result.after).toEqual([
+      { type: 'equal', text: 'hello ' },
+      { type: 'add', text: 'there' },
+    ])
+  })
+
+  it('diffAuditValues uses character tokens for short single words', async () => {
+    const { diffAuditValues } = await import('#layers/autoadmin/utils/auditLogViewer')
+    const result = diffAuditValues('cat', 'bat')
+    expect(result.before.some(s => s.type === 'remove' && s.text.includes('c'))).toBe(true)
+    expect(result.after.some(s => s.type === 'add' && s.text.includes('b'))).toBe(true)
+    expect(result.before.some(s => s.type === 'equal' && s.text.includes('at'))).toBe(true)
+  })
+
+  it('diffAuditValues highlights only a tiny edit in long HTML', async () => {
+    const { diffAuditValues } = await import('#layers/autoadmin/utils/auditLogViewer')
+    const prefix = `<p>${'The Board of Airlines Representatives in Nepal (BARN) '.repeat(8)}aviation sector.`
+    const before = `${prefix}</p>`
+    const after = `${prefix} </p>`
+    const result = diffAuditValues(before, after)
+
+    const removed = result.before.filter(s => s.type === 'remove').map(s => s.text).join('')
+    const added = result.after.filter(s => s.type === 'add').map(s => s.text).join('')
+    expect(removed).toBe('')
+    expect(added).toBe(' ')
+    const equalBefore = result.before.filter(s => s.type === 'equal').map(s => s.text).join('')
+    expect(equalBefore).toBe(before)
+  })
+})

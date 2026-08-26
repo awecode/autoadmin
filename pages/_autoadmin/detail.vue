@@ -61,12 +61,25 @@ const heading = computed(() => {
   return String(row.value.id ?? lookupValue)
 })
 
+const documentTitle = computed(() => {
+  if (auditEntry.value) {
+    const contentId = auditEntry.value.lookupValue
+    const parts = [
+      toTitleCase(auditEntry.value.action.replace(/\./g, ' ')),
+      auditedModelLabel.value,
+      contentId != null && contentId !== '' ? String(contentId) : null,
+    ].filter(Boolean)
+    return `${parts.join(' · ')} | ${listTitle.value} | ${adminTitle.value}`
+  }
+  return `${heading.value} | ${listTitle.value} | ${adminTitle.value}`
+})
+
 const fallbackKeys = computed(() => Object.keys(row.value).sort())
 
 const listPath = { name: 'autoadmin-list', params: { modelKey } } as const
 
 useHead({
-  title: computed(() => `${heading.value} | ${listTitle.value} | ${adminTitle.value}`),
+  title: documentTitle,
 })
 </script>
 

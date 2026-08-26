@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { AuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
-import { auditChangeFieldKeys, formatAuditValue } from '#layers/autoadmin/utils/auditLogViewer'
+import type { AuditDiffSegment, AuditLogEntry } from '#layers/autoadmin/utils/auditLogViewer'
+import { auditChangeFieldKeys, diffAuditValues, formatAuditValue } from '#layers/autoadmin/utils/auditLogViewer'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { computed } from 'vue'
@@ -13,23 +13,6 @@ const props = defineProps<{
 
 const actionLabel = computed(() => toTitleCase(props.entry.action.replace(/\./g, ' ')))
 const displayModelLabel = computed(() => props.modelLabel || props.entry.modelKey)
-
-const actionColor = computed(() => {
-  switch (props.entry.action) {
-    case 'create':
-      return 'success'
-    case 'update':
-      return 'info'
-    case 'delete':
-    case 'bulkDelete':
-      return 'error'
-    case 'relation.m2m':
-    case 'relation.o2m':
-      return 'warning'
-    default:
-      return 'neutral'
-  }
-})
 
 const createdLabel = computed(() => {
   const raw = props.entry.createdAt
@@ -49,16 +32,38 @@ const createdLabel = computed(() => {
   return String(raw)
 })
 
-const actorLine = computed(() => {
-  const parts = [
-    props.entry.actorLabel,
-    props.entry.actorRole,
-    props.entry.actorId,
-  ].filter(Boolean)
-  return parts.length ? parts.join(' · ') : '—'
+const lookupLabel = computed(() => {
+  const value = props.entry.lookupValue
+  if (value == null || value === '') {
+    return '—'
+  }
+  return String(value)
 })
 
+const actorLabel = computed(() => props.entry.actorLabel || '—')
+const actorIdLabel = computed(() => props.entry.actorId || '—')
+const actorRoleLabel = computed(() => props.entry.actorRole || '—')
+
 const diffKeys = computed(() => auditChangeFieldKeys(props.entry.changes))
+
+const fieldDiffs = computed(() => {
+  const changes = props.entry.changes
+  const map = new Map<string, { before: AuditDiffSegment[], after: AuditDiffSegment[] }>()
+  for (const key of diffKeys.value) {
+    map.set(key, diffAuditValues(changes?.before?.[key], changes?.after?.[key]))
+  }
+  return map
+})
+
+function segmentClass(type: AuditDiffSegment['type']): string {
+  if (type === 'remove') {
+    return 'bg-error/20 text-error rounded-sm'
+  }
+  if (type === 'add') {
+    return 'bg-success/20 text-success rounded-sm'
+  }
+  return ''
+}
 
 const snapshot = computed(() => {
   const action = props.entry.action
@@ -116,32 +121,57 @@ const leftoverMeta = computed(() => {
 
 <template>
   <div class="space-y-8">
-    <div class="flex flex-wrap items-start gap-3">
-      <UBadge
-        :color="actionColor"
-        variant="subtle"
-        size="lg"
-        class="font-mono"
-      >
-        {{ actionLabel }}
-      </UBadge>
-      <div class="min-w-0 space-y-1">
-        <p class="text-lg font-semibold text-highlighted">
-          {{ displayModelLabel }}
-          <span
-            v-if="entry.lookupValue != null && entry.lookupValue !== ''"
-            class="text-muted font-normal"
-          >
-            · {{ entry.lookupValue }}
-          </span>
-        </p>
-        <p class="text-sm text-muted">
-          {{ createdLabel }}
-        </p>
-        <p class="text-sm text-muted">
-          Actor: {{ actorLine }}
-        </p>
-      </div>
+    <div class="grid gap-6 sm:gap-8 lg:grid-cols-2 text-sm">
+      <dl class="space-y-2">
+        <div class="grid grid-cols-[minmax(7rem,9rem)_1fr] gap-x-3 gap-y-2">
+          <dt class="text-muted">
+            Action
+          </dt>
+          <dd class="text-highlighted font-medium">
+            {{ actionLabel }}
+          </dd>
+          <dt class="text-muted">
+            Content Type
+          </dt>
+          <dd class="text-highlighted">
+            {{ displayModelLabel }}
+          </dd>
+          <dt class="text-muted">
+            Content Id
+          </dt>
+          <dd class="text-highlighted font-mono text-xs sm:text-sm break-all">
+            {{ lookupLabel }}
+          </dd>
+          <dt class="text-muted">
+            Action Date/time
+          </dt>
+          <dd class="text-highlighted">
+            {{ createdLabel }}
+          </dd>
+        </div>
+      </dl>
+      <dl class="space-y-2">
+        <div class="grid grid-cols-[minmax(7rem,9rem)_1fr] gap-x-3 gap-y-2">
+          <dt class="text-muted">
+            Actor
+          </dt>
+          <dd class="text-highlighted break-all">
+            {{ actorLabel }}
+          </dd>
+          <dt class="text-muted">
+            Actor ID
+          </dt>
+          <dd class="text-highlighted font-mono text-xs sm:text-sm break-all">
+            {{ actorIdLabel }}
+          </dd>
+          <dt class="text-muted">
+            Role
+          </dt>
+          <dd class="text-highlighted">
+            {{ actorRoleLabel }}
+          </dd>
+        </div>
+      </dl>
     </div>
 
     <section
@@ -176,10 +206,18 @@ const leftoverMeta = computed(() => {
                 {{ key }}
               </td>
               <td class="px-3 py-2">
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs text-muted">{{ formatAuditValue(entry.changes?.before?.[key]) }}</pre>
+                <pre class="whitespace-pre-wrap break-words font-mono text-xs"><span
+                  v-for="(seg, i) in fieldDiffs.get(key)?.before ?? []"
+                  :key="`b-${i}`"
+                  :class="segmentClass(seg.type)"
+                >{{ seg.text }}</span></pre>
               </td>
-              <td class="px-3 py-2 bg-primary/5">
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs">{{ formatAuditValue(entry.changes?.after?.[key]) }}</pre>
+              <td class="px-3 py-2">
+                <pre class="whitespace-pre-wrap break-words font-mono text-xs"><span
+                  v-for="(seg, i) in fieldDiffs.get(key)?.after ?? []"
+                  :key="`a-${i}`"
+                  :class="segmentClass(seg.type)"
+                >{{ seg.text }}</span></pre>
               </td>
             </tr>
           </tbody>
