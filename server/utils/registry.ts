@@ -12,7 +12,7 @@ import type { AutoadminRolesConfig } from './roleAccess'
 import { getLabelColumnFromColumns } from '#layers/autoadmin/utils/autoadmin'
 import { createNoSpaceString, toTitleCase } from '#layers/autoadmin/utils/string'
 import { defu } from 'defu'
-import { getTableColumns, getTableName } from 'drizzle-orm'
+import { eq, getTableColumns, getTableName } from 'drizzle-orm'
 import { createInsertSchema } from 'drizzle-zod'
 import { getAuditConfig, configureAudit as setAuditConfig } from './audit'
 import { assertValidListOrdering } from './listOrdering'
@@ -449,12 +449,25 @@ export function useAdminRegistry() {
         defaultOrdering: 'createdAt:desc',
         searchFields: ['modelKey', 'lookupValue', 'actorLabel', 'actorId'] as ColKey<T>[],
         filterFields: [
-          'action',
+          'action' as ColKey<T>,
           { field: 'modelKey' as ColKey<T>, label: 'Model' },
           { field: 'actorLabel' as ColKey<T>, label: 'Actor' },
           { field: 'actorRole' as ColKey<T>, label: 'Role' },
+          {
+            parameterName: 'lookupValue',
+            label: 'Lookup',
+            type: 'text',
+            queryConditions: async (_db, value) => {
+              const cols = getTableColumns(model)
+              const column = cols.lookupValue
+              if (!column) {
+                return []
+              }
+              return [eq(column, value)]
+            },
+          } satisfies CustomFilter,
           { field: 'createdAt' as ColKey<T>, label: 'Date/time' },
-        ],
+        ] as FilterFieldDef<T>[],
         fields: [
           { field: 'createdAt' as ColKey<T>, label: 'Date/time' },
           {
@@ -477,8 +490,8 @@ export function useAdminRegistry() {
           'lookupValue' as ColKey<T>,
           { field: 'actorLabel' as ColKey<T>, label: 'Actor' },
           'actorRole' as ColKey<T>,
-        ],
-      }),
+        ] as ListFieldDef<T>[],
+      } as Partial<ListOptions<T>>),
       create: { enabled: false },
       update: { enabled: false },
       delete: { enabled: false },

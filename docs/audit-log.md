@@ -66,6 +66,8 @@ By default, `event.context.auth.user` is read for saving as the audit log's acto
 
 The detail page shows action, actor, and related metadata, plus field-level before/after diffs with type-aware formatting and colored highlights where they help.
 
+On update forms for audited models, a **History** button opens the audit log list filtered to that record.
+
 ## Notes
 
 - Failure semantics : Audit writes run **after** a successful mutation and are **best-effort**. If the audit insert (or custom `write`) fails, the error is logged and the user-facing CRUD response still succeeds. Mutations and audit rows are not wrapped in a shared transaction.

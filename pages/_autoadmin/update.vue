@@ -54,7 +54,7 @@ const backText = formSpec.canList ? `Back to ${formSpec.listTitle}` : 'Back to D
 
 <template>
   <AutoAdmin>
-    <div class="flex items-center mb-6">
+    <div class="flex items-center mb-6 gap-2">
       <UTooltip :text="backText">
         <UButton
           class="mr-1"
@@ -66,9 +66,20 @@ const backText = formSpec.canList ? `Back to ${formSpec.listTitle}` : 'Back to D
         </UButton>
       </UTooltip>
 
-      <h1 class="text-3xl font-bold">
+      <h1 class="text-3xl font-bold min-w-0 truncate">
         Update {{ formSpec.labelString ?? lookupValue }}
       </h1>
+
+      <div class="flex-1" />
+
+      <UButton
+        v-if="formSpec.historyPath"
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-history"
+        label="History"
+        :to="formSpec.historyPath"
+      />
     </div>
 
     <AutoForm

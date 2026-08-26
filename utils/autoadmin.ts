@@ -20,3 +20,12 @@ export function getLabelColumnFromColumns(columns: Record<string, Column>) {
   // else return the first column
   return columnNames[0]!
 }
+
+/**
+ * Encode list filter query the same way as Filters.vue / DataTable (`key:value;...`).
+ */
+export function encodeAutoadminListFilters(filters: Record<string, string>): string {
+  return Object.entries(filters)
+    .map(([key, val]) => `${key}:${String(val).replaceAll(';', '%3B')}`)
+    .join(';')
+}

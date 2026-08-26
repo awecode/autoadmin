@@ -1,10 +1,13 @@
 import type { Table } from 'drizzle-orm'
 import { getModelConfig } from '#layers/autoadmin/server/utils/autoadmin'
+import { isModelAuditEnabled, isOwnedAuditTable } from '#layers/autoadmin/server/utils/audit'
 import { isDateOnlyColumn, isDateTimeColumn, isSQLiteTimestampColumn } from '#layers/autoadmin/server/utils/dialect'
 import { useDefinedFields, zodToFormSpec } from '#layers/autoadmin/server/utils/form'
 import { useMetadataOnFormSpec } from '#layers/autoadmin/server/utils/metadata'
+import { useAdminRegistry } from '#layers/autoadmin/server/utils/registry'
 import { addForeignKeysToFormSpec, addM2mRelationsToFormSpec, addO2mRelationsToFormSpec, getTableForeignKeys, parseM2mRelations } from '#layers/autoadmin/server/utils/relation'
 import { assertRoleAccessAllowed, getAllowedActions } from '#layers/autoadmin/server/utils/roleHelpers'
+import { encodeAutoadminListFilters } from '#layers/autoadmin/utils/autoadmin'
 import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { eq } from 'drizzle-orm'
 import { zerialize } from 'zodex'
@@ -128,6 +131,22 @@ export default defineEventHandler(async (event) => {
   specWithMetadata.listTitle = cfg.list.title ?? cfg.label
   specWithMetadata.canList = getAllowedActions(event, { roles: cfg.roles }).list
   specWithMetadata.schema = zerialize(cfg.update.schema)
+
+  if (isModelAuditEnabled(cfg.audit)) {
+    const auditListCfg = useAdminRegistry().all().find(c => isOwnedAuditTable(c.model))
+    if (auditListCfg && getAllowedActions(event, { roles: auditListCfg.roles }).list) {
+      specWithMetadata.historyPath = {
+        name: 'autoadmin-list',
+        params: { modelKey: auditListCfg.key },
+        query: {
+          filters: encodeAutoadminListFilters({
+            modelKey,
+            lookupValue,
+          }),
+        },
+      }
+    }
+  }
 
   return {
     spec: specWithMetadata,
