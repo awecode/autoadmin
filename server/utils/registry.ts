@@ -448,15 +448,36 @@ export function useAdminRegistry() {
         enableSort: true,
         defaultOrdering: 'createdAt:desc',
         searchFields: ['modelKey', 'lookupValue', 'actorLabel', 'actorId'] as ColKey<T>[],
-        filterFields: ['action', 'modelKey', 'createdAt'] as ColKey<T>[],
-        fields: [
-          'createdAt',
+        filterFields: [
           'action',
-          'modelKey',
-          'lookupValue',
-          'actorLabel',
-          'actorRole',
-        ] as ColKey<T>[],
+          { field: 'modelKey' as ColKey<T>, label: 'Model' },
+          { field: 'actorLabel' as ColKey<T>, label: 'Actor' },
+          { field: 'actorRole' as ColKey<T>, label: 'Role' },
+          { field: 'createdAt' as ColKey<T>, label: 'Date/time' },
+        ],
+        fields: [
+          { field: 'createdAt' as ColKey<T>, label: 'Date/time' },
+          {
+            field: async function action(_db: AdminDbType, row: InferSelectModel<T>) {
+              const raw = String((row as { action?: string }).action ?? '')
+              return toTitleCase(raw.replace(/\./g, ' '))
+            },
+            label: 'Action',
+            sortKey: 'action' as ColKey<T>,
+          },
+          {
+            field: async function modelLabel(_db: AdminDbType, row: InferSelectModel<T>) {
+              const key = String((row as { modelKey?: string }).modelKey ?? '')
+              const registered = getRegistry().get(key) as AdminModelConfig | undefined
+              return registered?.label ?? toTitleCase(key.replace(/-/g, ' '))
+            },
+            label: 'Model',
+            sortKey: 'modelKey' as ColKey<T>,
+          },
+          'lookupValue' as ColKey<T>,
+          { field: 'actorLabel' as ColKey<T>, label: 'Actor' },
+          'actorRole' as ColKey<T>,
+        ],
       }),
       create: { enabled: false },
       update: { enabled: false },
