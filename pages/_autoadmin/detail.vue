@@ -73,7 +73,13 @@ useHead({
       </h1>
     </div>
 
+    <AuditLogViewer
+      v-if="auditEntry"
+      :entry="auditEntry"
+    />
+
     <div
+      v-else
       class="overflow-x-auto rounded-lg border border-default"
     >
       <table class="w-full text-sm">

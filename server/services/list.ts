@@ -4,6 +4,7 @@ import type { AnyColumn, SQL, Table } from 'drizzle-orm'
 import { aggregateFunctions } from '#layers/autoadmin/server/utils/registry'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { asc, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm'
+import { isOwnedAuditTable } from '../utils/audit'
 import { buildBaseWhereContext, getBaseWhereClause, mergeWhere } from '../utils/baseWhere'
 import { createDateFilterCondition, createDateRangeFilterCondition } from '../utils/dateFilter'
 import { aliasRelationTable, buildAggregateExpression, buildTextSearchCondition } from '../utils/dialect'
@@ -388,9 +389,14 @@ export async function listRecords<T extends Table>(
     const canDelete = allowedActions.delete !== false
     // Drag-drop reorder requires update access; fall back to column-header sort when masked.
     const effectiveSortField = (cfg.sortField && canUpdate) ? cfg.sortField : undefined
+    const canDetail = allowedActions.detail !== false
+    const detailPage = (!cfg.update.enabled && canDetail && isOwnedAuditTable(cfg.model))
+      ? { name: 'autoadmin-detail', params: { modelKey: cfg.key } }
+      : undefined
     const spec = {
       endpoint: cfg.list.endpoint,
       updatePage: (cfg.update.enabled && canUpdate) ? cfg.update.route : undefined,
+      detailPage,
       createPage: (cfg.create.enabled && canCreate) ? cfg.create.route : undefined,
       deleteEndpoint: (cfg.delete.enabled && canDelete) ? cfg.delete.endpoint : undefined,
       enableDelete: cfg.delete.enabled && canDelete,
