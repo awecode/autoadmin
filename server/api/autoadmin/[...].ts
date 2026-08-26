@@ -6,9 +6,12 @@ import { updateRecord } from '../../services/update'
 import { isOwnedAuditTable, withOwnedAuditTableRetry } from '../../utils/audit'
 import { getAuditFieldMeta } from '../../utils/auditFieldMeta'
 import { getModelConfig } from '../../utils/autoadmin'
+import { buildBaseWhereContext, whereWithBaseWhere } from '../../utils/baseWhere'
+import { useAdminDb } from '../../utils/db'
 import { useAdminRegistry } from '../../utils/registry'
 import { assertRoleAccessAllowed, getAllowedActions } from '../../utils/roleHelpers'
 import { parseAutoadminRoute } from '../../utils/router'
+import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
@@ -67,18 +70,47 @@ export default defineEventHandler(async (event) => {
           const auditedModelKey = String(row.modelKey)
           const auditedLookup = row.lookupValue
           let objectPath: { name: string, params: { modelKey: string, lookupValue: string } } | undefined
+          let viewOnSiteUrl: string | undefined
           if (auditedLookup != null && auditedLookup !== '') {
             const auditedCfg = useAdminRegistry().get(auditedModelKey)
-            if (
-              auditedCfg?.update.enabled
-              && getAllowedActions(event, { roles: auditedCfg.roles }).update
-            ) {
-              objectPath = {
-                name: 'autoadmin-update',
-                params: {
-                  modelKey: auditedModelKey,
-                  lookupValue: String(auditedLookup),
-                },
+            if (auditedCfg) {
+              const allowed = getAllowedActions(event, { roles: auditedCfg.roles })
+              if (auditedCfg.update.enabled && allowed.update) {
+                objectPath = {
+                  name: 'autoadmin-update',
+                  params: {
+                    modelKey: auditedModelKey,
+                    lookupValue: String(auditedLookup),
+                  },
+                }
+              }
+              if (auditedCfg.getAbsoluteUrl && (allowed.detail || allowed.list || allowed.update)) {
+                try {
+                  const db = await useAdminDb()
+                  const ctx = buildBaseWhereContext(auditedCfg, 'detail', { event }, {
+                    lookupValue: String(auditedLookup),
+                  })
+                  const where = await whereWithBaseWhere(
+                    auditedCfg,
+                    ctx,
+                    eq(auditedCfg.lookupColumn, String(auditedLookup)),
+                  )
+                  let query = db.select().from(auditedCfg.model)
+                  if (where) {
+                    query = query.where(where) as unknown as typeof query
+                  }
+                  const records = await query.limit(1)
+                  const record = records[0]
+                  if (record) {
+                    const url = auditedCfg.getAbsoluteUrl(record)
+                    if (url) {
+                      viewOnSiteUrl = url
+                    }
+                  }
+                }
+                catch {
+                  // Record may be deleted or out of scope; omit the button.
+                }
               }
             }
           }
@@ -86,6 +118,7 @@ export default defineEventHandler(async (event) => {
             ...row,
             fieldMeta: getAuditFieldMeta(auditedModelKey),
             objectPath,
+            viewOnSiteUrl,
           }
         }
         return row

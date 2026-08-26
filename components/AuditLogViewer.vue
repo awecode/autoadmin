@@ -217,6 +217,17 @@ const leftoverMeta = computed(() => {
             <span class="inline-flex flex-wrap items-center gap-2">
               <span>{{ lookupLabel }}</span>
               <UButton
+                v-if="entry.viewOnSiteUrl"
+                size="xs"
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-external-link"
+                label="View on site"
+                :to="entry.viewOnSiteUrl"
+                target="_blank"
+                external
+              />
+              <UButton
                 v-if="entry.objectPath"
                 size="xs"
                 color="neutral"

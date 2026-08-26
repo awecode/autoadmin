@@ -148,6 +148,8 @@ export interface AuditLogEntry {
     name: string
     params: { modelKey: string, lookupValue: string }
   } | null
+  /** Public URL from the audited model's `getAbsoluteUrl`, when available. */
+  viewOnSiteUrl?: string | null
 }
 
 export interface AuditDiffSegment {
