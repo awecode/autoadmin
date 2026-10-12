@@ -5,6 +5,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import type { ZodObject, ZodType } from 'zod'
 import { useEditorPendingUploads } from '#layers/autoadmin/components/editor/FileUpload'
 import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
+import { autoadminFormBridgeKey } from '#layers/autoadmin/utils/fileUploadHook'
 import { getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
 import { slugify } from '#layers/autoadmin/utils/string'
 
@@ -46,6 +47,13 @@ function initializeState() {
 }
 
 const state = initializeState()
+
+provide(autoadminFormBridgeKey, {
+  getFieldValue: name => state[name],
+  setFieldValue: (name, value) => {
+    state[name] = value
+  },
+})
 
 // Process schema to only include fields defined in spec
 const processedSchema = computed(() => processSchemaForForm(props.schema, props.spec))

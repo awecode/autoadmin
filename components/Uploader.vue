@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { autoadminFormBridgeKey } from '#layers/autoadmin/utils/fileUploadHook'
 import { formatBytes } from '#layers/autoadmin/utils/string'
 import { formBusInjectionKey, useFormField } from '@nuxt/ui/composables/useFormField'
 
@@ -36,6 +37,8 @@ const placeholder = props.attrs?.placeholder || `Drop ${type} here or click to u
 
 const fileRef = useTemplateRef<HTMLInputElement>('fileRef')
 const formBus = inject(formBusInjectionKey, undefined)
+const formBridge = inject(autoadminFormBridgeKey, undefined)
+const nuxtApp = useNuxtApp()
 const { id, name, ariaAttrs } = useFormField({
   id: props.attrs?.id,
   name: props.name,
@@ -171,6 +174,18 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
         fileUrl.value = uploadedFileUrl
         emit('update:modelValue', uploadedFileUrl)
         notifyFormFieldChanged()
+        // A failing hook must not undo the upload, so its errors are only logged
+        try {
+          await nuxtApp.callHook('autoadmin:file-uploaded', {
+            name: props.name,
+            file,
+            url: uploadedFileUrl,
+            form: formBridge,
+          })
+        }
+        catch (hookError) {
+          console.error('autoadmin:file-uploaded hook failed', hookError)
+        }
       }
     }
     catch (error: any) {
