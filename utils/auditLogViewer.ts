@@ -1,4 +1,4 @@
-import { formatDateTimeUTC } from '#layers/autoadmin/utils/date'
+import { humanifyDateTime } from '#layers/autoadmin/utils/date'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 
 /** Format a single audit payload value for display. */
@@ -69,11 +69,11 @@ export function formatAuditValueForType(value: unknown, type?: string): string {
     }
     case 'date': {
       const date = parseAuditDate(value)
-      return date ? formatDateTimeUTC(date, { includeTime: false }) : formatAuditValue(value)
+      return date ? humanifyDateTime(date, { includeTime: false }) : formatAuditValue(value)
     }
     case 'datetime-local': {
       const date = parseAuditDate(value)
-      return date ? formatDateTimeUTC(date) : formatAuditValue(value)
+      return date ? humanifyDateTime(date) : formatAuditValue(value)
     }
     case 'boolean': {
       if (value === true || value === 'true' || value === 1 || value === '1') {

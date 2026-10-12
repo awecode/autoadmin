@@ -1,6 +1,6 @@
 /**
  * Format a date in the runtime's local timezone (Today / Yesterday when applicable).
- * Do not interpolate this into SSR templates — use `HumanifyDateTime` instead.
+ * Prefer `HumanifyDateTime` in SSR templates to avoid hydration warnings.
  */
 export function humanifyDateTime(date: string | Date, opts: { includeTime?: boolean } = {}): string {
   if (!date) {
@@ -42,32 +42,4 @@ export function humanifyDateTime(date: string | Date, opts: { includeTime?: bool
   const dateString = inputDate.toLocaleDateString('en-US', dateOptions)
 
   return includeTime ? `${dateString}, ${timeString}` : dateString
-}
-
-/** UTC formatting for plain strings that must match between SSR and client. */
-export function formatDateTimeUTC(date: string | Date, opts: { includeTime?: boolean } = {}): string {
-  if (!date) {
-    return ''
-  }
-
-  const includeTime = typeof opts.includeTime === 'boolean' ? opts.includeTime : true
-  const inputDate = new Date(date)
-  if (Number.isNaN(inputDate.getTime())) {
-    return String(date)
-  }
-
-  const options: Intl.DateTimeFormatOptions = {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }
-  if (includeTime) {
-    options.hour = 'numeric'
-    options.minute = '2-digit'
-    options.hour12 = true
-    options.timeZoneName = 'short'
-  }
-
-  return inputDate.toLocaleString('en-US', options)
 }

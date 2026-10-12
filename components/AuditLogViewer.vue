@@ -107,6 +107,11 @@ function isImageField(key: string): boolean {
   return fieldType(key) === 'image'
 }
 
+function isDateTimeField(key: string): boolean {
+  const type = fieldType(key)
+  return type === 'date' || type === 'datetime-local'
+}
+
 /** Native tooltip with stored DB value when display formatting differs. */
 function rawDbTitle(value: unknown, type?: string): string | undefined {
   if (!type || type === 'rich-text' || type === 'text' || type === 'textarea' || type === 'email' || type === 'number') {
@@ -334,7 +339,16 @@ const leftoverMeta = computed(() => {
                     class="max-h-24 max-w-full rounded border border-default object-contain"
                   >
                 </div>
+                <HumanifyDateTime
+                  v-if="isDateTimeField(key) && entry.changes?.before?.[key] != null && entry.changes?.before?.[key] !== ''"
+                  :value="entry.changes!.before![key] as string"
+                  :include-time="fieldType(key) !== 'date'"
+                />
+                <template v-else-if="isDateTimeField(key)">
+                  —
+                </template>
                 <pre
+                  v-else
                   class="whitespace-pre-wrap wrap-break-word font-mono text-xs"
                   :title="rawDbTitle(entry.changes?.before?.[key], fieldType(key))"
                 ><span
@@ -354,7 +368,16 @@ const leftoverMeta = computed(() => {
                     class="max-h-24 max-w-full rounded border border-default object-contain"
                   >
                 </div>
+                <HumanifyDateTime
+                  v-if="isDateTimeField(key) && entry.changes?.after?.[key] != null && entry.changes?.after?.[key] !== ''"
+                  :value="entry.changes!.after![key] as string"
+                  :include-time="fieldType(key) !== 'date'"
+                />
+                <template v-else-if="isDateTimeField(key)">
+                  —
+                </template>
                 <pre
+                  v-else
                   class="whitespace-pre-wrap wrap-break-word font-mono text-xs"
                   :title="rawDbTitle(entry.changes?.after?.[key], fieldType(key))"
                 ><span
@@ -406,7 +429,16 @@ const leftoverMeta = computed(() => {
                     class="max-h-24 max-w-full rounded border border-default object-contain"
                   >
                 </div>
+                <HumanifyDateTime
+                  v-if="isDateTimeField(key) && snapshot.record?.[key] != null && snapshot.record?.[key] !== ''"
+                  :value="snapshot.record![key] as string"
+                  :include-time="fieldType(key) !== 'date'"
+                />
+                <template v-else-if="isDateTimeField(key)">
+                  —
+                </template>
                 <pre
+                  v-else
                   class="whitespace-pre-wrap wrap-break-word font-mono text-xs"
                   :title="rawDbTitle(snapshot.record?.[key], fieldType(key))"
                 >{{ formatAuditValueForType(snapshot.record?.[key], fieldType(key)) }}</pre>
