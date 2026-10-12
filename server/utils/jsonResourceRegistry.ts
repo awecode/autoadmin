@@ -101,6 +101,8 @@ export interface RegisterJsonArrayResourceInput {
   labelField?: string
   /** Auto-generate URL-friendly slugs from other fields. Example: { slug: ["title", "date"] } */
   slugFields?: Partial<Record<string, string[]>>
+  /** Slugs that cannot be used as-is (case-insensitive). A reserved slug gets a suffix like a taken one. Example: ["admin", "new"] */
+  reservedSlugs?: string[]
   list?: Partial<JsonArrayListOptions>
   create?: Partial<JsonCreateOptions>
   update?: Partial<JsonUpdateOptions>
@@ -149,6 +151,7 @@ export interface JsonArrayResourceConfig {
   idField: string
   labelField: string
   slugFields?: Partial<Record<string, string[]>>
+  reservedSlugs?: string[]
   list: JsonArrayListOptions & {
     title: string
     endpoint: string
@@ -330,6 +333,7 @@ function defaultArrayConfig(
     idField: JSON_ARRAY_ROW_ID,
     labelField,
     slugFields: input.slugFields,
+    reservedSlugs: input.reservedSlugs,
     list,
     create,
     update,

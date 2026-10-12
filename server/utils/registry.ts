@@ -204,6 +204,8 @@ export interface AdminModelOptions<T extends Table = Table, C extends CustomSele
   icon?: string
   /** Example: { slug: ["title", "date"] } */
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
+  /** Slugs that cannot be used as-is (case-insensitive). A reserved slug gets a suffix like a taken one. Example: ["admin", "new"] */
+  reservedSlugs?: string[]
   enableIndex?: boolean
   labelColumnName?: ColKey<T>
   lookupColumnName?: ColKey<T>
@@ -275,6 +277,7 @@ export interface AdminModelConfig<T extends Table = Table, C extends CustomSelec
   metadata: TableMetadata
   apiPrefix: string
   slugFields?: Partial<Record<ColKey<T>, ColKey<T>[]>>
+  reservedSlugs?: string[]
   /** Normalized from `AdminModelOptions.roles` (array → `{ full }`). */
   roles?: AutoadminRolesConfig
   baseWhere?: BaseWhereFn<T>

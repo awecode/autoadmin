@@ -195,6 +195,7 @@ Role-based access for registered models is configured with the `roles` option. S
 | `labelColumnName`      | `string`                   | `name`, `title`, etc. | Column used for display labels in relationships and select options.                                                                                            |
 | `lookupColumnName`     | `string`                   | `id`                  | The primary or unique key used to fetch single records.                                                                                                        |
 | `slugFields`           | `Record<string, string[]>` | `undefined`           | Auto-generate URL-friendly slugs from other fields. [Reference ↗](#automatic-slug-generation-slugfields)                                                       |
+| `reservedSlugs`        | `string[]`                 | `undefined`           | Slugs that cannot be used as-is; they get a suffix like a taken slug. [Reference ↗](#reserved-slugs)                                                          |
 | `warnOnUnsavedChanges` | `boolean`                  | `false`               | Prompt user before leaving a form with unsaved changes.                                                                                                        |
 | `list`                 | `Partial<ListOptions>`     | `{}`                  | Configuration for the list/table view. [Reference ↗](#list-view-configuration)                                                                                 |
 | `create`               | `Partial<CreateOptions>`   | `{}`                  | Create form configuration. [Reference ↗](#form-configuration-create-update-formfields)                                                                         |
@@ -501,6 +502,23 @@ export default defineNuxtConfig({
 ```
 
 When disabled, duplicate slugs will result in a standard unique constraint validation error returned to the user.
+
+### Reserved Slugs
+
+Use `reservedSlugs` to keep slugs that would clash with your own routes, such as `admin` or `new`, out of a model:
+
+```ts
+registry.register(posts, {
+  slugFields: { slug: ['title'] },
+  reservedSlugs: ['admin', 'new', 'search'],
+})
+```
+
+A reserved slug is treated as if a record already used it. Saving a post titled "New" produces `new-1`, or `new-2` if `new-1` is taken. The check is case-insensitive and applies to every field in `slugFields`. Suffixed values are checked too, so reserving `new-1` skips it as well.
+
+Unlike collisions, reserved slugs are checked before the record is saved, because the database has no row to reject them. When auto-unique slugs are disabled, a reserved slug returns a validation error on the slug field instead of a suffix.
+
+On update, a slug the record already has is left alone, so existing rows are not renamed when you reserve their slug later. Changing a slug to a reserved value gets the suffix.
 
 ## Rich Text Editor Configuration
 

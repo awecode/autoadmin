@@ -6,7 +6,7 @@ import { buildBaseWhereContext, whereWithBaseWhere } from '../utils/baseWhere'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
-import { ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
+import { avoidReservedSlugs, ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
 import { unwrapZodType } from '../utils/zod'
 
 export async function updateRecord<T extends Table>(
@@ -70,6 +70,8 @@ export async function updateRecord<T extends Table>(
     beforeRecord = undefined
   }
 
+  await avoidReservedSlugs(cfg, validatedData as Record<string, any>, lookupValue, beforeRecord)
+
   let result
   try {
     let updateQuery = db.update(model).set(validatedData)
@@ -80,7 +82,7 @@ export async function updateRecord<T extends Table>(
   }
   catch (error) {
     if (isSlugUniqueViolation(cfg, error)) {
-      await ensureUniqueSlugs(cfg, validatedData as Record<string, any>, lookupValue)
+      await ensureUniqueSlugs(cfg, validatedData as Record<string, any>, lookupValue, beforeRecord)
       try {
         let updateQuery = db.update(model).set(validatedData)
         if (updateWhere) {

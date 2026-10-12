@@ -76,6 +76,7 @@ export default defineNitroPlugin(() => {
   // Posts - Complex setup with relationships and custom functions
   registry.register(posts, {
     slugFields: { slug: ['title'] },
+    reservedSlugs: ['new', 'admin'],
     getAbsoluteUrl: post => (post.slug ? `/blog/${post.slug}` : undefined),
     baseWhere: async (_db, ctx) => {
       if (ctx.event?.context.auth?.user?.role === 'admin') {

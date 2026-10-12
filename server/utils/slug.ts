@@ -41,9 +41,74 @@ export function isSlugUniqueViolation<T extends Table>(
   return !!column && column in cfg.slugFields
 }
 
+export function reservedSlugSet(reservedSlugs: string[] | undefined): Set<string> {
+  return new Set((reservedSlugs ?? []).map(s => s.toLowerCase()))
+}
+
+/**
+ * Reserved slugs for one field of one record. The slug the record already has
+ * (`currentValue`) is left out, so existing rows keep it.
+ */
+export function reservedSlugsFor(reserved: Set<string>, currentValue?: unknown): Set<string> {
+  if (typeof currentValue !== 'string' || !reserved.has(currentValue.toLowerCase()))
+    return reserved
+  const copy = new Set(reserved)
+  copy.delete(currentValue.toLowerCase())
+  return copy
+}
+
+/** First of `slug`, `slug-1`, `slug-2`, … that is neither taken nor reserved. */
+export function nextAvailableSlug(slug: string, taken: Set<string>, reserved: Set<string>): string {
+  const isFree = (value: string) => !taken.has(value) && !reserved.has(value.toLowerCase())
+  if (isFree(slug))
+    return slug
+  let suffix = 1
+  while (!isFree(`${slug}-${suffix}`)) {
+    suffix++
+  }
+  return `${slug}-${suffix}`
+}
+
+/**
+ * Checks slug values against `cfg.reservedSlugs` before saving. A reserved
+ * value gets a suffix like a taken slug, or a validation error when
+ * auto-unique slugs are disabled. Pass `currentRecord` on update so an
+ * unchanged slug is left alone.
+ */
+export async function avoidReservedSlugs<T extends Table>(
+  cfg: AdminModelConfig<T>,
+  data: Record<string, any>,
+  excludeLookupValue?: string,
+  currentRecord?: Record<string, unknown>,
+) {
+  if (!cfg.slugFields || !cfg.reservedSlugs?.length)
+    return
+
+  const reserved = reservedSlugSet(cfg.reservedSlugs)
+  const hit = Object.keys(cfg.slugFields).find((name) => {
+    const slug = data[name]
+    return typeof slug === 'string' && slug !== '' && reservedSlugsFor(reserved, currentRecord?.[name]).has(slug.toLowerCase())
+  })
+  if (!hit)
+    return
+
+  if (useRuntimeConfig().autoadmin?.autoUniqueSlugs === false) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Validation Error',
+      data: {
+        message: `The ${hit} "${data[hit]}" is reserved.`,
+        errors: [{ name: hit, message: 'This value is reserved and cannot be used.' }],
+      },
+    })
+  }
+
+  await ensureUniqueSlugs(cfg, data, excludeLookupValue, currentRecord)
+}
+
 /**
  * For each slug field in cfg.slugFields, ensures the value in `data` is unique
- * by appending -1, -2, etc. if a collision exists.
+ * and not reserved by appending -1, -2, etc.
  * When `excludeLookupValue` is provided (update mode), the current record is
  * excluded from the uniqueness check.
  */
@@ -51,16 +116,20 @@ export async function ensureUniqueSlugs<T extends Table>(
   cfg: AdminModelConfig<T>,
   data: Record<string, any>,
   excludeLookupValue?: string,
+  currentRecord?: Record<string, unknown>,
 ) {
   if (!cfg.slugFields)
     return
 
   const db = await useAdminDb()
+  const reserved = reservedSlugSet(cfg.reservedSlugs)
 
   for (const slugFieldName of Object.keys(cfg.slugFields)) {
     const slug = data[slugFieldName]
     if (typeof slug !== 'string' || slug === '')
       continue
+
+    const fieldReserved = reservedSlugsFor(reserved, currentRecord?.[slugFieldName])
 
     const column = cfg.columns[slugFieldName] as Column | undefined
     if (!column)
@@ -84,14 +153,6 @@ export async function ensureUniqueSlugs<T extends Table>(
       .where(and(...conditions))
 
     const existing = new Set<string>(rows.map((r: any) => r.val))
-
-    if (!existing.has(slug))
-      continue
-
-    let suffix = 1
-    while (existing.has(`${slug}-${suffix}`)) {
-      suffix++
-    }
-    data[slugFieldName] = `${slug}-${suffix}`
+    data[slugFieldName] = nextAvailableSlug(slug, existing, fieldReserved)
   }
 }

@@ -10,6 +10,7 @@ import { createJsonStorageRepository } from '#layers/autoadmin/server/utils/json
 import { formatJsonFileBody, writeJsonStorageWithRetry } from '#layers/autoadmin/server/utils/jsonStorage/writeWithRetry'
 import { getZodObjectWithLenientJsonRead } from '#layers/autoadmin/server/utils/jsonZodLenientRead'
 import { zodToListSpec } from '#layers/autoadmin/server/utils/list'
+import { nextAvailableSlug, reservedSlugSet, reservedSlugsFor } from '#layers/autoadmin/server/utils/slug'
 import { unwrapZodType } from '#layers/autoadmin/server/utils/zod'
 import { toTitleCase } from '#layers/autoadmin/utils/string'
 import { z } from 'zod'
@@ -401,7 +402,8 @@ function preprocessDates(schema: ZodObject<Record<string, ZodType>>, inputData: 
 /**
  * In-memory counterpart of the Drizzle admin's `ensureUniqueSlugs`: for each
  * configured slug field, append -1, -2, … when the value collides with another
- * row. `excludeId` skips the row being updated.
+ * row or is reserved. `excludeId` skips the row being updated, and that row's
+ * unchanged slug is never treated as reserved.
  */
 function ensureUniqueJsonSlugs(
   cfg: JsonArrayResourceConfig,
@@ -415,6 +417,10 @@ function ensureUniqueJsonSlugs(
   const others = excludeId === undefined
     ? rows
     : rows.filter(r => String(r[cfg.idField]) !== excludeId)
+  const current = excludeId === undefined
+    ? undefined
+    : rows.find(r => String(r[cfg.idField]) === excludeId)
+  const reserved = reservedSlugSet(cfg.reservedSlugs)
   for (const slugFieldName of Object.keys(cfg.slugFields)) {
     const slug = data[slugFieldName]
     if (typeof slug !== 'string' || slug === '') {
@@ -427,14 +433,8 @@ function ensureUniqueJsonSlugs(
         existing.add(v)
       }
     }
-    if (!existing.has(slug)) {
-      continue
-    }
-    let suffix = 1
-    while (existing.has(`${slug}-${suffix}`)) {
-      suffix++
-    }
-    data[slugFieldName] = `${slug}-${suffix}`
+    const fieldReserved = reservedSlugsFor(reserved, current?.[slugFieldName])
+    data[slugFieldName] = nextAvailableSlug(slug, existing, fieldReserved)
   }
 }
 

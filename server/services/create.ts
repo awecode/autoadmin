@@ -4,7 +4,7 @@ import { maybeEmitModelAudit } from '../utils/auditEmit'
 import { useAdminDb } from '../utils/db'
 import { colKey, handleDrizzleError } from '../utils/drizzle'
 import { parseM2mRelations, saveM2mRelation, saveO2mRelation } from '../utils/relation'
-import { ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
+import { avoidReservedSlugs, ensureUniqueSlugs, isSlugUniqueViolation } from '../utils/slug'
 import { unwrapZodType } from '../utils/zod'
 
 export async function createRecord<T extends Table>(
@@ -49,6 +49,8 @@ export async function createRecord<T extends Table>(
   }
 
   const validatedData = schema.parse(preprocessed) as InferInsertModel<T>
+
+  await avoidReservedSlugs(cfg, validatedData as Record<string, any>)
 
   let result
   try {
