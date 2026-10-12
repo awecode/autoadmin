@@ -12,9 +12,20 @@ function getImageDimensions(src: string): Promise<{ width: number, height: numbe
 
 const pendingUploadCount = ref(0)
 
-/** Number of editor file uploads currently in flight (images, files, embed media). */
+/** Number of file uploads currently in flight (editor media and image/file fields). AutoForm blocks submit while it is above 0. */
 export function useEditorPendingUploads() {
   return readonly(pendingUploadCount)
+}
+
+/** Counts `task` as a pending upload until it settles. */
+export async function trackPendingUpload<T>(task: () => Promise<T>): Promise<T> {
+  pendingUploadCount.value++
+  try {
+    return await task()
+  }
+  finally {
+    pendingUploadCount.value--
+  }
 }
 
 export async function uploadFile(file: File, uploadPrefix?: string): Promise<string> {
@@ -27,28 +38,25 @@ export async function uploadFile(file: File, uploadPrefix?: string): Promise<str
     fileName: file.name,
   })
 
-  pendingUploadCount.value++
-  try {
-    const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
-      method: 'POST',
-      body: file,
-    })
+  return trackPendingUpload(async () => {
+    try {
+      const response = await fetch(`${apiPrefix}/file-upload?${params}`, {
+        method: 'POST',
+        body: file,
+      })
 
-    if (!response.ok) {
-      throw new Error(response.statusText)
+      if (!response.ok) {
+        throw new Error(response.statusText)
+      }
+
+      return await response.text()
     }
-
-    const result = await response.text()
-    return result
-  }
-  catch (error) {
-    // eslint-disable-next-line no-alert
-    window.alert(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    throw error
-  }
-  finally {
-    pendingUploadCount.value--
-  }
+    catch (error) {
+      // eslint-disable-next-line no-alert
+      window.alert(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw error
+    }
+  })
 }
 
 export interface HandleFilesOptions {

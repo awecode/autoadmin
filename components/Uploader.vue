@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trackPendingUpload } from '#layers/autoadmin/components/editor/FileUpload'
 import { autoadminFormBridgeKey } from '#layers/autoadmin/utils/fileUploadHook'
 import { formatBytes } from '#layers/autoadmin/utils/string'
 import { formBusInjectionKey, useFormField } from '@nuxt/ui/composables/useFormField'
@@ -164,44 +165,46 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       fileType: file.type,
       fileName: file.name,
     })
-    try {
-      const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?${params}`, {
-        method: 'POST',
-        body: file,
-      })
-      if (uploadedFileUrl) {
-        uploadedFile.value = uploadedFileUrl
-        fileUrl.value = uploadedFileUrl
-        emit('update:modelValue', uploadedFileUrl)
-        notifyFormFieldChanged()
-        // A failing hook must not undo the upload, so its errors are only logged
-        try {
-          await nuxtApp.callHook('autoadmin:file-uploaded', {
-            name: props.name,
-            file,
-            url: uploadedFileUrl,
-            form: formBridge,
-          })
-        }
-        catch (hookError) {
-          console.error('autoadmin:file-uploaded hook failed', hookError)
+    await trackPendingUpload(async () => {
+      try {
+        const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?${params}`, {
+          method: 'POST',
+          body: file,
+        })
+        if (uploadedFileUrl) {
+          uploadedFile.value = uploadedFileUrl
+          fileUrl.value = uploadedFileUrl
+          emit('update:modelValue', uploadedFileUrl)
+          notifyFormFieldChanged()
+          // A failing hook must not undo the upload, so its errors are only logged
+          try {
+            await nuxtApp.callHook('autoadmin:file-uploaded', {
+              name: props.name,
+              file,
+              url: uploadedFileUrl,
+              form: formBridge,
+            })
+          }
+          catch (hookError) {
+            console.error('autoadmin:file-uploaded hook failed', hookError)
+          }
         }
       }
-    }
-    catch (error: any) {
-      toast.add({
-        title: error?.response?._data?.message || error?.response?._data?.statusMessage || 'Upload failed!',
-        icon: 'i-lucide-triangle-alert',
-        color: 'error',
-      })
-      clearFile()
-      if (fileRef.value) {
-        fileRef.value.value = ''
+      catch (error: any) {
+        toast.add({
+          title: error?.response?._data?.message || error?.response?._data?.statusMessage || 'Upload failed!',
+          icon: 'i-lucide-triangle-alert',
+          color: 'error',
+        })
+        clearFile()
+        if (fileRef.value) {
+          fileRef.value.value = ''
+        }
       }
-    }
-    finally {
-      isFileUploading.value = false
-    }
+      finally {
+        isFileUploading.value = false
+      }
+    })
   }
 }
 
