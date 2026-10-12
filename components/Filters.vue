@@ -176,7 +176,7 @@ const booleanOptions = [
             </USelectMenu>
 
             <RelationSelectMenu
-              v-else-if="filter.type === 'relation'"
+              v-else-if="filter.type === 'relation' || filter.lazy"
               v-model="getFilterModel(filter).value"
               :filter="filter"
             />

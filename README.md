@@ -1217,6 +1217,24 @@ registry.register(posts, {
 
 See [List Filters](#list-filters) for more examples.
 
+#### Lazy Options
+
+By default, a custom filter's `options` run on every list request and are sent with the list. For large lists (for example all authors), set `lazyOptions: true`. The options are then fetched from `formspec/:modelKey/filter-choices/:parameterName` only when the dropdown opens, or on load when a value is already selected so its label shows. The `options` function still receives the request query.
+
+```ts
+{
+  parameterName: 'authorId',
+  label: 'Author',
+  type: 'select',
+  lazyOptions: true,
+  options: async (db) => {
+    const rows = await db.select({ value: authors.id, label: authors.name }).from(authors)
+    return rows
+  },
+  queryConditions: async (db, value) => [/* ... */],
+}
+```
+
 ### Automatic Filter Detection
 
 If no `filterFields` are specified, the system automatically creates filters for:

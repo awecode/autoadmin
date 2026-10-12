@@ -5,7 +5,7 @@ import { normalizeOptions } from '#layers/autoadmin/utils/form'
 
 const props = defineProps<{
   modelValue: any
-  filter: FilterSpec
+  filter: FilterSpec & { lazy?: boolean }
 }>()
 
 const emit = defineEmits<{
@@ -29,6 +29,18 @@ const selectMenuItems = computed(() => {
   return selectMenuItemsRaw.value ? normalizeOptions(selectMenuItemsRaw.value) : []
 })
 
+// Lazy filters send the selected value from the URL as a string. Match it to the
+// fetched item so the label shows, and keep the item's own type (number or string).
+function syncSelectedWithItems() {
+  if (internalValue.value === undefined || internalValue.value === null || internalValue.value === '') {
+    return
+  }
+  const match = selectMenuItems.value.find(item => String(item.value) === String(internalValue.value))
+  if (match && match.value !== internalValue.value) {
+    internalValue.value = match.value
+  }
+}
+
 if (props.filter.options) {
   // Handle the case where the modelValue is a string and the options are numbers
   // modelValue can be a string because it is extracted from the url query params
@@ -46,11 +58,17 @@ async function onSelectMenuOpen(open: boolean) {
     try {
       await execute()
       selectFetched.value = true
+      syncSelectedWithItems()
     }
     finally {
       isLoadingChoices.value = false
     }
   }
+}
+
+// Lazy filters have no options yet, so fetch once on mount when a value is already selected
+if (shouldFetch && props.modelValue !== undefined && props.modelValue !== null && props.modelValue !== '') {
+  onSelectMenuOpen(true)
 }
 
 // Flag to prevent infinite recursion, or does Vue handle this?

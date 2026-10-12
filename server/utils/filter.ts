@@ -21,10 +21,27 @@ export interface CustomFilter {
   type?: FilterType
   // options is optional because it is not required for all types like boolean, date, daterange
   options?: (db: AdminDbType, query: Record<string, any>) => Promise<Option[]>
+  /**
+   * When true, options are not sent with the list. The filter fetches them from
+   * `formspec/:modelKey/filter-choices/:parameterName` only when the dropdown opens
+   * (or when a value is already selected, to show its label).
+   */
+  lazyOptions?: boolean
   queryConditions: (db: AdminDbType, value: any) => Promise<SQL[]>
 }
 
 async function prepareCustomFilter<T extends Table>(cfg: AdminModelConfig<T>, db: AdminDbType, columnTypes: ColTypes, filter: CustomFilter, query: Record<string, any>) {
+  if (filter.lazyOptions) {
+    return {
+      field: filter.parameterName,
+      label: filter.label,
+      type: filter.type || 'select',
+      lazy: true,
+      choicesEndpoint: `${cfg.apiPrefix}/formspec/${cfg.key}/filter-choices/${encodeURIComponent(filter.parameterName)}`,
+      options: undefined,
+      queryConditions: filter.queryConditions,
+    }
+  }
   return {
     field: filter.parameterName,
     label: filter.label,

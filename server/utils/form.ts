@@ -28,6 +28,8 @@ export interface FieldSpec {
   help?: string
   hint?: string
   description?: string
+  /** Show the current value without letting the admin change it. Supported for 'file' and 'image' fields. */
+  readonly?: boolean
   /** Configuration for file/image upload fields. Only applicable when type is 'file' or 'image' */
   fileConfig?: {
     /** Accept is a list of file extensions, e.g. ['.jpg', '.jpeg', '.png', '.svg'] */

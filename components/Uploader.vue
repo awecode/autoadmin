@@ -16,6 +16,8 @@ const props = withDefaults(defineProps<{
   type?: 'file' | 'image'
   attrs?: Record<string, any>
   enableClear?: boolean
+  /** Shows the file but disables picking, dropping, replacing and clearing. */
+  readonly?: boolean
 }>(), {
   enableClear: true,
 })
@@ -116,6 +118,8 @@ function clearFile() {
   notifyFormFieldChanged()
 }
 async function handleFileChange(e: Event | undefined, droppedFile: undefined | File = undefined) {
+  if (props.readonly)
+    return
   isFileUploading.value = true
   let file: File | undefined
   if (droppedFile) {
@@ -231,14 +235,14 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
 }
 
 function onClick() {
-  if (isFileUploading.value)
+  if (props.readonly || isFileUploading.value)
     return
   fileRef.value?.click()
 }
 
 function onFileDrop(event: DragEvent) {
   event.preventDefault()
-  if (isFileUploading.value)
+  if (props.readonly || isFileUploading.value)
     return
   if (event?.dataTransfer?.items) {
     if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0]?.kind === 'file') {
@@ -481,7 +485,7 @@ function replaceFile() {
               @click.stop="downloadFile"
             />
           </UTooltip>
-          <UTooltip v-if="isClearEnabled" text="Clear">
+          <UTooltip v-if="isClearEnabled && !readonly" text="Clear">
             <UButton
               class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
               icon="i-lucide-x"
@@ -490,7 +494,7 @@ function replaceFile() {
               @click.stop="clearFile"
             />
           </UTooltip>
-          <UTooltip text="Replace">
+          <UTooltip v-if="!readonly" text="Replace">
             <UButton
               class="text-white hover:bg-white hover:bg-opacity-20 rounded-full cursor-pointer"
               icon="i-lucide-refresh-cw"
