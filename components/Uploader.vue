@@ -79,6 +79,13 @@ watch(() => props.modelValue, (newValue) => {
 }, { immediate: false })
 
 const isFileUploading = ref(false)
+const uploadController = shallowRef<AbortController>()
+
+function cancelUpload() {
+  uploadController.value?.abort()
+}
+
+onBeforeUnmount(cancelUpload)
 
 // Dialog preview state
 const isPreviewDialogOpen = ref(false)
@@ -165,12 +172,18 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
       fileType: file.type,
       fileName: file.name,
     })
+    const controller = new AbortController()
+    uploadController.value = controller
     await trackPendingUpload(async () => {
       try {
         const uploadedFileUrl = await $fetch<string>(`${apiPrefix}/file-upload?${params}`, {
           method: 'POST',
           body: file,
+          signal: controller.signal,
         })
+        if (uploadController.value === controller) {
+          uploadController.value = undefined
+        }
         if (uploadedFileUrl) {
           uploadedFile.value = uploadedFileUrl
           fileUrl.value = uploadedFileUrl
@@ -191,6 +204,12 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
         }
       }
       catch (error: any) {
+        if (controller.signal.aborted) {
+          if (fileRef.value) {
+            fileRef.value.value = ''
+          }
+          return
+        }
         toast.add({
           title: error?.response?._data?.message || error?.response?._data?.statusMessage || 'Upload failed!',
           icon: 'i-lucide-triangle-alert',
@@ -202,6 +221,9 @@ async function handleFileChange(e: Event | undefined, droppedFile: undefined | F
         }
       }
       finally {
+        if (uploadController.value === controller) {
+          uploadController.value = undefined
+        }
         isFileUploading.value = false
       }
     })
@@ -216,6 +238,8 @@ function onClick() {
 
 function onFileDrop(event: DragEvent) {
   event.preventDefault()
+  if (isFileUploading.value)
+    return
   if (event?.dataTransfer?.items) {
     if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0]?.kind === 'file') {
       const file = event.dataTransfer.items[0].getAsFile() as File
@@ -395,6 +419,15 @@ function replaceFile() {
           </g>
         </svg>
         Uploading...
+        <UButton
+          v-if="uploadController"
+          color="neutral"
+          size="xs"
+          variant="outline"
+          @click.stop="cancelUpload"
+        >
+          Cancel
+        </UButton>
       </div>
     </div>
     <div v-else-if="fileUrl" class="absolute inset-0 flex items-center justify-center">
