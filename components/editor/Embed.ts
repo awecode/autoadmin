@@ -1,7 +1,10 @@
 import { Node } from '@tiptap/core'
 import { NodeSelection } from '@tiptap/pm/state'
+import { loadTwitterWidgets, tweetStatusUrl } from './twitterEmbed'
 
-export type EmbedType = 'youtube' | 'iframe' | 'facebook' | 'linkedin' | 'pdf' | 'video' | 'audio'
+export const defaultEmbedTypes = ['youtube', 'facebook', 'linkedin', 'pdf', 'video', 'audio', 'iframe'] as const
+
+export type EmbedType = typeof defaultEmbedTypes[number] | 'twitter'
 
 const MEDIA_TYPES = new Set<EmbedType>(['video', 'audio'])
 
@@ -26,6 +29,12 @@ function normalizeDim(value: string | number | null) {
 
 export const Embed = Node.create({
   name: 'embed',
+
+  addOptions() {
+    return {
+      twitter: false,
+    }
+  },
 
   group: 'block',
 
@@ -60,9 +69,10 @@ export const Embed = Node.create({
           const el = element as HTMLElement
           const embedType = (el.getAttribute('data-embed-type') ?? 'iframe') as EmbedType
           const media = el.querySelector('video, audio, iframe')
+          const tweetHref = el.querySelector('blockquote.twitter-tweet a')?.getAttribute('href') ?? null
           return {
             embedType,
-            src: media?.getAttribute('src') ?? null,
+            src: media?.getAttribute('src') ?? tweetHref,
             width: media?.getAttribute('width') ?? null,
             height: media?.getAttribute('height') ?? null,
           }
@@ -75,7 +85,11 @@ export const Embed = Node.create({
           const src = el.getAttribute('src')
           let embedType: EmbedType = 'iframe'
 
-          if (src?.includes('youtube.com') || src?.includes('youtu.be')) {
+          const tweetUrl = this.options.twitter && src ? tweetStatusUrl(src) : null
+          if (tweetUrl) {
+            embedType = 'twitter'
+          }
+          else if (src?.includes('youtube.com') || src?.includes('youtu.be')) {
             embedType = 'youtube'
           }
           else if (src?.includes('facebook.com')) {
@@ -84,12 +98,29 @@ export const Embed = Node.create({
 
           return {
             embedType,
-            src,
+            src: tweetUrl || src,
             width: el.getAttribute('width') ?? null,
             height: el.getAttribute('height') ?? null,
           }
         },
       },
+      ...(this.options.twitter
+        ? [{
+            tag: 'blockquote.twitter-tweet',
+            priority: 100,
+            getAttrs: (element: HTMLElement) => {
+              const url = tweetStatusUrl(element.outerHTML)
+              if (!url)
+                return false
+              return {
+                embedType: 'twitter' as const,
+                src: url,
+                width: null,
+                height: null,
+              }
+            },
+          }]
+        : []),
       {
         tag: 'video',
         getAttrs: (element) => {
@@ -151,6 +182,13 @@ export const Embed = Node.create({
       return ['div', wrapperAttrs, ['audio', audioAttrs]]
     }
 
+    if (embedType === 'twitter') {
+      const quote = ['blockquote', { class: 'twitter-tweet' }]
+      if (!src)
+        return ['div', wrapperAttrs, quote]
+      return ['div', wrapperAttrs, ['blockquote', { class: 'twitter-tweet' }, ['a', { href: src }, src]]]
+    }
+
     const iframeAttrs: Record<string, string> = { frameborder: '0' }
     if (src)
       iframeAttrs.src = src
@@ -181,6 +219,58 @@ export const Embed = Node.create({
         container.style.width = normWidth
 
       let child: HTMLElement
+
+      if (embedType === 'twitter') {
+        const preview = document.createElement('div')
+        preview.style.pointerEvents = 'none'
+        const quote = document.createElement('blockquote')
+        quote.className = 'twitter-tweet'
+        if (node.attrs.src) {
+          const link = document.createElement('a')
+          link.href = node.attrs.src
+          link.textContent = node.attrs.src
+          quote.appendChild(link)
+        }
+        preview.appendChild(quote)
+        container.appendChild(preview)
+
+        loadTwitterWidgets()
+          .then(twttr => twttr.widgets?.load(preview))
+          .catch(() => {})
+
+        container.addEventListener('dblclick', (event) => {
+          preview.style.pointerEvents = 'auto'
+          event.stopPropagation()
+        })
+
+        container.addEventListener('click', (event) => {
+          const pos = typeof getPos === 'function' ? getPos() : undefined
+          if (typeof pos === 'number') {
+            editor.commands.setNodeSelection(pos)
+            event.preventDefault()
+            event.stopPropagation()
+          }
+        })
+
+        const onSelectionUpdate = () => {
+          const { selection } = editor.state
+          const pos = typeof getPos === 'function' ? getPos() : undefined
+          if (typeof pos !== 'number')
+            return
+          if (selection instanceof NodeSelection && selection.from === pos)
+            return
+          preview.style.pointerEvents = 'none'
+        }
+
+        editor.on('selectionUpdate', onSelectionUpdate)
+
+        return {
+          dom: container,
+          destroy() {
+            editor.off('selectionUpdate', onSelectionUpdate)
+          },
+        }
+      }
 
       if (MEDIA_TYPES.has(embedType)) {
         const media = document.createElement(embedType === 'audio' ? 'audio' : 'video')

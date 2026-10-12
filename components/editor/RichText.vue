@@ -417,7 +417,7 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [[{
     :extensions="[
       TableKit,
       TextAlign.configure({ types: textAlignTypes }),
-      Embed,
+      Embed.configure({ twitter: Boolean(embedTypes?.includes('twitter')) }),
       AdvancedImage.configure({
         HTMLAttributes: {
           class: 'content-image',

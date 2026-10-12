@@ -579,6 +579,8 @@ If you use **float images**, **media text**, or **embeds** in the rich text edit
 @import '#layers/autoadmin/assets/css/rich-text.css';
 ```
 
+X posts are stored as a `blockquote.twitter-tweet`. On the public page, load `https://platform.x.com/widgets.js` and call `twttr.widgets.load()` after the HTML is in the page. The editor does this itself when the X post type is enabled.
+
 ### Available options
 
 All options below work in both `inputAttrs` (server-side) and client-side configuration:
@@ -594,7 +596,17 @@ All options below work in both `inputAttrs` (server-side) and client-side config
 | `extraFixedToolbarItems`  | `EditorToolbarItem[][]` | `[]`                                                                                                | Additional toolbar item groups appended to the fixed toolbar.                                                                            |
 | `extraBubbleToolbarItems` | `EditorToolbarItem[][]` | `[]`                                                                                                | Additional toolbar item groups appended to the bubble (selection) toolbar.                                                               |
 | `extensions`              | `Extension[]`           | `[]`                                                                                                | Additional Tiptap extensions to load alongside the built-in ones.                                                                        |
-| `embedTypes`              | `EmbedType[]`           | all types                                                                                           | Embed types to show in the embed popover. Available: `'youtube'`, `'facebook'`, `'linkedin'`, `'pdf'`, `'video'`, `'audio'`, `'iframe'`. |
+| `embedTypes`              | `EmbedType[]`           | `youtube`, `facebook`, `linkedin`, `pdf`, `video`, `audio`, `iframe`                                | Embed types to show in the embed popover. Add `'twitter'` to this list to allow X posts. X is off unless it is listed. |
+
+`embedTypes` replaces the default list. To keep the defaults and add X posts, repeat the defaults and add `'twitter'`:
+
+```ts
+setGlobalRichText({
+  embedTypes: ['youtube', 'facebook', 'linkedin', 'pdf', 'video', 'audio', 'iframe', 'twitter'],
+})
+```
+
+The same array works in a field's client config or in server `inputAttrs`. Leave `embedTypes` unset and X stays out of the popover.
 
 Options like `extensions`, `extraFixedToolbarItems`, and `extraBubbleToolbarItems` are not serializable and should be configured via the client-side approach. When the same option is set in multiple places, the merge order from lowest to highest priority is:
 

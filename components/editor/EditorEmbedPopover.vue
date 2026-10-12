@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
 import type { EmbedType } from './Embed'
+import { defaultEmbedTypes } from './Embed'
 
 import { uploadFile } from './FileUpload'
+import { tweetStatusUrl } from './twitterEmbed'
 
 const props = defineProps<{
   editor: Editor
@@ -15,6 +17,7 @@ const allEmbedItems: { label: string, value: EmbedType }[] = [
   { label: 'YouTube', value: 'youtube' },
   { label: 'Facebook post', value: 'facebook' },
   { label: 'LinkedIn post', value: 'linkedin' },
+  { label: 'X post', value: 'twitter' },
   { label: 'PDF', value: 'pdf' },
   { label: 'Video', value: 'video' },
   { label: 'Audio', value: 'audio' },
@@ -22,10 +25,11 @@ const allEmbedItems: { label: string, value: EmbedType }[] = [
 ]
 
 const embedItems = computed(() => {
-  if (!props.enabledTypes?.length)
-    return allEmbedItems
-  return allEmbedItems.filter(item => props.enabledTypes!.includes(item.value))
+  const enabled: EmbedType[] = props.enabledTypes?.length ? props.enabledTypes : [...defaultEmbedTypes]
+  return allEmbedItems.filter(item => enabled.includes(item.value))
 })
+
+const twitterEnabled = computed(() => embedItems.value.some(item => item.value === 'twitter'))
 
 const uploadableTypes: Record<string, { accept: string, label: string }> = {
   pdf: { accept: '.pdf', label: 'Upload PDF' },
@@ -155,20 +159,36 @@ function setEmbed() {
   let parsedHeight: string | null = null
 
   if (isProbablyCode(input)) {
-    const parsed = parseIframeFromHtml(input)
-    if (!parsed || !parsed.src)
-      return
-    src = parsed.src
-    parsedWidth = parsed.width
-    parsedHeight = parsed.height
-    if (/youtu\.be|youtube\.com/.test(src))
-      kind = 'youtube'
-    else if (/facebook\.com/.test(src))
-      kind = 'facebook'
-    else if (/linkedin\.com/.test(src))
-      kind = 'linkedin'
-    else if (/\.pdf(?:[?#]|$)/i.test(src))
-      kind = 'pdf'
+    const tweet = twitterEnabled.value ? tweetStatusUrl(input) : null
+    if (tweet) {
+      kind = 'twitter'
+      src = tweet
+    }
+    else {
+      const parsed = parseIframeFromHtml(input)
+      if (!parsed || !parsed.src)
+        return
+      src = parsed.src
+      parsedWidth = parsed.width
+      parsedHeight = parsed.height
+      const tweetFromIframe = twitterEnabled.value ? tweetStatusUrl(src) : null
+      if (tweetFromIframe) {
+        kind = 'twitter'
+        src = tweetFromIframe
+      }
+      else if (/youtu\.be|youtube\.com/.test(src)) {
+        kind = 'youtube'
+      }
+      else if (/facebook\.com/.test(src)) {
+        kind = 'facebook'
+      }
+      else if (/linkedin\.com/.test(src)) {
+        kind = 'linkedin'
+      }
+      else if (/\.pdf(?:[?#]|$)/i.test(src)) {
+        kind = 'pdf'
+      }
+    }
   }
   else {
     if (!/^https?:\/\//i.test(input))
@@ -181,6 +201,9 @@ function setEmbed() {
     }
     else if (kind === 'linkedin') {
       src = getLinkedInEmbedSrc(input)
+    }
+    else if (kind === 'twitter') {
+      src = tweetStatusUrl(input)
     }
     else {
       src = input
@@ -279,6 +302,7 @@ function handleKeyDown(event: KeyboardEvent) {
               v-model="embedType"
               :items="embedItems"
               class="w-full"
+              :ui="{ content: 'w-full' }"
             />
           </UFormField>
 
@@ -289,7 +313,7 @@ function handleKeyDown(event: KeyboardEvent) {
               name="embed"
               :rows="4"
               variant="outline"
-              placeholder="Paste a URL or iframe code"
+              :placeholder="embedType === 'twitter' ? 'Paste a post link or the embed code' : 'Paste a URL or iframe code'"
               @keydown="handleKeyDown"
             />
           </UFormField>

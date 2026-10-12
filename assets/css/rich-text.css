@@ -113,9 +113,14 @@
   padding-bottom: 56.25%;
 }
 
-.embed-node iframe {
+.embed-node:not([data-embed-type="twitter"]) iframe {
   width: 100%;
   height: 100%;
+}
+
+.embed-node[data-embed-type="twitter"] {
+  width: 100%;
+  max-width: 550px;
 }
 
 .embed-node[data-embed-type="youtube"] iframe {
