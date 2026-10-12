@@ -278,7 +278,7 @@ function handleKeyDown(event: KeyboardEvent) {
             <USelect
               v-model="embedType"
               :items="embedItems"
-              :ui="{ content: 'w-full' }"
+              class="w-full"
             />
           </UFormField>
 
