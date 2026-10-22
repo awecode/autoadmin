@@ -70,7 +70,7 @@ function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
               class="w-8 h-8 text-neutral-600 dark:text-neutral-400 transition-colors duration-200"
               :name="link.icon || 'i-lucide-database'"
             />
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <span class="text-sm font-medium text-highlighted">
               {{ link.label }}
             </span>
           </div>
@@ -119,7 +119,7 @@ function openSearchModal(link: NonNullable<typeof modelLinks.value>[number]) {
             class="w-8 h-8 text-neutral-600 dark:text-neutral-400 transition-colors duration-200"
             :name="linkIcon"
           />
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <span class="text-sm font-medium text-highlighted">
             {{ linkLabel }}
           </span>
         </div>

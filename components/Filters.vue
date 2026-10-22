@@ -143,7 +143,7 @@ const booleanOptions = [
       <div :class="mobileFiltersOpen ? 'space-y-4' : 'contents'">
         <template v-for="filter in filters" :key="filter.field">
           <div :class="mobileFiltersOpen ? 'space-y-2' : ''">
-            <div v-if="props.showLabel" :class="mobileFiltersOpen ? 'text-sm font-medium text-gray-700 dark:text-gray-300' : 'text-sm text-dimmed mb-1'">
+            <div v-if="props.showLabel" :class="mobileFiltersOpen ? 'text-sm font-medium text-default' : 'text-sm text-dimmed mb-1'">
               {{ filter.label }}
             </div>
 
@@ -171,7 +171,7 @@ const booleanOptions = [
                 {{ item.label || item.value }}
               </template>
               <template #item-trailing="{ item }">
-                <span v-if="item.count" class="text-xs text-gray-500">( {{ item.count }} )</span>
+                <span v-if="item.count" class="text-xs text-muted">( {{ item.count }} )</span>
               </template>
             </USelectMenu>
 

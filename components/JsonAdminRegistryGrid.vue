@@ -35,7 +35,7 @@ withDefaults(defineProps<{
               class="w-8 h-8 text-neutral-600 dark:text-neutral-400"
               :name="link.icon || getIconForLabel(link.label)"
             />
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <span class="text-sm font-medium text-highlighted">
               {{ link.label }}
             </span>
           </div>

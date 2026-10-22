@@ -507,7 +507,7 @@ function replaceFile() {
       </div>
     </div>
     <div v-else class="flex items-center gap-4 text-xl md:text-3xl">
-      <span class="text-sm text-gray-500">{{ placeholder }}</span>
+      <span class="text-sm text-muted">{{ placeholder }}</span>
     </div>
 
     <!-- Preview Dialog -->

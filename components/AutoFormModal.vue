@@ -42,7 +42,7 @@ const title = props.mode === 'create' ? `${listTitle} > Create` : `${listTitle} 
 </script>
 
 <template>
-  <UModal class="max-w-2xl overflow-y-auto border border-gray-500 rounded-lg p-8" :description="title" :title="title">
+  <UModal class="max-w-2xl overflow-y-auto border border-neutral-500 rounded-lg p-8" :description="title" :title="title">
     <template #content>
       <div class="text-lg font-bold mb-8">
         {{ title }}

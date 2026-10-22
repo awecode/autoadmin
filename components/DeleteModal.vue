@@ -32,7 +32,7 @@ async function confirm() {
         <h3 class="text-lg font-medium mb-2">
           {{ title }}
         </h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-4">
+        <p class="text-toned mb-4">
           {{ description }}
         </p>
         <div class="flex justify-end gap-3">
