@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 /**
  * AutoAdmin-owned audit log table (SQLite / libsql / D1).
@@ -17,4 +17,7 @@ export const auditLogs = sqliteTable('autoadmin_audit_logs', {
   actorLabel: text(),
   changes: text({ mode: 'json' }).$type<{ before?: Record<string, unknown>, after?: Record<string, unknown> }>(),
   meta: text({ mode: 'json' }).$type<Record<string, unknown>>(),
-})
+}, table => [
+  index('autoadmin_audit_logs_record_idx').on(table.modelKey, table.lookupValue),
+  index('autoadmin_audit_logs_created_at_idx').on(table.createdAt),
+])

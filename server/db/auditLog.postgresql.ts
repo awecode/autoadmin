@@ -1,4 +1,4 @@
-import { jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
 
 /**
  * AutoAdmin-owned audit log table (PostgreSQL).
@@ -16,4 +16,7 @@ export const auditLogs = pgTable('autoadmin_audit_logs', {
   actorLabel: text(),
   changes: jsonb().$type<{ before?: Record<string, unknown>, after?: Record<string, unknown> }>(),
   meta: jsonb().$type<Record<string, unknown>>(),
-})
+}, table => [
+  index('autoadmin_audit_logs_record_idx').on(table.modelKey, table.lookupValue),
+  index('autoadmin_audit_logs_created_at_idx').on(table.createdAt),
+])

@@ -59,7 +59,9 @@ export interface AuditGlobalConfig {
 
 const OWNED_AUDIT_TABLE_NAME = 'autoadmin_audit_logs'
 
-const SQLITE_CREATE_AUDIT_TABLE = `CREATE TABLE IF NOT EXISTS \`autoadmin_audit_logs\` (
+// One statement per entry, since D1 and libsql run one at a time. The indexes
+// serve the audit list (newest first) and a record's History.
+const SQLITE_CREATE_AUDIT_TABLE = [`CREATE TABLE IF NOT EXISTS \`autoadmin_audit_logs\` (
 \t\`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 \t\`created_at\` integer DEFAULT (unixepoch()*1000) NOT NULL,
 \t\`action\` text NOT NULL,
@@ -70,9 +72,9 @@ const SQLITE_CREATE_AUDIT_TABLE = `CREATE TABLE IF NOT EXISTS \`autoadmin_audit_
 \t\`actor_label\` text,
 \t\`changes\` text,
 \t\`meta\` text
-)`
+)`, 'CREATE INDEX IF NOT EXISTS `autoadmin_audit_logs_record_idx` ON `autoadmin_audit_logs` (`model_key`, `lookup_value`)', 'CREATE INDEX IF NOT EXISTS `autoadmin_audit_logs_created_at_idx` ON `autoadmin_audit_logs` (`created_at`)']
 
-const POSTGRES_CREATE_AUDIT_TABLE = `CREATE TABLE IF NOT EXISTS "autoadmin_audit_logs" (
+const POSTGRES_CREATE_AUDIT_TABLE = [`CREATE TABLE IF NOT EXISTS "autoadmin_audit_logs" (
 \t"id" serial PRIMARY KEY NOT NULL,
 \t"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 \t"action" text NOT NULL,
@@ -83,7 +85,7 @@ const POSTGRES_CREATE_AUDIT_TABLE = `CREATE TABLE IF NOT EXISTS "autoadmin_audit
 \t"actor_label" text,
 \t"changes" jsonb,
 \t"meta" jsonb
-)`
+)`, 'CREATE INDEX IF NOT EXISTS "autoadmin_audit_logs_record_idx" ON "autoadmin_audit_logs" ("model_key", "lookup_value")', 'CREATE INDEX IF NOT EXISTS "autoadmin_audit_logs_created_at_idx" ON "autoadmin_audit_logs" ("created_at")']
 
 interface AuditRuntimeState {
   config: AuditGlobalConfig
@@ -347,8 +349,10 @@ async function execAuditDdl(ddl: string): Promise<void> {
 
 async function ensureOwnedAuditTable(): Promise<void> {
   const dialect = getConfiguredAdminDialect(useRuntimeConfig())
-  const ddl = dialect === 'postgresql' ? POSTGRES_CREATE_AUDIT_TABLE : SQLITE_CREATE_AUDIT_TABLE
-  await execAuditDdl(ddl)
+  const statements = dialect === 'postgresql' ? POSTGRES_CREATE_AUDIT_TABLE : SQLITE_CREATE_AUDIT_TABLE
+  for (const ddl of statements) {
+    await execAuditDdl(ddl)
+  }
 }
 
 /**
