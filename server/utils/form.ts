@@ -15,6 +15,22 @@ interface Rules {
 }
 export type Option = string | number | { label?: string, value: string | number, count?: number }
 
+/**
+ * A condition on another field's current value in the form, for `disabledWhen`
+ * and `hiddenWhen`. Every key given must hold. Empty means undefined, null, ''
+ * or [].
+ */
+export interface FieldCondition {
+  /** The other field's name */
+  field: string
+  /** Holds when the value is one of these */
+  in?: unknown[]
+  /** Holds when the value is none of these */
+  notIn?: unknown[]
+  /** true: holds when the value is empty; false: when it is not */
+  empty?: boolean
+}
+
 export interface FieldSpec {
   name: string
   label?: string
@@ -30,6 +46,10 @@ export interface FieldSpec {
   description?: string
   /** Show the current value without letting the admin change it. Supported for 'file' and 'image' fields. */
   readonly?: boolean
+  /** Disables the field while the condition holds. Its value is kept and still submitted. */
+  disabledWhen?: FieldCondition
+  /** Hides the field while the condition holds. Its value is kept and still submitted. */
+  hiddenWhen?: FieldCondition
   /** Configuration for file/image upload fields. Only applicable when type is 'file' or 'image' */
   fileConfig?: {
     /** Accept is a list of file extensions, e.g. ['.jpg', '.jpeg', '.png', '.svg'] */

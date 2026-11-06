@@ -1,4 +1,4 @@
-import type { FormSpec, Option } from '#layers/autoadmin/server/utils/form'
+import type { FieldCondition, FormSpec, Option } from '#layers/autoadmin/server/utils/form'
 import type { ZodObject, ZodRawShape } from 'zod'
 import { z } from 'zod'
 
@@ -12,6 +12,25 @@ export function normalizeOptions(opts: Option[]) {
     }
     return { label: option.label || option.value?.toString(), value: option.value, count: option.count }
   })
+}
+
+function isEmptyValue(value: unknown) {
+  return value === undefined || value === null || value === '' || (Array.isArray(value) && !value.length)
+}
+
+/** Whether a field's `disabledWhen` / `hiddenWhen` condition holds for the form's values. No condition: false. */
+export function fieldConditionHolds(condition: FieldCondition | undefined, values: Record<string, unknown>) {
+  if (!condition)
+    return false
+  const value = values[condition.field]
+  const same = (other: unknown) => other === value || (isEmptyValue(other) && isEmptyValue(value))
+  if (condition.in && !condition.in.some(same))
+    return false
+  if (condition.notIn && condition.notIn.some(same))
+    return false
+  if (condition.empty !== undefined && condition.empty !== isEmptyValue(value))
+    return false
+  return true
 }
 
 /** Put selected relation-many options first, preserving selection order. */

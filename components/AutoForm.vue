@@ -6,7 +6,7 @@ import type { ZodObject, ZodType } from 'zod'
 import { useEditorPendingUploads } from '#layers/autoadmin/components/editor/FileUpload'
 import { useWarnOnUnsavedChanges } from '#layers/autoadmin/composables/unsavedWarning'
 import { autoadminFormBridgeKey } from '#layers/autoadmin/utils/fileUploadHook'
-import { getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
+import { fieldConditionHolds, getErrorMessageFromError, processSchemaForForm } from '#layers/autoadmin/utils/form'
 import { slugify } from '#layers/autoadmin/utils/string'
 
 const props = defineProps<{
@@ -178,13 +178,15 @@ onUnmounted(() => {
     @submit="performSave()"
   >
     <div class="flex flex-wrap">
-      <AutoFormField
-        v-for="field in spec.fields"
-        :key="field.name"
-        v-model="state[field.name]"
-        :field="field"
-        :form="form"
-      />
+      <template v-for="field in spec.fields" :key="field.name">
+        <AutoFormField
+          v-if="!fieldConditionHolds(field.hiddenWhen, state)"
+          v-model="state[field.name]"
+          :disabled="fieldConditionHolds(field.disabledWhen, state)"
+          :field="field"
+          :form="form"
+        />
+      </template>
     </div>
     <div class="flex items-center justify-between mt-8">
       <UButton

@@ -8,11 +8,20 @@ const props = defineProps<{
   field: FormSpec['fields'][number]
   modelValue: any
   form?: any
+  /** From the field's `disabledWhen` */
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: any]
 }>()
+
+// The field's input attributes, disabled while its `disabledWhen` holds
+const inputAttrs = computed(() => {
+  if (!props.disabled)
+    return props.field.inputAttrs
+  return { ...props.field.inputAttrs, disabled: true, ...(props.field.type === 'rich-text' ? { editable: false } : {}) }
+})
 
 const modelKey = (useRoute().params.modelKey as string | undefined)?.replace(/\/$/, '')
 const richTextClientConfig = computed(() => {
@@ -237,7 +246,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             class="w-full"
             label-key="label"
             value-key="value"
-            v-bind="field.inputAttrs"
+            v-bind="inputAttrs"
             :virtualize="selectMenuItems.length > 100"
             :items="selectMenuItems ?? []"
             :loading="status === 'pending' || isLoadingChoices"
@@ -249,7 +258,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             <template #trailing>
               <ClientOnly>
                 <UIcon
-                  v-if="fieldValue"
+                  v-if="fieldValue && !disabled"
                   class="text-dimmed px-2 hover:text-red-300"
                   name="i-lucide-x"
                   @click.stop="() => { fieldValue = null }"
@@ -264,6 +273,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
             color="neutral"
             icon="i-lucide-square-plus"
             variant="soft"
+            :disabled="disabled"
             @click.prevent="openRelationModal('create')"
           />
           <UButton
@@ -289,7 +299,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
               class="w-full"
               label-key="label"
               value-key="value"
-              v-bind="field.inputAttrs"
+              v-bind="inputAttrs"
               :virtualize="selectMenuItems.length > 100"
               :items="selectMenuItems ?? []"
               :loading="status === 'pending' || isLoadingChoices"
@@ -310,7 +320,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
               <template #trailing>
                 <ClientOnly>
                   <UIcon
-                    v-if="fieldValue && Array.isArray(fieldValue) && fieldValue.length"
+                    v-if="fieldValue && Array.isArray(fieldValue) && fieldValue.length && !disabled"
                     class="text-dimmed px-2 hover:text-red-300"
                     name="i-lucide-x"
                     @click.stop="() => { fieldValue = [] }"
@@ -325,6 +335,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
               color="neutral"
               icon="i-lucide-square-plus"
               variant="soft"
+              :disabled="disabled"
               @click.prevent="openRelationModal('create')"
             />
             <UButton
@@ -353,6 +364,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
                 icon="i-lucide-x"
                 size="xs"
                 variant="ghost"
+                :disabled="disabled"
                 @click="removeRelationManyItem(item.value)"
               />
             </li>
@@ -364,7 +376,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           v-else-if="field.type === 'select'"
           v-model="fieldValue"
           class="w-full"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           :items="field.options"
         />
 
@@ -376,21 +388,21 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           color="neutral"
           placeholder="{}"
           spellcheck="false"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           :rows="6"
         />
 
         <!-- Date picker -->
         <DatePicker
           v-else-if="field.type === 'date'"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           v-model="fieldValue"
         />
 
         <!-- Checkbox -->
         <UCheckbox
           v-else-if="field.type === 'boolean'"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           v-model="fieldValue"
           color="neutral"
         />
@@ -399,7 +411,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         <UInput
           v-else-if="field.type === 'text'"
           v-model.nullable="fieldValue"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           class="w-full"
           color="neutral"
           type="text"
@@ -409,7 +421,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         <UTextarea
           v-else-if="field.type === 'textarea'"
           v-model.nullable="fieldValue"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           class="w-full"
           color="neutral"
         />
@@ -418,7 +430,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           v-else-if="field.type === 'rich-text'"
           v-model="fieldValue"
           class="w-full border border-muted rounded-md p-1"
-          :attrs="field.inputAttrs"
+          :attrs="inputAttrs"
           :client-config="richTextClientConfig"
         />
 
@@ -426,28 +438,28 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
           v-else-if="field.type === 'image'"
           v-model="fieldValue"
           type="image"
-          :attrs="field.inputAttrs"
+          :attrs="inputAttrs"
           :config="field.fileConfig"
           :label="field.label ?? ''"
           :name="field.name"
-          :readonly="field.readonly"
+          :readonly="field.readonly || disabled"
         />
 
         <Uploader
           v-else-if="field.type === 'file'"
           v-model="fieldValue"
           type="file"
-          :attrs="field.inputAttrs"
+          :attrs="inputAttrs"
           :config="field.fileConfig"
           :label="field.label ?? ''"
           :name="field.name"
-          :readonly="field.readonly"
+          :readonly="field.readonly || disabled"
         />
 
         <UInput
           v-else-if="field.type === 'blob'"
           v-model="fieldValue"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           class="w-full"
           type="file"
           :accept="field.inputAttrs?.accept"
@@ -456,7 +468,7 @@ async function openRelationModal(mode: 'create' | 'update', lookupValue?: string
         <UInput
           v-else-if="field.type === 'number'"
           v-model="fieldValue"
-          v-bind="field.inputAttrs"
+          v-bind="inputAttrs"
           class="w-full"
           step="any"
           type="number"

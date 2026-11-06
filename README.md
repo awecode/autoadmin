@@ -287,6 +287,10 @@ interface FieldSpec {
   rules?: Record<string, unknown>
   // Automatically inferred for enums and relations; defines the options for the field
   options?: (string | number | { label?: string, value: string | number, count?: number })[]
+  // Disables the field while another field's value matches; see Conditional Fields
+  disabledWhen?: FieldCondition
+  // Hides the field while another field's value matches; see Conditional Fields
+  hiddenWhen?: FieldCondition
 }
 ```
 
@@ -337,6 +341,46 @@ A preview dialog is implemented for images, and files with extensions - `.pdf`, 
 ```
 
 When using file and image uploads, you need to configure object storage as described in the [Object Storage Configuration](#object-storage-configuration) section.
+
+#### Conditional Fields (disabledWhen, hiddenWhen)
+
+A field can be disabled or hidden while another field in the same form has a given value. The condition is checked in the browser as the admin edits the form.
+
+```ts
+interface FieldCondition {
+  // The other field's name
+  field: string
+  // Holds when the value is one of these
+  in?: unknown[]
+  // Holds when the value is none of these
+  notIn?: unknown[]
+  // true: holds when the value is empty (undefined, null, '' or []); false: when it is not
+  empty?: boolean
+}
+```
+
+Every key given must hold. In this example, a notification goes to a topic or to some users: picking users disables the topic, and picking a topic other than `none` disables the users.
+
+```ts
+registry.register(notifications, {
+  m2m: { recipients: notificationRecipients },
+  fields: [
+    {
+      name: 'topic',
+      type: 'select',
+      options: ['none', 'news', 'offers'],
+      disabledWhen: { field: '___recipients___userId', empty: false },
+    },
+    {
+      name: '___recipients___userId',
+      type: 'relation-many',
+      disabledWhen: { field: 'topic', empty: false, notIn: ['none'] },
+    },
+  ],
+})
+```
+
+A disabled or hidden field keeps its value, and the value is still submitted. Validate the combination on the server too, such as in a `create.before` hook.
 
 ## List View Configuration
 
